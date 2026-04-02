@@ -4,7 +4,7 @@
   "description": "2D pixel art character generator for RPG games",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/server.js",
     "generate": "node src/index.js"
   },
   "dependencies": {

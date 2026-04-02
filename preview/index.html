@@ -3,279 +3,791 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sprite Preview – GameAssetGenerator2D</title>
+  <title>GameAssetGenerator2D — Character Builder</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0f1a;
+      --panel:    #16213e;
+      --surface:  #1a2744;
+      --border:   #2a3a5e;
+      --accent:   #4a90d9;
+      --accent2:  #7ecfff;
+      --text:     #dce8ff;
+      --muted:    #7a8faa;
+      --success:  #4caf50;
+      --error:    #ef5350;
+      --radius:   6px;
+    }
+
     body {
-      background: #1a1a2e;
-      color: #e0e0e0;
-      font-family: 'Courier New', monospace;
-      padding: 20px;
-    }
-    h1 { color: #7ecfff; margin-bottom: 8px; font-size: 1.4rem; }
-    h2 { color: #aad4ff; margin: 24px 0 8px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; }
-    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-    label { font-size: 0.85rem; color: #aaa; }
-    input[type=range] { width: 100px; }
-    select, button {
-      background: #2a2a4a; border: 1px solid #4a4a8a; color: #e0e0e0;
-      padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
-    }
-    button:hover { background: #3a3a6a; }
-
-    .character-grid { display: flex; flex-wrap: wrap; gap: 32px; }
-    .character-card {
-      background: #16213e;
-      border: 1px solid #2a3a5e;
-      border-radius: 8px;
-      padding: 16px;
-      min-width: 340px;
-    }
-    .char-name { color: #7ecfff; font-size: 0.9rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
-
-    /* Animation rows table */
-    .anim-table { width: 100%; border-collapse: collapse; }
-    .anim-table td { padding: 2px 4px; vertical-align: middle; }
-    .anim-label { color: #888; font-size: 0.7rem; white-space: nowrap; width: 90px; }
-    .anim-preview { display: flex; align-items: center; gap: 2px; }
-
-    .sprite-frame {
-      display: inline-block;
-      width: 64px; height: 64px;
-      background: transparent;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
       overflow: hidden;
-      position: relative;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
       flex-shrink: 0;
     }
-    .sprite-frame canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 64px; height: 64px;
-      image-rendering: pixelated;
+    header h1 { font-size: 1rem; color: var(--accent2); letter-spacing: 1px; }
+    header span { color: var(--muted); font-size: 0.8rem; }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
     }
 
-    /* Big animated preview */
-    .live-preview {
-      display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px;
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
-    .live-box {
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .toggle-btn:hover  { border-color: var(--accent); }
+    .toggle-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+    .swatch {
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.15s, transform 0.1s;
+      position: relative;
+    }
+    .swatch:hover   { transform: scale(1.15); }
+    .swatch.active  { border-color: #fff; }
+    .swatch .tip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .swatch:hover .tip { display: block; }
+
+    select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    input[type=text] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      font-size: 0.82rem;
+    }
+    input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    #demon-section { display: none; }
+
+    .generate-btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .generate-btn:hover    { background: #5aa0e9; }
+    .generate-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+    #gen-status {
+      font-size: 0.75rem;
       text-align: center;
+      min-height: 18px;
+      color: var(--muted);
     }
-    .live-box span { display: block; font-size: 0.7rem; color: #888; margin-top: 4px; }
-    .live-canvas {
+    #gen-status.ok  { color: var(--success); }
+    #gen-status.err { color: var(--error); }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      gap: 10px;
+    }
+    .empty-state svg { opacity: 0.2; }
+    .empty-state p   { font-size: 0.85rem; }
+
+    /* ── Cards ── */
+    .char-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      gap: 10px;
+    }
+    .card-name { color: var(--accent2); font-weight: 600; font-size: 0.85rem; }
+    .card-meta { color: var(--muted); font-size: 0.75rem; }
+    .card-actions { display: flex; gap: 8px; margin-left: auto; }
+    .card-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .card-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+    .card-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+
+    .live-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+    .live-box { text-align: center; }
+    .live-box span {
+      display: block;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    canvas.live {
       display: block;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      border: 1px solid #2a3a5e;
+      border: 1px solid var(--border);
+      border-radius: 3px;
     }
 
-    .separator { border: none; border-top: 1px solid #2a3a5e; margin: 24px 0; }
-    #status { color: #ffcc44; font-size: 0.85rem; margin-top: 12px; }
+    .card-controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .card-controls label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-controls input[type=range] { width: 80px; cursor: pointer; }
+    .card-controls select { width: auto; padding: 3px 6px; font-size: 0.75rem; }
+
+    details { border-top: 1px solid var(--border); padding-top: 10px; }
+    summary { cursor: pointer; color: var(--muted); font-size: 0.72rem; letter-spacing: 1.5px; user-select: none; text-transform: uppercase; }
+    summary:hover { color: var(--text); }
+    .strip-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .strip-table td { padding: 2px 4px; vertical-align: middle; white-space: nowrap; }
+    .strip-label { color: var(--muted); font-size: 0.68rem; width: 90px; }
+    .strip-frames { display: flex; gap: 2px; }
+    .strip-frame canvas {
+      display: block;
+      image-rendering: pixelated;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+    }
   </style>
 </head>
 <body>
 
-<h1>GameAssetGenerator2D — Sprite Preview</h1>
+<header>
+  <h1>GameAssetGenerator2D</h1>
+  <span>Character Builder</span>
+</header>
 
-<div class="controls">
-  <label>Scale:
-    <input type="range" id="scaleSlider" min="1" max="6" value="3" step="1">
-    <span id="scaleVal">3×</span>
-  </label>
-  <label>FPS:
-    <input type="range" id="fpsSlider" min="2" max="24" value="8" step="1">
-    <span id="fpsVal">8</span>
-  </label>
-  <label>Bg:
-    <select id="bgSelect">
-      <option value="transparent">Transparent</option>
-      <option value="#1a1a2e">Dark</option>
-      <option value="#ffffff">White</option>
-      <option value="#3a7d44">Green</option>
-    </select>
-  </label>
-  <button id="pauseBtn">Pause</button>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="section-label">Character Type</div>
+      <div class="btn-row" id="type-row">
+        <button class="toggle-btn active" data-val="human">Human</button>
+        <button class="toggle-btn"        data-val="demon">Demon</button>
+      </div>
+    </div>
+
+    <div id="human-skin-section">
+      <div class="section-label">Skin Tone</div>
+      <div class="swatches" id="skin-swatches"></div>
+    </div>
+
+    <div>
+      <div class="section-label">Hair Color</div>
+      <div class="swatches" id="hair-color-swatches"></div>
+    </div>
+
+    <div>
+      <div class="section-label">Hair Style</div>
+      <div class="btn-row" id="hair-style-row">
+        <button class="toggle-btn active" data-val="short">Short</button>
+        <button class="toggle-btn"        data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="long">Long</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Clothing</div>
+      <select id="clothing-select"></select>
+    </div>
+
+    <div>
+      <div class="section-label">Pants</div>
+      <select id="pants-select"></select>
+    </div>
+
+    <div>
+      <div class="section-label">Shoes</div>
+      <select id="shoes-select"></select>
+    </div>
+
+    <div id="demon-section">
+      <div class="section-label">Demon Skin</div>
+      <div class="swatches" id="demon-skin-swatches"></div>
+
+      <div class="section-label" style="margin-top:14px">Horn Style</div>
+      <div class="btn-row" id="horn-row">
+        <button class="toggle-btn active" data-val="curved">Curved</button>
+        <button class="toggle-btn"        data-val="straight">Straight</button>
+        <button class="toggle-btn"        data-val="ram">Ram</button>
+      </div>
+
+      <div class="section-label" style="margin-top:14px">Tail Style</div>
+      <div class="btn-row" id="tail-row">
+        <button class="toggle-btn active" data-val="long">Long</button>
+        <button class="toggle-btn"        data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="short">Short</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Sprite Size</div>
+      <div class="btn-row" id="size-row">
+        <button class="toggle-btn active" data-val="64">64 px</button>
+        <button class="toggle-btn"        data-val="96">96 px</button>
+        <button class="toggle-btn"        data-val="128">128 px</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Character Name</div>
+      <input type="text" id="char-name" placeholder="my_character" maxlength="64">
+    </div>
+
+    <div>
+      <div class="section-label">Load Preset</div>
+      <select id="preset-select"><option value="">— choose preset —</option></select>
+    </div>
+
+    <button class="generate-btn" id="gen-btn" disabled>Generate Character</button>
+    <div id="gen-status">Connecting to server…</div>
+
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main" id="main">
+    <div class="empty-state" id="empty-state">
+      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18M9 21V9"/>
+      </svg>
+      <p>Configure a character on the left and click <strong>Generate</strong>.</p>
+    </div>
+  </main>
+
 </div>
 
-<div id="characters" class="character-grid"></div>
-<div id="status"></div>
-
 <script>
-const FRAME_W = 64, FRAME_H = 64;
-const SHEET_COLS = 8;
-
-let scale = 3, fps = 8, paused = false;
-let bgColor = 'transparent';
-let manifest = null;
-const sheets = {}; // name → HTMLImageElement
-const timers = [];
-
-document.getElementById('scaleSlider').oninput = (e) => {
-  scale = +e.target.value;
-  document.getElementById('scaleVal').textContent = scale + '×';
-  rebuildAll();
-};
-document.getElementById('fpsSlider').oninput = (e) => {
-  fps = +e.target.value;
-  document.getElementById('fpsVal').textContent = fps;
-};
-document.getElementById('bgSelect').onchange = (e) => {
-  bgColor = e.target.value;
-  rebuildAll();
-};
-document.getElementById('pauseBtn').onclick = () => {
-  paused = !paused;
-  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+// ── State ──────────────────────────────────────────────────────────────────
+const state = {
+  type: 'human', skin: null, hair: null, hairStyle: 'short',
+  clothing: null, pants: null, shoes: null,
+  demonSkin: null, hornStyle: 'curved', tailStyle: 'long',
+  frameSize: 64, name: '',
 };
 
-async function loadManifest() {
+let options = null;
+const liveAnimations = {};
+let cardCounter = 0;
+
+const ANIM_ROWS = [
+  { name: 'idle',         frameCount: 4 },
+  { name: 'walk south',   frameCount: 8 },
+  { name: 'walk west',    frameCount: 8 },
+  { name: 'walk north',   frameCount: 8 },
+  { name: 'walk east',    frameCount: 8 },
+  { name: 'attack south', frameCount: 6 },
+  { name: 'attack west',  frameCount: 6 },
+  { name: 'attack north', frameCount: 6 },
+  { name: 'attack east',  frameCount: 6 },
+];
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+async function boot() {
   try {
-    const r = await fetch('manifest.json');
-    if (!r.ok) throw new Error('manifest.json not found — run `npm start` first');
-    manifest = await r.json();
-    document.getElementById('status').textContent = '';
-    await Promise.all(manifest.characters.map(loadSheet));
-    buildUI();
+    const r = await fetch('/api/options');
+    if (!r.ok) throw new Error('Server returned ' + r.status);
+    options = await r.json();
+    populateSidebar();
+    document.getElementById('gen-btn').disabled = false;
+    setStatus('Ready.', '');
   } catch (e) {
-    document.getElementById('status').textContent = '⚠ ' + e.message;
+    setStatus('Server error: ' + e.message, 'err');
   }
 }
 
-function loadSheet(char) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload  = () => { sheets[char.name] = img; resolve(); };
-    img.onerror = () => { console.warn('Failed to load', char.file); resolve(); };
-    img.src = char.file;
+// ── Populate sidebar ───────────────────────────────────────────────────────
+function populateSidebar() {
+  buildSwatches('skin-swatches',       options.skinTones,  'skin');
+  buildSwatches('hair-color-swatches', options.hairColors, 'hair');
+  buildSwatches('demon-skin-swatches', options.demonSkins, 'demonSkin');
+  buildSelect('clothing-select', options.clothing, 'clothing');
+  buildSelect('pants-select',    options.pants,    'pants');
+  buildSelect('shoes-select',    options.shoes,    'shoes');
+  buildPresets();
+
+  const d = options.defaults;
+  activateSwatch('skin-swatches',       d.skin,      'skin');
+  activateSwatch('hair-color-swatches', d.hair,      'hair');
+  activateSwatch('demon-skin-swatches', d.demonSkin, 'demonSkin');
+  setSelectVal('clothing-select', d.clothing); state.clothing = d.clothing;
+  setSelectVal('pants-select',    d.pants);    state.pants    = d.pants;
+  setSelectVal('shoes-select',    d.shoes);    state.shoes    = d.shoes;
+}
+
+function buildSwatches(containerId, palette, stateKey) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  Object.entries(palette).forEach(([key, color]) => {
+    const sw = document.createElement('div');
+    sw.className = 'swatch';
+    sw.style.background = color;
+    sw.dataset.key = key;
+    sw.innerHTML = `<span class="tip">${key.replace(/_/g,' ')}</span>`;
+    sw.addEventListener('click', () => activateSwatch(containerId, key, stateKey));
+    el.appendChild(sw);
   });
 }
 
-function buildUI() {
-  const container = document.getElementById('characters');
-  container.innerHTML = '';
-  for (const char of manifest.characters) {
-    if (!sheets[char.name]) continue;
-    container.appendChild(buildCharCard(char));
-  }
-  startAnimations();
+function activateSwatch(containerId, val, stateKey) {
+  state[stateKey] = val;
+  document.getElementById(containerId)
+    .querySelectorAll('.swatch')
+    .forEach(s => s.classList.toggle('active', s.dataset.key === val));
 }
 
-function buildCharCard(char) {
+function buildSelect(id, keys, stateKey) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  keys.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k.replace(/_/g, ' ');
+    el.appendChild(opt);
+  });
+  el.addEventListener('change', () => { state[stateKey] = el.value; });
+}
+
+function setSelectVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+function buildPresets() {
+  const sel = document.getElementById('preset-select');
+  Object.keys(options.presets).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k.replace(/_/g, ' ');
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    const p = options.presets[sel.value];
+    if (p) { applyConfig(p); sel.value = ''; }
+  });
+}
+
+function applyConfig(cfg) {
+  if (cfg.type)      setType(cfg.type);
+  if (cfg.skin)      activateSwatch('skin-swatches',       cfg.skin,      'skin');
+  if (cfg.hair)      activateSwatch('hair-color-swatches', cfg.hair,      'hair');
+  if (cfg.hairStyle) activateToggle('hair-style-row', cfg.hairStyle, 'hairStyle');
+  if (cfg.clothing)  { state.clothing = cfg.clothing; setSelectVal('clothing-select', cfg.clothing); }
+  if (cfg.pants)     { state.pants    = cfg.pants;    setSelectVal('pants-select',    cfg.pants); }
+  if (cfg.shoes)     { state.shoes    = cfg.shoes;    setSelectVal('shoes-select',    cfg.shoes); }
+  if (cfg.demonSkin) activateSwatch('demon-skin-swatches', cfg.demonSkin, 'demonSkin');
+  if (cfg.hornStyle) activateToggle('horn-row',  cfg.hornStyle, 'hornStyle');
+  if (cfg.tailStyle) activateToggle('tail-row',  cfg.tailStyle, 'tailStyle');
+}
+
+// ── Toggle rows ────────────────────────────────────────────────────────────
+function wireToggleRow(rowId, stateKey, onChange) {
+  document.getElementById(rowId).querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activateToggle(rowId, btn.dataset.val, stateKey);
+      if (onChange) onChange(btn.dataset.val);
+    });
+  });
+}
+
+function activateToggle(rowId, val, stateKey) {
+  if (stateKey) state[stateKey] = val;
+  document.getElementById(rowId)
+    .querySelectorAll('.toggle-btn')
+    .forEach(b => b.classList.toggle('active', b.dataset.val === val));
+}
+
+function setType(val) {
+  activateToggle('type-row', val, 'type');
+  document.getElementById('demon-section').style.display      = val === 'demon' ? '' : 'none';
+  document.getElementById('human-skin-section').style.display = val === 'human' ? '' : 'none';
+}
+
+wireToggleRow('type-row',       'type',      setType);
+wireToggleRow('hair-style-row', 'hairStyle', null);
+wireToggleRow('horn-row',       'hornStyle', null);
+wireToggleRow('tail-row',       'tailStyle', null);
+wireToggleRow('size-row',       'frameSize', null);
+
+document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
+document.getElementById('gen-btn').addEventListener('click', generate);
+
+// ── Generate ───────────────────────────────────────────────────────────────
+async function generate() {
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  setStatus('Generating…', '');
+
+  const name     = state.name || ('character_' + Date.now());
+  const frameSize = Number(state.frameSize) || 64;
+  const config   = buildConfig();
+
+  try {
+    const r = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config, name, frameSize }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data.success) throw new Error(data.error || 'Unknown error');
+
+    setStatus('Done!', 'ok');
+    document.getElementById('empty-state').style.display = 'none';
+    loadAndShowCard(data.name, data.file, frameSize);
+  } catch (e) {
+    setStatus('Error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function buildConfig() {
+  const cfg = {
+    type: state.type,
+    hair: state.hair, hairStyle: state.hairStyle,
+    clothing: state.clothing, pants: state.pants, shoes: state.shoes,
+  };
+  if (state.type === 'human') {
+    cfg.skin = state.skin;
+  } else {
+    cfg.demonSkin = state.demonSkin;
+    cfg.hornStyle = state.hornStyle;
+    cfg.tailStyle = state.tailStyle;
+  }
+  return cfg;
+}
+
+// ── Card ───────────────────────────────────────────────────────────────────
+function loadAndShowCard(name, filePath, frameSize) {
+  const img = new Image();
+  img.onload = () => {
+    const card = buildCard(name, filePath, frameSize, img);
+    const main = document.getElementById('main');
+    // Insert after empty-state
+    const emptyState = document.getElementById('empty-state');
+    main.insertBefore(card, emptyState.nextSibling);
+    startCardAnims(card.dataset.cardId, img, frameSize);
+  };
+  img.onerror = () => setStatus('Failed to load spritesheet image.', 'err');
+  img.src = filePath + '?t=' + Date.now();
+}
+
+function buildCard(name, filePath, frameSize, img) {
+  const id = String(++cardCounter);
   const card = document.createElement('div');
-  card.className = 'character-card';
-  card.dataset.name = char.name;
+  card.className = 'char-card';
+  card.dataset.cardId = id;
 
-  const title = document.createElement('div');
-  title.className = 'char-name';
-  title.textContent = char.name.replace(/_/g, ' ');
-  card.appendChild(title);
+  // Header
+  const header = document.createElement('div');
+  header.className = 'card-header';
 
-  // Live animated previews for key animations
-  const liveDiv = document.createElement('div');
-  liveDiv.className = 'live-preview';
-  const liveAnims = ['idle', 'walk_south', 'walk_west', 'attack_south'];
-  for (const animName of liveAnims) {
-    const anim = manifest.animations.find(a => a.name === animName);
-    if (!anim) continue;
-    const box = document.createElement('div');
+  const nameEl = document.createElement('div');
+  nameEl.className = 'card-name';
+  nameEl.textContent = name.replace(/_/g, ' ');
+
+  const metaEl = document.createElement('div');
+  metaEl.className = 'card-meta';
+  metaEl.textContent = frameSize + '×' + frameSize + ' px/frame';
+
+  const dlBtn = document.createElement('a');
+  dlBtn.className = 'card-btn';
+  dlBtn.href = filePath;
+  dlBtn.download = name + '_spritesheet.png';
+  dlBtn.textContent = 'Download PNG';
+
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+  actions.appendChild(dlBtn);
+
+  header.appendChild(nameEl);
+  header.appendChild(metaEl);
+  header.appendChild(actions);
+  card.appendChild(header);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  // Controls
+  const controls = document.createElement('div');
+  controls.className = 'card-controls';
+  controls.innerHTML = `
+    <label>Bg:
+      <select class="bg-sel">
+        <option value="transparent">Transparent</option>
+        <option value="#1a1a2e">Dark</option>
+        <option value="#ffffff">White</option>
+        <option value="#3a7d44">Green</option>
+      </select>
+    </label>
+    <label>FPS:
+      <input type="range" class="fps-sl" min="2" max="24" value="8" step="1">
+      <span class="fps-val">8</span>
+    </label>
+    <label>Scale:
+      <input type="range" class="scale-sl" min="1" max="5" value="2" step="1">
+      <span class="scale-val">2×</span>
+    </label>`;
+  body.appendChild(controls);
+
+  // Live previews for key animations
+  const liveRow = document.createElement('div');
+  liveRow.className = 'live-row';
+
+  const animState = { fps: 8, scale: 2, bg: 'transparent', frameSize, img, timers: [], canvases: [] };
+  liveAnimations[id] = animState;
+
+  [0, 1, 2, 5].forEach(rowIdx => { // idle, walk_south, walk_west, attack_south
+    const anim = ANIM_ROWS[rowIdx];
+    const box  = document.createElement('div');
     box.className = 'live-box';
     const cvs = document.createElement('canvas');
-    cvs.className = 'live-canvas';
-    cvs.width  = FRAME_W * scale;
-    cvs.height = FRAME_H * scale;
-    cvs.dataset.charName  = char.name;
-    cvs.dataset.animRow   = anim.row;
-    cvs.dataset.animFrames = anim.frameCount;
-    cvs.dataset.frame     = 0;
+    cvs.className = 'live';
+    cvs.dataset.rowIdx     = rowIdx;
+    cvs.dataset.frameCount = anim.frameCount;
+    cvs.dataset.curFrame   = 0;
     const lbl = document.createElement('span');
-    lbl.textContent = animName.replace(/_/g, ' ');
+    lbl.textContent = anim.name;
     box.appendChild(cvs);
     box.appendChild(lbl);
-    liveDiv.appendChild(box);
-  }
-  card.appendChild(liveDiv);
+    liveRow.appendChild(box);
+    animState.canvases.push(cvs);
+  });
+  body.appendChild(liveRow);
 
-  // Full strip of all rows
+  // Wire card controls
+  controls.querySelector('.fps-sl').addEventListener('input', e => {
+    animState.fps = +e.target.value;
+    controls.querySelector('.fps-val').textContent = e.target.value;
+    restartCardTimer(id);
+  });
+  controls.querySelector('.scale-sl').addEventListener('input', e => {
+    animState.scale = +e.target.value;
+    controls.querySelector('.scale-val').textContent = e.target.value + '×';
+    resizeCardCanvases(id);
+  });
+  controls.querySelector('.bg-sel').addEventListener('change', e => {
+    animState.bg = e.target.value;
+  });
+
+  // All-frames strip
+  const det = document.createElement('details');
+  const sum = document.createElement('summary');
+  sum.textContent = 'All Frames';
+  det.appendChild(sum);
+
   const table = document.createElement('table');
-  table.className = 'anim-table';
-  for (const anim of manifest.animations) {
-    const tr = document.createElement('tr');
-    const tdLabel = document.createElement('td');
-    tdLabel.className = 'anim-label';
-    tdLabel.textContent = anim.name.replace(/_/g, ' ');
-    const tdFrames = document.createElement('td');
+  table.className = 'strip-table';
+  ANIM_ROWS.forEach((anim, rowIdx) => {
+    const tr   = document.createElement('tr');
+    const tdL  = document.createElement('td');
+    tdL.className = 'strip-label';
+    tdL.textContent = anim.name;
+    const tdF  = document.createElement('td');
     const strip = document.createElement('div');
-    strip.className = 'anim-preview';
+    strip.className = 'strip-frames';
     for (let f = 0; f < anim.frameCount; f++) {
-      const frameDiv = document.createElement('div');
-      frameDiv.className = 'sprite-frame';
-      frameDiv.style.width  = '32px';
-      frameDiv.style.height = '32px';
-      const cvs = document.createElement('canvas');
-      cvs.width  = 32;
-      cvs.height = 32;
-      cvs.style.width  = '32px';
-      cvs.style.height = '32px';
-      drawStaticFrame(cvs, sheets[char.name], anim.row, f);
-      frameDiv.appendChild(cvs);
-      strip.appendChild(frameDiv);
+      const fw  = document.createElement('div');
+      fw.className = 'strip-frame';
+      const c = document.createElement('canvas');
+      c.width = c.height = 32;
+      drawFrame(c, img, rowIdx, f, frameSize, 'transparent');
+      fw.appendChild(c);
+      strip.appendChild(fw);
     }
-    tdFrames.appendChild(strip);
-    tr.appendChild(tdLabel);
-    tr.appendChild(tdFrames);
+    tdF.appendChild(strip);
+    tr.appendChild(tdL);
+    tr.appendChild(tdF);
     table.appendChild(tr);
-  }
-  card.appendChild(table);
+  });
+  det.appendChild(table);
+  body.appendChild(det);
+
+  card.appendChild(body);
   return card;
 }
 
-function drawStaticFrame(canvas, sheet, row, col) {
+// ── Animation ──────────────────────────────────────────────────────────────
+function startCardAnims(id, img, frameSize) {
+  resizeCardCanvases(id);
+  restartCardTimer(id);
+}
+
+function resizeCardCanvases(id) {
+  const st = liveAnimations[id];
+  if (!st) return;
+  const sz = st.frameSize * st.scale;
+  st.canvases.forEach(cvs => {
+    cvs.width  = sz;
+    cvs.height = sz;
+  });
+}
+
+function restartCardTimer(id) {
+  const st = liveAnimations[id];
+  if (!st) return;
+  st.timers.forEach(clearInterval);
+  st.timers.length = 0;
+
+  // Each canvas animates independently
+  const groups = {};
+  st.canvases.forEach(cvs => {
+    const ri = +cvs.dataset.rowIdx;
+    if (!groups[ri]) groups[ri] = { canvases: [], frame: 0, frameCount: +cvs.dataset.frameCount };
+    groups[ri].canvases.push(cvs);
+  });
+
+  const tid = setInterval(() => {
+    Object.values(groups).forEach(g => {
+      g.canvases.forEach(cvs => drawFrame(cvs, st.img, +cvs.dataset.rowIdx, g.frame, st.frameSize, st.bg));
+      g.frame = (g.frame + 1) % g.frameCount;
+    });
+  }, 1000 / st.fps);
+  st.timers.push(tid);
+}
+
+function drawFrame(canvas, img, row, col, frameSize, bg) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (bgColor !== 'transparent') {
-    ctx.fillStyle = bgColor;
+  if (bg && bg !== 'transparent') {
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   ctx.imageSmoothingEnabled = false;
-  const sx = col * FRAME_W, sy = row * FRAME_H;
-  ctx.drawImage(sheet, sx, sy, FRAME_W, FRAME_H, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, col * frameSize, row * frameSize, frameSize, frameSize, 0, 0, canvas.width, canvas.height);
 }
 
-function startAnimations() {
-  timers.forEach(clearInterval);
-  timers.length = 0;
-
-  const liveCanvases = document.querySelectorAll('.live-canvas');
-  const groups = {};
-  liveCanvases.forEach(cvs => {
-    const key = `${cvs.dataset.charName}-${cvs.dataset.animRow}`;
-    if (!groups[key]) groups[key] = { canvases: [], frame: 0, frameCount: +cvs.dataset.animFrames, charName: cvs.dataset.charName, row: +cvs.dataset.animRow };
-    groups[key].canvases.push(cvs);
-  });
-
-  const id = setInterval(() => {
-    if (paused) return;
-    for (const g of Object.values(groups)) {
-      const sheet = sheets[g.charName];
-      if (!sheet) continue;
-      for (const cvs of g.canvases) {
-        cvs.width  = FRAME_W * scale;
-        cvs.height = FRAME_H * scale;
-        drawStaticFrame(cvs, sheet, g.row, g.frame);
-      }
-      g.frame = (g.frame + 1) % g.frameCount;
-    }
-  }, 1000 / fps);
-  timers.push(id);
+// ── Helpers ────────────────────────────────────────────────────────────────
+function setStatus(msg, cls) {
+  const el = document.getElementById('gen-status');
+  el.textContent = msg;
+  el.className   = cls || '';
 }
 
-function rebuildAll() {
-  if (manifest) buildUI();
-}
-
-loadManifest();
+boot();
 </script>
 </body>
 </html>

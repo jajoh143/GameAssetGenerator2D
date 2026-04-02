@@ -30,20 +30,27 @@ const SHEET_H = SHEET_ROWS * FRAME_H; // 576
  * Build a spritesheet from an array of row frame arrays.
  *
  * @param {Array<Canvas[]>} rowFrames - Array of 9 entries, each is an array of frame canvases.
+ * @param {number} [frameSize=64]     - Output size per frame (square). Source frames are scaled.
  * @returns {Canvas} The composited spritesheet canvas.
  */
-function buildSpritesheet(rowFrames) {
-  const { canvas, ctx } = makeCanvas(SHEET_W, SHEET_H);
+function buildSpritesheet(rowFrames, frameSize = FRAME_W) {
+  const sheetW = SHEET_COLS * frameSize;
+  const sheetH = ROWS.length * frameSize;
+  const { canvas, ctx } = makeCanvas(sheetW, sheetH);
 
-  // Fill with transparent background
-  ctx.clearRect(0, 0, SHEET_W, SHEET_H);
+  ctx.clearRect(0, 0, sheetW, sheetH);
+  ctx.imageSmoothingEnabled = false;
 
   for (let row = 0; row < ROWS.length; row++) {
     const frames = rowFrames[row] || [];
     for (let col = 0; col < frames.length; col++) {
       const frameCanvas = frames[col];
       if (frameCanvas) {
-        blit(ctx, frameCanvas, col * FRAME_W, row * FRAME_H);
+        if (frameSize === FRAME_W) {
+          blit(ctx, frameCanvas, col * frameSize, row * frameSize);
+        } else {
+          ctx.drawImage(frameCanvas, col * frameSize, row * frameSize, frameSize, frameSize);
+        }
       }
     }
   }

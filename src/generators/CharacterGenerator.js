@@ -10,29 +10,32 @@ const { resolveConfig } = require('../characters/CharacterConfig');
 /**
  * Generate a complete spritesheet for a character.
  *
- * @param {object} rawConfig  - Character config
- * @param {string} outputPath - Where to save the PNG
- * @returns {string}          - Resolved output path
+ * @param {object} rawConfig   - Character config
+ * @param {string} outputPath  - Where to save the PNG
+ * @param {number} [frameSize=64] - Output frame size in pixels (64 | 96 | 128)
+ * @returns {string}           - Resolved output path
  */
-function generateSpritesheet(rawConfig, outputPath) {
+function generateSpritesheet(rawConfig, outputPath, frameSize = 64) {
   const config = resolveConfig(rawConfig);
   const generateFrame = config.type === 'demon' ? generateDemonFrame : generateHumanFrame;
 
-  // Build all 9 animation rows
   const rowFrames = ANIMATION_ROWS.map((animName) => {
     const offsets = getFrames(animName);
     return offsets.map((frameOffset) => generateFrame(config, animName, frameOffset));
   });
 
-  const sheet = buildSpritesheet(rowFrames);
+  const sheet = buildSpritesheet(rowFrames, frameSize);
   saveSpritesheet(sheet, outputPath);
   return outputPath;
 }
 
 /**
- * Generate a spritesheet and return the canvas without saving.
+ * Generate a spritesheet canvas without saving.
+ *
+ * @param {object} rawConfig
+ * @param {number} [frameSize=64]
  */
-function generateSpritesheetCanvas(rawConfig) {
+function generateSpritesheetCanvas(rawConfig, frameSize = 64) {
   const config = resolveConfig(rawConfig);
   const generateFrame = config.type === 'demon' ? generateDemonFrame : generateHumanFrame;
 
@@ -41,7 +44,7 @@ function generateSpritesheetCanvas(rawConfig) {
     return offsets.map((frameOffset) => generateFrame(config, animName, frameOffset));
   });
 
-  return buildSpritesheet(rowFrames);
+  return buildSpritesheet(rowFrames, frameSize);
 }
 
 module.exports = { generateSpritesheet, generateSpritesheetCanvas };
