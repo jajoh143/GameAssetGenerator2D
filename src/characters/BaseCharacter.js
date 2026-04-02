@@ -25,96 +25,111 @@ function drawGroundShadow(ctx, cx, y) {
 }
 
 // ---------------------------------------------------------------------------
-// drawHeadSouth  –  front-facing head, fixed at x=24, y=8  (16×14)
+// drawHeadSouth  –  front-facing head, fixed at x=22, y=5  (20×18)
 // ---------------------------------------------------------------------------
 
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
-  const HX = 24, HY = 8, HW = 16, HH = 14;
+  const HX = 22, HY = 5, HW = 20, HH = 18;
   const outline = '#111111';
 
   // ── Oval face shape ──────────────────────────────────────────────────────
-  // Build an oval by varying row widths (hair covers top 6 rows, so face
-  // visible from HY+6 downward).  Row widths widen toward cheeks then taper
-  // to chin:  narrow(12) → full(14) → narrow-chin(12) → chin-tip(10)
-  //
-  //  HY+6  : 12px  x+2 … x+13
-  //  HY+7-8: 14px  x+1 … x+14
-  //  HY+9-11: 14px  x+1 … x+14  (widest – cheeks)
-  //  HY+12 : 12px  x+2 … x+13
-  //  HY+13 : 10px  x+3 … x+12  (chin)
+  // Hair covers top 7 rows (y=5-11), face visible from HY+7 downward.
+  // Row widths widen at cheeks then taper to a pointed chin:
+  //  y=12 (HY+7):  14px  x=25-38
+  //  y=13 (HY+8):  16px  x=24-39
+  //  y=14-16:      18px  x=23-40  (cheeks — widest)
+  //  y=17-18:      16px  x=24-39
+  //  y=19-20:      14px  x=25-38
+  //  y=21:         12px  x=26-37  (pre-chin)
+  //  y=22 (HY+17): 10px  x=27-36  (chin)
 
-  hLine(ctx, skinColors.base, HX + 2, HY + 6,  HW - 4);   // 12px top of face
-  fillRect(ctx, skinColors.base, HX + 1, HY + 7,  HW - 2, 5); // 14px cheeks
-  hLine(ctx, skinColors.base, HX + 2, HY + 12, HW - 4);   // 12px pre-chin
-  hLine(ctx, skinColors.base, HX + 3, HY + 13, HW - 6);   // 10px chin
+  hLine(ctx, skinColors.base, 25, HY + 7, 14);   // y=12: 14px
+  hLine(ctx, skinColors.base, 24, HY + 8, 16);   // y=13: 16px
+  fillRect(ctx, skinColors.base, 23, HY + 9, 18, 3);  // y=14-16: 18px cheeks
+  fillRect(ctx, skinColors.base, 24, HY + 12, 16, 2); // y=17-18: 16px
+  fillRect(ctx, skinColors.base, 25, HY + 14, 14, 2); // y=19-20: 14px
+  hLine(ctx, skinColors.base, 26, HY + 16, 12);  // y=21: 12px pre-chin
+  hLine(ctx, skinColors.base, 27, HY + 17, 10);  // y=22: 10px chin
 
   // ── 4-level shading ──────────────────────────────────────────────────────
-  // Forehead/left-cheek highlight (top-left area of face)
-  fillRect(ctx, skinColors.highlight, HX + 2, HY + 7, 4, 3);
-  hLine(ctx, skinColors.highlight,   HX + 3, HY + 6, 3);
+  // Highlight (top-left face): rows 12-16 on left quarter (x=24-27)
+  fillRect(ctx, skinColors.highlight, 24, HY + 8, 4, 5);
+  hLine(ctx, skinColors.highlight, 25, HY + 7, 3);
 
-  // Right-cheek mid-shadow
-  vLine(ctx, skinColors.shadow, HX + HW - 3, HY + 7,  5);
-  vLine(ctx, skinColors.shadow, HX + HW - 2, HY + 7,  4);
+  // Shadow (right side): rows 13-19 on right quarter (x=38-40)
+  vLine(ctx, skinColors.shadow, 38, HY + 8, 7);
+  vLine(ctx, skinColors.shadow, 39, HY + 8, 5);
+  px(ctx, skinColors.shadow, 40, HY + 9);
+  px(ctx, skinColors.shadow, 40, HY + 10);
+  px(ctx, skinColors.shadow, 40, HY + 11);
 
-  // Chin / lower-face shadow
-  hLine(ctx, skinColors.shadow, HX + 3, HY + 12, HW - 6);
-  hLine(ctx, skinColors.shadow, HX + 4, HY + 13, HW - 8);
+  // Dark shadow (chin): rows 20-22
+  hLine(ctx, skinColors.shadow, 25, HY + 14, 14);
+  hLine(ctx, skinColors.shadow, 26, HY + 16, 12);
+  hLine(ctx, skinColors.shadow, 27, HY + 17, 10);
 
   // ── Oval outline ─────────────────────────────────────────────────────────
-  // Top of face (hair-to-face boundary) — drawn over by hair, kept for clarity
-  hLine(ctx, outline, HX + 2, HY + 6, HW - 4);
   // Left side
-  px(ctx, outline, HX + 1, HY + 6);
-  vLine(ctx, outline, HX + 1, HY + 7,  5);  // HY+7 to HY+11
-  px(ctx, outline, HX + 2, HY + 12);
-  px(ctx, outline, HX + 3, HY + 13);
+  px(ctx, outline, 25, HY + 7);
+  px(ctx, outline, 24, HY + 8);
+  vLine(ctx, outline, 23, HY + 9, 3);   // y=14-16 cheeks
+  px(ctx, outline, 24, HY + 12);
+  px(ctx, outline, 24, HY + 13);
+  px(ctx, outline, 25, HY + 14);
+  px(ctx, outline, 25, HY + 15);
+  px(ctx, outline, 26, HY + 16);
+  px(ctx, outline, 27, HY + 17);
   // Right side (mirror)
-  px(ctx, outline, HX + HW - 2, HY + 6);
-  vLine(ctx, outline, HX + HW - 2, HY + 7,  5);
-  px(ctx, outline, HX + HW - 3, HY + 12);
-  px(ctx, outline, HX + HW - 4, HY + 13);
+  px(ctx, outline, 38, HY + 7);
+  px(ctx, outline, 39, HY + 8);
+  vLine(ctx, outline, 40, HY + 9, 3);   // y=14-16 cheeks
+  px(ctx, outline, 39, HY + 12);
+  px(ctx, outline, 39, HY + 13);
+  px(ctx, outline, 38, HY + 14);
+  px(ctx, outline, 38, HY + 15);
+  px(ctx, outline, 37, HY + 16);
+  px(ctx, outline, 36, HY + 17);
   // Chin bottom
-  hLine(ctx, outline, HX + 4, HY + 13, HW - 8);
+  hLine(ctx, outline, 28, HY + 17, 8);
 
-  // ── Eyebrows (just above eyes) ───────────────────────────────────────────
-  const browY = HY + 7;
-  hLine(ctx, hairColors.base,   HX + 3, browY, 3);   // left brow
-  px(ctx,   hairColors.shadow,  HX + 3, browY);       // left inner dark
-  hLine(ctx, hairColors.base,   HX + 10, browY, 3);  // right brow
-  px(ctx,   hairColors.shadow,  HX + 12, browY);      // right inner dark
+  // ── Eyebrows ─────────────────────────────────────────────────────────────
+  const browY = HY + 8;   // y=13
+  hLine(ctx, hairColors.base,   26, browY, 4);   // left brow
+  px(ctx,   hairColors.shadow,  26, browY);
+  hLine(ctx, hairColors.base,   33, browY, 4);   // right brow
+  px(ctx,   hairColors.shadow,  36, browY);
 
-  // ── Eyes  (2×2 each) ─────────────────────────────────────────────────────
-  const eyeY = HY + 8;
+  // ── Eyes  (3×2 each) ─────────────────────────────────────────────────────
+  const eyeY = HY + 9;   // y=14
   // whites
-  fillRect(ctx, '#FFFFFF', HX + 3,  eyeY, 3, 2);
-  fillRect(ctx, '#FFFFFF', HX + 10, eyeY, 3, 2);
+  fillRect(ctx, '#FFFFFF', 26, eyeY, 4, 2);
+  fillRect(ctx, '#FFFFFF', 33, eyeY, 4, 2);
   // iris / pupil
-  px(ctx, '#5A3010', HX + 3,  eyeY + 1);
-  px(ctx, '#1A0800', HX + 4,  eyeY + 1);
-  px(ctx, '#5A3010', HX + 10, eyeY + 1);
-  px(ctx, '#1A0800', HX + 11, eyeY + 1);
+  px(ctx, '#5A3010', 26, eyeY + 1);
+  px(ctx, '#1A0800', 27, eyeY + 1);
+  px(ctx, '#5A3010', 33, eyeY + 1);
+  px(ctx, '#1A0800', 34, eyeY + 1);
   // eye outlines
-  outlineRect(ctx, outline, HX + 3,  eyeY, 3, 2);
-  outlineRect(ctx, outline, HX + 10, eyeY, 3, 2);
+  outlineRect(ctx, outline, 26, eyeY, 4, 2);
+  outlineRect(ctx, outline, 33, eyeY, 4, 2);
   // eyelid shadow above eyes
-  hLine(ctx, skinColors.shadow, HX + 3,  eyeY - 1, 3);
-  hLine(ctx, skinColors.shadow, HX + 10, eyeY - 1, 3);
+  hLine(ctx, skinColors.shadow, 26, eyeY - 1, 4);
+  hLine(ctx, skinColors.shadow, 33, eyeY - 1, 4);
 
   // ── Nose ─────────────────────────────────────────────────────────────────
-  const noseY = HY + 10;
-  px(ctx, skinColors.shadow, HX + 6,  noseY + 1);  // left nostril
-  px(ctx, skinColors.shadow, HX + 7,  noseY);
-  px(ctx, skinColors.shadow, HX + 8,  noseY);
-  px(ctx, skinColors.shadow, HX + 9,  noseY + 1);  // right nostril
+  const noseY = HY + 12;   // y=17
+  px(ctx, skinColors.shadow, 30, noseY + 1);  // left nostril
+  px(ctx, skinColors.shadow, 31, noseY);
+  px(ctx, skinColors.shadow, 32, noseY);
+  px(ctx, skinColors.shadow, 33, noseY + 1);  // right nostril
 
   // ── Mouth ─────────────────────────────────────────────────────────────────
-  const mouthY = HY + 12;
-  px(ctx, skinColors.shadow, HX + 4,  mouthY);       // left corner
-  hLine(ctx, '#C05050',      HX + 5,  mouthY, 2);    // left lip
-  px(ctx, skinColors.shadow, HX + 7,  mouthY);       // center dip
-  hLine(ctx, '#C05050',      HX + 8,  mouthY, 2);    // right lip
-  px(ctx, skinColors.shadow, HX + 10, mouthY);       // right corner
+  const mouthY = HY + 15;   // y=20
+  px(ctx, skinColors.shadow, 27, mouthY);       // left corner
+  hLine(ctx, '#C05050',      28, mouthY, 3);    // left lip
+  px(ctx, skinColors.shadow, 31, mouthY);       // center dip
+  hLine(ctx, '#C05050',      32, mouthY, 3);    // right lip
+  px(ctx, skinColors.shadow, 35, mouthY);       // right corner
 
   // ── Hair ─────────────────────────────────────────────────────────────────
   drawHairSouth(ctx, hairColors, hairStyle, HX, HY, HW);
@@ -127,76 +142,89 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
 function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   const outline = '#111111';
 
-  // Top hair band (6px tall)
-  fillRect(ctx, hairColors.base, headX, headY, headW, 6);
+  // Top hair band (7px tall, rows y=HY to HY+6)
+  fillRect(ctx, hairColors.base, headX, headY, headW, 7);
   // Highlight stripe
   hLine(ctx, hairColors.highlight, headX + 3, headY + 1, headW - 8);
   hLine(ctx, hairColors.highlight, headX + 2, headY + 2, headW - 6);
   // Lower hair-line shadow
-  hLine(ctx, hairColors.shadow, headX, headY + 4, headW);
   hLine(ctx, hairColors.shadow, headX, headY + 5, headW);
-  // Side strips (sideburns)
-  vLine(ctx, hairColors.base, headX,           headY,      11);
-  vLine(ctx, hairColors.base, headX + 1,       headY,      10);
-  vLine(ctx, hairColors.base, headX + headW - 2, headY,    11);
-  vLine(ctx, hairColors.base, headX + headW - 1, headY,    10);
+  hLine(ctx, hairColors.shadow, headX, headY + 6, headW);
+
+  // Side sideburn strips: x=22-23 (left) and x=40-41 (right)
+  // Short hair: down to y=18 (headY+13)
+  // Medium:     down to y=23 (headY+18)
+  // Long:       down to y=28 (headY+23)
+  const sideburnShortEnd = headY + 13;
+  const sideburnMedEnd   = headY + 18;
+  const sideburnLongEnd  = headY + 23;
+
+  // Always draw base sideburns (short length)
+  vLine(ctx, hairColors.base, headX,     headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.base, headX + 1, headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.base, headX + headW - 2, headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.base, headX + headW - 1, headY, sideburnShortEnd - headY);
 
   if (hairStyle === 'medium') {
-    vLine(ctx, hairColors.base, headX,             headY + 10, 5);
-    vLine(ctx, hairColors.base, headX + headW - 1, headY + 10, 5);
+    vLine(ctx, hairColors.base, headX,             sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base, headX + 1,         sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base, headX + headW - 2, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base, headX + headW - 1, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
   } else if (hairStyle === 'long') {
-    vLine(ctx, hairColors.base, headX,             headY + 10, 10);
-    vLine(ctx, hairColors.base, headX + headW - 1, headY + 10, 10);
+    vLine(ctx, hairColors.base, headX,             sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base, headX + 1,         sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base, headX + headW - 2, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base, headX + headW - 1, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
   }
 
   // Re-draw top outline over hair
   hLine(ctx, outline, headX, headY, headW);
-  vLine(ctx, outline, headX,           headY, 6);
-  vLine(ctx, outline, headX + headW - 1, headY, 6);
+  vLine(ctx, outline, headX,             headY, 7);
+  vLine(ctx, outline, headX + headW - 1, headY, 7);
 }
 
 // ---------------------------------------------------------------------------
-// drawHeadNorth  –  back of head, fixed at x=24, y=8
+// drawHeadNorth  –  back of head, fixed at x=22, y=5  (20×18)
 // ---------------------------------------------------------------------------
 
 function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
-  const HX = 24, HY = 8, HW = 16, HH = 14;
+  const HX = 22, HY = 5, HW = 20, HH = 18;
   const outline = '#111111';
 
   // Skin (neck area at bottom)
-  fillRect(ctx, skinColors.base, HX + 2, HY + 10, HW - 4, 4);
+  fillRect(ctx, skinColors.base, HX + 2, HY + 12, HW - 4, 6);
 
   // Hair covers most of back
-  fillRect(ctx, hairColors.base, HX, HY, HW, HH - 3);
+  fillRect(ctx, hairColors.base, HX, HY, HW, HH - 5);
   // Highlight stripe
   hLine(ctx, hairColors.highlight, HX + 3, HY + 1, HW - 8);
   hLine(ctx, hairColors.highlight, HX + 2, HY + 2, HW - 6);
   // Shadow at hair bottom edge
-  hLine(ctx, hairColors.shadow, HX, HY + HH - 5, HW);
-  hLine(ctx, hairColors.shadow, HX, HY + HH - 4, HW);
+  hLine(ctx, hairColors.shadow, HX, HY + HH - 7, HW);
+  hLine(ctx, hairColors.shadow, HX, HY + HH - 6, HW);
 
   if (hairStyle === 'long') {
-    fillRect(ctx, hairColors.base, HX + 1, HY + HH - 3, HW - 2, 5);
-    hLine(ctx, hairColors.shadow, HX + 1, HY + HH + 1, HW - 2);
+    fillRect(ctx, hairColors.base, HX + 1, HY + HH - 5, HW - 2, 5);
+    hLine(ctx, hairColors.shadow, HX + 1, HY + HH - 1, HW - 2);
   }
 
   outlineRect(ctx, outline, HX, HY, HW, HH);
 }
 
 // ---------------------------------------------------------------------------
-// drawHeadWest  –  side profile facing LEFT, nose extends past x=19
+// drawHeadWest  –  side profile facing LEFT, nose extends past HX
 // ---------------------------------------------------------------------------
 
 function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
-  // Profile: 12px wide, 14px tall
-  // Head occupies x=20-31, y=8-21  (facing left, face at low-x end)
-  const HX = 20, HY = 8, HW = 12, HH = 14;
+  // Profile: 14px wide, 18px tall (proportionally wider to match new south head)
+  // Head occupies x=19-32, y=5-22  (facing left, face at low-x end)
+  const HX = 19, HY = 5, HW = 14, HH = 18;
   const outline = '#111111';
 
   // --- Skin fill ---
   fillRect(ctx, skinColors.base, HX, HY, HW, HH);
   // highlight on forehead/face side (left = facing side)
-  fillRect(ctx, skinColors.highlight, HX, HY + 1, 4, 5);
+  fillRect(ctx, skinColors.highlight, HX, HY + 1, 4, 6);
   // shadow on back of head
   vLine(ctx, skinColors.shadow, HX + HW - 1, HY + 2, HH - 4);
   // chin underside
@@ -210,35 +238,35 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
   erasePixel(ctx, HX + HW - 1, HY);            // clip top-right corner
   erasePixel(ctx, HX + HW - 1, HY + HH - 1);  // clip bottom-right corner
 
-  // --- Nose  y=13-14, extends past HX to x=19 ---
-  px(ctx, skinColors.shadow, HX - 1, HY + 5);
-  px(ctx, skinColors.base,   HX - 1, HY + 4);
+  // --- Nose  extends past HX to x=HX-1 ---
+  px(ctx, skinColors.shadow, HX - 1, HY + 7);
+  px(ctx, skinColors.base,   HX - 1, HY + 6);
 
-  // --- Eye  y=12-13, x=20-21 ---
-  const eyeY = HY + 4;
-  fillRect(ctx, '#FFFFFF', HX, eyeY, 2, 2);
+  // --- Eye  x=HX to HX+2 ---
+  const eyeY = HY + 5;
+  fillRect(ctx, '#FFFFFF', HX, eyeY, 3, 2);
   px(ctx, '#1A0800', HX + 1, eyeY + 1);
-  outlineRect(ctx, outline, HX, eyeY, 2, 2);
+  outlineRect(ctx, outline, HX, eyeY, 3, 2);
 
-  // --- Eyebrow y=11, x=20-22 ---
-  hLine(ctx, hairColors.base, HX, eyeY - 1, 3);
+  // --- Eyebrow ---
+  hLine(ctx, hairColors.base, HX, eyeY - 1, 4);
 
   // --- Mouth ---
-  hLine(ctx, skinColors.shadow, HX, eyeY + 6, 2);
-  px(ctx, '#D06060', HX + 1, eyeY + 7);
+  hLine(ctx, skinColors.shadow, HX, eyeY + 8, 3);
+  px(ctx, '#D06060', HX + 1, eyeY + 9);
 
   // --- Hard outline ---
   outlineRect(ctx, outline, HX, HY, HW, HH);
   // nose protrusion outline
-  px(ctx, outline, HX - 1, HY + 3);
-  px(ctx, outline, HX - 1, HY + 6);
+  px(ctx, outline, HX - 1, HY + 5);
+  px(ctx, outline, HX - 1, HY + 8);
 
   // --- Hair ---
-  // Top hair
-  fillRect(ctx, hairColors.base, HX, HY, HW, 5);
+  // Top hair band (7px tall)
+  fillRect(ctx, hairColors.base, HX, HY, HW, 7);
   hLine(ctx, hairColors.highlight, HX + 2, HY + 1, HW - 4);
-  hLine(ctx, hairColors.shadow,    HX,     HY + 3, HW);
-  hLine(ctx, hairColors.shadow,    HX,     HY + 4, HW);
+  hLine(ctx, hairColors.shadow,    HX,     HY + 5, HW);
+  hLine(ctx, hairColors.shadow,    HX,     HY + 6, HW);
   // Back of hair strip (right side = back of head)
   vLine(ctx, hairColors.base, HX + HW - 2, HY, HH);
   vLine(ctx, hairColors.base, HX + HW - 1, HY, HH);
@@ -258,8 +286,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawNeckSouth(ctx, skinColors, baseY) {
-  // neck: 8px wide x 3px, centered at x=28-35
-  const NX = 28, NW = 8, NH = 3;
+  // neck: 10px wide x 3px, centered at x=27-36 (wider to match larger head)
+  const NX = 27, NW = 10, NH = 3;
   fillRect(ctx, skinColors.base, NX, baseY, NW, NH);
   vLine(ctx, skinColors.highlight, NX + 1, baseY, NH);
   vLine(ctx, skinColors.shadow,    NX + NW - 2, baseY, NH);
@@ -273,20 +301,32 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 function drawJacketSouth(ctx, colors, x, y, w, h) {
   const cx = x + Math.floor(w / 2);
 
-  // Main jacket body
-  fillRect(ctx, colors.base, x, y, w, h);
+  // ── Tapered body: wider at shoulders, narrower at waist ───────────────────
+  // Top 5px (shoulders): 24px wide → x-1 to x+w
+  fillRect(ctx, colors.base, x - 1, y, w + 2, 5);
+  // Mid section (rows 5 to h-9): original width
+  fillRect(ctx, colors.base, x, y + 5, w, h - 9);
+  // Waist (bottom 4px): 20px → x+1 to x+w-2
+  fillRect(ctx, colors.base, x + 1, y + h - 4, w - 2, 4);
 
-  // ── Shoulder caps: 2-pixel extension on each side at top ──────────────────
-  // These bridge the 1px gap between the torso edge and the arm rectangle,
-  // making the shoulder-to-sleeve connection seamless.
-  px(ctx, colors.base,    x - 1, y);         // left shoulder cap row 0
-  px(ctx, colors.base,    x - 1, y + 1);     // left shoulder cap row 1
-  px(ctx, colors.shadow,  x - 1, y + 2);     // left shoulder shadow
-  px(ctx, colors.outline, x - 2, y);         // left shoulder outer outline
-  px(ctx, colors.base,    x + w, y);         // right shoulder cap row 0
-  px(ctx, colors.base,    x + w, y + 1);     // right shoulder cap row 1
-  px(ctx, colors.shadow,  x + w, y + 2);     // right shoulder shadow
-  px(ctx, colors.outline, x + w + 1, y);     // right shoulder outer outline
+  // ── Curved shoulder arch ──────────────────────────────────────────────────
+  // Left shoulder arch — rises 1px above torso top
+  px(ctx, colors.base,    x - 1, y);         // left shoulder at torso edge
+  px(ctx, colors.base,    x - 2, y - 1);     // left shoulder PEAK (1px above torso)
+  px(ctx, colors.shadow,  x - 2, y);         // left shoulder outer shadow
+  px(ctx, colors.outline, x - 3, y - 1);     // left shoulder outer outline
+  px(ctx, colors.outline, x - 2, y - 2);     // left shoulder top outline
+
+  // Right shoulder arch
+  px(ctx, colors.base,    x + w, y);         // right shoulder at torso edge
+  px(ctx, colors.base,    x + w + 1, y - 1); // right shoulder PEAK
+  px(ctx, colors.shadow,  x + w + 1, y);     // right shoulder outer shadow
+  px(ctx, colors.outline, x + w + 2, y - 1); // right shoulder outer outline
+  px(ctx, colors.outline, x + w + 1, y - 2); // right shoulder top outline
+
+  // Inner shoulder seam — curves from shoulder peak down into arm
+  px(ctx, colors.shadow, x - 1, y + 1);      // seam descends into torso side
+  px(ctx, colors.shadow, x + w, y + 1);
 
   // Left side highlight strip
   vLine(ctx, colors.highlight, x + 1, y + 1, h - 2);
@@ -305,12 +345,9 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   fillRect(ctx, shirtCol, cx - 3, y, 6, 8);
 
   // Left lapel: overwrite shirt area with jacket color in triangular shape
-  // lapel goes from (cx-3, y) diagonally to (cx-6, y+7)
   for (let dy = 0; dy < 8; dy++) {
     const lapelW = Math.round(dy * 0.45);
-    // left lapel fill (jacket color over shirt area)
     fillRect(ctx, colors.base, cx - 3,          y + dy, lapelW + 1, 1);
-    // right lapel fill
     fillRect(ctx, colors.base, cx + 2 - lapelW, y + dy, lapelW + 1, 1);
   }
   // Lapel shadow edge (left)
@@ -324,7 +361,26 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
     px(ctx, colors.shadow, rx, y + dy);
   }
 
-  outlineRect(ctx, colors.outline, x, y, w, h);
+  // ── Tapered outline (staircase edges) ─────────────────────────────────────
+  // Top edge of shoulder band
+  hLine(ctx, colors.outline, x - 1, y, w + 2);
+  // Left staircase: shoulder band → mid section → waist
+  vLine(ctx, colors.outline, x - 1, y, 5);           // left shoulder band side
+  px(ctx, colors.outline, x, y + 5);                 // step in at shoulder→mid
+  vLine(ctx, colors.outline, x, y + 5, h - 9);       // left mid section side
+  px(ctx, colors.outline, x + 1, y + h - 4);         // step in at mid→waist
+  vLine(ctx, colors.outline, x + 1, y + h - 4, 4);   // left waist side
+  // Right staircase (mirror)
+  vLine(ctx, colors.outline, x + w, y, 5);            // right shoulder band side
+  px(ctx, colors.outline, x + w - 1, y + 5);          // step in
+  vLine(ctx, colors.outline, x + w - 1, y + 5, h - 9); // right mid section side
+  px(ctx, colors.outline, x + w - 2, y + h - 4);      // step in
+  vLine(ctx, colors.outline, x + w - 2, y + h - 4, 4); // right waist side
+  // Bottom edge
+  hLine(ctx, colors.outline, x + 1, y + h - 1, w - 2);
+  // Bottom corners
+  px(ctx, colors.outline, x + 1, y + h - 1);
+  px(ctx, colors.outline, x + w - 2, y + h - 1);
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
@@ -420,12 +476,24 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 // ---------------------------------------------------------------------------
 
 function drawBeltSouth(ctx, beltColors, x, y) {
+  // Belt / hip band: tapers from torso waist (20px) down toward legs
+  // Row 1 (beltY):   20px wide x=22-41 — matches torso waist
+  // Row 2 (beltY+1): 18px wide x=23-40 — taper step
   const w = 20, h = 2;
   fillRect(ctx, beltColors.base, x, y, w, h);
+  // Second row slightly narrower (hip taper)
+  fillRect(ctx, beltColors.base, x + 1, y + 1, w - 2, 1);
   // Buckle center
   const bx = x + Math.floor(w / 2) - 1;
   fillRect(ctx, beltColors.buckle, bx, y, 3, h);
-  outlineRect(ctx, beltColors.outline, x, y, w, h);
+  // Hip taper dark corners at outer edges of row 2
+  px(ctx, beltColors.outline, x, y + 1);
+  px(ctx, beltColors.outline, x + w - 1, y + 1);
+  outlineRect(ctx, beltColors.outline, x, y, w, 1);
+  // Outline bottom row separately
+  hLine(ctx, beltColors.outline, x + 1, y + 1, w - 2);
+  px(ctx, beltColors.outline, x + 1, y + 2);
+  px(ctx, beltColors.outline, x + w - 2, y + 2);
 }
 
 function drawBeltWest(ctx, beltColors, x, y) {
@@ -441,26 +509,27 @@ function drawBeltWest(ctx, beltColors, x, y) {
 // ---------------------------------------------------------------------------
 
 function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY) {
-  // Each leg: 8px wide, 13px tall
+  // Each leg: 6px wide, 13px tall
+  // Left leg x=25-30, Right leg x=34-39, gap x=31-33 (3px)
   const legH = 13;
-  const lx = 23 + Math.round(lLegDX);
-  const rx = 33 + Math.round(rLegDX);
+  const lx = 25 + Math.round(lLegDX);
+  const rx = 34 + Math.round(rLegDX);
   const y  = baseY;
 
   // Left leg
-  fillRect(ctx, pantColors.base, lx, y, 8, legH);
+  fillRect(ctx, pantColors.base, lx, y, 6, legH);
   vLine(ctx, pantColors.highlight, lx + 1, y, legH);
-  vLine(ctx, pantColors.shadow,    lx + 6, y, legH);
+  vLine(ctx, pantColors.shadow,    lx + 4, y, legH);
   // Knee highlight (y+6)
-  hLine(ctx, pantColors.highlight, lx + 2, y + 6, 2);
-  outlineRect(ctx, pantColors.outline, lx, y, 8, legH);
+  hLine(ctx, pantColors.highlight, lx + 1, y + 6, 2);
+  outlineRect(ctx, pantColors.outline, lx, y, 6, legH);
 
   // Right leg
-  fillRect(ctx, pantColors.base, rx, y, 8, legH);
+  fillRect(ctx, pantColors.base, rx, y, 6, legH);
   vLine(ctx, pantColors.highlight, rx + 1, y, legH);
-  vLine(ctx, pantColors.shadow,    rx + 6, y, legH);
-  hLine(ctx, pantColors.highlight, rx + 2, y + 6, 2);
-  outlineRect(ctx, pantColors.outline, rx, y, 8, legH);
+  vLine(ctx, pantColors.shadow,    rx + 4, y, legH);
+  hLine(ctx, pantColors.highlight, rx + 1, y + 6, 2);
+  outlineRect(ctx, pantColors.outline, rx, y, 6, legH);
 }
 
 // ---------------------------------------------------------------------------
@@ -487,26 +556,26 @@ function drawLegsWest(ctx, pantColors, frontLegX, backLegX, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY) {
-  // Left shoe: x=21-31 (11px wide, 4px tall)
-  const lx = 21 + Math.round(lShoeDX);
-  const rx = 33 + Math.round(rShoeDX);
+  // Left shoe: x=23-32 (10px wide, 4px tall) — centered under 6px leg
+  const lx = 23 + Math.round(lShoeDX);
+  const rx = 34 + Math.round(rShoeDX);
   const y  = baseY;
 
   // Left shoe
-  fillRect(ctx, shoeColors.base, lx, y, 11, 4);
-  hLine(ctx, shoeColors.highlight, lx + 1, y,         9);
-  hLine(ctx, shoeColors.shadow,    lx,     y + 3,     11);
+  fillRect(ctx, shoeColors.base, lx, y, 10, 4);
+  hLine(ctx, shoeColors.highlight, lx + 1, y,         8);
+  hLine(ctx, shoeColors.shadow,    lx,     y + 3,     10);
   // Toe rounding (left side)
   px(ctx, shoeColors.shadow, lx, y);
-  outlineRect(ctx, shoeColors.outline, lx, y, 11, 4);
+  outlineRect(ctx, shoeColors.outline, lx, y, 10, 4);
 
   // Right shoe
-  fillRect(ctx, shoeColors.base, rx, y, 11, 4);
-  hLine(ctx, shoeColors.highlight, rx + 1, y,     9);
-  hLine(ctx, shoeColors.shadow,    rx,     y + 3, 11);
+  fillRect(ctx, shoeColors.base, rx, y, 10, 4);
+  hLine(ctx, shoeColors.highlight, rx + 1, y,     8);
+  hLine(ctx, shoeColors.shadow,    rx,     y + 3, 10);
   // Toe rounding (right side)
-  px(ctx, shoeColors.shadow, rx + 10, y);
-  outlineRect(ctx, shoeColors.outline, rx, y, 11, 4);
+  px(ctx, shoeColors.shadow, rx + 9, y);
+  outlineRect(ctx, shoeColors.outline, rx, y, 10, 4);
 }
 
 // ---------------------------------------------------------------------------
@@ -537,12 +606,11 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
-  // Arms are positioned so their inner edges overlap the torso shoulder-cap
-  // pixels (x=20 left, x=43 right), eliminating the visible gap.
+  // Arms attach to shoulder arch peaks at (x-2, y-1) and (x+w+1, y-1).
   // We skip the inner-edge outline on each arm so there's no dark seam line
   // where the arm meets the jacket shoulder.
-  const lx = 12, rx = 43;
-  const baseY = 27;
+  const lx = 11, rx = 42;
+  const baseY = 26;
   const sleeveH = 12, handH = 6, aw = 9;
 
   const lArmY = baseY + Math.round(lArmDY);
