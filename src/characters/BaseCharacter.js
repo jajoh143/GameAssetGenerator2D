@@ -301,38 +301,43 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 function drawJacketSouth(ctx, colors, x, y, w, h) {
   const cx = x + Math.floor(w / 2);
 
-  // ── Single body fill ──────────────────────────────────────────────────────
-  fillRect(ctx, colors.base, x, y, w, h);
+  // ── Triangular 3-zone fill ─────────────────────────────────────────────────
+  // Wide shoulders (rows 0–3):  24px  x=20–43
+  fillRect(ctx, colors.base, x - 1, y,      w + 2, 4);
+  // Mid chest    (rows 4–12):   22px  x=21–42
+  fillRect(ctx, colors.base, x,     y + 4,  w,     9);
+  // Narrow waist (rows 13–18):  18px  x=23–40
+  fillRect(ctx, colors.base, x + 2, y + 13, w - 4, 6);
 
-  // ── Shoulder arch (connects to arm peaks) ─────────────────────────────────
-  px(ctx, colors.base,    x - 1, y);          // left shoulder cap
-  px(ctx, colors.base,    x - 2, y - 1);      // left shoulder PEAK
-  px(ctx, colors.shadow,  x - 2, y);
-  px(ctx, colors.outline, x - 3, y - 1);
-  px(ctx, colors.outline, x - 2, y - 2);
+  // ── Shoulder meld — strip 1px above torso connecting jacket to arm ─────────
+  // Left:  x=17–20 filled, x=16 is the outer outline corner
+  hLine(ctx, colors.base,    x - 4, y - 1, 4);   // x=17-20 at y=25
+  px(ctx,   colors.outline,  x - 5, y - 1);       // x=16, y=25 — outer left corner
+  // Right: x=43–46 filled, x=47 is the outer outline corner
+  hLine(ctx, colors.base,    x + w, y - 1, 4);   // x=43-46 at y=25
+  px(ctx,   colors.outline,  x + w + 4, y - 1);  // x=47, y=25 — outer right corner
 
-  px(ctx, colors.base,    x + w,     y);      // right shoulder cap
-  px(ctx, colors.base,    x + w + 1, y - 1);  // right shoulder PEAK
-  px(ctx, colors.shadow,  x + w + 1, y);
-  px(ctx, colors.outline, x + w + 2, y - 1);
+  // Shoulder arch top-curve outline (y = torsoY-2)
+  px(ctx, colors.outline, x - 4, y - 2);  // x=17
+  px(ctx, colors.outline, x - 3, y - 2);  // x=18
+  px(ctx, colors.outline, x - 2, y - 2);  // x=19 — arch peak
+  px(ctx, colors.outline, x + w + 3, y - 2);
+  px(ctx, colors.outline, x + w + 2, y - 2);
   px(ctx, colors.outline, x + w + 1, y - 2);
+  // Shadow tuck where shoulder meets arm
+  px(ctx, colors.shadow,  x - 4, y - 1);
+  px(ctx, colors.shadow,  x + w + 3, y - 1);
 
-  // ── 3-zone shading for cylindrical depth ─────────────────────────────────
-  // Highlight zone: left 2 columns
+  // ── Shading zones ─────────────────────────────────────────────────────────
   vLine(ctx, colors.highlight, x + 1, y + 1, h - 2);
-  vLine(ctx, colors.highlight, x + 2, y + 1, h / 2);  // fade out at mid
+  vLine(ctx, colors.highlight, x + 2, y + 1, 8);           // top half only
+  vLine(ctx, colors.shadow,    x + w - 2, y + 1, h - 2);
+  vLine(ctx, colors.shadow,    x + w - 3, y + 1, h - 2);
+  hLine(ctx, colors.shadow,    x + 3,     y + h - 2, w - 6);
 
-  // Shadow zone: right 2 columns
-  vLine(ctx, colors.shadow, x + w - 2, y + 1, h - 2);
-  vLine(ctx, colors.shadow, x + w - 3, y + 1, h - 2);
-
-  // Bottom edge darker
-  hLine(ctx, colors.shadow, x + 1, y + h - 2, w - 2);
-
-  // ── V-Collar / Lapels ────────────────────────────────────────────────────
+  // ── V-Collar / Lapels ─────────────────────────────────────────────────────
   const shirtCol = colors.collar || colors.highlight;
   fillRect(ctx, shirtCol, cx - 3, y, 6, 8);
-
   for (let dy = 0; dy < 8; dy++) {
     const lapelW = Math.round(dy * 0.45);
     fillRect(ctx, colors.base, cx - 3,          y + dy, lapelW + 1, 1);
@@ -340,27 +345,26 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   }
   for (let dy = 1; dy < 7; dy++) {
     px(ctx, colors.shadow, cx - 3 + Math.round(dy * 0.45), y + dy);
-  }
-  for (let dy = 1; dy < 7; dy++) {
     px(ctx, colors.shadow, cx + 2 - Math.round(dy * 0.45), y + dy);
   }
 
-  // ── Smooth outline with rounded corners ──────────────────────────────────
-  outlineRect(ctx, colors.outline, x, y, w, h);
-  // Clip corners to round them
-  erasePixel(ctx, x,         y);
-  erasePixel(ctx, x + w - 1, y);
-  erasePixel(ctx, x,         y + h - 1);
-  erasePixel(ctx, x + w - 1, y + h - 1);
-  // Restore rounded outline pixels
-  px(ctx, colors.outline, x + 1,     y);
-  px(ctx, colors.outline, x + w - 2, y);
-  px(ctx, colors.outline, x + 1,     y + h - 1);
-  px(ctx, colors.outline, x + w - 2, y + h - 1);
-  px(ctx, colors.outline, x,         y + 1);
-  px(ctx, colors.outline, x + w - 1, y + 1);
-  px(ctx, colors.outline, x,         y + h - 2);
-  px(ctx, colors.outline, x + w - 1, y + h - 2);
+  // ── Triangular staircase outline ──────────────────────────────────────────
+  // Top edge of shoulder zone (x=20–43)
+  hLine(ctx, colors.outline, x - 1, y, w + 2);
+  // Left side
+  vLine(ctx, colors.outline, x - 1, y,      4);   // x=20, rows 0–3
+  px(ctx,   colors.outline,  x,     y + 4);        // step
+  vLine(ctx, colors.outline, x,     y + 4,  9);   // x=21, rows 4–12
+  px(ctx,   colors.outline,  x + 2, y + 13);       // step
+  vLine(ctx, colors.outline, x + 2, y + 13, 6);   // x=23, rows 13–18
+  // Right side (mirror)
+  vLine(ctx, colors.outline, x + w,     y,      4);
+  px(ctx,   colors.outline,  x + w - 1, y + 4);
+  vLine(ctx, colors.outline, x + w - 1, y + 4,  9);
+  px(ctx,   colors.outline,  x + w - 3, y + 13);
+  vLine(ctx, colors.outline, x + w - 3, y + 13, 6);
+  // Bottom edge (waist zone width)
+  hLine(ctx, colors.outline, x + 2, y + h - 1, w - 4);
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
@@ -597,29 +601,27 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   const rArmY = baseY + Math.round(rArmDY);
 
   // ── Left arm ──────────────────────────────────────────────────────────────
+  // Top outline row is OMITTED — the jacket shoulder meld defines that edge.
   fillRect(ctx, clothingColors.base, lx, lArmY, aw, sleeveH);
-  vLine(ctx, clothingColors.highlight, lx,     lArmY, sleeveH);  // outer edge highlight
+  vLine(ctx, clothingColors.highlight, lx + 1, lArmY, sleeveH);  // highlight inset 1px so outline is visible
   vLine(ctx, clothingColors.shadow,    lx + 3, lArmY, sleeveH);  // inner shadow
-  // Outline: top, outer left, bottom — omit inner right edge (no seam)
-  hLine(ctx, clothingColors.outline, lx, lArmY,              aw);
-  vLine(ctx, clothingColors.outline, lx, lArmY,              sleeveH);
-  hLine(ctx, clothingColors.outline, lx, lArmY + sleeveH - 1, aw - 1);
-  // Left hand (4px wide, slightly tapered)
+  vLine(ctx, clothingColors.outline,   lx,     lArmY, sleeveH);  // outer left outline only
+  hLine(ctx, clothingColors.outline,   lx,     lArmY + sleeveH - 1, aw - 1);  // bottom
+  // Left hand (4px wide)
   fillRect(ctx, skinColors.base, lx, lArmY + sleeveH, aw - 1, handH);
-  vLine(ctx, skinColors.highlight, lx, lArmY + sleeveH, handH);
+  vLine(ctx, skinColors.highlight, lx + 1, lArmY + sleeveH, handH);
   outlineRect(ctx, skinColors.outline, lx, lArmY + sleeveH, aw - 1, handH);
 
   // ── Right arm ─────────────────────────────────────────────────────────────
+  // Top outline row is OMITTED — jacket shoulder meld defines that edge.
   fillRect(ctx, clothingColors.base, rx, rArmY, aw, sleeveH);
-  vLine(ctx, clothingColors.highlight, rx + aw - 1, rArmY, sleeveH);  // outer edge highlight
+  vLine(ctx, clothingColors.highlight, rx + aw - 2, rArmY, sleeveH);  // highlight inset 1px
   vLine(ctx, clothingColors.shadow,    rx + 1,      rArmY, sleeveH);  // inner shadow
-  // Outline: top, outer right, bottom — omit inner left edge
-  hLine(ctx, clothingColors.outline, rx,          rArmY,              aw);
-  vLine(ctx, clothingColors.outline, rx + aw - 1, rArmY,              sleeveH);
-  hLine(ctx, clothingColors.outline, rx + 1,      rArmY + sleeveH - 1, aw - 1);
+  vLine(ctx, clothingColors.outline,   rx + aw - 1, rArmY, sleeveH);  // outer right outline only
+  hLine(ctx, clothingColors.outline,   rx + 1,      rArmY + sleeveH - 1, aw - 1);  // bottom
   // Right hand (4px wide)
   fillRect(ctx, skinColors.base, rx + 1, rArmY + sleeveH, aw - 1, handH);
-  vLine(ctx, skinColors.highlight, rx + aw - 1, rArmY + sleeveH, handH);
+  vLine(ctx, skinColors.highlight, rx + aw - 2, rArmY + sleeveH, handH);
   outlineRect(ctx, skinColors.outline, rx + 1, rArmY + sleeveH, aw - 1, handH);
 }
 
