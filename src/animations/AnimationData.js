@@ -26,25 +26,25 @@ const IDLE_FRAMES = [
 // WALK SOUTH: 8 frames - walking toward camera
 const WALK_SOUTH_FRAMES = [
   { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: 4,  rightLegFwd: -4, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: 7,  rightLegFwd: -7, leftArmFwd: -5, rightArmFwd: 5,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: 4,  rightLegFwd: -4, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -1, leftLegFwd: 3,  rightLegFwd: -3, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -2, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -4, rightArmFwd: 4,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
+  { bodyY: -1, leftLegFwd: 3,  rightLegFwd: -3, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
   { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: -4, rightLegFwd: 4,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: -7, rightLegFwd: 7,  leftArmFwd: 5,  rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: -4, rightLegFwd: 4,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -1, leftLegFwd: -3, rightLegFwd: 3,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -2, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
+  { bodyY: -1, leftLegFwd: -3, rightLegFwd: 3,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
 ];
 
 // WALK WEST: 8 frames - walking left (profile view)
 const WALK_WEST_FRAMES = [
   { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: 8,  rightLegFwd: -8, leftArmFwd: -5, rightArmFwd: 5,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -1, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -4, rightArmFwd: 4,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -2, leftLegFwd: 9,  rightLegFwd: -9, leftArmFwd: -6, rightArmFwd: 6,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
+  { bodyY: -1, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -4, rightArmFwd: 4,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
   { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: -8, rightLegFwd: 8,  leftArmFwd: 5,  rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -1, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY: -2, leftLegFwd: -9, rightLegFwd: 9,  leftArmFwd: 6,  rightArmFwd: -6, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
+  { bodyY: -1, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
 ];
 
 // WALK NORTH: 8 frames - walking away from camera
