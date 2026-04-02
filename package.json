@@ -1,0 +1,16 @@
+{
+  "name": "game-asset-generator-2d",
+  "version": "1.0.0",
+  "description": "2D pixel art character generator for RPG games",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "generate": "node src/index.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.97"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

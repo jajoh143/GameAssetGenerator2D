@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprite Preview – GameAssetGenerator2D</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+    }
+    h1 { color: #7ecfff; margin-bottom: 8px; font-size: 1.4rem; }
+    h2 { color: #aad4ff; margin: 24px 0 8px; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; }
+    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+    label { font-size: 0.85rem; color: #aaa; }
+    input[type=range] { width: 100px; }
+    select, button {
+      background: #2a2a4a; border: 1px solid #4a4a8a; color: #e0e0e0;
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;
+    }
+    button:hover { background: #3a3a6a; }
+
+    .character-grid { display: flex; flex-wrap: wrap; gap: 32px; }
+    .character-card {
+      background: #16213e;
+      border: 1px solid #2a3a5e;
+      border-radius: 8px;
+      padding: 16px;
+      min-width: 340px;
+    }
+    .char-name { color: #7ecfff; font-size: 0.9rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Animation rows table */
+    .anim-table { width: 100%; border-collapse: collapse; }
+    .anim-table td { padding: 2px 4px; vertical-align: middle; }
+    .anim-label { color: #888; font-size: 0.7rem; white-space: nowrap; width: 90px; }
+    .anim-preview { display: flex; align-items: center; gap: 2px; }
+
+    .sprite-frame {
+      display: inline-block;
+      width: 64px; height: 64px;
+      background: transparent;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sprite-frame canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 64px; height: 64px;
+      image-rendering: pixelated;
+    }
+
+    /* Big animated preview */
+    .live-preview {
+      display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .live-box {
+      text-align: center;
+    }
+    .live-box span { display: block; font-size: 0.7rem; color: #888; margin-top: 4px; }
+    .live-canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 1px solid #2a3a5e;
+    }
+
+    .separator { border: none; border-top: 1px solid #2a3a5e; margin: 24px 0; }
+    #status { color: #ffcc44; font-size: 0.85rem; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>GameAssetGenerator2D — Sprite Preview</h1>
+
+<div class="controls">
+  <label>Scale:
+    <input type="range" id="scaleSlider" min="1" max="6" value="3" step="1">
+    <span id="scaleVal">3×</span>
+  </label>
+  <label>FPS:
+    <input type="range" id="fpsSlider" min="2" max="24" value="8" step="1">
+    <span id="fpsVal">8</span>
+  </label>
+  <label>Bg:
+    <select id="bgSelect">
+      <option value="transparent">Transparent</option>
+      <option value="#1a1a2e">Dark</option>
+      <option value="#ffffff">White</option>
+      <option value="#3a7d44">Green</option>
+    </select>
+  </label>
+  <button id="pauseBtn">Pause</button>
+</div>
+
+<div id="characters" class="character-grid"></div>
+<div id="status"></div>
+
+<script>
+const FRAME_W = 64, FRAME_H = 64;
+const SHEET_COLS = 8;
+
+let scale = 3, fps = 8, paused = false;
+let bgColor = 'transparent';
+let manifest = null;
+const sheets = {}; // name → HTMLImageElement
+const timers = [];
+
+document.getElementById('scaleSlider').oninput = (e) => {
+  scale = +e.target.value;
+  document.getElementById('scaleVal').textContent = scale + '×';
+  rebuildAll();
+};
+document.getElementById('fpsSlider').oninput = (e) => {
+  fps = +e.target.value;
+  document.getElementById('fpsVal').textContent = fps;
+};
+document.getElementById('bgSelect').onchange = (e) => {
+  bgColor = e.target.value;
+  rebuildAll();
+};
+document.getElementById('pauseBtn').onclick = () => {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+};
+
+async function loadManifest() {
+  try {
+    const r = await fetch('manifest.json');
+    if (!r.ok) throw new Error('manifest.json not found — run `npm start` first');
+    manifest = await r.json();
+    document.getElementById('status').textContent = '';
+    await Promise.all(manifest.characters.map(loadSheet));
+    buildUI();
+  } catch (e) {
+    document.getElementById('status').textContent = '⚠ ' + e.message;
+  }
+}
+
+function loadSheet(char) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload  = () => { sheets[char.name] = img; resolve(); };
+    img.onerror = () => { console.warn('Failed to load', char.file); resolve(); };
+    img.src = char.file;
+  });
+}
+
+function buildUI() {
+  const container = document.getElementById('characters');
+  container.innerHTML = '';
+  for (const char of manifest.characters) {
+    if (!sheets[char.name]) continue;
+    container.appendChild(buildCharCard(char));
+  }
+  startAnimations();
+}
+
+function buildCharCard(char) {
+  const card = document.createElement('div');
+  card.className = 'character-card';
+  card.dataset.name = char.name;
+
+  const title = document.createElement('div');
+  title.className = 'char-name';
+  title.textContent = char.name.replace(/_/g, ' ');
+  card.appendChild(title);
+
+  // Live animated previews for key animations
+  const liveDiv = document.createElement('div');
+  liveDiv.className = 'live-preview';
+  const liveAnims = ['idle', 'walk_south', 'walk_west', 'attack_south'];
+  for (const animName of liveAnims) {
+    const anim = manifest.animations.find(a => a.name === animName);
+    if (!anim) continue;
+    const box = document.createElement('div');
+    box.className = 'live-box';
+    const cvs = document.createElement('canvas');
+    cvs.className = 'live-canvas';
+    cvs.width  = FRAME_W * scale;
+    cvs.height = FRAME_H * scale;
+    cvs.dataset.charName  = char.name;
+    cvs.dataset.animRow   = anim.row;
+    cvs.dataset.animFrames = anim.frameCount;
+    cvs.dataset.frame     = 0;
+    const lbl = document.createElement('span');
+    lbl.textContent = animName.replace(/_/g, ' ');
+    box.appendChild(cvs);
+    box.appendChild(lbl);
+    liveDiv.appendChild(box);
+  }
+  card.appendChild(liveDiv);
+
+  // Full strip of all rows
+  const table = document.createElement('table');
+  table.className = 'anim-table';
+  for (const anim of manifest.animations) {
+    const tr = document.createElement('tr');
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'anim-label';
+    tdLabel.textContent = anim.name.replace(/_/g, ' ');
+    const tdFrames = document.createElement('td');
+    const strip = document.createElement('div');
+    strip.className = 'anim-preview';
+    for (let f = 0; f < anim.frameCount; f++) {
+      const frameDiv = document.createElement('div');
+      frameDiv.className = 'sprite-frame';
+      frameDiv.style.width  = '32px';
+      frameDiv.style.height = '32px';
+      const cvs = document.createElement('canvas');
+      cvs.width  = 32;
+      cvs.height = 32;
+      cvs.style.width  = '32px';
+      cvs.style.height = '32px';
+      drawStaticFrame(cvs, sheets[char.name], anim.row, f);
+      frameDiv.appendChild(cvs);
+      strip.appendChild(frameDiv);
+    }
+    tdFrames.appendChild(strip);
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdFrames);
+    table.appendChild(tr);
+  }
+  card.appendChild(table);
+  return card;
+}
+
+function drawStaticFrame(canvas, sheet, row, col) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (bgColor !== 'transparent') {
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.imageSmoothingEnabled = false;
+  const sx = col * FRAME_W, sy = row * FRAME_H;
+  ctx.drawImage(sheet, sx, sy, FRAME_W, FRAME_H, 0, 0, canvas.width, canvas.height);
+}
+
+function startAnimations() {
+  timers.forEach(clearInterval);
+  timers.length = 0;
+
+  const liveCanvases = document.querySelectorAll('.live-canvas');
+  const groups = {};
+  liveCanvases.forEach(cvs => {
+    const key = `${cvs.dataset.charName}-${cvs.dataset.animRow}`;
+    if (!groups[key]) groups[key] = { canvases: [], frame: 0, frameCount: +cvs.dataset.animFrames, charName: cvs.dataset.charName, row: +cvs.dataset.animRow };
+    groups[key].canvases.push(cvs);
+  });
+
+  const id = setInterval(() => {
+    if (paused) return;
+    for (const g of Object.values(groups)) {
+      const sheet = sheets[g.charName];
+      if (!sheet) continue;
+      for (const cvs of g.canvases) {
+        cvs.width  = FRAME_W * scale;
+        cvs.height = FRAME_H * scale;
+        drawStaticFrame(cvs, sheet, g.row, g.frame);
+      }
+      g.frame = (g.frame + 1) % g.frameCount;
+    }
+  }, 1000 / fps);
+  timers.push(id);
+}
+
+function rebuildAll() {
+  if (manifest) buildUI();
+}
+
+loadManifest();
+</script>
+</body>
+</html>

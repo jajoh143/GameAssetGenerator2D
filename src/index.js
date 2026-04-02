@@ -1,0 +1,39 @@
+'use strict';
+
+const path = require('path');
+const fs   = require('fs');
+const { generateSpritesheet } = require('./generators/CharacterGenerator');
+const { PRESETS } = require('./characters/CharacterConfig');
+const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
+
+const OUTPUT_DIR  = path.join(__dirname, '..', 'output');
+const PREVIEW_DIR = path.join(__dirname, '..', 'preview');
+
+if (!fs.existsSync(OUTPUT_DIR))  fs.mkdirSync(OUTPUT_DIR,  { recursive: true });
+if (!fs.existsSync(PREVIEW_DIR)) fs.mkdirSync(PREVIEW_DIR, { recursive: true });
+
+const manifest = {
+  frameWidth:  FRAME_W,
+  frameHeight: FRAME_H,
+  animations: ROWS.map((r, i) => ({ name: r.name, row: i, frameCount: r.frameCount })),
+  characters: [],
+};
+
+console.log('Generating character spritesheets...\n');
+
+for (const [name, config] of Object.entries(PRESETS)) {
+  const outFile = path.join(OUTPUT_DIR, `${name}_spritesheet.png`);
+  try {
+    generateSpritesheet(config, outFile);
+    console.log(`  ✓ ${name} → ${path.relative(process.cwd(), outFile)}`);
+    manifest.characters.push({ name, file: `../output/${name}_spritesheet.png`, config });
+  } catch (err) {
+    console.error(`  ✗ ${name}: ${err.message}`);
+    if (process.env.DEBUG) console.error(err.stack);
+  }
+}
+
+const manifestPath = path.join(PREVIEW_DIR, 'manifest.json');
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+console.log(`\nManifest written to ${path.relative(process.cwd(), manifestPath)}`);
+console.log('\nDone! Open preview/index.html in your browser to view the sprites.');

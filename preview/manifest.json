@@ -1,0 +1,122 @@
+{
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "animations": [
+    {
+      "name": "idle",
+      "row": 0,
+      "frameCount": 4
+    },
+    {
+      "name": "walk_south",
+      "row": 1,
+      "frameCount": 8
+    },
+    {
+      "name": "walk_west",
+      "row": 2,
+      "frameCount": 8
+    },
+    {
+      "name": "walk_north",
+      "row": 3,
+      "frameCount": 8
+    },
+    {
+      "name": "walk_east",
+      "row": 4,
+      "frameCount": 8
+    },
+    {
+      "name": "attack_south",
+      "row": 5,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_west",
+      "row": 6,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_north",
+      "row": 7,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_east",
+      "row": 8,
+      "frameCount": 6
+    }
+  ],
+  "characters": [
+    {
+      "name": "human_casual",
+      "file": "../output/human_casual_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "medium",
+        "hair": "black",
+        "hairStyle": "short",
+        "clothing": "jacket_grey",
+        "pants": "jeans_blue",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "human_mechanic",
+      "file": "../output/human_mechanic_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "light",
+        "hair": "brown",
+        "hairStyle": "medium",
+        "clothing": "apron_white",
+        "pants": "jeans_dark",
+        "shoes": "shoe_brown"
+      }
+    },
+    {
+      "name": "human_hoodie",
+      "file": "../output/human_hoodie_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "dark",
+        "hair": "black",
+        "hairStyle": "short",
+        "clothing": "hoodie_black",
+        "pants": "pants_grey",
+        "shoes": "shoe_white"
+      }
+    },
+    {
+      "name": "demon_warrior",
+      "file": "../output/demon_warrior_spritesheet.png",
+      "config": {
+        "type": "demon",
+        "demonSkin": "crimson",
+        "hair": "black",
+        "hairStyle": "short",
+        "hornStyle": "curved",
+        "tailStyle": "long",
+        "clothing": "jacket_grey",
+        "pants": "jeans_dark",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "demon_cook",
+      "file": "../output/demon_cook_spritesheet.png",
+      "config": {
+        "type": "demon",
+        "demonSkin": "dark_red",
+        "hair": "dark_brown",
+        "hairStyle": "medium",
+        "hornStyle": "straight",
+        "tailStyle": "medium",
+        "clothing": "apron_white",
+        "pants": "pants_black",
+        "shoes": "shoe_black"
+      }
+    }
+  ]
+}
