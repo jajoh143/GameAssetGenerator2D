@@ -610,8 +610,9 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   const baseY = 26;
   const baseAW = 4, sleeveH = 11, handH = 4;
 
-  // Per-row outer bulge: 0=flat, 1=bicep extends 1px outward
-  const bulge = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0];
+  // Per-row shape: +1=extends outward (shoulder), 0=normal, -1=steps in (wrist taper)
+  // Research: shoulder is widest point, arm tapers downward to narrow wrist.
+  const bulge = [1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1];
 
   const lArmY = baseY + Math.round(lArmDY);
   const rArmY = baseY + Math.round(rArmDY);
@@ -619,15 +620,14 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   // ── Left arm ──────────────────────────────────────────────────────────────
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row] || 0;
-    const rowLx = lx - b;            // outer edge extends left on bicep rows
-    const rowW  = baseAW + b;
-    hLine(ctx, clothingColors.base,      rowLx,     lArmY + row, rowW);
-    px(ctx,   clothingColors.highlight,  rowLx + 1, lArmY + row);  // inner highlight
-    px(ctx,   clothingColors.shadow,     lx + 3,    lArmY + row);  // inner shadow (fixed x)
-    px(ctx,   clothingColors.outline,    rowLx,     lArmY + row);  // outer outline only
+    const rowLx = lx - b;         // outer edge: shoulder extends left, wrist steps right
+    const rowW  = baseAW + b;     // 5px shoulder, 4px mid, 3px wrist
+    hLine(ctx, clothingColors.base,      rowLx,         lArmY + row, rowW);
+    px(ctx,   clothingColors.highlight,  rowLx + 1,     lArmY + row);
+    px(ctx,   clothingColors.shadow,     rowLx + rowW - 1, lArmY + row);  // inner shadow follows shape
+    px(ctx,   clothingColors.outline,    rowLx,         lArmY + row);
   }
-  // Sleeve bottom edge (omit inner pixel to avoid seam)
-  hLine(ctx, clothingColors.outline, lx, lArmY + sleeveH - 1, baseAW - 1);
+  hLine(ctx, clothingColors.outline, lx - (bulge[sleeveH-1]||0), lArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
   // Left fist — slightly wider than sleeve (knuckle), rounded bottom corners
   const lhw = baseAW + 1;  // 5px
@@ -645,13 +645,13 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   // ── Right arm ─────────────────────────────────────────────────────────────
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row] || 0;
-    const rowW  = baseAW + b;
-    hLine(ctx, clothingColors.base,      rx,           rArmY + row, rowW);
-    px(ctx,   clothingColors.highlight,  rx + rowW - 2, rArmY + row);  // inner highlight
-    px(ctx,   clothingColors.shadow,     rx,            rArmY + row);  // inner shadow (fixed x)
-    px(ctx,   clothingColors.outline,    rx + rowW - 1, rArmY + row);  // outer outline only
+    const rowW = baseAW + b;
+    hLine(ctx, clothingColors.base,      rx,            rArmY + row, rowW);
+    px(ctx,   clothingColors.highlight,  rx + rowW - 2, rArmY + row);
+    px(ctx,   clothingColors.shadow,     rx,            rArmY + row);  // inner shadow (fixed inner edge)
+    px(ctx,   clothingColors.outline,    rx + rowW - 1, rArmY + row);
   }
-  hLine(ctx, clothingColors.outline, rx + 1, rArmY + sleeveH - 1, baseAW - 1);
+  hLine(ctx, clothingColors.outline, rx + 1, rArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
   // Right fist
   const rhw = baseAW + 1;
