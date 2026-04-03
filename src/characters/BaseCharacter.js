@@ -379,8 +379,12 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
 
-  // ── 9. Outlines: black on top + bottom, selout (shadow) on sides ─────────
-  hLine(ctx, colors.outline, x - 1, y, w + 2);
+  // ── 9. Selective outlining (research: "lightest colors where light hits") ──
+  // Shoulder top corners use shadow (not black) — softer, rounder shoulder read.
+  // Inner shoulder top stays black for strong silhouette definition.
+  px(ctx, colors.shadow,  x - 1, y);          // left shoulder corner — selout
+  hLine(ctx, colors.outline, x, y, w);         // inner shoulder top — hard black
+  px(ctx, colors.shadow,  x + w, y);           // right shoulder corner — selout
   for (let row = 1; row < numRows - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
@@ -388,12 +392,10 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 
-  // ── 10. Shoulder cap volume highlight (post-outline) ─────────────────────
-  // Left shoulder outer tip at row 1 catches upper-left light → rounded cap.
-  // This overwrites the selout pixel to show the lit shoulder convexity.
+  // ── 10. Shoulder cap volume + underpectoral fold ──────────────────────────
+  // Left shoulder outer tip row 1 = highlight (rounded cap catching upper-left light).
   px(ctx, colors.highlight, x - 1, y + 1);
-  // Underpectoral fold on shirt (row 7, where lapels are fully open).
-  // Suggests the shirt fabric pressing against the chest below the pectorals.
+  // Underpectoral fold on shirt at row 7 (lapels fully open here).
   hLine(ctx, colors.shadow, shirtLx + 1, y + 7, shirtW - 2);
 }
 
@@ -457,8 +459,10 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
 
-  // Outlines
-  hLine(ctx, colors.outline, x - 1, y, w + 2);
+  // Selective outlining: shoulder corners → shadow not black (rounded feel)
+  px(ctx, colors.shadow,  x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow,  x + w, y);
   for (let row = 1; row < numRows - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
@@ -466,7 +470,7 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 
-  // Shoulder cap volume highlight (post-outline, left shoulder only — lit side)
+  // Shoulder cap volume highlight (left shoulder lit side)
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
