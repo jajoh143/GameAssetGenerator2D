@@ -399,33 +399,53 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => row < SHOULDER ? x - 1 : x;
   const rr = (row) => row < SHOULDER ? x + w : x + w - 1;
 
-  // Fill
+  // ── 1. Fill hoodie base ───────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
 
-  // Side panel shadows
+  // ── 2. Directional form shading (left-lit, matching jacket convention) ────
   for (let row = 0; row < numRows; row++) {
-    px(ctx, colors.shadow, rl(row) + 1, y + row);
-    px(ctx, colors.shadow, rr(row) - 1, y + row);
+    px(ctx, colors.highlight, rl(row) + 1, y + row);      // left panel lit face
+    px(ctx, colors.shadow,    rr(row) - 1, y + row);      // right panel shadow
+    px(ctx, colors.shadow,    rr(row) - 2, y + row);      // 2px shadow strip
   }
 
-  // Hood collar at top center
+  // ── 3. Dither highlight on upper-left (SNES sweatshirt texture) ──────────
+  for (let row = 1; row < Math.min(7, numRows); row++) {
+    if (row % 2 === 1) px(ctx, colors.highlight, rl(row) + 2, y + row);
+  }
+
+  // ── 4. Horizontal fold lines (soft fabric has more folds than a jacket) ───
+  const hFold1 = Math.floor(numRows * 0.35);
+  const hFold2 = Math.floor(numRows * 0.65);
+  const hFold3 = numRows - 3;
+  for (const fr of [hFold1, hFold2, hFold3]) {
+    hLine(ctx, colors.shadow, rl(fr) + 2, y + fr, rr(fr) - rl(fr) - 3);
+  }
+
+  // ── 5. Hood collar at top center ─────────────────────────────────────────
   const hoodX = cx - 3;
   fillRect(ctx, colors.collar, hoodX, y, 6, 3);
+  // Directional collar shading
+  vLine(ctx, colors.highlight, hoodX + 1, y, 3);
+  vLine(ctx, colors.shadow,    hoodX + 4, y, 3);
   outlineRect(ctx, colors.outline, hoodX, y, 6, 3);
 
-  // Center zipper line (runs full body height below collar)
+  // ── 6. Center zipper line (below collar) ─────────────────────────────────
   vLine(ctx, colors.shadow, cx, y + 3, numRows - 3);
 
-  // Kangaroo pocket at lower-center
+  // ── 7. Kangaroo pocket at lower-center ───────────────────────────────────
   const pkx = cx - 4;
   const pky = y + Math.floor(numRows * 0.58);
   const pkw = 8, pkh = Math.max(3, Math.floor(numRows * 0.32));
   fillRect(ctx, colors.shadow, pkx, pky, pkw, pkh);
+  // Pocket form: lighter left edge, darker right
+  vLine(ctx, colors.highlight, pkx + 1,       pky, pkh);
+  vLine(ctx, colors.shadow,    pkx + pkw - 2,  pky, pkh);
   outlineRect(ctx, colors.outline, pkx, pky, pkw, pkh);
 
-  // Armpit crease
+  // ── 8. Armpit crease ─────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
 
@@ -564,27 +584,30 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY) {
 
     // ── Left leg ──────────────────────────────────────────────────────────────
     const llx = lx + lo;   // outer edge (extends left for knee)
-    hLine(ctx, pantColors.base,      llx,      y + row, lw);
-    px(ctx,   pantColors.highlight,  llx + 1,  y + row);            // front-face lit
+    hLine(ctx, pantColors.base,      llx,          y + row, lw);
+    px(ctx,   pantColors.highlight,  llx + 1,      y + row);        // outer-lit face (left leg = lit side)
     px(ctx,   pantColors.shadow,     llx + lw - 2, y + row);        // inner-thigh shadow
     // knee face brightness
     if (row >= 5 && row <= 7) px(ctx, pantColors.highlight, llx + 2, y + row);
-    // selout outer edge (left side of left leg)
+    // Dithered highlight on thigh (rows 1,3 — upper pant texture)
+    if (row === 1 || row === 3) px(ctx, pantColors.highlight, llx + 2, y + row);
+    // selout outer edge
     px(ctx, pantColors.shadow, llx, y + row);
     // black inner edge (toward crotch gap)
     if (row > 0) px(ctx, pantColors.outline, llx + lw - 1, y + row);
 
     // ── Right leg ─────────────────────────────────────────────────────────────
-    // Right leg outer edge extends RIGHT for knee
     const rrx = rx;
     const rrw = lw;
-    const rrOuter = rrx + rrw - 1 + (lo < 0 ? -lo : 0);   // outer pixel
+    const rrOuter = rrx + rrw - 1 + (lo < 0 ? -lo : 0);
     const rrStart = rrOuter - rrw + 1;
-    hLine(ctx, pantColors.base,      rrStart,  y + row, rrw);
-    px(ctx,   pantColors.highlight,  rrStart + 1, y + row);
-    px(ctx,   pantColors.shadow,     rrStart + rrw - 2, y + row);
-    if (row >= 5 && row <= 7) px(ctx, pantColors.highlight, rrStart + 2, y + row);
-    // selout outer edge (right side of right leg)
+    hLine(ctx, pantColors.base,      rrStart,           y + row, rrw);
+    px(ctx,   pantColors.highlight,  rrStart + rrw - 2, y + row);   // outer-lit face (right leg outer edge)
+    px(ctx,   pantColors.shadow,     rrStart + 1,       y + row);   // inner-thigh shadow
+    if (row >= 5 && row <= 7) px(ctx, pantColors.highlight, rrStart + rrw - 3, y + row);
+    // Dithered highlight on outer thigh (rows 1,3)
+    if (row === 1 || row === 3) px(ctx, pantColors.highlight, rrStart + rrw - 3, y + row);
+    // selout outer edge
     px(ctx, pantColors.shadow, rrOuter, y + row);
     // black inner edge (toward crotch gap)
     if (row > 0) px(ctx, pantColors.outline, rrStart, y + row);
@@ -702,15 +725,19 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   const rArmY = baseY + Math.round(rArmDY);
 
   // ── Left arm ──────────────────────────────────────────────────────────────
+  // Directional shading (left arm = lit side of body, upper-left light source):
+  //   outer face (leftmost pixel) = highlight (faces the light)
+  //   inner face (rightmost pixel, toward body) = shadow
+  //   Dithered highlight on upper sleeve (rows 1,3,5) for SNES fabric texture
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row] || 0;
-    const rowLx = lx - b;         // outer edge: shoulder extends left, wrist steps right
-    const rowW  = baseAW + b;     // 5px shoulder, 4px mid, 3px wrist
-    hLine(ctx, clothingColors.base,      rowLx,             lArmY + row, rowW);
-    px(ctx,   clothingColors.highlight,  rowLx + 1,         lArmY + row);        // inner-edge highlight
-    if (rowW >= 4) px(ctx, clothingColors.highlight, rowLx + Math.floor(rowW / 2), lArmY + row); // center highlight
-    px(ctx,   clothingColors.shadow,     rowLx + rowW - 1,  lArmY + row);        // inner shadow (selout blend)
-    px(ctx,   clothingColors.shadow,     rowLx,             lArmY + row);        // outer edge — selout (not black)
+    const rowLx = lx - b;
+    const rowW  = baseAW + b;
+    hLine(ctx, clothingColors.base,      rowLx,            lArmY + row, rowW);
+    px(ctx,   clothingColors.highlight,  rowLx,            lArmY + row);  // outer face lit (selout-highlight)
+    px(ctx,   clothingColors.shadow,     rowLx + rowW - 1, lArmY + row);  // inner shadow toward body
+    // Dithered highlight on 2nd pixel, upper sleeve odd rows only
+    if (row >= 1 && row <= 5 && row % 2 === 1) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);
   }
   hLine(ctx, clothingColors.shadow, lx - (bulge[sleeveH-1]||0), lArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
@@ -728,14 +755,15 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   px(ctx, skinColors.shadow, lhx + lhw - 1, lArmY + sleeveH + handH - 2);
 
   // ── Right arm ─────────────────────────────────────────────────────────────
+  // Right arm is on the shadow side of the body (light from upper-left).
+  //   Both edges stay shadowed; mid pixel keeps base tone for form roundness.
+  //   No highlight dithering — this arm stays uniformly dim.
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row] || 0;
     const rowW = baseAW + b;
-    hLine(ctx, clothingColors.base,      rx,                rArmY + row, rowW);
-    px(ctx,   clothingColors.highlight,  rx + rowW - 2,     rArmY + row);        // inner-edge highlight
-    if (rowW >= 4) px(ctx, clothingColors.highlight, rx + Math.floor(rowW / 2), rArmY + row); // center highlight
-    px(ctx,   clothingColors.shadow,     rx,                rArmY + row);        // inner edge — selout
-    px(ctx,   clothingColors.shadow,     rx + rowW - 1,     rArmY + row);        // outer edge — selout (not black)
+    hLine(ctx, clothingColors.base,   rx,            rArmY + row, rowW);
+    px(ctx,   clothingColors.shadow,  rx,            rArmY + row);  // inner selout
+    px(ctx,   clothingColors.shadow,  rx + rowW - 1, rArmY + row);  // outer selout
   }
   hLine(ctx, clothingColors.shadow, rx + 1, rArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
