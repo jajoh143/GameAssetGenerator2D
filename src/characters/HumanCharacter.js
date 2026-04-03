@@ -139,14 +139,43 @@ function drawNorth(ctx, config, offsets) {
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY);
   drawBeltSouth(ctx, colors.belt,   24, beltY);
 
-  // Back of torso (no V-collar) — 18px wide, x=23-40
-  fillRect(ctx, colors.clothing.base, 23, torsoY, 18, torsoH);
-  vLine(ctx, colors.clothing.highlight, 24, torsoY + 1, torsoH - 2);
-  vLine(ctx, colors.clothing.highlight, 25, torsoY + 1, torsoH - 2);
-  vLine(ctx, colors.clothing.shadow,    38, torsoY + 1, torsoH - 2);
-  vLine(ctx, colors.clothing.shadow,    39, torsoY + 1, torsoH - 2);
-  hLine(ctx, colors.clothing.shadow,    24, torsoY + torsoH - 2, 16);
-  outlineRect(ctx, colors.clothing.outline, 23, torsoY, 18, torsoH);
+  // Back of torso — same organic silhouette as front, no collar
+  {
+    const bx = 23, bw = 18, by = torsoY;
+    const bRows = [
+      [0,0],[0,0],[1,-1],[2,-2],[3,-3],[4,-4],[4,-4],[4,-4],
+      [3,-3],[2,-2],[1,-1],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],
+    ];
+    const bN = Math.min(torsoH, bRows.length);
+    for (let r = 0; r < bN; r++) {
+      const [dl, dr] = bRows[r];
+      const lx2 = (bx - 1) + dl, rx2 = (bx + bw) + dr;
+      hLine(ctx, colors.clothing.base, lx2, by + r, rx2 - lx2 + 1);
+    }
+    // Shading: highlight left 2 cols + center, shadow right 2 cols
+    for (let r = 0; r < bN; r++) {
+      const [dl, dr] = bRows[r];
+      const lx2 = (bx - 1) + dl, rx2 = (bx + bw) + dr;
+      px(ctx, colors.clothing.highlight, lx2 + 1, by + r);
+      px(ctx, colors.clothing.highlight, lx2 + 2, by + r);
+      px(ctx, colors.clothing.highlight, Math.floor((lx2 + rx2) / 2), by + r);
+      px(ctx, colors.clothing.shadow, rx2 - 1, by + r);
+      px(ctx, colors.clothing.shadow, rx2 - 2, by + r);
+    }
+    // Selout sides, black top+bottom
+    hLine(ctx, colors.clothing.outline, bx - 1, by, bw + 2);
+    for (let r = 1; r < bN - 1; r++) {
+      const [dl, dr] = bRows[r];
+      px(ctx, colors.clothing.shadow, (bx - 1) + dl, by + r);
+      px(ctx, colors.clothing.shadow, (bx + bw) + dr, by + r);
+    }
+    const [dlB2, drB2] = bRows[bN - 1];
+    const bBotL = (bx - 1) + dlB2, bBotR = (bx + bw) + drB2;
+    hLine(ctx, colors.clothing.outline, bBotL, by + bN - 1, bBotR - bBotL + 1);
+    // Armpit creases (same position as south-view jacket)
+    px(ctx, colors.clothing.shadow, bx - 1, by - 1);
+    px(ctx, colors.clothing.shadow, bx + bw, by - 1);
+  }
 
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY);
   drawNeckSouth(ctx, colors.skin, neckY);
