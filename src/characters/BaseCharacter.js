@@ -357,16 +357,19 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   vLine(ctx, colors.shadow,    shirtLx + shirtW - 2, y, numRows);  // shirt right shadow
 
   // ── 6. Lapels: V opens from closed (row 0) to fully open (row 7) ─────────
+  // Research (SNES form shading): "the lapel face gets a highlight if the light
+  // source hits it." Left lapel faces upper-left light → full highlight fill.
+  // Right lapel faces away from light → stays base tone.
   const lapelH = Math.min(8, numRows);
   for (let row = 0; row < lapelH; row++) {
     const lw = Math.round(3 * (lapelH - 1 - row) / (lapelH - 1));
     if (lw > 0) {
-      hLine(ctx, colors.base,  shirtLx,               y + row, lw);  // left lapel
-      px(ctx,   colors.shadow, shirtLx + lw - 1,      y + row);      // lapel inner edge
-      hLine(ctx, colors.base,  shirtLx + shirtW - lw, y + row, lw);  // right lapel
-      px(ctx,   colors.shadow, shirtLx + shirtW - lw, y + row);      // lapel inner edge
-      // Highlight the top of left lapel (light catches the folded cloth)
-      if (row < 3) px(ctx, colors.highlight, shirtLx + 1, y + row);
+      // Left lapel: highlight across the folded face, shadow on inner edge
+      hLine(ctx, colors.highlight, shirtLx,          y + row, lw);
+      px(ctx,   colors.shadow,     shirtLx + lw - 1, y + row);   // lapel fold shadow
+      // Right lapel: base tone (shadow side, facing away from light)
+      hLine(ctx, colors.base,  shirtLx + shirtW - lw, y + row, lw);
+      px(ctx,   colors.shadow, shirtLx + shirtW - lw, y + row);  // lapel fold shadow
     }
   }
 
