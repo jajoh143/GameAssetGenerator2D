@@ -460,10 +460,8 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 // ---------------------------------------------------------------------------
 
 function drawBeltSouth(ctx, beltColors, x, y) {
-  // Belt / hip band: tapers from torso waist (20px) down toward legs
-  // Row 1 (beltY):   20px wide x=22-41 — matches torso waist
-  // Row 2 (beltY+1): 18px wide x=23-40 — taper step
-  const w = 20, h = 2;
+  // Belt / hip band: now 16px wide at x=24 to match narrowed torso waist (x=25-38)
+  const w = 16, h = 2;
   fillRect(ctx, beltColors.base, x, y, w, h);
   // Second row slightly narrower (hip taper)
   fillRect(ctx, beltColors.base, x + 1, y + 1, w - 2, 1);
@@ -593,9 +591,12 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   // Arms are 5px wide — matches reference art proportions.
   // Highlight on the outer edge (away from body), shadow on inner edge (toward body).
   // Inner outline edge omitted so no seam appears at the shoulder joint.
-  const lx = 16, rx = 43;
+  // Narrow 4px arms positioned to touch the 18px torso shoulder zone (x=22-41).
+  // Left arm x=19-22 shares x=22 with torso left edge — no gap, no seam.
+  // Right arm x=41-44 shares x=41 with torso right edge.
+  const lx = 19, rx = 41;
   const baseY = 26;
-  const sleeveH = 11, handH = 5, aw = 5;
+  const sleeveH = 11, handH = 5, aw = 4;
 
   const lArmY = baseY + Math.round(lArmDY);
   const rArmY = baseY + Math.round(rArmDY);
@@ -630,9 +631,8 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
 // ---------------------------------------------------------------------------
 
 function drawArmsWest(ctx, clothingColors, skinColors, frontArmDY, backArmDY, torsoX, torsoY) {
-  // frontArm is to the LEFT of the torso (x=13-18)
-  // backArm is partially behind torso
-  const sleeveH = 11, handH = 5, aw = 5;
+  // 4px arms for west view — matching narrowed south-view arm width
+  const sleeveH = 11, handH = 5, aw = 4;
 
   const frontY = torsoY + 1 + Math.round(frontArmDY);
   const backY  = torsoY + 1 + Math.round(backArmDY);
@@ -644,7 +644,7 @@ function drawArmsWest(ctx, clothingColors, skinColors, frontArmDY, backArmDY, to
   outlineRect(ctx, clothingColors.outline, backAX, backY, aw, sleeveH + handH);
 
   // Front arm (full detail)
-  const frontAX = torsoX - 7;
+  const frontAX = torsoX - 6;
   fillRect(ctx, clothingColors.base, frontAX, frontY, aw, sleeveH);
   vLine(ctx, clothingColors.highlight, frontAX,     frontY, sleeveH);
   vLine(ctx, clothingColors.shadow,    frontAX + aw - 1, frontY, sleeveH);

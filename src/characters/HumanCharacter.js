@@ -87,9 +87,9 @@ function drawSouth(ctx, config, offsets) {
   // Legs
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY);
   // Belt
-  drawBeltSouth(ctx, colors.belt, 22, beltY);
-  // Torso (22px wide, x=21-42)
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 21, torsoY, 22, torsoH);
+  drawBeltSouth(ctx, colors.belt, 24, beltY);
+  // Torso (18px wide, x=23-40) — narrower body matches reference proportions
+  drawTorsoSouth(ctx, config.clothing, colors.clothing, 23, torsoY, 18, torsoH);
   // Arms (drawn over torso edges)
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY);
   // Neck
@@ -137,16 +137,16 @@ function drawNorth(ctx, config, offsets) {
 
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY);
-  drawBeltSouth(ctx, colors.belt,   22, beltY);
+  drawBeltSouth(ctx, colors.belt,   24, beltY);
 
-  // Back of torso (no V-collar)
-  fillRect(ctx, colors.clothing.base, 21, torsoY, 22, torsoH);
-  vLine(ctx, colors.clothing.highlight, 22, torsoY + 1, torsoH - 2);
-  vLine(ctx, colors.clothing.highlight, 23, torsoY + 1, torsoH - 2);
-  vLine(ctx, colors.clothing.shadow,    40, torsoY + 1, torsoH - 2);
-  vLine(ctx, colors.clothing.shadow,    41, torsoY + 1, torsoH - 2);
-  hLine(ctx, colors.clothing.shadow,    22, torsoY + torsoH - 2, 20);
-  outlineRect(ctx, colors.clothing.outline, 21, torsoY, 22, torsoH);
+  // Back of torso (no V-collar) — 18px wide, x=23-40
+  fillRect(ctx, colors.clothing.base, 23, torsoY, 18, torsoH);
+  vLine(ctx, colors.clothing.highlight, 24, torsoY + 1, torsoH - 2);
+  vLine(ctx, colors.clothing.highlight, 25, torsoY + 1, torsoH - 2);
+  vLine(ctx, colors.clothing.shadow,    38, torsoY + 1, torsoH - 2);
+  vLine(ctx, colors.clothing.shadow,    39, torsoY + 1, torsoH - 2);
+  hLine(ctx, colors.clothing.shadow,    24, torsoY + torsoH - 2, 16);
+  outlineRect(ctx, colors.clothing.outline, 23, torsoY, 18, torsoH);
 
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY);
   drawNeckSouth(ctx, colors.skin, neckY);
