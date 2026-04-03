@@ -299,152 +299,128 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  const cx = Math.floor(x + w / 2);
+  // Reference analysis: Stardew Valley / RPG sprite torsos are nearly rectangular.
+  // The silhouette is: 3 rows at full shoulder width, then 2px narrower for the body.
+  // Visual interest comes entirely from clothing TEXTURE, not silhouette shaping.
+  //
+  // Structure (with x=23, w=18):
+  //   Rows 0-2 (shoulder):  lx=22  rx=41  (20px)
+  //   Rows 3-18 (body):     lx=23  rx=40  (18px)
+  //
+  // Clothing zones per row (at body width 18px):
+  //   x=23: selout edge
+  //   x=24: outer panel shadow
+  //   x=25-27: outer jacket panel (3px, jacket base color)
+  //   x=28: shirt seam shadow
+  //   x=29-34: inner shirt (6px visible out of 8px shirt panel)
+  //   x=35: shirt seam shadow
+  //   x=36-38: outer jacket panel (3px)
+  //   x=39: outer panel shadow
+  //   x=40: selout edge
 
-  // ── Row-by-row organic silhouette ─────────────────────────────────────────
-  // 1px-per-row taper so silhouette edge is a true diagonal (no staircase bands).
-  // With x=23, w=18: shoulder lx=22 rx=41 (20px), waist 12px, hip back to 20px.
-  const shapeRows = [
-    [0, 0],              // row  0: 20px  shoulder
-    [0, 0],              // row  1: 20px  (hold 1 row so shoulder reads as a ledge)
-    [1,-1],              // row  2: 18px
-    [2,-2],              // row  3: 16px
-    [3,-3],              // row  4: 14px
-    [4,-4],              // row  5: 12px  waist
-    [4,-4],              // row  6: 12px
-    [4,-4],              // row  7: 12px
-    [3,-3],              // row  8: 14px
-    [2,-2],              // row  9: 16px
-    [1,-1],              // row 10: 18px
-    [0, 0],              // row 11: 20px  hip
-    [0, 0],              // row 12: 20px
-    [0, 0],              // row 13: 20px
-    [0, 0],              // row 14: 20px
-    [0, 0],              // row 15: 20px
-    [0, 0],              // row 16: 20px
-    [0, 0],              // row 17: 20px
-    [0, 0],              // row 18: 20px
-  ];
-  const numRows = Math.min(h, shapeRows.length);
+  const cx = Math.floor(x + w / 2);   // = 32
+  const numRows = Math.min(h, 19);
+  const SHOULDER = 3;                   // first 3 rows at full shoulder width
 
-  // Fill
+  // Resolves the left/right pixel edge for a given row (inclusive)
+  const rl = (row) => row < SHOULDER ? x - 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : x + w - 1;
+
+  // ── 1. Fill jacket base ──────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
-    const [dl, dr] = shapeRows[row];
-    const lx = (x - 1) + dl, rx = (x + w) + dr;
-    hLine(ctx, colors.base, lx, y + row, rx - lx + 1);
+    hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
 
-  // Shading: highlight left 1-2 cols + center chest strip, shadow right 2 cols
+  // ── 2. Jacket side-panel shadow (2nd pixel in from each outer edge) ───────
+  // Creates the "jacket wraps around cylinder" shading effect.
   for (let row = 0; row < numRows; row++) {
-    const [dl, dr] = shapeRows[row];
-    const lx = (x - 1) + dl, rx = (x + w) + dr;
-    const midX = Math.floor((lx + rx) / 2);
-    px(ctx, colors.highlight, lx + 1, y + row);
-    if (row < 6) px(ctx, colors.highlight, lx + 2, y + row);  // upper chest wider
-    px(ctx, colors.highlight, midX, y + row);                   // center column
-    px(ctx, colors.shadow, rx - 1, y + row);
-    px(ctx, colors.shadow, rx - 2, y + row);
+    px(ctx, colors.shadow, rl(row) + 1, y + row);
+    px(ctx, colors.shadow, rr(row) - 1, y + row);
   }
-  // Bottom-edge shadow band
-  const [dlB, drB] = shapeRows[numRows - 1];
-  hLine(ctx, colors.shadow, (x-1)+dlB+1, y+numRows-2, (x+w)+drB-1 - ((x-1)+dlB+1) + 1);
 
-  // ── Armpit crease only — no rectangular meld platform ────────────────────
-  // A single shadow pixel at each armpit hints at the concave junction.
-  px(ctx, colors.shadow, x - 1, y - 1);    // armpit left
-  px(ctx, colors.shadow, x + w, y - 1);    // armpit right
-
-  // ── V-Collar / Lapels ─────────────────────────────────────────────────────
+  // ── 3. Inner shirt panel (visible through open jacket front) ─────────────
+  const shirtW = 8, shirtLx = cx - 4;   // shirt x=28-35  (8px centered)
   const shirtCol = colors.collar || colors.highlight;
-  fillRect(ctx, shirtCol, cx - 3, y, 6, 8);
-  for (let dy = 0; dy < 8; dy++) {
-    const lapelW = Math.round(dy * 0.45);
-    fillRect(ctx, colors.base, cx - 3,          y + dy, lapelW + 1, 1);
-    fillRect(ctx, colors.base, cx + 2 - lapelW, y + dy, lapelW + 1, 1);
-  }
-  for (let dy = 1; dy < 7; dy++) {
-    px(ctx, colors.shadow, cx - 3 + Math.round(dy * 0.45), y + dy);
-    px(ctx, colors.shadow, cx + 2 - Math.round(dy * 0.45), y + dy);
+  fillRect(ctx, shirtCol, shirtLx, y, shirtW, numRows);
+  vLine(ctx, colors.shadow, shirtLx,              y, numRows);  // left shirt seam
+  vLine(ctx, colors.shadow, shirtLx + shirtW - 1, y, numRows);  // right shirt seam
+
+  // ── 4. Lapels: jacket folds closed at top, V opens downward ─────────────
+  // Row 0: lapelW=3  → jacket fully covers shirt (closed collar)
+  // Row 7: lapelW=0  → shirt fully visible (open jacket)
+  const lapelH = Math.min(8, numRows);
+  for (let row = 0; row < lapelH; row++) {
+    const lw = Math.round(3 * (lapelH - 1 - row) / (lapelH - 1));
+    if (lw > 0) {
+      hLine(ctx, colors.base,  shirtLx,              y + row, lw);  // left lapel
+      px(ctx,   colors.shadow, shirtLx + lw - 1,     y + row);      // lapel inner edge
+      hLine(ctx, colors.base,  shirtLx + shirtW - lw, y + row, lw); // right lapel
+      px(ctx,   colors.shadow, shirtLx + shirtW - lw, y + row);     // lapel inner edge
+    }
   }
 
-  // ── Outline: selout on sides (shadow), black only top + bottom ────────────
-  hLine(ctx, colors.outline, x - 1, y, w + 2);     // top edge (shoulder width) — black
+  // ── 5. Armpit crease ─────────────────────────────────────────────────────
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+
+  // ── 6. Outlines: black on top + bottom, selout (shadow) on sides ─────────
+  hLine(ctx, colors.outline, x - 1, y, w + 2);          // black top (shoulder width)
   for (let row = 1; row < numRows - 1; row++) {
-    const [dl, dr] = shapeRows[row];
-    px(ctx, colors.shadow, (x - 1) + dl, y + row); // left edge — selout (shadow, not black)
-    px(ctx, colors.shadow, (x + w) + dr, y + row); // right edge — selout
+    px(ctx, colors.shadow, rl(row), y + row);             // left selout
+    px(ctx, colors.shadow, rr(row), y + row);             // right selout
   }
-  // Bottom edge — black
-  const botL = (x - 1) + dlB, botR = (x + w) + drB;
-  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);  // black bottom
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
-  // Organic silhouette — baggier than jacket (waist not as narrow)
-  const shapeRows = [
-    [0, 0],   // row  0: 20px shoulder
-    [0, 0],   // row  1: 20px
-    [1,-1],   // row  2: 18px
-    [2,-2],   // row  3: 16px
-    [3,-3],   // row  4: 14px waist
-    [3,-3],   // row  5: 14px
-    [3,-3],   // row  6: 14px
-    [2,-2],   // row  7: 16px
-    [1,-1],   // row  8: 18px
-    [0, 0],   // row  9: 20px hip
-    [0, 0],   // row 10: 20px
-    [0, 0],   // row 11: 20px
-    [0, 0],   // row 12: 20px
-    [0, 0],   // row 13: 20px
-    [0, 0],   // row 14: 20px
-    [0, 0],   // row 15: 20px
-    [0, 0],   // row 16: 20px
-    [0, 0],   // row 17: 20px
-    [0, 0],   // row 18: 20px
-  ];
-  const numRows = Math.min(h, shapeRows.length);
+  // Same rectangular silhouette as jacket: 3-row shoulder cap + constant body.
+  // Closed front (no visible shirt): side shadows + center zipper + pocket.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 19);
+  const SHOULDER = 3;
+
+  const rl = (row) => row < SHOULDER ? x - 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : x + w - 1;
 
   // Fill
   for (let row = 0; row < numRows; row++) {
-    const [dl, dr] = shapeRows[row];
-    const lx = (x - 1) + dl, rx = (x + w) + dr;
-    hLine(ctx, colors.base, lx, y + row, rx - lx + 1);
+    hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
 
-  // Shading: highlight left 2 cols + center, shadow right 2 cols
+  // Side panel shadows
   for (let row = 0; row < numRows; row++) {
-    const [dl, dr] = shapeRows[row];
-    const lx = (x - 1) + dl, rx = (x + w) + dr;
-    const midX = Math.floor((lx + rx) / 2);
-    px(ctx, colors.highlight, lx + 1, y + row);
-    if (row < numRows >> 1) px(ctx, colors.highlight, lx + 2, y + row);
-    px(ctx, colors.highlight, midX, y + row);      // center highlight
-    px(ctx, colors.shadow, rx - 1, y + row);
-    px(ctx, colors.shadow, rx - 2, y + row);
+    px(ctx, colors.shadow, rl(row) + 1, y + row);
+    px(ctx, colors.shadow, rr(row) - 1, y + row);
   }
 
-  // Hood visible at top center
-  const hoodX = x + Math.floor(w / 2) - 3;
-  fillRect(ctx, colors.collar, hoodX, y, 6, 4);
-  outlineRect(ctx, colors.outline, hoodX, y, 6, 4);
+  // Hood collar at top center
+  const hoodX = cx - 3;
+  fillRect(ctx, colors.collar, hoodX, y, 6, 3);
+  outlineRect(ctx, colors.outline, hoodX, y, 6, 3);
 
-  // Kangaroo pocket at bottom center
-  const pkx = x + Math.floor(w / 2) - 4;
-  const pky = y + Math.floor(h * 0.58);
-  const pkw = 8, pkh = Math.floor(h * 0.35);
+  // Center zipper line (runs full body height below collar)
+  vLine(ctx, colors.shadow, cx, y + 3, numRows - 3);
+
+  // Kangaroo pocket at lower-center
+  const pkx = cx - 4;
+  const pky = y + Math.floor(numRows * 0.58);
+  const pkw = 8, pkh = Math.max(3, Math.floor(numRows * 0.32));
   fillRect(ctx, colors.shadow, pkx, pky, pkw, pkh);
   outlineRect(ctx, colors.outline, pkx, pky, pkw, pkh);
 
-  // Selout on sides, black on top+bottom
-  hLine(ctx, colors.outline, x - 1, y, w + 2);    // top
+  // Armpit crease
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+
+  // Outlines
+  hLine(ctx, colors.outline, x - 1, y, w + 2);
   for (let row = 1; row < numRows - 1; row++) {
-    const [dl, dr] = shapeRows[row];
-    px(ctx, colors.shadow, (x - 1) + dl, y + row);
-    px(ctx, colors.shadow, (x + w) + dr, y + row);
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
   }
-  const [hDlB, hDrB] = shapeRows[numRows - 1];
-  const hBotL = (x - 1) + hDlB, hBotR = (x + w) + hDrB;
-  hLine(ctx, colors.outline, hBotL, y + numRows - 1, hBotR - hBotL + 1);  // bottom
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 }
 
 function drawApronSouth(ctx, colors, x, y, w, h) {
