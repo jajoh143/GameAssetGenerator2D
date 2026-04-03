@@ -387,6 +387,14 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   }
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+
+  // ── 10. Shoulder cap volume highlight (post-outline) ─────────────────────
+  // Left shoulder outer tip at row 1 catches upper-left light → rounded cap.
+  // This overwrites the selout pixel to show the lit shoulder convexity.
+  px(ctx, colors.highlight, x - 1, y + 1);
+  // Underpectoral fold on shirt (row 7, where lapels are fully open).
+  // Suggests the shirt fabric pressing against the chest below the pectorals.
+  hLine(ctx, colors.shadow, shirtLx + 1, y + 7, shirtW - 2);
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
@@ -457,6 +465,9 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   }
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+
+  // Shoulder cap volume highlight (post-outline, left shoulder only — lit side)
+  px(ctx, colors.highlight, x - 1, y + 1);
 }
 
 function drawApronSouth(ctx, colors, x, y, w, h) {
@@ -528,14 +539,20 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 // ---------------------------------------------------------------------------
 
 function drawBeltSouth(ctx, beltColors, x, y) {
-  // Belt / hip band: now 16px wide at x=24 to match narrowed torso waist (x=25-38)
+  // Belt / hip band: 16px wide at x=24, anchors torso-to-leg transition.
+  // Research: belt color must visually "seat" the torso onto the legs.
   const w = 16, h = 2;
   fillRect(ctx, beltColors.base, x, y, w, h);
+  // Highlight on belt top row (belt leather catches light from above)
+  hLine(ctx, beltColors.highlight, x + 1, y, w - 2);
+  // Shadow on belt bottom row (underside of belt in shadow)
+  hLine(ctx, beltColors.shadow, x + 1, y + 1, w - 2);
   // Second row slightly narrower (hip taper)
   fillRect(ctx, beltColors.base, x + 1, y + 1, w - 2, 1);
   // Buckle center
   const bx = x + Math.floor(w / 2) - 1;
   fillRect(ctx, beltColors.buckle, bx, y, 3, h);
+  px(ctx, beltColors.highlight, bx + 1, y);   // buckle top shine
   // Hip taper dark corners at outer edges of row 2
   px(ctx, beltColors.outline, x, y + 1);
   px(ctx, beltColors.outline, x + w - 1, y + 1);
