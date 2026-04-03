@@ -299,41 +299,58 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  const cx = x + Math.floor(w / 2);
+  const cx = Math.floor(x + w / 2);
 
-  // ── Triangular 3-zone fill ─────────────────────────────────────────────────
-  // Wide shoulders (rows 0–3):  24px  x=20–43
-  fillRect(ctx, colors.base, x - 1, y,      w + 2, 4);
-  // Mid chest    (rows 4–12):   22px  x=21–42
-  fillRect(ctx, colors.base, x,     y + 4,  w,     9);
-  // Narrow waist (rows 13–18):  18px  x=23–40
-  fillRect(ctx, colors.base, x + 2, y + 13, w - 4, 6);
+  // ── Row-by-row organic silhouette ─────────────────────────────────────────
+  // Each entry: [leftOff, rightOff] relative to shoulder edges [x-1, x+w].
+  // Shape: wide shoulders → smooth V-taper to narrow waist → flares into hip bowl.
+  // With x=23, w=18: shoulders=20px, waist=12px, hips=18px.
+  const shapeRows = [
+    [0, 0], [0, 0],           // rows  0-1:  shoulders  (w+2 = 20px)
+    [1,-1], [1,-1],           // rows  2-3:  taper starts
+    [2,-2], [2,-2],           // rows  4-5
+    [3,-3], [3,-3],           // rows  6-7
+    [4,-4], [4,-4], [4,-4],  // rows  8-10: waist       (w-6 = 12px)
+    [3,-3], [3,-3],           // rows 11-12: bowl begins
+    [2,-2], [2,-2], [2,-2],  // rows 13-15: flare
+    [1,-1], [1,-1], [1,-1],  // rows 16-18: hips        (w   = 18px)
+  ];
+  const numRows = Math.min(h, shapeRows.length);
 
-  // ── Shoulder meld — strip 1px above torso connecting jacket to arm ─────────
-  // Left:  x=17–20 filled, x=16 is the outer outline corner
-  hLine(ctx, colors.base,    x - 4, y - 1, 4);   // x=17-20 at y=25
-  px(ctx,   colors.outline,  x - 5, y - 1);       // x=16, y=25 — outer left corner
-  // Right: x=43–46 filled, x=47 is the outer outline corner
-  hLine(ctx, colors.base,    x + w, y - 1, 4);   // x=43-46 at y=25
-  px(ctx,   colors.outline,  x + w + 4, y - 1);  // x=47, y=25 — outer right corner
+  // Fill
+  for (let row = 0; row < numRows; row++) {
+    const [dl, dr] = shapeRows[row];
+    const lx = (x - 1) + dl, rx = (x + w) + dr;
+    hLine(ctx, colors.base, lx, y + row, rx - lx + 1);
+  }
 
-  // Shoulder arch top-curve outline (y = torsoY-2)
-  px(ctx, colors.outline, x - 4, y - 2);  // x=17
-  px(ctx, colors.outline, x - 3, y - 2);  // x=18
-  px(ctx, colors.outline, x - 2, y - 2);  // x=19 — arch peak
+  // Shading: highlight left 1-2 cols, shadow right 2 cols, bottom row darker
+  for (let row = 0; row < numRows; row++) {
+    const [dl, dr] = shapeRows[row];
+    const lx = (x - 1) + dl, rx = (x + w) + dr;
+    px(ctx, colors.highlight, lx + 1, y + row);
+    if (row < numRows >> 1) px(ctx, colors.highlight, lx + 2, y + row);  // wider upper half
+    px(ctx, colors.shadow, rx - 1, y + row);
+    px(ctx, colors.shadow, rx - 2, y + row);
+  }
+  // Bottom-edge shadow band
+  const [dlB, drB] = shapeRows[numRows - 1];
+  hLine(ctx, colors.shadow, (x-1)+dlB+1, y+numRows-2, (x+w)+drB-1 - ((x-1)+dlB+1) + 1);
+
+  // ── Shoulder meld (1px above torso, bridges jacket→arm) ───────────────────
+  hLine(ctx, colors.base,   x - 4, y - 1, 4);      // left:  x=19–22 at y=25
+  px(ctx,   colors.outline, x - 5, y - 1);          // outer corner x=18
+  hLine(ctx, colors.base,   x + w, y - 1, 4);      // right: x=41–44 at y=25
+  px(ctx,   colors.outline, x + w + 4, y - 1);     // outer corner x=45
+  // Arch top-curve outline (y=24)
+  px(ctx, colors.outline, x - 4, y - 2);
+  px(ctx, colors.outline, x - 3, y - 2);
+  px(ctx, colors.outline, x - 2, y - 2);
   px(ctx, colors.outline, x + w + 3, y - 2);
   px(ctx, colors.outline, x + w + 2, y - 2);
   px(ctx, colors.outline, x + w + 1, y - 2);
-  // Shadow tuck where shoulder meets arm
-  px(ctx, colors.shadow,  x - 4, y - 1);
+  px(ctx, colors.shadow,  x - 4, y - 1);           // shadow tuck
   px(ctx, colors.shadow,  x + w + 3, y - 1);
-
-  // ── Shading zones ─────────────────────────────────────────────────────────
-  vLine(ctx, colors.highlight, x + 1, y + 1, h - 2);
-  vLine(ctx, colors.highlight, x + 2, y + 1, 8);           // top half only
-  vLine(ctx, colors.shadow,    x + w - 2, y + 1, h - 2);
-  vLine(ctx, colors.shadow,    x + w - 3, y + 1, h - 2);
-  hLine(ctx, colors.shadow,    x + 3,     y + h - 2, w - 6);
 
   // ── V-Collar / Lapels ─────────────────────────────────────────────────────
   const shirtCol = colors.collar || colors.highlight;
@@ -348,23 +365,16 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
     px(ctx, colors.shadow, cx + 2 - Math.round(dy * 0.45), y + dy);
   }
 
-  // ── Triangular staircase outline ──────────────────────────────────────────
-  // Top edge of shoulder zone (x=20–43)
-  hLine(ctx, colors.outline, x - 1, y, w + 2);
-  // Left side
-  vLine(ctx, colors.outline, x - 1, y,      4);   // x=20, rows 0–3
-  px(ctx,   colors.outline,  x,     y + 4);        // step
-  vLine(ctx, colors.outline, x,     y + 4,  9);   // x=21, rows 4–12
-  px(ctx,   colors.outline,  x + 2, y + 13);       // step
-  vLine(ctx, colors.outline, x + 2, y + 13, 6);   // x=23, rows 13–18
-  // Right side (mirror)
-  vLine(ctx, colors.outline, x + w,     y,      4);
-  px(ctx,   colors.outline,  x + w - 1, y + 4);
-  vLine(ctx, colors.outline, x + w - 1, y + 4,  9);
-  px(ctx,   colors.outline,  x + w - 3, y + 13);
-  vLine(ctx, colors.outline, x + w - 3, y + 13, 6);
-  // Bottom edge (waist zone width)
-  hLine(ctx, colors.outline, x + 2, y + h - 1, w - 4);
+  // ── Outline: trace each row's left/right edge pixel ───────────────────────
+  hLine(ctx, colors.outline, x - 1, y, w + 2);     // top edge (shoulder width)
+  for (let row = 0; row < numRows; row++) {
+    const [dl, dr] = shapeRows[row];
+    px(ctx, colors.outline, (x - 1) + dl, y + row); // left edge
+    px(ctx, colors.outline, (x + w) + dr, y + row); // right edge
+  }
+  // Bottom edge
+  const botL = (x - 1) + dlB, botR = (x + w) + drB;
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
