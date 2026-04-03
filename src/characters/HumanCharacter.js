@@ -152,18 +152,18 @@ function drawNorth(ctx, config, offsets) {
     }
     // Side panel shadows + center back highlight
     for (let r = 0; r < bN; r++) {
-      px(ctx, colors.clothing.shadow,    brl(r) + 1, by + r);
-      px(ctx, colors.clothing.shadow,    brr(r) - 1, by + r);
-      px(ctx, colors.clothing.highlight, Math.floor((brl(r) + brr(r)) / 2), by + r);
+      pixel(ctx, colors.clothing.shadow,    brl(r) + 1, by + r);
+      pixel(ctx, colors.clothing.shadow,    brr(r) - 1, by + r);
+      pixel(ctx, colors.clothing.highlight, Math.floor((brl(r) + brr(r)) / 2), by + r);
     }
     // Armpit creases
-    px(ctx, colors.clothing.shadow, bx - 1, by - 1);
-    px(ctx, colors.clothing.shadow, bx + bw, by - 1);
+    pixel(ctx, colors.clothing.shadow, bx - 1, by - 1);
+    pixel(ctx, colors.clothing.shadow, bx + bw, by - 1);
     // Outlines
     hLine(ctx, colors.clothing.outline, bx - 1, by, bw + 2);
     for (let r = 1; r < bN - 1; r++) {
-      px(ctx, colors.clothing.shadow, brl(r), by + r);
-      px(ctx, colors.clothing.shadow, brr(r), by + r);
+      pixel(ctx, colors.clothing.shadow, brl(r), by + r);
+      pixel(ctx, colors.clothing.shadow, brr(r), by + r);
     }
     const bBotL = brl(bN - 1), bBotR = brr(bN - 1);
     hLine(ctx, colors.clothing.outline, bBotL, by + bN - 1, bBotR - bBotL + 1);
