@@ -329,21 +329,18 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
     px(ctx, colors.shadow, rr(row) - 2, y + row);
   }
 
-  // ── 3. Dither highlight on upper-left jacket panel (fabric texture) ───────
-  // Alternating highlight pixels in upper chest area simulate SNES cloth texture
-  for (let row = 1; row < Math.min(7, numRows); row++) {
-    if (row % 2 === 1) {
-      px(ctx, colors.highlight, rl(row) + 2, y + row);
-    }
-  }
-
-  // ── 4. Horizontal fold shadow lines (fabric crease at mid-torso) ──────────
-  // A single shadow row at mid-torso and near belt suggests draped fabric.
-  const foldRow1 = Math.floor(numRows * 0.45);  // ~row 8: mid-jacket fold
-  const foldRow2 = numRows - 3;                   // ~row 15: near-belt fold
+  // ── 3. Fold shadow notches: jacket side panels only, not crossing shirt ─────
+  // Short 3px shadow notches on each jacket flank suggest fabric drape without
+  // creating visible horizontal bands across the full torso.
+  const foldRow1 = Math.floor(numRows * 0.45);  // ~row 8: mid-jacket
+  const foldRow2 = numRows - 3;                   // ~row 15: near-belt
   for (const fr of [foldRow1, foldRow2]) {
-    const rowLx = rl(fr) + 2, rowRx = rr(fr) - 2;  // avoid outer shadow columns
-    hLine(ctx, colors.shadow, rowLx, y + fr, rowRx - rowLx + 1);
+    const frl = rl(fr) + 2;   // left panel start (= 25 for body rows)
+    const frr = rr(fr) - 2;   // right panel end  (= 38 for body rows)
+    // Left jacket panel: up to the shirt edge at x=28
+    if (28 - frl > 0) hLine(ctx, colors.shadow, frl, y + fr, 28 - frl);
+    // Right jacket panel: from shirt end at x=36
+    if (frr - 35 > 0) hLine(ctx, colors.shadow, 36,  y + fr, frr - 35);
   }
 
   // ── 5. Inner shirt panel (visible through open jacket front) ─────────────
@@ -727,78 +724,78 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
-  // Row-by-row organic arm with shoulder-to-wrist taper:
-  //   Rows 0-2:  5px — shoulder (widest, outer edge extends 1px outward)
-  //   Rows 3-7:  4px — mid-arm
-  //   Rows 8-10: 3px — wrist (narrowest, outer edge steps inward)
-  // All edges use selout (shadow color) instead of black outline.
-  // Center highlight per-row creates the cylinder/rounded illusion.
-  // 3px front arms (research: front arms 3px, rear 2px at small sprite scale).
-  // lx=20: inner edge of left arm at x=22 (= torso left outer edge), fills x=20-22.
-  // rx=41: inner edge of right arm, fills x=41-43.
-  const lx = 20, rx = 41;
+  // 4px arms (body rows 1-7) with 5px shoulder cap at row 0 and 3px wrist taper.
+  // Left arm = lit side (highlight on outer face).
+  // Right arm = shadow side (both edges shadowed).
+  // Black junction outline at x=22 (left) and x=41 (right) creates clear
+  // arm-torso seam at the shoulder joint.
+  const lx = 19, rx = 41;
   const baseY = 26;
-  const baseAW = 3, sleeveH = 11, handH = 4;
+  const baseAW = 4, sleeveH = 11, handH = 4;
 
-  // Per-row shape: 0=normal width, -1=steps in (wrist taper)
-  // No outward shoulder bulge — the shoulder aligns flush with the torso edge.
-  // Arm tapers from 4px (shoulder/mid) to 3px (wrist) for a natural limb look.
-  const bulge = [0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1];
+  // Row 0: +1 shoulder cap bulge (5px) for rounded deltoid volume
+  // Rows 1-7: 0 → 4px arm body
+  // Rows 8-10: -1 → 3px wrist taper
+  const bulge = [1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1];
 
   const lArmY = baseY + Math.round(lArmDY);
   const rArmY = baseY + Math.round(rArmDY);
 
   // ── Left arm ──────────────────────────────────────────────────────────────
-  // Directional shading (left arm = lit side of body, upper-left light source):
-  //   outer face (leftmost pixel) = highlight (faces the light)
-  //   inner face (rightmost pixel, toward body) = shadow
-  //   Dithered highlight on upper sleeve (rows 1,3,5) for SNES fabric texture
+  // Directional: outer face = highlight (lit side), inner face = shadow.
+  // Row 0 gets double-highlight on 2nd pixel to suggest rounded shoulder cap.
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row] || 0;
     const rowLx = lx - b;
     const rowW  = baseAW + b;
-    hLine(ctx, clothingColors.base,      rowLx,            lArmY + row, rowW);
-    px(ctx,   clothingColors.highlight,  rowLx,            lArmY + row);  // outer face lit (selout-highlight)
-    px(ctx,   clothingColors.shadow,     rowLx + rowW - 1, lArmY + row);  // inner shadow toward body
-    // Dithered highlight on 2nd pixel, upper sleeve odd rows only
-    if (row >= 1 && row <= 5 && row % 2 === 1) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);
+    hLine(ctx, clothingColors.base,     rowLx,            lArmY + row, rowW);
+    px(ctx,   clothingColors.highlight, rowLx,            lArmY + row);  // outer lit face
+    px(ctx,   clothingColors.shadow,    rowLx + rowW - 1, lArmY + row);  // inner shadow
+    if (row === 0) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);  // shoulder cap volume
+  }
+  // Hard junction seam: arm inner edge painted with outline color
+  for (let row = 0; row < sleeveH; row++) {
+    px(ctx, clothingColors.outline, 22, lArmY + row);
   }
   hLine(ctx, clothingColors.shadow, lx - (bulge[sleeveH-1]||0), lArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
-  // Left fist — slightly wider than sleeve (knuckle), rounded bottom corners
-  const lhw = baseAW + 1;  // 5px
-  const lhx = lx - 1;
+  // Left fist — x=19-22 (4px, aligns with arm body), rounded bottom corners
+  const lhw = baseAW;   // 4px, same as arm body
+  const lhx = lx;       // 19 — aligns to arm outer edge
   fillRect(ctx, skinColors.base, lhx, lArmY + sleeveH, lhw, handH);
-  vLine(ctx, skinColors.highlight, lhx + 1, lArmY + sleeveH, handH);
+  vLine(ctx, skinColors.highlight, lhx + 1,       lArmY + sleeveH, handH);
   vLine(ctx, skinColors.shadow,    lhx + lhw - 2, lArmY + sleeveH, handH);
   outlineRect(ctx, skinColors.outline, lhx, lArmY + sleeveH, lhw, handH);
-  // Round fist bottom corners
-  erasePixel(ctx, lhx,         lArmY + sleeveH + handH - 1);
+  erasePixel(ctx, lhx,           lArmY + sleeveH + handH - 1);
   erasePixel(ctx, lhx + lhw - 1, lArmY + sleeveH + handH - 1);
-  px(ctx, skinColors.shadow, lhx,           lArmY + sleeveH + handH - 2);  // rounded side
+  px(ctx, skinColors.shadow, lhx,           lArmY + sleeveH + handH - 2);
   px(ctx, skinColors.shadow, lhx + lhw - 1, lArmY + sleeveH + handH - 2);
 
   // ── Right arm ─────────────────────────────────────────────────────────────
-  // Right arm is on the shadow side of the body (light from upper-left).
-  //   Both edges stay shadowed; mid pixel keeps base tone for form roundness.
-  //   No highlight dithering — this arm stays uniformly dim.
+  // Shadow side: both edges shadowed. Row 0 outer tip overridden to base so
+  // the right shoulder cap doesn't read as a double-dark blob.
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row] || 0;
     const rowW = baseAW + b;
-    hLine(ctx, clothingColors.base,   rx,            rArmY + row, rowW);
-    px(ctx,   clothingColors.shadow,  rx,            rArmY + row);  // inner selout
-    px(ctx,   clothingColors.shadow,  rx + rowW - 1, rArmY + row);  // outer selout
+    hLine(ctx, clothingColors.base,  rx,            rArmY + row, rowW);
+    px(ctx,   clothingColors.shadow, rx,            rArmY + row);  // inner selout
+    px(ctx,   clothingColors.shadow, rx + rowW - 1, rArmY + row);  // outer selout
+    if (row === 0) px(ctx, clothingColors.base, rx + rowW - 1, rArmY + row);  // soften cap tip
+  }
+  // Hard junction seam
+  for (let row = 0; row < sleeveH; row++) {
+    px(ctx, clothingColors.outline, 41, rArmY + row);
   }
   hLine(ctx, clothingColors.shadow, rx + 1, rArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
-  // Right fist
-  const rhw = baseAW + 1;
-  const rhx = rx;
+  // Right fist — x=41-44 (4px)
+  const rhw = baseAW;   // 4px
+  const rhx = rx;       // 41
   fillRect(ctx, skinColors.base, rhx, rArmY + sleeveH, rhw, handH);
   vLine(ctx, skinColors.highlight, rhx + rhw - 2, rArmY + sleeveH, handH);
   vLine(ctx, skinColors.shadow,    rhx + 1,        rArmY + sleeveH, handH);
   outlineRect(ctx, skinColors.outline, rhx, rArmY + sleeveH, rhw, handH);
-  erasePixel(ctx, rhx,         rArmY + sleeveH + handH - 1);
+  erasePixel(ctx, rhx,           rArmY + sleeveH + handH - 1);
   erasePixel(ctx, rhx + rhw - 1, rArmY + sleeveH + handH - 1);
   px(ctx, skinColors.shadow, rhx,           rArmY + sleeveH + handH - 2);
   px(ctx, skinColors.shadow, rhx + rhw - 1, rArmY + sleeveH + handH - 2);
