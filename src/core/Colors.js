@@ -86,40 +86,42 @@ const HAIR_COLORS = {
 
 // Clothing color presets
 const CLOTHING = {
+  // SDV/SNES art guide: shadows shift cooler (toward blue/teal),
+  // highlights shift warmer (toward yellow/orange).
   jacket_grey: {
-    highlight: '#B0B0B0',
+    highlight: '#B8B0A0',  // warm: slight yellow-tan tint
     base:      '#787878',
-    shadow:    '#484848',
-    outline:   '#202020',
-    collar:    '#606060',
+    shadow:    '#404454',  // cool: slight blue-grey
+    outline:   '#1C1C28',  // tinted dark navy rather than pure charcoal
+    collar:    '#585864',  // cool collar
   },
   jacket_blue: {
-    highlight: '#6888C8',
+    highlight: '#7098D4',  // warmer, more cyan-sky blue
     base:      '#3858A0',
-    shadow:    '#183070',
-    outline:   '#0A1840',
-    collar:    '#2848A0',
+    shadow:    '#101848',  // cooler, deeper blue-violet
+    outline:   '#080E30',
+    collar:    '#2040A0',
   },
   jacket_brown: {
-    highlight: '#A07850',
+    highlight: '#B08840',  // warmer, golden-orange highlight
     base:      '#705028',
-    shadow:    '#402810',
-    outline:   '#200C00',
-    collar:    '#604020',
+    shadow:    '#302818',  // cooler shadow (slight blue-brown)
+    outline:   '#180A00',
+    collar:    '#583818',
   },
   hoodie_black: {
-    highlight: '#404040',
+    highlight: '#463C30',  // warm: slight amber/brown tint
     base:      '#202020',
-    shadow:    '#080808',
-    outline:   '#000000',
-    collar:    '#303030',
+    shadow:    '#060810',  // cool: very slight blue in deep shadow
+    outline:   '#000008',
+    collar:    '#2E2820',
   },
   hoodie_grey: {
-    highlight: '#C8C8C8',
+    highlight: '#C8C0A8',  // warm: slight warm ivory tint
     base:      '#888888',
-    shadow:    '#505050',
-    outline:   '#282828',
-    collar:    '#707070',
+    shadow:    '#484858',  // cool: slight blue-grey
+    outline:   '#242430',
+    collar:    '#686870',
   },
   apron_white: {
     highlight: '#FFFFFF',

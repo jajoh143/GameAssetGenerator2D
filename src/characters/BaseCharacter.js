@@ -25,11 +25,11 @@ function drawGroundShadow(ctx, cx, y) {
 }
 
 // ---------------------------------------------------------------------------
-// drawHeadSouth  –  front-facing head, fixed at x=22, y=5  (20×18)
+// drawHeadSouth  –  front-facing head, fixed at x=22, y=5  (20×21)
 // ---------------------------------------------------------------------------
 
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
-  const HX = 22, HY = 5, HW = 20, HH = 18;
+  const HX = 22, HY = 5, HW = 20, HH = 21;
   const outline = '#111111';
 
   // ── Oval face shape ──────────────────────────────────────────────────────
@@ -49,7 +49,10 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   fillRect(ctx, skinColors.base, 24, HY + 12, 16, 2); // y=17-18: 16px
   fillRect(ctx, skinColors.base, 25, HY + 14, 14, 2); // y=19-20: 14px
   hLine(ctx, skinColors.base, 26, HY + 16, 12);  // y=21: 12px pre-chin
-  hLine(ctx, skinColors.base, 27, HY + 17, 10);  // y=22: 10px chin
+  hLine(ctx, skinColors.base, 27, HY + 17, 10);  // y=22: 10px upper-chin
+  hLine(ctx, skinColors.base, 28, HY + 18,  8);  // y=23:  8px mid-chin
+  hLine(ctx, skinColors.base, 29, HY + 19,  6);  // y=24:  6px lower-chin
+  hLine(ctx, skinColors.base, 30, HY + 20,  4);  // y=25:  4px chin tip
 
   // ── 4-level shading ──────────────────────────────────────────────────────
   // Highlight (top-left face): rows 12-16 on left quarter (x=24-27)
@@ -63,10 +66,13 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, skinColors.shadow, 40, HY + 10);
   px(ctx, skinColors.shadow, 40, HY + 11);
 
-  // Dark shadow (chin): rows 20-22
+  // Dark shadow (chin + extended chin): all lower-face rows are shadow-toned
   hLine(ctx, skinColors.shadow, 25, HY + 14, 14);
   hLine(ctx, skinColors.shadow, 26, HY + 16, 12);
   hLine(ctx, skinColors.shadow, 27, HY + 17, 10);
+  hLine(ctx, skinColors.shadow, 28, HY + 18,  8);
+  hLine(ctx, skinColors.shadow, 29, HY + 19,  6);
+  hLine(ctx, skinColors.shadow, 30, HY + 20,  4);
 
   // ── Oval outline ─────────────────────────────────────────────────────────
   // Left side
@@ -79,6 +85,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, outline, 25, HY + 15);
   px(ctx, outline, 26, HY + 16);
   px(ctx, outline, 27, HY + 17);
+  px(ctx, outline, 28, HY + 18);
+  px(ctx, outline, 29, HY + 19);
   // Right side (mirror)
   px(ctx, outline, 38, HY + 7);
   px(ctx, outline, 39, HY + 8);
@@ -89,19 +97,18 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, outline, 38, HY + 15);
   px(ctx, outline, 37, HY + 16);
   px(ctx, outline, 36, HY + 17);
-  // Chin bottom
-  hLine(ctx, outline, 28, HY + 17, 8);
+  px(ctx, outline, 35, HY + 18);
+  px(ctx, outline, 34, HY + 19);
+  // Chin tip bottom (4px at HY+20)
+  hLine(ctx, outline, 30, HY + 20, 4);
 
-  // ── Eyebrows (slight arch: inner end 1px higher than outer) ─────────────
-  // Left brow: arch rises from x=26 (outer, browY) to x=29 (inner, browY-1)
+  // ── Eyebrows (flat 3px strokes — SNES/SDV overworld style) ──────────────
+  // Flat brows read clearly at small scale; arches add clutter on tiny faces.
   const browY = HY + 8;   // y=13
-  hLine(ctx, hairColors.base,   26, browY,     3);   // outer 3px of left brow
-  px(ctx,   hairColors.base,    29, browY - 1);       // inner peak (1px up)
-  px(ctx,   hairColors.shadow,  26, browY);            // outer end slightly darker
-  // Right brow: mirror arch (inner end at x=33, outer at x=36)
-  px(ctx,   hairColors.base,    33, browY - 1);       // inner peak
-  hLine(ctx, hairColors.base,   34, browY,     3);   // outer 3px of right brow
-  px(ctx,   hairColors.shadow,  36, browY);            // outer end slightly darker
+  hLine(ctx, hairColors.base,  27, browY, 3);   // left brow: x=27-29
+  px(ctx,  hairColors.shadow,  27, browY);       // outer end slightly darker
+  hLine(ctx, hairColors.base,  33, browY, 3);   // right brow: x=33-35
+  px(ctx,  hairColors.shadow,  35, browY);       // outer end slightly darker
 
   // ── Eyes (4×2 each, organic pixel art) ──────────────────────────────────
   // Order: outline first → override interior with sclera/iris/shine → soften top corners
@@ -141,15 +148,15 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, skinColors.shadow, 33, noseY + 1);  // right nostril
 
   // ── Mouth (natural neutral expression) ───────────────────────────────────
-  // Head center = x=32. Lip bar x=29-34 (6px, centered).
-  // Top row: shadow corners at 28,35; lip color across 29-34.
-  // Bottom row: shadow at 30,33 creates gentle lower-lip arc.
+  // Head center = x=32. Lip bar x=30-33 (4px, centered).
+  // 4px matches SNES/SDV scale: 2px at native → 4px at 2× display.
+  // Shadow corners just outside bar; 2-pixel lower arc for closed-mouth read.
   const mouthY = HY + 15;   // y=20
-  px(ctx, skinColors.shadow, 28, mouthY);       // left corner
-  hLine(ctx, '#C05050',      29, mouthY, 6);    // 6px lip bar (centered on x=32)
-  px(ctx, skinColors.shadow, 35, mouthY);       // right corner
-  px(ctx, skinColors.shadow, 30, mouthY + 1);   // lower-left arc
-  px(ctx, skinColors.shadow, 33, mouthY + 1);   // lower-right arc
+  px(ctx, skinColors.shadow, 29, mouthY);       // left corner
+  hLine(ctx, '#C05050',      30, mouthY, 4);    // 4px lip bar (centered on x=32)
+  px(ctx, skinColors.shadow, 34, mouthY);       // right corner
+  px(ctx, skinColors.shadow, 31, mouthY + 1);   // lower-left arc
+  px(ctx, skinColors.shadow, 32, mouthY + 1);   // lower-right arc
 
   // ── Hair ─────────────────────────────────────────────────────────────────
   drawHairSouth(ctx, hairColors, hairStyle, HX, HY, HW);
@@ -175,9 +182,9 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   // Short hair: down to y=18 (headY+13)
   // Medium:     down to y=23 (headY+18)
   // Long:       down to y=28 (headY+23)
-  const sideburnShortEnd = headY + 13;
-  const sideburnMedEnd   = headY + 18;
-  const sideburnLongEnd  = headY + 23;
+  const sideburnShortEnd = headY + 16;  // reaches pre-chin on taller head
+  const sideburnMedEnd   = headY + 21;  // reaches below chin into neck
+  const sideburnLongEnd  = headY + 26;  // drapes over shoulder
 
   // Always draw base sideburns (short length)
   vLine(ctx, hairColors.base, headX,     headY, sideburnShortEnd - headY);
@@ -208,11 +215,11 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
 // ---------------------------------------------------------------------------
 
 function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
-  const HX = 22, HY = 5, HW = 20, HH = 18;
+  const HX = 22, HY = 5, HW = 20, HH = 21;
   const outline = '#111111';
 
-  // Skin (neck area at bottom)
-  fillRect(ctx, skinColors.base, HX + 2, HY + 12, HW - 4, 6);
+  // Skin (neck/lower-head area at bottom — 9px to match extended head height)
+  fillRect(ctx, skinColors.base, HX + 2, HY + 12, HW - 4, 9);
 
   // Hair covers most of back
   fillRect(ctx, hairColors.base, HX, HY, HW, HH - 5);
@@ -236,9 +243,9 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
-  // Profile: 14px wide, 18px tall (proportionally wider to match new south head)
-  // Head occupies x=19-32, y=5-22  (facing left, face at low-x end)
-  const HX = 19, HY = 5, HW = 14, HH = 18;
+  // Profile: 14px wide, 21px tall (matches south head height)
+  // Head occupies x=19-32, y=5-25  (facing left, face at low-x end)
+  const HX = 19, HY = 5, HW = 14, HH = 21;
   const outline = '#111111';
 
   // --- Skin fill ---
@@ -306,8 +313,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawNeckSouth(ctx, skinColors, baseY) {
-  // neck: 10px wide x 3px, centered at x=27-36 (wider to match larger head)
-  const NX = 27, NW = 10, NH = 3;
+  // neck: 10px wide x 2px, centered at x=27-36
+  const NX = 27, NW = 10, NH = 2;
   fillRect(ctx, skinColors.base, NX, baseY, NW, NH);
   vLine(ctx, skinColors.highlight, NX + 1, baseY, NH);
   vLine(ctx, skinColors.shadow,    NX + NW - 2, baseY, NH);
@@ -750,7 +757,7 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   // Black junction outline at x=22 (left) and x=41 (right) creates clear
   // arm-torso seam at the shoulder joint.
   const lx = 18, rx = 41;
-  const baseY = 26;
+  const baseY = 28;  // matches new torsoY after head height increase
   const baseAW = 5, sleeveH = 11, handH = 4;
 
   // Row 0: +1 shoulder cap bulge (5px) for rounded deltoid volume
@@ -773,9 +780,9 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
     px(ctx,   clothingColors.shadow,    rowLx + rowW - 1, lArmY + row);  // inner shadow
     if (row === 0) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);  // shoulder cap volume
   }
-  // Hard junction seam: arm inner edge painted with outline color
+  // Soft junction seam: shadow color (selout style) rather than hard black
   for (let row = 0; row < sleeveH; row++) {
-    px(ctx, clothingColors.outline, 22, lArmY + row);
+    px(ctx, clothingColors.shadow, 22, lArmY + row);
   }
   hLine(ctx, clothingColors.shadow, lx - (bulge[sleeveH-1]||0), lArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 
@@ -802,9 +809,9 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
     px(ctx,   clothingColors.shadow, rx + rowW - 1, rArmY + row);  // outer selout
     if (row === 0) px(ctx, clothingColors.base, rx + rowW - 1, rArmY + row);  // soften cap tip
   }
-  // Hard junction seam
+  // Soft junction seam
   for (let row = 0; row < sleeveH; row++) {
-    px(ctx, clothingColors.outline, 41, rArmY + row);
+    px(ctx, clothingColors.shadow, 41, rArmY + row);
   }
   hLine(ctx, clothingColors.shadow, rx + 1, rArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
 

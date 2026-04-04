@@ -64,8 +64,8 @@ function drawSouth(ctx, config, offsets) {
   const shoeH  = 4;
   const legH   = 13;
   const beltH  = 2;
-  const torsoH = 19;
-  const neckH  = 3;
+  const torsoH = 17;  // reduced 2px; head grew 3px, neck shrunk 1px → net +0 total
+  const neckH  = 2;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -119,8 +119,8 @@ function drawNorth(ctx, config, offsets) {
   const shoeH  = 4;
   const legH   = 13;
   const beltH  = 2;
-  const torsoH = 19;
-  const neckH  = 3;
+  const torsoH = 17;
+  const neckH  = 2;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -196,13 +196,13 @@ function drawWest(ctx, config, offsets) {
   const shoeH  = 4;
   const legH   = 13;
   const beltH  = 2;
-  const torsoH = 18;
+  const torsoH = 16;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
   const beltY  = legY - beltH;
   const torsoY = beltY - torsoH;
-  const neckY  = torsoY - 3;
+  const neckY  = torsoY - 2;
 
   // Side profile centering: torso at x=20-32
   const torsoX = 20;
@@ -229,8 +229,8 @@ function drawWest(ctx, config, offsets) {
   // Torso
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
   // Neck (side)
-  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 3);
-  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 3);
+  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 2);
+  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 2);
   // Head
   ctx.save();
   ctx.translate(0, headBob || 0);
