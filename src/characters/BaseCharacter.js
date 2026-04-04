@@ -92,27 +92,44 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   // Chin bottom
   hLine(ctx, outline, 28, HY + 17, 8);
 
-  // ── Eyebrows ─────────────────────────────────────────────────────────────
+  // ── Eyebrows (slight arch: inner end 1px higher than outer) ─────────────
+  // Left brow: arch rises from x=26 (outer, browY) to x=29 (inner, browY-1)
   const browY = HY + 8;   // y=13
-  hLine(ctx, hairColors.base,   26, browY, 4);   // left brow
-  px(ctx,   hairColors.shadow,  26, browY);
-  hLine(ctx, hairColors.base,   33, browY, 4);   // right brow
-  px(ctx,   hairColors.shadow,  36, browY);
+  hLine(ctx, hairColors.base,   26, browY,     3);   // outer 3px of left brow
+  px(ctx,   hairColors.base,    29, browY - 1);       // inner peak (1px up)
+  px(ctx,   hairColors.shadow,  26, browY);            // outer end slightly darker
+  // Right brow: mirror arch (inner end at x=33, outer at x=36)
+  px(ctx,   hairColors.base,    33, browY - 1);       // inner peak
+  hLine(ctx, hairColors.base,   34, browY,     3);   // outer 3px of right brow
+  px(ctx,   hairColors.shadow,  36, browY);            // outer end slightly darker
 
-  // ── Eyes  (3×2 each) ─────────────────────────────────────────────────────
+  // ── Eyes (4×2 each, organic pixel art) ──────────────────────────────────
+  // Order: outline first → override interior with sclera/iris/shine → soften top corners
+  // Top corners → skinColors.shadow (eyelid feel, matches eyelid shadow above)
+  // Iris centered in bottom row; white shine top-right creates "living" eye look
   const eyeY = HY + 9;   // y=14
-  // whites
-  fillRect(ctx, '#FFFFFF', 26, eyeY, 4, 2);
-  fillRect(ctx, '#FFFFFF', 33, eyeY, 4, 2);
-  // iris / pupil
-  px(ctx, '#5A3010', 26, eyeY + 1);
-  px(ctx, '#1A0800', 27, eyeY + 1);
-  px(ctx, '#5A3010', 33, eyeY + 1);
-  px(ctx, '#1A0800', 34, eyeY + 1);
-  // eye outlines
+
+  // Left eye: x=26-29
   outlineRect(ctx, outline, 26, eyeY, 4, 2);
+  px(ctx, '#FFFFFF',         27, eyeY);            // sclera left
+  px(ctx, '#FFFFFF',         28, eyeY);            // sclera right
+  px(ctx, '#6B3A10',         27, eyeY + 1);        // iris (warm brown)
+  px(ctx, '#160800',         28, eyeY + 1);        // pupil (dark center)
+  px(ctx, '#FFFFFF',         28, eyeY);            // shine: white highlight on iris top-right
+  px(ctx, skinColors.shadow, 26, eyeY);            // rounded top-left corner
+  px(ctx, skinColors.shadow, 29, eyeY);            // rounded top-right corner
+
+  // Right eye: x=33-36
   outlineRect(ctx, outline, 33, eyeY, 4, 2);
-  // eyelid shadow above eyes
+  px(ctx, '#FFFFFF',         34, eyeY);
+  px(ctx, '#FFFFFF',         35, eyeY);
+  px(ctx, '#6B3A10',         34, eyeY + 1);
+  px(ctx, '#160800',         35, eyeY + 1);
+  px(ctx, '#FFFFFF',         35, eyeY);            // shine
+  px(ctx, skinColors.shadow, 33, eyeY);
+  px(ctx, skinColors.shadow, 36, eyeY);
+
+  // Eyelid shadow above both eyes
   hLine(ctx, skinColors.shadow, 26, eyeY - 1, 4);
   hLine(ctx, skinColors.shadow, 33, eyeY - 1, 4);
 
@@ -123,13 +140,16 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, skinColors.shadow, 32, noseY);
   px(ctx, skinColors.shadow, 33, noseY + 1);  // right nostril
 
-  // ── Mouth ─────────────────────────────────────────────────────────────────
+  // ── Mouth (natural neutral expression) ───────────────────────────────────
+  // Head center = x=32. Lip bar x=29-34 (6px, centered).
+  // Top row: shadow corners at 28,35; lip color across 29-34.
+  // Bottom row: shadow at 30,33 creates gentle lower-lip arc.
   const mouthY = HY + 15;   // y=20
-  px(ctx, skinColors.shadow, 27, mouthY);       // left corner
-  hLine(ctx, '#C05050',      28, mouthY, 3);    // left lip
-  px(ctx, skinColors.shadow, 31, mouthY);       // center dip
-  hLine(ctx, '#C05050',      32, mouthY, 3);    // right lip
+  px(ctx, skinColors.shadow, 28, mouthY);       // left corner
+  hLine(ctx, '#C05050',      29, mouthY, 6);    // 6px lip bar (centered on x=32)
   px(ctx, skinColors.shadow, 35, mouthY);       // right corner
+  px(ctx, skinColors.shadow, 30, mouthY + 1);   // lower-left arc
+  px(ctx, skinColors.shadow, 33, mouthY + 1);   // lower-right arc
 
   // ── Hair ─────────────────────────────────────────────────────────────────
   drawHairSouth(ctx, hairColors, hairStyle, HX, HY, HW);
@@ -729,9 +749,9 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   // Right arm = shadow side (both edges shadowed).
   // Black junction outline at x=22 (left) and x=41 (right) creates clear
   // arm-torso seam at the shoulder joint.
-  const lx = 19, rx = 41;
+  const lx = 18, rx = 41;
   const baseY = 26;
-  const baseAW = 4, sleeveH = 11, handH = 4;
+  const baseAW = 5, sleeveH = 11, handH = 4;
 
   // Row 0: +1 shoulder cap bulge (5px) for rounded deltoid volume
   // Rows 1-7: 0 → 4px arm body
