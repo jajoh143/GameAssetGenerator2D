@@ -169,17 +169,19 @@
       flex: 1;
       overflow-y: auto;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
       gap: 24px;
+      align-content: start;
     }
 
     .empty-state {
-      flex: 1;
+      grid-column: 1 / -1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      min-height: 300px;
       color: var(--muted);
       gap: 10px;
     }
@@ -274,6 +276,7 @@
 <header>
   <h1>GameAssetGenerator2D</h1>
   <span>Character Builder</span>
+  <button id="clear-btn" class="card-btn" style="display:none;margin-left:auto">Clear All</button>
 </header>
 
 <div class="layout">
@@ -390,6 +393,7 @@ const state = {
 
 let options = null;
 const liveAnimations = {};
+const cardsByName = {};   // name → cardId, for replace-on-regenerate
 let cardCounter = 0;
 
 const ANIM_ROWS = [
@@ -413,9 +417,25 @@ async function boot() {
     populateSidebar();
     document.getElementById('gen-btn').disabled = false;
     setStatus('Ready.', '');
+    loadManifest();
   } catch (e) {
     setStatus('Server error: ' + e.message, 'err');
   }
+}
+
+// ── Load batch-generated characters from manifest ─────────────────────────
+async function loadManifest() {
+  try {
+    const r = await fetch('/manifest.json?t=' + Date.now());
+    if (!r.ok) return;
+    const manifest = await r.json();
+    if (!manifest.characters || !manifest.characters.length) return;
+    document.getElementById('empty-state').style.display = 'none';
+    for (const char of manifest.characters) {
+      const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
+      loadAndShowCard(char.name, filePath, manifest.frameWidth || 64);
+    }
+  } catch (_) { /* manifest may not exist yet, ignore */ }
 }
 
 // ── Populate sidebar ───────────────────────────────────────────────────────
@@ -533,6 +553,16 @@ wireToggleRow('size-row',       'frameSize', null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
 document.getElementById('gen-btn').addEventListener('click', generate);
+document.getElementById('clear-btn').addEventListener('click', () => {
+  Object.keys(liveAnimations).forEach(id => {
+    liveAnimations[id].timers.forEach(clearInterval);
+    delete liveAnimations[id];
+  });
+  Object.keys(cardsByName).forEach(n => delete cardsByName[n]);
+  document.querySelectorAll('.char-card').forEach(c => c.remove());
+  document.getElementById('empty-state').style.display = '';
+  updateClearBtn();
+});
 
 // ── Generate ───────────────────────────────────────────────────────────────
 async function generate() {
@@ -554,7 +584,6 @@ async function generate() {
     if (!r.ok || !data.success) throw new Error(data.error || 'Unknown error');
 
     setStatus('Done!', 'ok');
-    document.getElementById('empty-state').style.display = 'none';
     loadAndShowCard(data.name, data.file, frameSize);
   } catch (e) {
     setStatus('Error: ' + e.message, 'err');
@@ -583,15 +612,37 @@ function buildConfig() {
 function loadAndShowCard(name, filePath, frameSize) {
   const img = new Image();
   img.onload = () => {
+    // Replace existing card for same name (e.g. re-generating)
+    if (cardsByName[name]) removeCard(cardsByName[name]);
+
     const card = buildCard(name, filePath, frameSize, img);
     const main = document.getElementById('main');
-    // Insert after empty-state
-    const emptyState = document.getElementById('empty-state');
-    main.insertBefore(card, emptyState.nextSibling);
+    main.insertBefore(card, document.getElementById('empty-state').nextSibling);
+    cardsByName[name] = card.dataset.cardId;
+    updateClearBtn();
     startCardAnims(card.dataset.cardId, img, frameSize);
   };
   img.onerror = () => setStatus('Failed to load spritesheet image.', 'err');
   img.src = filePath + '?t=' + Date.now();
+}
+
+function removeCard(id) {
+  const st = liveAnimations[id];
+  if (st) { st.timers.forEach(clearInterval); delete liveAnimations[id]; }
+  for (const [n, cid] of Object.entries(cardsByName)) {
+    if (cid === id) delete cardsByName[n];
+  }
+  const card = document.querySelector(`[data-card-id="${id}"]`);
+  if (card) card.remove();
+  if (!document.querySelector('.char-card')) {
+    document.getElementById('empty-state').style.display = '';
+  }
+  updateClearBtn();
+}
+
+function updateClearBtn() {
+  const hasCards = !!document.querySelector('.char-card');
+  document.getElementById('clear-btn').style.display = hasCards ? '' : 'none';
 }
 
 function buildCard(name, filePath, frameSize, img) {
@@ -618,9 +669,15 @@ function buildCard(name, filePath, frameSize, img) {
   dlBtn.download = name + '_spritesheet.png';
   dlBtn.textContent = 'Download PNG';
 
+  const rmBtn = document.createElement('button');
+  rmBtn.className = 'card-btn';
+  rmBtn.textContent = '✕ Remove';
+  rmBtn.addEventListener('click', () => removeCard(id));
+
   const actions = document.createElement('div');
   actions.className = 'card-actions';
   actions.appendChild(dlBtn);
+  actions.appendChild(rmBtn);
 
   header.appendChild(nameEl);
   header.appendChild(metaEl);
