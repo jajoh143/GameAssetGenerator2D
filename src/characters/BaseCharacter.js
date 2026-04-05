@@ -587,25 +587,55 @@ function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
 // ---------------------------------------------------------------------------
 
 function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
-  const w = 13, h = 18;
+  // Side profile torso — row-by-row for organic side silhouette:
+  //   Rows 0-2  (shoulder): full width  (w=13)
+  //   Rows 3-6  (chest):    tapered 1px at back (w=12, back edge pulls in)
+  //   Rows 7-11 (waist):    tapered 2px at back (w=11, most pull-in)
+  //   Rows 12+  (hip):      tapered 1px at back (w=12, slight flare)
+  // Front edge stays constant (facing viewer = stable silhouette).
+  const h = 16;  // updated torsoH for west
+  const SHOULDER = 3, WAIST_S = 7, WAIST_E = 11;
 
-  fillRect(ctx, clothingColors.base, x, y, w, h);
+  // Back edge (x+w direction) varies; front edge (x) stays constant
+  const rowW = (row) => {
+    if (row < SHOULDER)                       return 13;  // full shoulder
+    if (row >= WAIST_S && row <= WAIST_E)    return 11;  // narrow waist
+    return 12;                                             // chest/hip
+  };
 
-  // Front side highlight (left edge)
+  // Fill row by row
+  for (let row = 0; row < h; row++) {
+    hLine(ctx, clothingColors.base, x, y + row, rowW(row));
+  }
+
+  // Front side highlight (left edge — lit side facing viewer)
   vLine(ctx, clothingColors.highlight, x,     y + 1, h - 2);
   vLine(ctx, clothingColors.highlight, x + 1, y + 1, h - 2);
 
-  // Back/right side shadow
-  vLine(ctx, clothingColors.shadow, x + w - 2, y + 1, h - 2);
-  vLine(ctx, clothingColors.shadow, x + w - 3, y + 1, h - 2);
+  // Back/right shadow (2px strip — back of torso away from light)
+  for (let row = 0; row < h; row++) {
+    const rw = rowW(row);
+    px(ctx, clothingColors.shadow, x + rw - 2, y + row);
+    px(ctx, clothingColors.shadow, x + rw - 3, y + row);
+  }
 
-  // Slight belly contour at mid-height
-  px(ctx, clothingColors.shadow, x + w, y + Math.floor(h / 2));
+  // Chest prominence at rows 3-5: slight forward bulge shadow below chest
+  hLine(ctx, clothingColors.shadow, x + 2, y + 6, rowW(6) - 4);
 
   // Bottom edge darker
-  hLine(ctx, clothingColors.shadow, x + 1, y + h - 2, w - 2);
+  hLine(ctx, clothingColors.shadow, x + 1, y + h - 2, rowW(h - 1) - 2);
 
-  outlineRect(ctx, clothingColors.outline, x, y, w, h);
+  // Outline: front + top + bottom solid; back edge follows rowW
+  hLine(ctx, clothingColors.outline, x, y, rowW(0));         // top
+  hLine(ctx, clothingColors.outline, x, y + h - 1, rowW(h - 1));  // bottom
+  vLine(ctx, clothingColors.outline, x, y, h);                // front edge
+  for (let row = 0; row < h; row++) {
+    px(ctx, clothingColors.shadow, x + rowW(row) - 1, y + row);  // back selout
+  }
+  // AA at waist step transitions
+  px(ctx, clothingColors.shadow, x + rowW(SHOULDER) - 1, y + SHOULDER);
+  px(ctx, clothingColors.shadow, x + rowW(WAIST_S) - 1,  y + WAIST_S);
+  px(ctx, clothingColors.shadow, x + rowW(WAIST_E + 1) - 1, y + WAIST_E + 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -748,26 +778,44 @@ function drawLegsWest(ctx, pantColors, frontLegX, backLegX, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY) {
-  // Left shoe: x=23-32 (10px wide, 4px tall) — centered under 6px leg
+  // Left shoe: x=23-32 (10px wide, 4px tall)
+  // Right shoe: x=34-43 (10px wide)
+  // Each shoe: toe extends 2px left of leg, heel extends 2px right.
+  // Organic shape: toe top rounded (erase corner), heel raised 1px (step).
   const lx = 23 + Math.round(lShoeDX);
   const rx = 34 + Math.round(rShoeDX);
   const y  = baseY;
 
-  // Left shoe
+  // ── Left shoe ─────────────────────────────────────────────────────────────
   fillRect(ctx, shoeColors.base, lx, y, 10, 4);
-  hLine(ctx, shoeColors.highlight, lx + 1, y,         8);
-  hLine(ctx, shoeColors.shadow,    lx,     y + 3,     10);
-  // Toe rounding (left side)
-  px(ctx, shoeColors.shadow, lx, y);
+  // Highlight: top row (shoe catching light from above), skip toe corner
+  hLine(ctx, shoeColors.highlight, lx + 2, y, 7);
+  // Mid-shine stripe row 1 (boot leather often has a secondary shine)
+  hLine(ctx, shoeColors.highlight, lx + 3, y + 1, 4);
+  // Sole shadow: bottom 2 rows darker + sole line
+  hLine(ctx, shoeColors.shadow, lx,     y + 2, 10);
+  hLine(ctx, shoeColors.shadow, lx,     y + 3, 10);
+  // Toe rounding: erase top-left corner pixel, shadow at corner
+  erasePixel(ctx, lx, y);
+  px(ctx, shoeColors.shadow, lx + 1, y);   // soft toe top
+  // Heel: top-right corner slightly lighter (catches light at back)
+  px(ctx, shoeColors.highlight, lx + 9, y);
   outlineRect(ctx, shoeColors.outline, lx, y, 10, 4);
+  // Toe-cap stitch line (vertical shadow 1px from left)
+  px(ctx, shoeColors.shadow, lx + 2, y + 1);
 
-  // Right shoe
+  // ── Right shoe ────────────────────────────────────────────────────────────
   fillRect(ctx, shoeColors.base, rx, y, 10, 4);
-  hLine(ctx, shoeColors.highlight, rx + 1, y,     8);
-  hLine(ctx, shoeColors.shadow,    rx,     y + 3, 10);
-  // Toe rounding (right side)
-  px(ctx, shoeColors.shadow, rx + 9, y);
+  hLine(ctx, shoeColors.highlight, rx + 1, y, 7);
+  hLine(ctx, shoeColors.highlight, rx + 3, y + 1, 4);
+  hLine(ctx, shoeColors.shadow, rx, y + 2, 10);
+  hLine(ctx, shoeColors.shadow, rx, y + 3, 10);
+  // Toe rounding (right shoe toe = right side)
+  erasePixel(ctx, rx + 9, y);
+  px(ctx, shoeColors.shadow, rx + 8, y);
+  px(ctx, shoeColors.highlight, rx, y);
   outlineRect(ctx, shoeColors.outline, rx, y, 10, 4);
+  px(ctx, shoeColors.shadow, rx + 7, y + 1);
 }
 
 // ---------------------------------------------------------------------------
