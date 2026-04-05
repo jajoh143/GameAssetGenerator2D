@@ -386,10 +386,16 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   }
 
   // ── 2. Directional form shading (left-lit, SNES convention) ──────────────
+  // Anti-banding: highlight width varies with body area to follow the form.
+  // Shoulder (rows 0-2): 2px highlight (broad shoulder face catches most light)
+  // Chest (rows 3-6):    1px highlight
+  // Waist (rows 7-11):   1px highlight (taper means less surface area facing light)
+  // Hip (rows 12+):      1px highlight + extra pixel on row 12 (hip flare re-facing)
   for (let row = 0; row < numRows; row++) {
-    // Left panel: 2nd pixel = highlight
+    const isShoulderRow = row < SHOULDER;
     px(ctx, colors.highlight, rl(row) + 1, y + row);
-    // Right panel: 2nd + 3rd pixels = shadow
+    if (isShoulderRow) px(ctx, colors.highlight, rl(row) + 2, y + row); // wider shoulder lit face
+    // Right panel: 2px shadow strip
     px(ctx, colors.shadow, rr(row) - 1, y + row);
     px(ctx, colors.shadow, rr(row) - 2, y + row);
   }
