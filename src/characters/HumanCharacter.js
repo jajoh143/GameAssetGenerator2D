@@ -139,22 +139,34 @@ function drawNorth(ctx, config, offsets) {
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY);
   drawBeltSouth(ctx, colors.belt,   24, beltY);
 
-  // Back of torso — same rectangular silhouette as front jacket, no collar
+  // Back of torso — hourglass silhouette matching front jacket
   {
     const bx = 23, bw = 18, by = torsoY, bN = Math.min(torsoH, 19);
-    const bSHOULDER = 3;
-    const brl = (r) => r < bSHOULDER ? bx - 1 : bx;
-    const brr = (r) => r < bSHOULDER ? bx + bw : bx + bw - 1;
+    const bSHOULDER = 3, bWS = 7, bWE = 11;
+    const brl = (r) => {
+      if (r < bSHOULDER)            return bx - 1;
+      if (r >= bWS && r <= bWE)    return bx + 1;  // waist taper
+      return bx;
+    };
+    const brr = (r) => {
+      if (r < bSHOULDER)            return bx + bw;
+      if (r >= bWS && r <= bWE)    return bx + bw - 2;  // waist taper
+      return bx + bw - 1;
+    };
 
-    // Fill
     for (let r = 0; r < bN; r++) {
       hLine(ctx, colors.clothing.base, brl(r), by + r, brr(r) - brl(r) + 1);
     }
-    // Side panel shadows + center back highlight
+    // Side panel shadows + center back highlight (back-lit rim light simulation)
     for (let r = 0; r < bN; r++) {
       pixel(ctx, colors.clothing.shadow,    brl(r) + 1, by + r);
       pixel(ctx, colors.clothing.shadow,    brr(r) - 1, by + r);
       pixel(ctx, colors.clothing.highlight, Math.floor((brl(r) + brr(r)) / 2), by + r);
+    }
+    // Waist bridge pixels (same as front)
+    for (let r = bWS; r <= bWE; r++) {
+      pixel(ctx, colors.clothing.shadow, bx, by + r);
+      pixel(ctx, colors.clothing.shadow, bx + bw - 1, by + r);
     }
     // Armpit creases
     pixel(ctx, colors.clothing.shadow, bx - 1, by - 1);

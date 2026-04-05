@@ -147,9 +147,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, skinColors.shadow, 33, eyeY);
   px(ctx, skinColors.shadow, 36, eyeY);
 
-  // Eyelid shadow above both eyes
-  hLine(ctx, skinColors.shadow, 26, eyeY - 1, 4);
-  hLine(ctx, skinColors.shadow, 33, eyeY - 1, 4);
+  // (Eyelid shadow removed — flat brows at browY serve the same visual role
+  //  and the heavy upper-lid of each eye outline provides enough lid read)
 
   // ── Nose ─────────────────────────────────────────────────────────────────
   const noseY = HY + 12;   // y=17
