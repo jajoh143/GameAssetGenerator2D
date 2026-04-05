@@ -54,19 +54,30 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   hLine(ctx, skinColors.base, 29, HY + 19,  6);  // y=24:  6px lower-chin
   hLine(ctx, skinColors.base, 30, HY + 20,  4);  // y=25:  4px chin tip
 
-  // ── 4-level shading ──────────────────────────────────────────────────────
-  // Highlight (top-left face): rows 12-16 on left quarter (x=24-27)
-  fillRect(ctx, skinColors.highlight, 24, HY + 8, 4, 5);
-  hLine(ctx, skinColors.highlight, 25, HY + 7, 3);
+  // ── Face sphere shading (4 tones: highlight → base → mid-shadow → shadow) ──
+  // Light from upper-left. Sphere: bright forehead/left cheek → base center
+  //   → soft mid-shadow right-center → hard shadow right edge.
+  // This mirrors the SNES technique of using color to model shape, not lines.
 
-  // Shadow (right side): rows 13-19 on right quarter (x=38-40)
+  // Highlight zone (upper-left): forehead / left cheek
+  fillRect(ctx, skinColors.highlight, 24, HY + 8, 4, 5);  // left cheek
+  hLine(ctx, skinColors.highlight, 25, HY + 7, 3);         // forehead left
+
+  // Mid-face right ambient shadow (1px strip between base and edge shadow)
+  // Suggests the face surface curving away from light at right-center.
+  vLine(ctx, skinColors.shadow, 36, HY + 9, 5);    // right-center tone band
+
+  // Edge shadow (right): full dark strip at silhouette
   vLine(ctx, skinColors.shadow, 38, HY + 8, 7);
   vLine(ctx, skinColors.shadow, 39, HY + 8, 5);
   px(ctx, skinColors.shadow, 40, HY + 9);
   px(ctx, skinColors.shadow, 40, HY + 10);
   px(ctx, skinColors.shadow, 40, HY + 11);
 
-  // Dark shadow (chin + extended chin): all lower-face rows are shadow-toned
+  // Brow-cast shadow: the brow ridge casts a slight shadow on the upper eye socket
+  hLine(ctx, skinColors.shadow, 27, HY + 7, 5);    // center forehead one row darker
+
+  // Chin + extended chin (all shadow — under-lit)
   hLine(ctx, skinColors.shadow, 25, HY + 14, 14);
   hLine(ctx, skinColors.shadow, 26, HY + 16, 12);
   hLine(ctx, skinColors.shadow, 27, HY + 17, 10);
@@ -142,10 +153,11 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
 
   // ── Nose ─────────────────────────────────────────────────────────────────
   const noseY = HY + 12;   // y=17
-  px(ctx, skinColors.shadow, 30, noseY + 1);  // left nostril
-  px(ctx, skinColors.shadow, 31, noseY);
-  px(ctx, skinColors.shadow, 32, noseY);
-  px(ctx, skinColors.shadow, 33, noseY + 1);  // right nostril
+  px(ctx, skinColors.highlight, 31, noseY - 1);  // nose bridge highlight (catches light)
+  px(ctx, skinColors.shadow,    30, noseY + 1);  // left nostril
+  px(ctx, skinColors.shadow,    31, noseY);
+  px(ctx, skinColors.shadow,    32, noseY);
+  px(ctx, skinColors.shadow,    33, noseY + 1);  // right nostril
 
   // ── Mouth (natural neutral expression) ───────────────────────────────────
   // Head center = x=32. Lip bar x=30-33 (4px, centered).
@@ -326,21 +338,33 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  // SNES RPG body structure:
-  //   Rows 0-2 (shoulder): 20px  lx=22  rx=41
-  //   Rows 3-18 (body):    18px  lx=23  rx=40
+  // SNES RPG body structure — organic hourglass silhouette:
+  //   Rows 0-2  (shoulder): 20px  lx=22  rx=41  (shoulder cap)
+  //   Rows 3-6  (chest):    18px  lx=23  rx=40
+  //   Rows 7-11 (waist):    16px  lx=24  rx=39  ← taper -1px each side
+  //   Rows 12+  (hips):     18px  lx=23  rx=40  ← flare back out
   //
-  // DIRECTIONAL form shading (light from upper-left, not pillow shading):
-  //   Left panel: highlight on 2nd pixel → suggests cylinder lit from left
-  //   Right panel: shadow on 2nd+3rd pixel → shadow side away from light
-  //   Shirt: highlight on left column, shadow on right column
+  // DIRECTIONAL form shading (light from upper-left):
+  //   Left panel: highlight on 2nd pixel → lit face of cylinder
+  //   Right panel: 2px shadow strip → shadow face
+  //   Waist: shadow on inset pixels to sell the pull-in
+  //   Shirt: center column highlight for shirt-front volume
 
   const cx = Math.floor(x + w / 2);   // = 32
   const numRows = Math.min(h, 19);
   const SHOULDER = 3;
+  const WAIST_S = 7, WAIST_E = 11;   // waist taper row range
 
-  const rl = (row) => row < SHOULDER ? x - 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : x + w - 1;
+  const rl = (row) => {
+    if (row < SHOULDER)                       return x - 1;  // shoulder: x=22
+    if (row >= WAIST_S && row <= WAIST_E)    return x + 1;  // waist: x=24
+    return x;                                                  // body: x=23
+  };
+  const rr = (row) => {
+    if (row < SHOULDER)                       return x + w;      // shoulder: x=41
+    if (row >= WAIST_S && row <= WAIST_E)    return x + w - 2;  // waist: x=39
+    return x + w - 1;                                             // body: x=40
+  };
 
   // ── 1. Fill jacket base ──────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
@@ -349,69 +373,71 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
 
   // ── 2. Directional form shading (left-lit, SNES convention) ──────────────
   for (let row = 0; row < numRows; row++) {
-    // Left panel: 2nd pixel = highlight (facing the light source)
+    // Left panel: 2nd pixel = highlight
     px(ctx, colors.highlight, rl(row) + 1, y + row);
-    // Right panel: 2nd + 3rd pixels = shadow (away from light)
+    // Right panel: 2nd + 3rd pixels = shadow
     px(ctx, colors.shadow, rr(row) - 1, y + row);
     px(ctx, colors.shadow, rr(row) - 2, y + row);
   }
 
-  // ── 3. Fold shadow notches: jacket side panels only, not crossing shirt ─────
-  // Short 3px shadow notches on each jacket flank suggest fabric drape without
-  // creating visible horizontal bands across the full torso.
-  const foldRow1 = Math.floor(numRows * 0.45);  // ~row 8: mid-jacket
-  const foldRow2 = numRows - 3;                   // ~row 15: near-belt
+  // ── 3. Fold shadow notches: jacket flanks suggest fabric drape ───────────
+  const foldRow1 = Math.floor(numRows * 0.45);  // ~row 7-8
+  const foldRow2 = numRows - 3;                  // ~row 13-14
   for (const fr of [foldRow1, foldRow2]) {
-    const frl = rl(fr) + 2;   // left panel start (= 25 for body rows)
-    const frr = rr(fr) - 2;   // right panel end  (= 38 for body rows)
-    // Left jacket panel: up to the shirt edge at x=28
+    const frl = rl(fr) + 2;
+    const frr = rr(fr) - 2;
     if (28 - frl > 0) hLine(ctx, colors.shadow, frl, y + fr, 28 - frl);
-    // Right jacket panel: from shirt end at x=36
     if (frr - 35 > 0) hLine(ctx, colors.shadow, 36,  y + fr, frr - 35);
   }
 
-  // ── 5. Inner shirt panel (visible through open jacket front) ─────────────
+  // ── 5. Inner shirt panel ─────────────────────────────────────────────────
   const shirtW = 8, shirtLx = cx - 4;   // shirt x=28-35
   const shirtCol = colors.collar || colors.highlight;
   fillRect(ctx, shirtCol, shirtLx, y, shirtW, numRows);
-  // Shirt form shading: left highlight, right shadow, seam shadows at edges
+  // Shirt form shading
   vLine(ctx, colors.shadow,    shirtLx,              y, numRows);  // left seam
   vLine(ctx, colors.shadow,    shirtLx + shirtW - 1, y, numRows);  // right seam
-  vLine(ctx, colors.highlight, shirtLx + 1,          y, numRows);  // shirt left highlight
-  vLine(ctx, colors.shadow,    shirtLx + shirtW - 2, y, numRows);  // shirt right shadow
+  vLine(ctx, colors.highlight, shirtLx + 1,          y, numRows);  // lit face
+  vLine(ctx, colors.shadow,    shirtLx + shirtW - 2, y, numRows);  // shadow face
+  // Center highlight column — shirt front catches light, reads as rounded
+  vLine(ctx, colors.highlight, cx, y + 1, numRows - 2);
 
   // ── 6. Lapels: V opens from closed (row 0) to fully open (row 7) ─────────
-  // Research (SNES form shading): "the lapel face gets a highlight if the light
-  // source hits it." Left lapel faces upper-left light → full highlight fill.
-  // Right lapel faces away from light → stays base tone.
   const lapelH = Math.min(8, numRows);
   for (let row = 0; row < lapelH; row++) {
     const lw = Math.round(3 * (lapelH - 1 - row) / (lapelH - 1));
     if (lw > 0) {
-      // Left lapel: highlight across the folded face, shadow on inner edge
       hLine(ctx, colors.highlight, shirtLx,          y + row, lw);
-      px(ctx,   colors.shadow,     shirtLx + lw - 1, y + row);   // lapel fold shadow
-      // Right lapel: base tone (shadow side, facing away from light)
+      px(ctx,   colors.shadow,     shirtLx + lw - 1, y + row);
       hLine(ctx, colors.base,  shirtLx + shirtW - lw, y + row, lw);
-      px(ctx,   colors.shadow, shirtLx + shirtW - lw, y + row);  // lapel fold shadow
+      px(ctx,   colors.shadow, shirtLx + shirtW - lw, y + row);
     }
   }
 
-  // ── 7. AA pixel at shoulder-to-body step (row 3 corner) ─────────────────
-  // Smooth the 1px silhouette step with a shadow at the corner pixel
-  px(ctx, colors.shadow, x - 1, y + SHOULDER);      // left corner AA
-  px(ctx, colors.shadow, x + w, y + SHOULDER);      // right corner AA
+  // ── 7. Anti-aliasing at silhouette steps + waist gap bridge ─────────────
+  // Shoulder-to-body step (row 3)
+  px(ctx, colors.shadow, x - 1, y + SHOULDER);
+  px(ctx, colors.shadow, x + w, y + SHOULDER);
+  // Chest-to-waist and waist-to-hip corners
+  px(ctx, colors.shadow, x, y + WAIST_S);
+  px(ctx, colors.shadow, x + w - 1, y + WAIST_S);
+  px(ctx, colors.shadow, x, y + WAIST_E + 1);
+  px(ctx, colors.shadow, x + w - 1, y + WAIST_E + 1);
+  // Bridge pixels at waist: arm seam is at x=22, torso waist starts at x+1=24.
+  // x=23 would be transparent — fill with shadow to close the gap.
+  for (let row = WAIST_S; row <= WAIST_E; row++) {
+    px(ctx, colors.shadow, x,       y + row);  // left bridge  x=23
+    px(ctx, colors.shadow, x + w - 1, y + row);  // right bridge x=40
+  }
 
   // ── 8. Armpit crease ─────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
 
-  // ── 9. Selective outlining (research: "lightest colors where light hits") ──
-  // Shoulder top corners use shadow (not black) — softer, rounder shoulder read.
-  // Inner shoulder top stays black for strong silhouette definition.
-  px(ctx, colors.shadow,  x - 1, y);          // left shoulder corner — selout
-  hLine(ctx, colors.outline, x, y, w);         // inner shoulder top — hard black
-  px(ctx, colors.shadow,  x + w, y);           // right shoulder corner — selout
+  // ── 9. Selective outlining (selout: shadow not black at lit edges) ────────
+  px(ctx, colors.shadow,  x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow,  x + w, y);
   for (let row = 1; row < numRows - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
@@ -419,22 +445,29 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 
-  // ── 10. Shoulder cap volume + underpectoral fold ──────────────────────────
-  // Left shoulder outer tip row 1 = highlight (rounded cap catching upper-left light).
+  // ── 10. Shoulder cap volume ───────────────────────────────────────────────
   px(ctx, colors.highlight, x - 1, y + 1);
-  // Underpectoral fold on shirt at row 7 (lapels fully open here).
+  // Underpectoral fold
   hLine(ctx, colors.shadow, shirtLx + 1, y + 7, shirtW - 2);
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
-  // Same rectangular silhouette as jacket: 3-row shoulder cap + constant body.
-  // Closed front (no visible shirt): side shadows + center zipper + pocket.
+  // Hourglass silhouette matching jacket: shoulder cap + waist taper + hip flare.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 19);
   const SHOULDER = 3;
+  const WAIST_S = 7, WAIST_E = 11;
 
-  const rl = (row) => row < SHOULDER ? x - 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : x + w - 1;
+  const rl = (row) => {
+    if (row < SHOULDER)                     return x - 1;
+    if (row >= WAIST_S && row <= WAIST_E)  return x + 1;
+    return x;
+  };
+  const rr = (row) => {
+    if (row < SHOULDER)                     return x + w;
+    if (row >= WAIST_S && row <= WAIST_E)  return x + w - 2;
+    return x + w - 1;
+  };
 
   // ── 1. Fill hoodie base ───────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
@@ -486,7 +519,17 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
 
-  // Selective outlining: shoulder corners → shadow not black (rounded feel)
+  // AA at waist steps + bridge pixels (same logic as jacket)
+  px(ctx, colors.shadow, x, y + WAIST_S);
+  px(ctx, colors.shadow, x + w - 1, y + WAIST_S);
+  px(ctx, colors.shadow, x, y + WAIST_E + 1);
+  px(ctx, colors.shadow, x + w - 1, y + WAIST_E + 1);
+  for (let row = WAIST_S; row <= WAIST_E; row++) {
+    px(ctx, colors.shadow, x,       y + row);
+    px(ctx, colors.shadow, x + w - 1, y + row);
+  }
+
+  // Selective outlining: shoulder corners → shadow not black
   px(ctx, colors.shadow,  x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
   px(ctx, colors.shadow,  x + w, y);
@@ -497,7 +540,7 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 
-  // Shoulder cap volume highlight (left shoulder lit side)
+  // Shoulder cap volume highlight
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
@@ -633,11 +676,15 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY) {
     // ── Left leg ──────────────────────────────────────────────────────────────
     const llx = lx + lo;   // outer edge (extends left for knee)
     hLine(ctx, pantColors.base,      llx,          y + row, lw);
-    px(ctx,   pantColors.highlight,  llx + 1,      y + row);        // outer-lit face (left leg = lit side)
-    px(ctx,   pantColors.shadow,     llx + lw - 2, y + row);        // inner-thigh shadow
-    // knee face brightness
-    if (row >= 5 && row <= 7) px(ctx, pantColors.highlight, llx + 2, y + row);
-    // Dithered highlight on thigh (rows 1,3 — upper pant texture)
+    px(ctx,   pantColors.highlight,  llx + 1,      y + row);  // outer lit face
+    px(ctx,   pantColors.shadow,     llx + lw - 2, y + row);  // inner-thigh shadow
+    // Knee cap: 2px highlight column on outer face for knee prominence
+    if (row >= 5 && row <= 7) {
+      px(ctx, pantColors.highlight, llx + 2, y + row);
+      // Knee shadow under cap (row 7 = knee bottom edge)
+      if (row === 7) hLine(ctx, pantColors.shadow, llx + 1, y + row, lw - 2);
+    }
+    // Upper thigh texture highlights (rows 1, 3)
     if (row === 1 || row === 3) px(ctx, pantColors.highlight, llx + 2, y + row);
     // selout outer edge
     px(ctx, pantColors.shadow, llx, y + row);
@@ -751,44 +798,47 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
-  // 4px arms (body rows 1-7) with 5px shoulder cap at row 0 and 3px wrist taper.
-  // Left arm = lit side (highlight on outer face).
-  // Right arm = shadow side (both edges shadowed).
-  // Black junction outline at x=22 (left) and x=41 (right) creates clear
-  // arm-torso seam at the shoulder joint.
+  // Organic arm silhouette — SNES style:
+  //   Row 0:    shoulder cap   (+1 = 6px outward)
+  //   Rows 1-2: bicep swell    (+1 = 6px, widest part of upper arm)
+  //   Rows 3-5: arm body       ( 0 = 5px)
+  //   Rows 6-7: elbow narrow   (-1 = 4px, slight elbow pull-in)
+  //   Rows 8-9: forearm swell  ( 0 = 5px, forearm slightly wider than elbow)
+  //   Row 10:   wrist taper    (-1 = 4px, narrowing toward hand)
+  // Left arm = lit side (outer highlight). Right arm = shadow side.
   const lx = 18, rx = 41;
-  const baseY = 28;  // matches new torsoY after head height increase
+  const baseY = 28;
   const baseAW = 5, sleeveH = 11, handH = 4;
 
-  // Row 0: +1 shoulder cap bulge (5px) for rounded deltoid volume
-  // Rows 1-7: 0 → 4px arm body
-  // Rows 8-10: -1 → 3px wrist taper
-  const bulge = [1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1];
+  // bulge[row]: amount added to baseAW, and lx shifted left by same amount
+  const bulge = [1, 1, 1, 0, 0, 0, -1, -1, 0, 0, -1];
 
   const lArmY = baseY + Math.round(lArmDY);
   const rArmY = baseY + Math.round(rArmDY);
 
-  // ── Left arm ──────────────────────────────────────────────────────────────
-  // Directional: outer face = highlight (lit side), inner face = shadow.
-  // Row 0 gets double-highlight on 2nd pixel to suggest rounded shoulder cap.
+  // ── Left arm (lit side) ──────────────────────────────────────────────────
   for (let row = 0; row < sleeveH; row++) {
-    const b = bulge[row] || 0;
-    const rowLx = lx - b;
+    const b = bulge[row];
+    const rowLx = lx - b;          // extends outward at bicep/shoulder
     const rowW  = baseAW + b;
     hLine(ctx, clothingColors.base,     rowLx,            lArmY + row, rowW);
-    px(ctx,   clothingColors.highlight, rowLx,            lArmY + row);  // outer lit face
-    px(ctx,   clothingColors.shadow,    rowLx + rowW - 1, lArmY + row);  // inner shadow
-    if (row === 0) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);  // shoulder cap volume
+    px(ctx,   clothingColors.highlight, rowLx,            lArmY + row);   // outer lit face
+    px(ctx,   clothingColors.shadow,    rowLx + rowW - 1, lArmY + row);   // inner shadow
+    // Double highlight at shoulder cap and bicep peak rows (0-2) for volume
+    if (row <= 2) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);
+    // Elbow shadow: extra dark pixel on inner face at elbow rows
+    if (row === 6 || row === 7) px(ctx, clothingColors.shadow, rowLx + 1, lArmY + row);
   }
-  // Soft junction seam: shadow color (selout style) rather than hard black
+  // Soft junction seam (selout)
   for (let row = 0; row < sleeveH; row++) {
     px(ctx, clothingColors.shadow, 22, lArmY + row);
   }
-  hLine(ctx, clothingColors.shadow, lx - (bulge[sleeveH-1]||0), lArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
+  // Wrist-bottom shadow line
+  hLine(ctx, clothingColors.shadow, lx - bulge[sleeveH-1], lArmY + sleeveH - 1, baseAW + bulge[sleeveH-1] - 1);
 
-  // Left fist — x=19-22 (4px, aligns with arm body), rounded bottom corners
-  const lhw = baseAW;   // 4px, same as arm body
-  const lhx = lx;       // 19 — aligns to arm outer edge
+  // Left fist (aligns to arm wrist width)
+  const lhw = baseAW - 1;  // 4px fist, narrower than max arm
+  const lhx = lx;
   fillRect(ctx, skinColors.base, lhx, lArmY + sleeveH, lhw, handH);
   vLine(ctx, skinColors.highlight, lhx + 1,       lArmY + sleeveH, handH);
   vLine(ctx, skinColors.shadow,    lhx + lhw - 2, lArmY + sleeveH, handH);
@@ -798,29 +848,30 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   px(ctx, skinColors.shadow, lhx,           lArmY + sleeveH + handH - 2);
   px(ctx, skinColors.shadow, lhx + lhw - 1, lArmY + sleeveH + handH - 2);
 
-  // ── Right arm ─────────────────────────────────────────────────────────────
-  // Shadow side: both edges shadowed. Row 0 outer tip overridden to base so
-  // the right shoulder cap doesn't read as a double-dark blob.
+  // ── Right arm (shadow side) ───────────────────────────────────────────────
   for (let row = 0; row < sleeveH; row++) {
-    const b = bulge[row] || 0;
+    const b = bulge[row];
     const rowW = baseAW + b;
-    hLine(ctx, clothingColors.base,  rx,            rArmY + row, rowW);
-    px(ctx,   clothingColors.shadow, rx,            rArmY + row);  // inner selout
-    px(ctx,   clothingColors.shadow, rx + rowW - 1, rArmY + row);  // outer selout
-    if (row === 0) px(ctx, clothingColors.base, rx + rowW - 1, rArmY + row);  // soften cap tip
+    hLine(ctx, clothingColors.base,  rx,             rArmY + row, rowW);
+    px(ctx,   clothingColors.shadow, rx,             rArmY + row);   // inner selout
+    px(ctx,   clothingColors.shadow, rx + rowW - 1,  rArmY + row);   // outer selout
+    // Soften the outer tip at bicep/shoulder — avoid double-dark blob
+    if (row <= 2) px(ctx, clothingColors.base, rx + rowW - 1, rArmY + row);
+    // Elbow extra shadow
+    if (row === 6 || row === 7) px(ctx, clothingColors.shadow, rx + 1, rArmY + row);
   }
   // Soft junction seam
   for (let row = 0; row < sleeveH; row++) {
     px(ctx, clothingColors.shadow, 41, rArmY + row);
   }
-  hLine(ctx, clothingColors.shadow, rx + 1, rArmY + sleeveH - 1, baseAW + (bulge[sleeveH-1]||0) - 1);
+  hLine(ctx, clothingColors.shadow, rx + 1, rArmY + sleeveH - 1, baseAW + bulge[sleeveH-1] - 1);
 
-  // Right fist — x=41-44 (4px)
-  const rhw = baseAW;   // 4px
-  const rhx = rx;       // 41
+  // Right fist
+  const rhw = baseAW - 1;  // 4px
+  const rhx = rx;
   fillRect(ctx, skinColors.base, rhx, rArmY + sleeveH, rhw, handH);
   vLine(ctx, skinColors.highlight, rhx + rhw - 2, rArmY + sleeveH, handH);
-  vLine(ctx, skinColors.shadow,    rhx + 1,        rArmY + sleeveH, handH);
+  vLine(ctx, skinColors.shadow,    rhx + 1,       rArmY + sleeveH, handH);
   outlineRect(ctx, skinColors.outline, rhx, rArmY + sleeveH, rhw, handH);
   erasePixel(ctx, rhx,           rArmY + sleeveH + handH - 1);
   erasePixel(ctx, rhx + rhw - 1, rArmY + sleeveH + handH - 1);
