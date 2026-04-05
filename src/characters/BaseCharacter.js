@@ -182,11 +182,26 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   const outline = '#111111';
 
   // Top hair band (7px tall, rows y=HY to HY+6)
+  // SNES hair technique: flat base, 2-row highlight curve (upper-left lit),
+  // strand texture via shadow dither, dark hairline edge.
   fillRect(ctx, hairColors.base, headX, headY, headW, 7);
-  // Highlight stripe
-  hLine(ctx, hairColors.highlight, headX + 3, headY + 1, headW - 8);
-  hLine(ctx, hairColors.highlight, headX + 2, headY + 2, headW - 6);
-  // Lower hair-line shadow
+
+  // Highlight curve: suggests hair parted upper-left, catching light
+  // Row 1: wide highlight arc (12px, centered left of part)
+  hLine(ctx, hairColors.highlight, headX + 2, headY + 1, headW - 6);
+  // Row 2: narrower (hair curves away from light toward right)
+  hLine(ctx, hairColors.highlight, headX + 2, headY + 2, headW - 8);
+
+  // Strand texture: alternating shadow pixels on rows 3-4 (hair depth)
+  // Odd columns = shadow dither suggesting individual hair strands
+  for (let dx = 1; dx < headW - 1; dx += 3) {
+    px(ctx, hairColors.shadow, headX + dx, headY + 3);
+  }
+  for (let dx = 2; dx < headW - 1; dx += 3) {
+    px(ctx, hairColors.shadow, headX + dx, headY + 4);
+  }
+
+  // Dark hairline: bottom 2 rows of hair band are shadow — hair meets face
   hLine(ctx, hairColors.shadow, headX, headY + 5, headW);
   hLine(ctx, hairColors.shadow, headX, headY + 6, headW);
 
