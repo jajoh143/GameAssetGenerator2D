@@ -465,8 +465,30 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 
-  // ── 10. Shoulder cap volume ───────────────────────────────────────────────
+  // ── 10. Shoulder cap + rounded corners + hip flare + cylinder body ────────
+  // Left shoulder cap: highlight row 1 (rounded cap catching upper-left light)
   px(ctx, colors.highlight, x - 1, y + 1);
+
+  // Rounded shoulder corners (finalbossblues: "emphasize simple round shapes"):
+  // Erase the outer top corners of the shoulder cap so the outline curves.
+  // Replace with shadow pixel to suggest the corner curves away from viewer.
+  erasePixel(ctx, x - 1, y);                             // left outer corner
+  px(ctx, colors.shadow, x - 1, y);                      // shadow in its place
+  erasePixel(ctx, x + w, y);                             // right outer corner
+  px(ctx, colors.shadow, x + w, y);                      // shadow in its place
+
+  // Hip flare highlight: at the waist→hip transition row (WAIST_E+1 = row 12),
+  // the silhouette widens back out. The newly-exposed outer pixels catch light.
+  px(ctx, colors.highlight, rl(WAIST_E + 1) + 1, y + WAIST_E + 1);  // left hip edge lit
+
+  // Jacket body cylinder shading: treat the jacket as a cylinder.
+  // The surface curves away from light toward the right-center.
+  // Add 1 mid-shadow pixel between shirt edge (x=35) and shadow strip (x=38-39)
+  // on the chest rows — suggests the jacket fabric wrapping around the body.
+  for (let row = 3; row <= 6; row++) {
+    px(ctx, colors.shadow, 37, y + row);  // right-center cylinder fall-off
+  }
+
   // Underpectoral fold
   hLine(ctx, colors.shadow, shirtLx + 1, y + 7, shirtW - 2);
 }
