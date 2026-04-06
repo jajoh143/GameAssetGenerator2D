@@ -73,17 +73,23 @@ function drawSouth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // Leg X offsets capped to prevent clipping
-  const lLegDX = Math.max(-5, Math.min(5, Math.round(leftLegFwd  * 0.5)));
-  const rLegDX = Math.max(-5, Math.min(5, Math.round(rightLegFwd * 0.5)));
+  // South-facing walk: legs move forward/back (depth), not left/right (lateral).
+  // Near-zero DX keeps feet under the body. Forward leg's foot drops slightly
+  // lower on screen (closer = lower in top-down perspective) via shoe DY offset.
+  // This replaces the old "feet spread sideways" shuffle look.
+  const lLegDX = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.1)));
+  const rLegDX = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.1)));
+  // Forward foot drops 1px, back foot rises 1px (max ±1px at this scale)
+  const lShoeDY = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.2)));
+  const rShoeDY = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.2)));
 
   // Arm Y offsets
   const lArmDY = Math.round(leftArmFwd  * 0.4);
   const rArmDY = Math.round(rightArmFwd * 0.4);
 
   // --- Draw order: back-to-front ---
-  // Shoes first (behind legs visually)
-  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY);
+  // Shoes first (behind legs visually); per-foot DY for depth illusion
+  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lShoeDY, rShoeDY);
   // Legs
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY);
   // Belt
@@ -128,14 +134,17 @@ function drawNorth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  const lLegDX = Math.max(-5, Math.min(5, Math.round(leftLegFwd  * 0.5)));
-  const rLegDX = Math.max(-5, Math.min(5, Math.round(rightLegFwd * 0.5)));
+  // Same south-view logic: near-zero DX, per-foot DY for depth
+  const lLegDX = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.1)));
+  const rLegDX = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.1)));
+  const lShoeDY = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.2)));
+  const rShoeDY = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.2)));
   const lArmDY = Math.round(leftArmFwd  * 0.4);
   const rArmDY = Math.round(rightArmFwd * 0.4);
 
   drawGroundShadow(ctx, 32, 62 + bodyY);
 
-  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY);
+  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lShoeDY, rShoeDY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY);
   drawBeltSouth(ctx, colors.belt,   24, beltY);
 

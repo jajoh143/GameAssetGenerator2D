@@ -837,45 +837,39 @@ function drawLegsWest(ctx, pantColors, frontLegX, backLegX, baseY) {
 // drawShoesSouth
 // ---------------------------------------------------------------------------
 
-function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY) {
+function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY, lShoeDY=0, rShoeDY=0) {
   // Left shoe: x=23-32 (10px wide, 4px tall)
   // Right shoe: x=34-43 (10px wide)
-  // Each shoe: toe extends 2px left of leg, heel extends 2px right.
-  // Organic shape: toe top rounded (erase corner), heel raised 1px (step).
+  // lShoeDY / rShoeDY: per-foot vertical offset so the forward foot drops
+  // slightly lower on screen (south-view depth illusion from top-down perspective).
   const lx = 23 + Math.round(lShoeDX);
   const rx = 34 + Math.round(rShoeDX);
-  const y  = baseY;
+  const ly = baseY + Math.round(lShoeDY);   // left foot Y (forward = slightly lower)
+  const ry = baseY + Math.round(rShoeDY);   // right foot Y
 
   // ── Left shoe ─────────────────────────────────────────────────────────────
-  fillRect(ctx, shoeColors.base, lx, y, 10, 4);
-  // Highlight: top row (shoe catching light from above), skip toe corner
-  hLine(ctx, shoeColors.highlight, lx + 2, y, 7);
-  // Mid-shine stripe row 1 (boot leather often has a secondary shine)
-  hLine(ctx, shoeColors.highlight, lx + 3, y + 1, 4);
-  // Sole shadow: bottom 2 rows darker + sole line
-  hLine(ctx, shoeColors.shadow, lx,     y + 2, 10);
-  hLine(ctx, shoeColors.shadow, lx,     y + 3, 10);
-  // Toe rounding: erase top-left corner pixel, shadow at corner
-  erasePixel(ctx, lx, y);
-  px(ctx, shoeColors.shadow, lx + 1, y);   // soft toe top
-  // Heel: top-right corner slightly lighter (catches light at back)
-  px(ctx, shoeColors.highlight, lx + 9, y);
-  outlineRect(ctx, shoeColors.outline, lx, y, 10, 4);
-  // Toe-cap stitch line (vertical shadow 1px from left)
-  px(ctx, shoeColors.shadow, lx + 2, y + 1);
+  fillRect(ctx, shoeColors.base, lx, ly, 10, 4);
+  hLine(ctx, shoeColors.highlight, lx + 2, ly, 7);
+  hLine(ctx, shoeColors.highlight, lx + 3, ly + 1, 4);
+  hLine(ctx, shoeColors.shadow, lx, ly + 2, 10);
+  hLine(ctx, shoeColors.shadow, lx, ly + 3, 10);
+  erasePixel(ctx, lx, ly);
+  px(ctx, shoeColors.shadow, lx + 1, ly);
+  px(ctx, shoeColors.highlight, lx + 9, ly);
+  outlineRect(ctx, shoeColors.outline, lx, ly, 10, 4);
+  px(ctx, shoeColors.shadow, lx + 2, ly + 1);
 
   // ── Right shoe ────────────────────────────────────────────────────────────
-  fillRect(ctx, shoeColors.base, rx, y, 10, 4);
-  hLine(ctx, shoeColors.highlight, rx + 1, y, 7);
-  hLine(ctx, shoeColors.highlight, rx + 3, y + 1, 4);
-  hLine(ctx, shoeColors.shadow, rx, y + 2, 10);
-  hLine(ctx, shoeColors.shadow, rx, y + 3, 10);
-  // Toe rounding (right shoe toe = right side)
-  erasePixel(ctx, rx + 9, y);
-  px(ctx, shoeColors.shadow, rx + 8, y);
-  px(ctx, shoeColors.highlight, rx, y);
-  outlineRect(ctx, shoeColors.outline, rx, y, 10, 4);
-  px(ctx, shoeColors.shadow, rx + 7, y + 1);
+  fillRect(ctx, shoeColors.base, rx, ry, 10, 4);
+  hLine(ctx, shoeColors.highlight, rx + 1, ry, 7);
+  hLine(ctx, shoeColors.highlight, rx + 3, ry + 1, 4);
+  hLine(ctx, shoeColors.shadow, rx, ry + 2, 10);
+  hLine(ctx, shoeColors.shadow, rx, ry + 3, 10);
+  erasePixel(ctx, rx + 9, ry);
+  px(ctx, shoeColors.shadow, rx + 8, ry);
+  px(ctx, shoeColors.highlight, rx, ry);
+  outlineRect(ctx, shoeColors.outline, rx, ry, 10, 4);
+  px(ctx, shoeColors.shadow, rx + 7, ry + 1);
 }
 
 // ---------------------------------------------------------------------------

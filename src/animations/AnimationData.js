@@ -24,27 +24,35 @@ const IDLE_FRAMES = [
 ];
 
 // WALK SOUTH: 8 frames - walking toward camera
+// Body bob: CONTACT pose (foot plants) = bodyY 0 (rest height, weight bearing).
+//           PASSING pose (legs cross under) = bodyY -1 (body rises 1px).
+// Leg values: only 1px lateral spread at peak — south-facing walk shows depth via
+// per-foot Y offset in drawSouth, not lateral sliding.
+// Arms: opposite to legs (left arm back when left leg forward).
 const WALK_SOUTH_FRAMES = [
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: 3,  rightLegFwd: -3, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -4, rightArmFwd: 4,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: 3,  rightLegFwd: -3, leftArmFwd: -3, rightArmFwd: 3,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: -3, rightLegFwd: 3,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: -3, rightLegFwd: 3,  leftArmFwd: 3,  rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // idle
+  { bodyY:  0, leftLegFwd:  4, rightLegFwd: -4, leftArmFwd: -3, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact L
+  { bodyY: -1, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -4, rightArmFwd:  4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (body UP)
+  { bodyY:  0, leftLegFwd:  4, rightLegFwd: -4, leftArmFwd: -3, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact return
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // idle
+  { bodyY:  0, leftLegFwd: -4, rightLegFwd:  4, leftArmFwd:  3, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact R
+  { bodyY: -1, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  4, rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (body UP)
+  { bodyY:  0, leftLegFwd: -4, rightLegFwd:  4, leftArmFwd:  3, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact return
 ];
 
-// WALK WEST: 8 frames - walking left (profile view)
+// WALK WEST: 8 frames - walking left (profile view — most legible direction)
+// Body bob: CONTACT (max stride, legs spread) = bodyY 0 (low, weight-bearing).
+//           PASSING (legs close, crossing under) = bodyY -1 (body UP 1px).
+// This is the CORRECT walk cycle: body rises as leg pushes up, drops as it plants.
 const WALK_WEST_FRAMES = [
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -4, rightArmFwd: 4,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: 9,  rightLegFwd: -9, leftArmFwd: -6, rightArmFwd: 6,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: 5,  rightLegFwd: -5, leftArmFwd: -4, rightArmFwd: 4,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -1, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
-  { bodyY: -2, leftLegFwd: -9, rightLegFwd: 9,  leftArmFwd: 6,  rightArmFwd: -6, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 },
-  { bodyY: -1, leftLegFwd: -5, rightLegFwd: 5,  leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 },
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // idle
+  { bodyY:  0, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -5, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact (legs spread, LOW)
+  { bodyY: -1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd: -2, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (legs close, HIGH)
+  { bodyY:  0, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -5, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact return
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // idle
+  { bodyY:  0, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  5, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact other side
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd:  2, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing other side
+  { bodyY:  0, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  5, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact return
 ];
 
 // WALK NORTH: 8 frames - walking away from camera
