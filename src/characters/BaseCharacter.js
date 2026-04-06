@@ -175,10 +175,12 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // Research: top lip = dark line, bottom lip catches light = highlight row.
   // 4px mouth centered at x=32; shadow corners just outside.
   const mouthY = HY + 15;   // y=20
-  px(ctx, skinColors.shadow, 29, mouthY);       // left corner shadow
-  hLine(ctx, '#B04040',      30, mouthY, 4);    // upper lip line (4px)
-  px(ctx, skinColors.shadow, 34, mouthY);       // right corner shadow
-  // Lower lip: 2px highlight in center — catches light, separates lips
+  // Research: mouth uses darker skin tone NOT saturated red (red reads as wound at small scale).
+  // 4px lip line centered; shadow corners just outside; lower lip highlight for volume.
+  px(ctx, skinColors.shadow,    29, mouthY);       // left corner shadow
+  hLine(ctx, skinColors.shadow, 30, mouthY, 4);    // upper lip line (4px, darker skin tone)
+  px(ctx, skinColors.shadow,    34, mouthY);       // right corner shadow
+  // Lower lip: 2px highlight in center — catches light from above, adds volume
   px(ctx, skinColors.highlight, 31, mouthY + 1);
   px(ctx, skinColors.highlight, 32, mouthY + 1);
 
