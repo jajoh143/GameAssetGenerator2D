@@ -59,13 +59,15 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   //   → soft mid-shadow right-center → hard shadow right edge.
   // This mirrors the SNES technique of using color to model shape, not lines.
 
-  // Highlight zone (upper-left): forehead / left cheek
-  fillRect(ctx, skinColors.highlight, 24, HY + 8, 4, 5);  // left cheek
-  hLine(ctx, skinColors.highlight, 25, HY + 7, 3);         // forehead left
+  // Highlight zone (upper-left): tight 3×3 cluster on forehead/cheek.
+  // Shadow > highlight in area (SNES rule: highlights are small bright accents).
+  fillRect(ctx, skinColors.highlight, 24, HY + 8, 3, 3);  // left cheek (3×3, not 4×5)
+  hLine(ctx, skinColors.highlight, 25, HY + 7, 2);         // forehead left (2px, not 3px)
 
-  // Mid-face right ambient shadow (1px strip between base and edge shadow)
-  // Suggests the face surface curving away from light at right-center.
+  // Mid-face ambient shadow — suggests sphere curving away from light.
+  // Two strip widths: 1px at right-center, 2px at right edge.
   vLine(ctx, skinColors.shadow, 36, HY + 9, 5);    // right-center tone band
+  vLine(ctx, skinColors.shadow, 37, HY + 9, 3);    // extra mid-shadow strip (wider falloff)
 
   // Edge shadow (right): full dark strip at silhouette
   vLine(ctx, skinColors.shadow, 38, HY + 8, 7);
@@ -121,34 +123,26 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   hLine(ctx, hairColors.base,  33, browY, 3);   // right brow: x=33-35
   px(ctx,  hairColors.shadow,  35, browY);       // outer end slightly darker
 
-  // ── Eyes (4×2 each, organic pixel art) ──────────────────────────────────
-  // Order: outline first → override interior with sclera/iris/shine → soften top corners
-  // Top corners → skinColors.shadow (eyelid feel, matches eyelid shadow above)
-  // Iris centered in bottom row; white shine top-right creates "living" eye look
+  // ── Eyes (3×2 simple dot — CT/FF6 overworld style) ──────────────────────
+  // No box outline: just lash-row + iris/pupil row + shine dot.
+  // Matches brow positions: left x=27-29, right x=33-35.
   const eyeY = HY + 9;   // y=14
 
-  // Left eye: x=26-29
-  outlineRect(ctx, outline, 26, eyeY, 4, 2);
-  px(ctx, '#FFFFFF',         27, eyeY);            // sclera left
-  px(ctx, '#FFFFFF',         28, eyeY);            // sclera right
-  px(ctx, '#6B3A10',         27, eyeY + 1);        // iris (warm brown)
-  px(ctx, '#160800',         28, eyeY + 1);        // pupil (dark center)
-  px(ctx, '#FFFFFF',         28, eyeY);            // shine: white highlight on iris top-right
-  px(ctx, skinColors.shadow, 26, eyeY);            // rounded top-left corner
-  px(ctx, skinColors.shadow, 29, eyeY);            // rounded top-right corner
+  // Left eye
+  px(ctx, '#2A1800', 27, eyeY);        // lid/lash left
+  px(ctx, '#FFFFFF', 28, eyeY);        // shine dot (top center)
+  px(ctx, '#2A1800', 29, eyeY);        // lid/lash right
+  px(ctx, '#7B4820', 27, eyeY + 1);    // iris
+  px(ctx, '#160800', 28, eyeY + 1);    // pupil
+  px(ctx, '#7B4820', 29, eyeY + 1);    // iris
 
-  // Right eye: x=33-36
-  outlineRect(ctx, outline, 33, eyeY, 4, 2);
-  px(ctx, '#FFFFFF',         34, eyeY);
-  px(ctx, '#FFFFFF',         35, eyeY);
-  px(ctx, '#6B3A10',         34, eyeY + 1);
-  px(ctx, '#160800',         35, eyeY + 1);
-  px(ctx, '#FFFFFF',         35, eyeY);            // shine
-  px(ctx, skinColors.shadow, 33, eyeY);
-  px(ctx, skinColors.shadow, 36, eyeY);
-
-  // (Eyelid shadow removed — flat brows at browY serve the same visual role
-  //  and the heavy upper-lid of each eye outline provides enough lid read)
+  // Right eye (mirror)
+  px(ctx, '#2A1800', 33, eyeY);
+  px(ctx, '#FFFFFF', 34, eyeY);
+  px(ctx, '#2A1800', 35, eyeY);
+  px(ctx, '#7B4820', 33, eyeY + 1);
+  px(ctx, '#160800', 34, eyeY + 1);
+  px(ctx, '#7B4820', 35, eyeY + 1);
 
   // ── Nose ─────────────────────────────────────────────────────────────────
   const noseY = HY + 12;   // y=17
@@ -204,6 +198,13 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   hLine(ctx, hairColors.shadow, headX, headY + 5, headW);
   hLine(ctx, hairColors.shadow, headX, headY + 6, headW);
 
+  // Hair-to-skin bleed: where sideburns meet the face, add 1px shadow pixels
+  // at the inner sideburn edge on the skin side — softens the color jump
+  // (FF6 technique: color contrast rather than hard black outline at hair/face seam).
+  // Applied to cheek rows (HY+9 to HY+11) where sideburn is widest vs face.
+  // Also at the hairline row HY+7 where face first appears below the hair.
+  // headX+2 = x=24 (one pixel inward from sideburn into the face skin zone)
+
   // Side sideburn strips: x=22-23 (left) and x=40-41 (right)
   // Short hair: down to y=18 (headY+13)
   // Medium:     down to y=23 (headY+18)
@@ -230,10 +231,27 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
     vLine(ctx, hairColors.base, headX + headW - 1, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
   }
 
-  // Re-draw top outline over hair
+  // Hair-skin shadow bleed: soft 1px transition at sideburn inner edge.
+  // Replaces the hard skin↔hair color jump with a shadow pixel,
+  // using sel-out (shadow color not black) on the skin side of the seam.
+  // Rows HY+9 to HY+11: cheek rows where face is widest (x=24 meets sideburn x=23)
+  px(ctx, hairColors.shadow, headX + 2, headY + 9);   // left cheek top
+  px(ctx, hairColors.shadow, headX + 2, headY + 10);  // left cheek mid
+  px(ctx, hairColors.shadow, headX + 2, headY + 11);  // left cheek bot
+  px(ctx, hairColors.shadow, headX + headW - 3, headY + 9);   // right cheek top
+  px(ctx, hairColors.shadow, headX + headW - 3, headY + 10);  // right cheek mid
+  px(ctx, hairColors.shadow, headX + headW - 3, headY + 11);  // right cheek bot
+  // Hairline row HY+7: face first appears (x=25), sideburn at x=22-23.
+  // x=24 is a gap — fill with hair shadow to close it.
+  px(ctx, hairColors.shadow, headX + 2, headY + 7);   // left hairline fill
+  px(ctx, hairColors.shadow, headX + headW - 3, headY + 7);   // right hairline fill
+
+  // Replace black sideburn outer outline with hair shadow (sel-out on side silhouette)
+  vLine(ctx, hairColors.shadow, headX,             headY, 7);
+  vLine(ctx, hairColors.shadow, headX + headW - 1, headY, 7);
+
+  // Re-draw top outline over hair (top edge only — sides use sel-out above)
   hLine(ctx, outline, headX, headY, headW);
-  vLine(ctx, outline, headX,             headY, 7);
-  vLine(ctx, outline, headX + headW - 1, headY, 7);
 }
 
 // ---------------------------------------------------------------------------
