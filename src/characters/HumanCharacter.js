@@ -87,10 +87,12 @@ function drawSouth(ctx, config, offsets) {
   const rArmDY = Math.round(rightArmFwd * 0.4);
 
   // --- Draw order: back-to-front ---
+  // Forward leg: brighter (base tone). Back leg: darker (shadow tone) — SNES depth technique.
+  const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   // Shoes use same DY as leg lower portion so they stay connected
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  // Legs (split DY: thigh fixed, knee-below shifts)
-  drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY);
+  // Legs (split DY: thigh fixed, knee-below shifts; color-differentiated for depth)
+  drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
   // Belt
   drawBeltSouth(ctx, colors.belt, 24, beltY);
   // Torso (18px wide, x=23-40) — narrower body matches reference proportions
@@ -143,8 +145,9 @@ function drawNorth(ctx, config, offsets) {
 
   drawGroundShadow(ctx, 32, 62 + bodyY);
 
+  const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY);
+  drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
   drawBeltSouth(ctx, colors.belt,   24, beltY);
 
   // Back of torso — hourglass silhouette matching front jacket
