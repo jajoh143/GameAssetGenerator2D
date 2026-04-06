@@ -177,7 +177,14 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   // Top hair band (7px tall, rows y=HY to HY+6)
   // SNES hair technique: flat base, 2-row highlight curve (upper-left lit),
   // strand texture via shadow dither, dark hairline edge.
+  // Rounded head cap: row 0 is 18px (clips 1px each side), rows 1-6 are 20px.
+  // This makes the head silhouette read as a dome, not a rectangle.
   fillRect(ctx, hairColors.base, headX, headY, headW, 7);
+  // Round top corners: erase outer pixels of row 0, replace with shadow
+  erasePixel(ctx, headX,             headY);
+  erasePixel(ctx, headX + headW - 1, headY);
+  px(ctx, hairColors.shadow, headX,             headY);   // left corner shadow
+  px(ctx, hairColors.shadow, headX + headW - 1, headY);   // right corner shadow
 
   // Highlight curve: suggests hair parted upper-left, catching light
   // Row 1: wide highlight arc (12px, centered left of part)
@@ -250,8 +257,8 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   vLine(ctx, hairColors.shadow, headX,             headY, 7);
   vLine(ctx, hairColors.shadow, headX + headW - 1, headY, 7);
 
-  // Re-draw top outline over hair (top edge only — sides use sel-out above)
-  hLine(ctx, outline, headX, headY, headW);
+  // Top outline: skip corner pixels (those are shadow for rounding), draw inner span
+  hLine(ctx, outline, headX + 1, headY, headW - 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -739,14 +746,19 @@ function drawBeltWest(ctx, beltColors, x, y) {
 // drawLegsSouth
 // ---------------------------------------------------------------------------
 
-function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY) {
+function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=0) {
   // Each leg: row-by-row shaping
-  //   Rows 0-4 (thigh):   6px wide
-  //   Rows 5-7 (knee):    7px wide on outer side (slight knee prominence)
-  //   Rows 8-10 (shin):   6px wide
-  //   Rows 11-12 (ankle): 5px wide (tapers to shoe)
-  // Outer edges use selout (shadow) not black to soften the silhouette.
+  //   Rows 0-5 (thigh):   6px wide  — Y FIXED (no shift; belt covers this area)
+  //   Rows 6-7 (knee):    7px wide  — Y SHIFTS per lLegDY/rLegDY
+  //   Rows 8-10 (shin):   6px wide  — Y SHIFTS
+  //   Rows 11-12 (ankle): 5px wide  — Y SHIFTS (aligns with shifted shoe)
+  //
+  // Split DY: thigh rows stay at baseY (prevents gap at belt junction),
+  // knee-to-ankle rows shift down for the forward leg and up for the back leg.
+  // This mimics the "forward leg extends lower / back leg bends up" depth cue
+  // visible in south-facing sprites without misaligning the hip/crotch area.
   const legH = 13;
+  const KNEE_ROW = 6;  // first row that shifts with DY
   const lx = 25 + Math.round(lLegDX);
   const rx = 34 + Math.round(rLegDX);
   const y  = baseY;
@@ -765,45 +777,51 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY) {
 
     // ── Left leg ──────────────────────────────────────────────────────────────
     const llx = lx + lo;   // outer edge (extends left for knee)
-    hLine(ctx, pantColors.base,      llx,          y + row, lw);
-    px(ctx,   pantColors.highlight,  llx + 1,      y + row);  // outer lit face
-    px(ctx,   pantColors.shadow,     llx + lw - 2, y + row);  // inner-thigh shadow
+    // Per-leg Y: thigh rows (0 to KNEE_ROW-1) stay at base; knee+ rows shift.
+    const ldy = row >= KNEE_ROW ? Math.round(lLegDY) : 0;
+    const rdy = row >= KNEE_ROW ? Math.round(rLegDY) : 0;
+    const lRowY = y + row + ldy;
+    const rRowY = y + row + rdy;
+
+    hLine(ctx, pantColors.base,      llx,          lRowY, lw);
+    px(ctx,   pantColors.highlight,  llx + 1,      lRowY);  // outer lit face
+    px(ctx,   pantColors.shadow,     llx + lw - 2, lRowY);  // inner-thigh shadow
     // Knee cap: 2px highlight column on outer face for knee prominence
     if (row >= 5 && row <= 7) {
-      px(ctx, pantColors.highlight, llx + 2, y + row);
-      // Knee shadow under cap (row 7 = knee bottom edge)
-      if (row === 7) hLine(ctx, pantColors.shadow, llx + 1, y + row, lw - 2);
+      px(ctx, pantColors.highlight, llx + 2, lRowY);
+      if (row === 7) hLine(ctx, pantColors.shadow, llx + 1, lRowY, lw - 2);
     }
     // Upper thigh texture highlights (rows 1, 3)
-    if (row === 1 || row === 3) px(ctx, pantColors.highlight, llx + 2, y + row);
+    if (row === 1 || row === 3) px(ctx, pantColors.highlight, llx + 2, lRowY);
     // selout outer edge
-    px(ctx, pantColors.shadow, llx, y + row);
+    px(ctx, pantColors.shadow, llx, lRowY);
     // black inner edge (toward crotch gap)
-    if (row > 0) px(ctx, pantColors.outline, llx + lw - 1, y + row);
+    if (row > 0) px(ctx, pantColors.outline, llx + lw - 1, lRowY);
 
     // ── Right leg ─────────────────────────────────────────────────────────────
     const rrx = rx;
     const rrw = lw;
     const rrOuter = rrx + rrw - 1 + (lo < 0 ? -lo : 0);
     const rrStart = rrOuter - rrw + 1;
-    hLine(ctx, pantColors.base,      rrStart,           y + row, rrw);
-    px(ctx,   pantColors.highlight,  rrStart + rrw - 2, y + row);   // outer-lit face (right leg outer edge)
-    px(ctx,   pantColors.shadow,     rrStart + 1,       y + row);   // inner-thigh shadow
-    if (row >= 5 && row <= 7) px(ctx, pantColors.highlight, rrStart + rrw - 3, y + row);
-    // Dithered highlight on outer thigh (rows 1,3)
-    if (row === 1 || row === 3) px(ctx, pantColors.highlight, rrStart + rrw - 3, y + row);
+    hLine(ctx, pantColors.base,      rrStart,           rRowY, rrw);
+    px(ctx,   pantColors.highlight,  rrStart + rrw - 2, rRowY);   // outer-lit face
+    px(ctx,   pantColors.shadow,     rrStart + 1,       rRowY);   // inner-thigh shadow
+    if (row >= 5 && row <= 7) px(ctx, pantColors.highlight, rrStart + rrw - 3, rRowY);
+    if (row === 1 || row === 3) px(ctx, pantColors.highlight, rrStart + rrw - 3, rRowY);
     // selout outer edge
-    px(ctx, pantColors.shadow, rrOuter, y + row);
+    px(ctx, pantColors.shadow, rrOuter, rRowY);
     // black inner edge (toward crotch gap)
-    if (row > 0) px(ctx, pantColors.outline, rrStart, y + row);
+    if (row > 0) px(ctx, pantColors.outline, rrStart, rRowY);
   }
 
-  // Top outlines (selout top of each leg — 1 dark row at belt junction)
+  // Top outlines (fixed at belt junction — thigh rows don't shift)
   hLine(ctx, pantColors.outline, lx, y, 6);
   hLine(ctx, pantColors.outline, rx, y, 6);
-  // Bottom outlines
-  hLine(ctx, pantColors.outline, lx, y + legH - 1, 5);
-  hLine(ctx, pantColors.outline, rx, y + legH - 1, 5);
+  // Bottom outlines (at shifted ankle position)
+  const lBotY = y + legH - 1 + Math.round(lLegDY);
+  const rBotY = y + legH - 1 + Math.round(rLegDY);
+  hLine(ctx, pantColors.outline, lx, lBotY, 5);
+  hLine(ctx, pantColors.outline, rx, rBotY, 5);
 
   // Crotch shadow: top 2px of gap between legs suggests depth/overlap
   const gapX = lx + 6;

@@ -175,6 +175,10 @@
       align-content: start;
       min-height: 0;
     }
+    /* Expanded card takes full row so nothing is cut off */
+    .char-card:not(.collapsed) {
+      grid-column: 1 / -1;
+    }
 
     .empty-state {
       grid-column: 1 / -1;

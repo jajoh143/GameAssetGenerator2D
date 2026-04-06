@@ -73,25 +73,24 @@ function drawSouth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // South-facing walk: legs move forward/back (depth), not left/right (lateral).
-  // Near-zero DX keeps feet under the body. Forward leg's foot drops slightly
-  // lower on screen (closer = lower in top-down perspective) via shoe DY offset.
-  // This replaces the old "feet spread sideways" shuffle look.
-  const lLegDX = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.1)));
-  const rLegDX = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.1)));
-  // Forward foot drops 1px, back foot rises 1px (max ±1px at this scale)
-  const lShoeDY = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.2)));
-  const rShoeDY = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.2)));
+  // South-facing walk: depth is shown via split DY on knee-to-ankle rows.
+  // Thigh rows stay fixed (belt junction stays clean).
+  // Forward leg: knee-to-ankle drops 2px. Back leg: rises 2px.
+  // Near-zero DX: feet stay under the body, no sideways shuffle.
+  const lLegDX = 0;
+  const rLegDX = 0;
+  const lLegDY = Math.max(-2, Math.min(2, Math.round(leftLegFwd  * 0.35)));
+  const rLegDY = Math.max(-2, Math.min(2, Math.round(rightLegFwd * 0.35)));
 
   // Arm Y offsets
   const lArmDY = Math.round(leftArmFwd  * 0.4);
   const rArmDY = Math.round(rightArmFwd * 0.4);
 
   // --- Draw order: back-to-front ---
-  // Shoes first (behind legs visually); per-foot DY for depth illusion
-  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lShoeDY, rShoeDY);
-  // Legs
-  drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY);
+  // Shoes use same DY as leg lower portion so they stay connected
+  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
+  // Legs (split DY: thigh fixed, knee-below shifts)
+  drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY);
   // Belt
   drawBeltSouth(ctx, colors.belt, 24, beltY);
   // Torso (18px wide, x=23-40) — narrower body matches reference proportions
@@ -134,18 +133,18 @@ function drawNorth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // Same south-view logic: near-zero DX, per-foot DY for depth
-  const lLegDX = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.1)));
-  const rLegDX = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.1)));
-  const lShoeDY = Math.max(-1, Math.min(1, Math.round(leftLegFwd  * 0.2)));
-  const rShoeDY = Math.max(-1, Math.min(1, Math.round(rightLegFwd * 0.2)));
+  // Same split-DY logic as south view
+  const lLegDX = 0;
+  const rLegDX = 0;
+  const lLegDY = Math.max(-2, Math.min(2, Math.round(leftLegFwd  * 0.35)));
+  const rLegDY = Math.max(-2, Math.min(2, Math.round(rightLegFwd * 0.35)));
   const lArmDY = Math.round(leftArmFwd  * 0.4);
   const rArmDY = Math.round(rightArmFwd * 0.4);
 
   drawGroundShadow(ctx, 32, 62 + bodyY);
 
-  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lShoeDY, rShoeDY);
-  drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY);
+  drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
+  drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY);
   drawBeltSouth(ctx, colors.belt,   24, beltY);
 
   // Back of torso — hourglass silhouette matching front jacket
