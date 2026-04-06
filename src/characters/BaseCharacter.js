@@ -906,36 +906,51 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
-  // Organic arm silhouette — SNES style:
-  //   Row 0:    shoulder cap   (+1 = 6px outward)
-  //   Rows 1-2: bicep swell    (+1 = 6px, widest part of upper arm)
-  //   Rows 3-5: arm body       ( 0 = 5px)
-  //   Rows 6-7: elbow narrow   (-1 = 4px, slight elbow pull-in)
-  //   Rows 8-9: forearm swell  ( 0 = 5px, forearm slightly wider than elbow)
-  //   Row 10:   wrist taper    (-1 = 4px, narrowing toward hand)
-  // Left arm = lit side (outer highlight). Right arm = shadow side.
+  // Organic arm cylinder — SNES / Pedro Medeiros anti-banding model:
+  //   Row 0:    shoulder attachment (5px — narrower than dome peak, starts the cap)
+  //   Rows 1-2: shoulder dome peak (6px — widest row; two rows create roundness)
+  //   Rows 3-5: bicep body         (5px)
+  //   Rows 6-7: elbow pull-in      (4px — slight narrow for joint read)
+  //   Rows 8-9: forearm            (5px)
+  //   Row 10:   wrist taper        (4px)
+  //
+  // Anti-banding (Pix3M rule): shadow strip width varies — NEVER the same for
+  // more than 2 consecutive rows. Widens at mid-bicep, elbow, and upper forearm.
+  // Shadow always on the inner (body-side) edge; highlight on outer (away) edge.
   const lx = 18, rx = 41;
   const baseY = 28;
   const baseAW = 5, sleeveH = 11, handH = 4;
 
-  // bulge[row]: amount added to baseAW, and lx shifted left by same amount
-  const bulge = [1, 1, 1, 0, 0, 0, -1, -1, 0, 0, -1];
+  // bulge[row]: amount added to baseAW; lx shifts left by same amount.
+  // Row 0 changed from 1→0: shoulder TOP is narrower than rows 1-2 (dome shape).
+  const bulge = [0, 1, 1, 0, 0, 0, -1, -1, 0, 0, -1];
+
+  // Shadow width by row: 1px baseline, 2px at anti-banding break points.
+  // Mid-bicep (5): 2px. Elbow joint (6-7): 2px. Upper forearm (9): 2px.
+  const shadowW = [1, 1, 1, 1, 1, 2, 2, 2, 1, 2, 1];
 
   const lArmY = baseY + Math.round(lArmDY);
   const rArmY = baseY + Math.round(rArmDY);
 
-  // ── Left arm (lit side) ──────────────────────────────────────────────────
+  // ── Left arm (lit side — outer edge faces away from body, catches light) ──
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row];
-    const rowLx = lx - b;          // extends outward at bicep/shoulder
+    const rowLx = lx - b;          // outer edge (left side, extends outward at bicep)
     const rowW  = baseAW + b;
-    hLine(ctx, clothingColors.base,     rowLx,            lArmY + row, rowW);
-    px(ctx,   clothingColors.highlight, rowLx,            lArmY + row);   // outer lit face
-    px(ctx,   clothingColors.shadow,    rowLx + rowW - 1, lArmY + row);   // inner shadow
-    // Double highlight at shoulder cap and bicep peak rows (0-2) for volume
-    if (row <= 2) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);
-    // Elbow shadow: extra dark pixel on inner face at elbow rows
-    if (row === 6 || row === 7) px(ctx, clothingColors.shadow, rowLx + 1, lArmY + row);
+    hLine(ctx, clothingColors.base, rowLx, lArmY + row, rowW);
+
+    // Outer lit edge (selout: highlight not black)
+    px(ctx, clothingColors.highlight, rowLx, lArmY + row);
+    // Double highlight at dome peak (rows 1-2 only — row 0 is narrower cap)
+    if (row === 1 || row === 2) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);
+    // Forearm long highlight strip (rows 8-9): follows the form contour
+    if (row === 8 || row === 9) px(ctx, clothingColors.highlight, rowLx + 1, lArmY + row);
+
+    // Inner shadow: width varies for anti-banding (shadow side = body side)
+    const sw = shadowW[row];
+    for (let i = 0; i < sw; i++) {
+      px(ctx, clothingColors.shadow, rowLx + rowW - 1 - i, lArmY + row);
+    }
   }
   // Soft junction seam (selout)
   for (let row = 0; row < sleeveH; row++) {
@@ -956,17 +971,26 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   px(ctx, skinColors.shadow, lhx,           lArmY + sleeveH + handH - 2);
   px(ctx, skinColors.shadow, lhx + lhw - 1, lArmY + sleeveH + handH - 2);
 
-  // ── Right arm (shadow side) ───────────────────────────────────────────────
+  // ── Right arm (shadow side — inner edge faces body/light source) ──────────
+  // Right arm is on the shadow side of the body; both edges are darker.
+  // Outer edge (right): mid-shadow. Inner edge (left, torso side): deep shadow.
+  // Anti-banding: same shadow width table applied to inner edge.
   for (let row = 0; row < sleeveH; row++) {
     const b = bulge[row];
     const rowW = baseAW + b;
-    hLine(ctx, clothingColors.base,  rx,             rArmY + row, rowW);
-    px(ctx,   clothingColors.shadow, rx,             rArmY + row);   // inner selout
-    px(ctx,   clothingColors.shadow, rx + rowW - 1,  rArmY + row);   // outer selout
-    // Soften the outer tip at bicep/shoulder — avoid double-dark blob
-    if (row <= 2) px(ctx, clothingColors.base, rx + rowW - 1, rArmY + row);
-    // Elbow extra shadow
-    if (row === 6 || row === 7) px(ctx, clothingColors.shadow, rx + 1, rArmY + row);
+    hLine(ctx, clothingColors.base,  rx, rArmY + row, rowW);
+
+    // Inner edge (body side, left edge of right arm): shadow selout
+    px(ctx, clothingColors.shadow, rx, rArmY + row);
+    // Outer edge (right side): base or slight shadow — not black; dome peak softer
+    if (row === 1 || row === 2) {
+      px(ctx, clothingColors.base, rx + rowW - 1, rArmY + row);    // dome peak: base, not shadow
+    } else {
+      px(ctx, clothingColors.shadow, rx + rowW - 1, rArmY + row);  // shadow on outer
+    }
+    // Variable shadow width on outer edge for anti-banding
+    const sw = shadowW[row];
+    if (sw > 1) px(ctx, clothingColors.shadow, rx + rowW - 2, rArmY + row);
   }
   // Soft junction seam
   for (let row = 0; row < sleeveH; row++) {
