@@ -57,6 +57,7 @@
         "skin": "medium",
         "hair": "black",
         "hairStyle": "short",
+        "eyes": "brown",
         "clothing": "jacket_grey",
         "pants": "jeans_blue",
         "shoes": "shoe_black"
@@ -70,6 +71,7 @@
         "skin": "light",
         "hair": "brown",
         "hairStyle": "medium",
+        "eyes": "blue",
         "clothing": "apron_white",
         "pants": "jeans_dark",
         "shoes": "shoe_brown"
@@ -83,6 +85,7 @@
         "skin": "dark",
         "hair": "black",
         "hairStyle": "short",
+        "eyes": "hazel",
         "clothing": "hoodie_black",
         "pants": "pants_grey",
         "shoes": "shoe_white"
@@ -96,6 +99,7 @@
         "demonSkin": "crimson",
         "hair": "black",
         "hairStyle": "short",
+        "eyes": "amber",
         "hornStyle": "curved",
         "tailStyle": "long",
         "clothing": "jacket_grey",
@@ -111,6 +115,7 @@
         "demonSkin": "dark_red",
         "hair": "dark_brown",
         "hairStyle": "medium",
+        "eyes": "green",
         "hornStyle": "straight",
         "tailStyle": "medium",
         "clothing": "apron_white",
