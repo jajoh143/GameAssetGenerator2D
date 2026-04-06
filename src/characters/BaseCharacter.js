@@ -28,7 +28,9 @@ function drawGroundShadow(ctx, cx, y) {
 // drawHeadSouth  –  front-facing head, fixed at x=22, y=5  (20×21)
 // ---------------------------------------------------------------------------
 
-function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
+function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
+  // Default eye colors if not provided (backwards-compat)
+  eyeColors = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
   const HX = 22, HY = 5, HW = 20, HH = 21;
   const outline = '#111111';
 
@@ -115,53 +117,70 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle) {
   // Chin tip bottom (4px at HY+20)
   hLine(ctx, outline, 30, HY + 20, 4);
 
-  // ── Eyebrows (flat 3px strokes — SNES/SDV overworld style) ──────────────
-  // Flat brows read clearly at small scale; arches add clutter on tiny faces.
+  // ── Eyebrows (slight arch — inner end 1px lower for natural shape) ───────
+  // Research: tilting inner corner down by 1px reads as natural/neutral brow.
+  // Left brow: outer 2px at browY, inner end drops to browY+1.
   const browY = HY + 8;   // y=13
-  hLine(ctx, hairColors.base,  27, browY, 3);   // left brow: x=27-29
-  px(ctx,  hairColors.shadow,  27, browY);       // outer end slightly darker
-  hLine(ctx, hairColors.base,  33, browY, 3);   // right brow: x=33-35
-  px(ctx,  hairColors.shadow,  35, browY);       // outer end slightly darker
+  px(ctx,  hairColors.base,   27, browY + 1);    // left brow inner (lower)
+  px(ctx,  hairColors.base,   28, browY);        // left brow middle
+  px(ctx,  hairColors.shadow, 29, browY);        // left brow outer (slightly darker)
+  // Right brow: mirror (inner end = rightmost pixel)
+  px(ctx,  hairColors.shadow, 33, browY);        // right brow outer
+  px(ctx,  hairColors.base,   34, browY);        // right brow middle
+  px(ctx,  hairColors.base,   35, browY + 1);    // right brow inner (lower)
 
-  // ── Eyes (3×2 simple dot — CT/FF6 overworld style) ──────────────────────
-  // No box outline: just lash-row + iris/pupil row + shine dot.
-  // Matches brow positions: left x=27-29, right x=33-35.
+  // ── Eyes (3×3 with lash row + iris/pupil + lower lid) ───────────────────
+  // Research: highlight in upper-LEFT of eye for left-side light source.
+  // Left eye at x=27-29, right eye at x=33-35.
+  // Lashes use eyeColors.lash; iris uses eyeColors.iris; pupil uses eyeColors.pupil.
+  // Shine dot: upper-left corner (x=27 for left eye, x=35 for right eye — both
+  //   on the outer-lit side, matching upper-left scene light source).
   const eyeY = HY + 9;   // y=14
 
   // Left eye
-  px(ctx, '#2A1800', 27, eyeY);        // lid/lash left
-  px(ctx, '#FFFFFF', 28, eyeY);        // shine dot (top center)
-  px(ctx, '#2A1800', 29, eyeY);        // lid/lash right
-  px(ctx, '#7B4820', 27, eyeY + 1);    // iris
-  px(ctx, '#160800', 28, eyeY + 1);    // pupil
-  px(ctx, '#7B4820', 29, eyeY + 1);    // iris
+  px(ctx, '#FFFFFF',       27, eyeY);        // shine (upper-left = lit corner)
+  px(ctx, eyeColors.lash,  28, eyeY);        // lid/lash center
+  px(ctx, eyeColors.lash,  29, eyeY);        // lid/lash inner
+  px(ctx, eyeColors.iris,  27, eyeY + 1);    // iris outer
+  px(ctx, eyeColors.pupil, 28, eyeY + 1);    // pupil
+  px(ctx, eyeColors.iris,  29, eyeY + 1);    // iris inner
+  px(ctx, eyeColors.lash,  28, eyeY + 2);    // lower eyelid crease (center)
+  px(ctx, skinColors.shadow, 29, eyeY + 2);  // lower lid sel-out (inner edge)
 
-  // Right eye (mirror)
-  px(ctx, '#2A1800', 33, eyeY);
-  px(ctx, '#FFFFFF', 34, eyeY);
-  px(ctx, '#2A1800', 35, eyeY);
-  px(ctx, '#7B4820', 33, eyeY + 1);
-  px(ctx, '#160800', 34, eyeY + 1);
-  px(ctx, '#7B4820', 35, eyeY + 1);
+  // Right eye (mirror — shine at upper-right = outer-lit corner)
+  px(ctx, eyeColors.lash,  33, eyeY);        // lid/lash inner
+  px(ctx, eyeColors.lash,  34, eyeY);        // lid/lash center
+  px(ctx, '#FFFFFF',       35, eyeY);        // shine (upper-right = lit corner)
+  px(ctx, eyeColors.iris,  33, eyeY + 1);    // iris inner
+  px(ctx, eyeColors.pupil, 34, eyeY + 1);    // pupil
+  px(ctx, eyeColors.iris,  35, eyeY + 1);    // iris outer
+  px(ctx, skinColors.shadow, 33, eyeY + 2);  // lower lid sel-out (inner edge)
+  px(ctx, eyeColors.lash,  34, eyeY + 2);    // lower eyelid crease (center)
 
-  // ── Nose ─────────────────────────────────────────────────────────────────
+  // ── Cheek blush (subtle — below outer eye corners) ───────────────────────
+  // Research: 1-3px per cheek below/outside eyes, adds warmth + chibi personality.
+  // Use skin highlight (warmest tone) so blush reads naturally across all tones.
+  px(ctx, skinColors.highlight, 25, eyeY + 3);  // left cheek
+  px(ctx, skinColors.highlight, 26, eyeY + 3);
+  px(ctx, skinColors.highlight, 37, eyeY + 3);  // right cheek
+  px(ctx, skinColors.highlight, 38, eyeY + 3);
+
+  // ── Nose (simplified — 2 nostril dots; bridge handled by face shading) ───
+  // Research: SNES small sprites often omit nose or use 1-2 shadow pixels only.
   const noseY = HY + 12;   // y=17
-  px(ctx, skinColors.highlight, 31, noseY - 1);  // nose bridge highlight (catches light)
-  px(ctx, skinColors.shadow,    30, noseY + 1);  // left nostril
-  px(ctx, skinColors.shadow,    31, noseY);
-  px(ctx, skinColors.shadow,    32, noseY);
-  px(ctx, skinColors.shadow,    33, noseY + 1);  // right nostril
+  px(ctx, skinColors.shadow, 30, noseY);  // left nostril dot
+  px(ctx, skinColors.shadow, 33, noseY);  // right nostril dot
 
-  // ── Mouth (natural neutral expression) ───────────────────────────────────
-  // Head center = x=32. Lip bar x=30-33 (4px, centered).
-  // 4px matches SNES/SDV scale: 2px at native → 4px at 2× display.
-  // Shadow corners just outside bar; 2-pixel lower arc for closed-mouth read.
+  // ── Mouth (4px lip line + lower lip highlight) ────────────────────────────
+  // Research: top lip = dark line, bottom lip catches light = highlight row.
+  // 4px mouth centered at x=32; shadow corners just outside.
   const mouthY = HY + 15;   // y=20
-  px(ctx, skinColors.shadow, 29, mouthY);       // left corner
-  hLine(ctx, '#C05050',      30, mouthY, 4);    // 4px lip bar (centered on x=32)
-  px(ctx, skinColors.shadow, 34, mouthY);       // right corner
-  px(ctx, skinColors.shadow, 31, mouthY + 1);   // lower-left arc
-  px(ctx, skinColors.shadow, 32, mouthY + 1);   // lower-right arc
+  px(ctx, skinColors.shadow, 29, mouthY);       // left corner shadow
+  hLine(ctx, '#B04040',      30, mouthY, 4);    // upper lip line (4px)
+  px(ctx, skinColors.shadow, 34, mouthY);       // right corner shadow
+  // Lower lip: 2px highlight in center — catches light, separates lips
+  px(ctx, skinColors.highlight, 31, mouthY + 1);
+  px(ctx, skinColors.highlight, 32, mouthY + 1);
 
   // ── Hair ─────────────────────────────────────────────────────────────────
   drawHairSouth(ctx, hairColors, hairStyle, HX, HY, HW);

@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = {
   skin:       'medium',     // skin tone key from Colors.SKIN_TONES
   hair:       'black',      // hair color key from Colors.HAIR_COLORS
   hairStyle:  'short',      // 'short' | 'medium' | 'long'
+  eyes:       'brown',      // eye color key from Colors.EYE_COLORS
   clothing:   'jacket_grey',
   pants:      'jeans_blue',
   shoes:      'shoe_black',
@@ -35,6 +36,7 @@ const PRESETS = {
     skin:       'medium',
     hair:       'black',
     hairStyle:  'short',
+    eyes:       'brown',
     clothing:   'jacket_grey',
     pants:      'jeans_blue',
     shoes:      'shoe_black',
@@ -44,6 +46,7 @@ const PRESETS = {
     skin:       'light',
     hair:       'brown',
     hairStyle:  'medium',
+    eyes:       'blue',
     clothing:   'apron_white',
     pants:      'jeans_dark',
     shoes:      'shoe_brown',
@@ -53,6 +56,7 @@ const PRESETS = {
     skin:       'dark',
     hair:       'black',
     hairStyle:  'short',
+    eyes:       'hazel',
     clothing:   'hoodie_black',
     pants:      'pants_grey',
     shoes:      'shoe_white',
@@ -62,6 +66,7 @@ const PRESETS = {
     demonSkin:  'crimson',
     hair:       'black',
     hairStyle:  'short',
+    eyes:       'amber',
     hornStyle:  'curved',
     tailStyle:  'long',
     clothing:   'jacket_grey',
@@ -73,6 +78,7 @@ const PRESETS = {
     demonSkin:  'dark_red',
     hair:       'dark_brown',
     hairStyle:  'medium',
+    eyes:       'green',
     hornStyle:  'straight',
     tailStyle:  'medium',
     clothing:   'apron_white',

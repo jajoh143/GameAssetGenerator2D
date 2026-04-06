@@ -236,12 +236,52 @@ const BELT = {
   },
 };
 
+// Eye color palettes: iris, pupil, lash (lash used for lid/lash outline)
+const EYE_COLORS = {
+  brown: {
+    iris:  '#7B4820',
+    pupil: '#160800',
+    lash:  '#2A1800',
+  },
+  blue: {
+    iris:  '#2060B8',
+    pupil: '#0A1E40',
+    lash:  '#111822',
+  },
+  green: {
+    iris:  '#2A8040',
+    pupil: '#0A2010',
+    lash:  '#0E1A12',
+  },
+  hazel: {
+    iris:  '#7A5A20',
+    pupil: '#201808',
+    lash:  '#221400',
+  },
+  grey: {
+    iris:  '#6080A0',
+    pupil: '#1C2C38',
+    lash:  '#1A2028',
+  },
+  amber: {
+    iris:  '#C08018',
+    pupil: '#402800',
+    lash:  '#281400',
+  },
+  violet: {
+    iris:  '#7040A0',
+    pupil: '#1E1030',
+    lash:  '#1A0C28',
+  },
+};
+
 // Shadow ellipse under character
 const GROUND_SHADOW = 'rgba(0,0,0,0.25)';
 
 module.exports = {
   SKIN_TONES,
   HAIR_COLORS,
+  EYE_COLORS,
   CLOTHING,
   PANTS,
   SHOES,

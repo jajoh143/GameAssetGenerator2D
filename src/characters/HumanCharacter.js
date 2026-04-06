@@ -35,6 +35,7 @@ function resolveColors(config) {
   return {
     skin:     skinColors,
     hair:     Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
+    eyes:     Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown,
     clothing: Colors.CLOTHING[config.clothing] || Colors.CLOTHING.jacket_grey,
     pants:    Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
     shoes:    Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
@@ -104,7 +105,7 @@ function drawSouth(ctx, config, offsets) {
   // Head
   ctx.save();
   ctx.translate(0, headBob || 0);
-  drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
+  drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes);
   ctx.restore();
 }
 
