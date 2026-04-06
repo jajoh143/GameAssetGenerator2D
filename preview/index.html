@@ -167,12 +167,13 @@
     /* ── Main ── */
     .main {
       flex: 1;
-      overflow-y: auto;
+      overflow-y: scroll;
       padding: 20px;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
-      gap: 24px;
+      gap: 16px;
       align-content: start;
+      min-height: 0;
     }
 
     .empty-state {
@@ -203,7 +204,20 @@
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       gap: 10px;
+      cursor: pointer;
+      user-select: none;
     }
+    .card-header:hover { background: #1e2f52; }
+    .card-chevron {
+      font-size: 0.7rem;
+      color: var(--muted);
+      transition: transform 0.18s ease;
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+    .char-card.collapsed .card-chevron { transform: rotate(-90deg); }
+    .char-card.collapsed .card-header { border-bottom: none; }
+    .char-card.collapsed .card-body   { display: none; }
     .card-name { color: var(--accent2); font-weight: 600; font-size: 0.85rem; }
     .card-meta { color: var(--muted); font-size: 0.75rem; }
     .card-actions { display: flex; gap: 8px; margin-left: auto; }
@@ -276,7 +290,11 @@
 <header>
   <h1>GameAssetGenerator2D</h1>
   <span>Character Builder</span>
-  <button id="clear-btn" class="card-btn" style="display:none;margin-left:auto">Clear All</button>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <button id="expand-all-btn" class="card-btn" style="display:none">Expand All</button>
+    <button id="collapse-all-btn" class="card-btn" style="display:none">Collapse All</button>
+    <button id="clear-btn" class="card-btn" style="display:none">Clear All</button>
+  </div>
 </header>
 
 <div class="layout">
@@ -553,6 +571,12 @@ wireToggleRow('size-row',       'frameSize', null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
 document.getElementById('gen-btn').addEventListener('click', generate);
+document.getElementById('expand-all-btn').addEventListener('click', () => {
+  document.querySelectorAll('.char-card').forEach(c => c.classList.remove('collapsed'));
+});
+document.getElementById('collapse-all-btn').addEventListener('click', () => {
+  document.querySelectorAll('.char-card').forEach(c => c.classList.add('collapsed'));
+});
 document.getElementById('clear-btn').addEventListener('click', () => {
   Object.keys(liveAnimations).forEach(id => {
     liveAnimations[id].timers.forEach(clearInterval);
@@ -642,7 +666,9 @@ function removeCard(id) {
 
 function updateClearBtn() {
   const hasCards = !!document.querySelector('.char-card');
-  document.getElementById('clear-btn').style.display = hasCards ? '' : 'none';
+  document.getElementById('clear-btn').style.display         = hasCards ? '' : 'none';
+  document.getElementById('expand-all-btn').style.display    = hasCards ? '' : 'none';
+  document.getElementById('collapse-all-btn').style.display  = hasCards ? '' : 'none';
 }
 
 function buildCard(name, filePath, frameSize, img) {
@@ -654,6 +680,11 @@ function buildCard(name, filePath, frameSize, img) {
   // Header
   const header = document.createElement('div');
   header.className = 'card-header';
+  header.title = 'Click to expand / collapse';
+
+  const chevron = document.createElement('span');
+  chevron.className = 'card-chevron';
+  chevron.textContent = '▼';
 
   const nameEl = document.createElement('div');
   nameEl.className = 'card-name';
@@ -679,10 +710,19 @@ function buildCard(name, filePath, frameSize, img) {
   actions.appendChild(dlBtn);
   actions.appendChild(rmBtn);
 
+  header.appendChild(chevron);
   header.appendChild(nameEl);
   header.appendChild(metaEl);
   header.appendChild(actions);
   card.appendChild(header);
+
+  // Collapse/expand on header click (but not on action buttons)
+  header.addEventListener('click', e => {
+    if (e.target.closest('.card-actions')) return;
+    card.classList.toggle('collapsed');
+  });
+  // Start collapsed so all cards are visible in the list
+  card.classList.add('collapsed');
 
   // Body
   const body = document.createElement('div');
