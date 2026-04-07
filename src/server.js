@@ -127,6 +127,25 @@ async function handleRequest(req, res) {
 
 // ─── start ───────────────────────────────────────────────────────────────────
 
+// ─── Regenerate preset spritesheets on startup ────────────────────────────────
+function regeneratePresets() {
+  if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  const { resolveConfig } = require('./characters/CharacterConfig');
+  const names = Object.keys(PRESETS);
+  let done = 0;
+  for (const name of names) {
+    try {
+      const cfg = resolveConfig(PRESETS[name]);
+      const out = path.join(OUTPUT_DIR, `${name}_spritesheet.png`);
+      generateSpritesheet(cfg, out, 64);
+      done++;
+    } catch (e) {
+      console.error(`[presets] failed to generate ${name}:`, e.message);
+    }
+  }
+  console.log(`  Regenerated ${done}/${names.length} preset spritesheets.`);
+}
+
 const server = http.createServer((req, res) => {
   handleRequest(req, res).catch(err => {
     console.error('[server]', err);
@@ -137,4 +156,5 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log('\n  GameAssetGenerator2D');
   console.log(`  http://localhost:${PORT}\n`);
+  regeneratePresets();
 });
