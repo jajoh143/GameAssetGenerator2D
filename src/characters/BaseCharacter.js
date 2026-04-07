@@ -858,19 +858,23 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
 // drawLegsWest  –  side profile legs with stride
 // ---------------------------------------------------------------------------
 
-function drawLegsWest(ctx, pantColors, frontLegX, backLegX, baseY) {
+function drawLegsWest(ctx, pantColors, frontLegX, backLegX, baseY, frontLegDY=0, backLegDY=0) {
   const legH = 13, legW = 7;
 
-  // Back leg (dimmer)
-  fillRect(ctx, pantColors.shadow, backLegX - 3, baseY, legW, legH);
-  outlineRect(ctx, pantColors.outline, backLegX - 3, baseY, legW, legH);
+  // Back leg (dimmer) — raised by backLegDY (negative = higher on screen)
+  const backLegTop = baseY + backLegDY;
+  const backLegH   = legH - Math.abs(backLegDY);
+  fillRect(ctx, pantColors.shadow, backLegX - 3, backLegTop, legW, backLegH);
+  outlineRect(ctx, pantColors.outline, backLegX - 3, backLegTop, legW, backLegH);
 
-  // Front leg (full detail)
-  fillRect(ctx, pantColors.base, frontLegX - 3, baseY, legW, legH);
-  vLine(ctx, pantColors.highlight, frontLegX - 2, baseY, legH);
-  vLine(ctx, pantColors.shadow,    frontLegX + 2, baseY, legH);
-  hLine(ctx, pantColors.highlight, frontLegX - 2, baseY + 6, 2);
-  outlineRect(ctx, pantColors.outline, frontLegX - 3, baseY, legW, legH);
+  // Front leg (full detail) — raised by frontLegDY
+  const frontLegTop = baseY + frontLegDY;
+  const frontLegH   = legH - Math.abs(frontLegDY);
+  fillRect(ctx, pantColors.base, frontLegX - 3, frontLegTop, legW, frontLegH);
+  vLine(ctx, pantColors.highlight, frontLegX - 2, frontLegTop, frontLegH);
+  vLine(ctx, pantColors.shadow,    frontLegX + 2, frontLegTop, frontLegH);
+  hLine(ctx, pantColors.highlight, frontLegX - 2, frontLegTop + 6, 2);
+  outlineRect(ctx, pantColors.outline, frontLegX - 3, frontLegTop, legW, frontLegH);
 }
 
 // ---------------------------------------------------------------------------
@@ -916,30 +920,30 @@ function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY, lShoeDY=0, rSh
 // drawShoesWest  –  side profile shoes
 // ---------------------------------------------------------------------------
 
-function drawShoesWest(ctx, shoeColors, frontX, backX, baseY) {
+function drawShoesWest(ctx, shoeColors, frontX, backX, baseY, frontShoeDY=0, backShoeDY=0) {
   const y = baseY;
 
-  // Back shoe (dimmer)
-  fillRect(ctx, shoeColors.shadow, backX - 3,  y, 11, 4);
-  hLine(ctx,  shoeColors.outline,  backX - 3,  y + 3, 11);
-  outlineRect(ctx, shoeColors.outline, backX - 3, y, 11, 4);
+  // Back shoe (dimmer) — raised by backShoeDY
+  fillRect(ctx, shoeColors.shadow, backX - 3,  y + backShoeDY, 11, 4);
+  hLine(ctx,  shoeColors.outline,  backX - 3,  y + backShoeDY + 3, 11);
+  outlineRect(ctx, shoeColors.outline, backX - 3, y + backShoeDY, 11, 4);
 
-  // Front shoe: pointing left (toe at lower-x)
-  fillRect(ctx, shoeColors.base, frontX - 6, y, 13, 4);
-  hLine(ctx, shoeColors.highlight, frontX - 5, y, 11);
-  hLine(ctx, shoeColors.shadow,    frontX - 6, y + 3, 13);
+  // Front shoe: pointing left (toe at lower-x) — raised by frontShoeDY
+  fillRect(ctx, shoeColors.base, frontX - 6, y + frontShoeDY, 13, 4);
+  hLine(ctx, shoeColors.highlight, frontX - 5, y + frontShoeDY, 11);
+  hLine(ctx, shoeColors.shadow,    frontX - 6, y + frontShoeDY + 3, 13);
   // Toe detail (round left)
-  px(ctx, shoeColors.shadow, frontX - 6, y);
+  px(ctx, shoeColors.shadow, frontX - 6, y + frontShoeDY);
   // Heel
-  px(ctx, shoeColors.shadow, frontX + 6, y);
-  outlineRect(ctx, shoeColors.outline, frontX - 6, y, 13, 4);
+  px(ctx, shoeColors.shadow, frontX + 6, y + frontShoeDY);
+  outlineRect(ctx, shoeColors.outline, frontX - 6, y + frontShoeDY, 13, 4);
 }
 
 // ---------------------------------------------------------------------------
 // drawArmsSouth
 // ---------------------------------------------------------------------------
 
-function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
+function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=0, rArmOut=0) {
   // Organic arm cylinder — SNES / Pedro Medeiros anti-banding model:
   //   Row 0:    shoulder attachment (5px — narrower than dome peak, starts the cap)
   //   Rows 1-2: shoulder dome peak (6px — widest row; two rows create roundness)
@@ -951,7 +955,7 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
   // Anti-banding (Pix3M rule): shadow strip width varies — NEVER the same for
   // more than 2 consecutive rows. Widens at mid-bicep, elbow, and upper forearm.
   // Shadow always on the inner (body-side) edge; highlight on outer (away) edge.
-  const lx = 18, rx = 41;
+  const lx = 18, rx = 41 + Math.round(rArmOut);
   const baseY = 28;
   const baseAW = 5, sleeveH = 11, handH = 4;
 
@@ -1049,23 +1053,27 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY) {
 // drawArmsWest
 // ---------------------------------------------------------------------------
 
-function drawArmsWest(ctx, clothingColors, skinColors, frontArmDY, backArmDY, torsoX, torsoY) {
-  // 4px arms for west view — matching narrowed south-view arm width
+function drawArmsWest(ctx, clothingColors, skinColors, frontArmDX, backArmDX, torsoX, torsoY) {
+  // 4px arms for west view
+  // Torso front edge at torsoX (x=20), back edge at torsoX+12 (x=32) for shoulder row.
+  // Front arm shoulder at front edge: base frontAX = torsoX - 3 (arm right edge overlaps torso front by 1px).
+  // Back arm shoulder at back edge:  base backAX  = torsoX + 9 (arm right edge at torso back x=32).
+  // frontArmDX / backArmDX: horizontal swing — negative = moves left (forward in west view).
   const sleeveH = 11, handH = 5, aw = 4;
 
-  const frontY = torsoY + 1 + Math.round(frontArmDY);
-  const backY  = torsoY + 1 + Math.round(backArmDY);
+  const frontY = torsoY + 1;
+  const backY  = torsoY + 1;
 
-  // Back arm (shadow, drawn before torso is on top)
-  const backAX = torsoX + 4;
+  // Back arm (shadow tone, behind torso)
+  const backAX = torsoX + 9 + Math.round(backArmDX);
   fillRect(ctx, clothingColors.shadow, backAX, backY, aw, sleeveH);
   fillRect(ctx, skinColors.shadow,     backAX, backY + sleeveH, aw, handH);
   outlineRect(ctx, clothingColors.outline, backAX, backY, aw, sleeveH + handH);
 
-  // Front arm (full detail)
-  const frontAX = torsoX - 6;
+  // Front arm (full detail, drawn after torso so it appears on top)
+  const frontAX = torsoX - 3 + Math.round(frontArmDX);
   fillRect(ctx, clothingColors.base, frontAX, frontY, aw, sleeveH);
-  vLine(ctx, clothingColors.highlight, frontAX,     frontY, sleeveH);
+  vLine(ctx, clothingColors.highlight, frontAX,         frontY, sleeveH);
   vLine(ctx, clothingColors.shadow,    frontAX + aw - 1, frontY, sleeveH);
   outlineRect(ctx, clothingColors.outline, frontAX, frontY, aw, sleeveH);
   fillRect(ctx, skinColors.base, frontAX, frontY + sleeveH, aw, handH);
