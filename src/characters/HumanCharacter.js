@@ -241,10 +241,6 @@ function drawWest(ctx, config, offsets) {
   const frontLegCenter = 26 - Math.round(leftLegFwd  * 0.9);
   const backLegCenter  = 26 - Math.round(rightLegFwd * 0.9);
 
-  // Leg lift: positive lift = foot rises (subtract from Y)
-  const frontLegDY = -leftLegLift;
-  const backLegDY  = -rightLegLift;
-
   // Arms swing horizontally in side profile (not vertically)
   // Positive armFwd → arm swings forward = moves left (lower X in west view)
   const frontArmDX = -Math.round(leftArmFwd  * 0.5);
@@ -254,9 +250,9 @@ function drawWest(ctx, config, offsets) {
 
   // --- Draw order: back-to-front ---
   // Back shoe
-  drawShoesWest(ctx, colors.shoes, backLegCenter, frontLegCenter, shoeY, frontLegDY, backLegDY);
+  drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, leftLegLift, rightLegLift);
   // Back leg
-  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegDY, backLegDY);
+  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, leftLegLift, rightLegLift);
   // Back arm (drawn before torso so torso covers overlap)
   drawArmsWest(ctx, colors.clothing, colors.skin, frontArmDX, backArmDX, torsoX, torsoY);
   // Belt

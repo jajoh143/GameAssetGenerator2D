@@ -700,6 +700,12 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
   vLine(ctx, clothingColors.highlight, x,     y + 1, h - 2);
   vLine(ctx, clothingColors.highlight, x + 1, y + 1, h - 2);
 
+  // Mid-shadow band: where the form curves away from direct light
+  // Creates SNES-style 3-zone tonal separation (highlight / base / shadow)
+  for (let row = 2; row < h - 1; row++) {
+    px(ctx, clothingColors.shadow, x + 6, y + row);
+  }
+
   // Back/right shadow (2px strip — back of torso away from light)
   for (let row = 0; row < h; row++) {
     const rw = rowW(row);
@@ -715,6 +721,8 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 
   // Outline: front + top + bottom solid; back edge follows rowW
   hLine(ctx, clothingColors.outline, x, y, rowW(0));         // top
+  // Shoulder/collar top highlight
+  hLine(ctx, clothingColors.highlight, x + 2, y, rowW(0) - 4);
   hLine(ctx, clothingColors.outline, x, y + h - 1, rowW(h - 1));  // bottom
   vLine(ctx, clothingColors.outline, x, y, h);                // front edge
   for (let row = 0; row < h; row++) {
@@ -858,23 +866,47 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
 // drawLegsWest  –  side profile legs with stride
 // ---------------------------------------------------------------------------
 
-function drawLegsWest(ctx, pantColors, frontLegX, backLegX, baseY, frontLegDY=0, backLegDY=0) {
-  const legH = 13, legW = 7;
+function drawLegsWest(ctx, pantColors, frontLegX, backLegX, legTopY, frontLift=0, backLift=0) {
+  // Both legs originate from the SAME hip midpoint at the top.
+  // Forward leg: full height, angles forward (lower x = facing direction).
+  // Back leg: shortens from the BOTTOM when foot lifts (top/hip stays fixed).
+  const legH = 13;
+  const legW = 6;
+  const hipX = Math.round((frontLegX + backLegX) / 2);
 
-  // Back leg (dimmer) — raised by backLegDY (negative = higher on screen)
-  const backLegTop = baseY + backLegDY;
-  const backLegH   = legH - Math.abs(backLegDY);
-  fillRect(ctx, pantColors.shadow, backLegX - 3, backLegTop, legW, backLegH);
-  outlineRect(ctx, pantColors.outline, backLegX - 3, backLegTop, legW, backLegH);
+  // ── Back leg (shadow tone — drawn first, behind front leg) ─────────────
+  const backH = legH - Math.round(backLift);
+  for (let row = 0; row < backH; row++) {
+    const t = (backH > 1) ? row / (backH - 1) : 0;
+    const cx = Math.round(hipX + (backLegX - hipX) * t);
+    hLine(ctx, pantColors.shadow, cx - 3, legTopY + row, legW);
+    // Front face of back leg: slightly lighter
+    px(ctx, pantColors.base, cx - 2, legTopY + row);
+    px(ctx, pantColors.base, cx - 1, legTopY + row);
+    // Knee cap hint
+    if (row === 5 || row === 6) px(ctx, pantColors.base, cx - 3, legTopY + row);
+    // Outlines
+    px(ctx, pantColors.outline, cx - 3, legTopY + row);
+    px(ctx, pantColors.outline, cx + 2, legTopY + row);
+  }
 
-  // Front leg (full detail) — raised by frontLegDY
-  const frontLegTop = baseY + frontLegDY;
-  const frontLegH   = legH - Math.abs(frontLegDY);
-  fillRect(ctx, pantColors.base, frontLegX - 3, frontLegTop, legW, frontLegH);
-  vLine(ctx, pantColors.highlight, frontLegX - 2, frontLegTop, frontLegH);
-  vLine(ctx, pantColors.shadow,    frontLegX + 2, frontLegTop, frontLegH);
-  hLine(ctx, pantColors.highlight, frontLegX - 2, frontLegTop + 6, 2);
-  outlineRect(ctx, pantColors.outline, frontLegX - 3, frontLegTop, legW, frontLegH);
+  // ── Front leg (base tone — drawn second, on top) ────────────────────────
+  const frontH = legH - Math.round(frontLift);
+  for (let row = 0; row < frontH; row++) {
+    const t = (frontH > 1) ? row / (frontH - 1) : 0;
+    const cx = Math.round(hipX + (frontLegX - hipX) * t);
+    hLine(ctx, pantColors.base, cx - 3, legTopY + row, legW);
+    // Front highlight (lit edge, facing viewer)
+    px(ctx, pantColors.highlight, cx - 2, legTopY + row);
+    // Back shadow (away from light)
+    px(ctx, pantColors.shadow, cx + 1, legTopY + row);
+    px(ctx, pantColors.shadow, cx + 2, legTopY + row);
+    // Knee cap highlight
+    if (row === 5 || row === 6) px(ctx, pantColors.highlight, cx - 1, legTopY + row);
+    // Outlines
+    px(ctx, pantColors.outline, cx - 3, legTopY + row);
+    px(ctx, pantColors.outline, cx + 2, legTopY + row);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -920,23 +952,24 @@ function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY, lShoeDY=0, rSh
 // drawShoesWest  –  side profile shoes
 // ---------------------------------------------------------------------------
 
-function drawShoesWest(ctx, shoeColors, frontX, backX, baseY, frontShoeDY=0, backShoeDY=0) {
-  const y = baseY;
+function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backLift=0) {
+  // Positive lift = foot goes higher on screen = smaller Y value
+  const frontY = shoeY - Math.round(frontLift);
+  const backY  = shoeY - Math.round(backLift);
 
-  // Back shoe (dimmer) — raised by backShoeDY
-  fillRect(ctx, shoeColors.shadow, backX - 3,  y + backShoeDY, 11, 4);
-  hLine(ctx,  shoeColors.outline,  backX - 3,  y + backShoeDY + 3, 11);
-  outlineRect(ctx, shoeColors.outline, backX - 3, y + backShoeDY, 11, 4);
+  // Back shoe (dimmer, drawn first)
+  fillRect(ctx, shoeColors.shadow, backX - 4, backY, 10, 4);
+  hLine(ctx,  shoeColors.outline,  backX - 4, backY + 3, 10);
+  outlineRect(ctx, shoeColors.outline, backX - 4, backY, 10, 4);
 
-  // Front shoe: pointing left (toe at lower-x) — raised by frontShoeDY
-  fillRect(ctx, shoeColors.base, frontX - 6, y + frontShoeDY, 13, 4);
-  hLine(ctx, shoeColors.highlight, frontX - 5, y + frontShoeDY, 11);
-  hLine(ctx, shoeColors.shadow,    frontX - 6, y + frontShoeDY + 3, 13);
-  // Toe detail (round left)
-  px(ctx, shoeColors.shadow, frontX - 6, y + frontShoeDY);
-  // Heel
-  px(ctx, shoeColors.shadow, frontX + 6, y + frontShoeDY);
-  outlineRect(ctx, shoeColors.outline, frontX - 6, y + frontShoeDY, 13, 4);
+  // Front shoe: pointing left (toe at lower-x = facing direction)
+  fillRect(ctx, shoeColors.base, frontX - 6, frontY, 13, 4);
+  hLine(ctx, shoeColors.highlight, frontX - 5, frontY, 11);
+  hLine(ctx, shoeColors.shadow,    frontX - 6, frontY + 3, 13);
+  // Toe and heel corners (rounded look)
+  px(ctx, shoeColors.shadow, frontX - 6, frontY);
+  px(ctx, shoeColors.shadow, frontX + 6, frontY);
+  outlineRect(ctx, shoeColors.outline, frontX - 6, frontY, 13, 4);
 }
 
 // ---------------------------------------------------------------------------
