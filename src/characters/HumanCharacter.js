@@ -79,10 +79,12 @@ function drawSouth(ctx, config, offsets) {
   // Thigh rows stay fixed (belt junction stays clean).
   // Forward leg: knee-to-ankle drops 2px. Back leg: rises 2px.
   // Near-zero DX: feet stay under the body, no sideways shuffle.
-  // Lateral foot spread: each foot steps slightly outward when striding
-  const lLegDX = Math.round(leftLegFwd  *  0.12);
-  const rLegDX = Math.round(rightLegFwd * -0.12);
-  // Increased DY: forward foot drops more visibly (closer to camera = lower on screen)
+  // Lateral spread: each foot steps OUTWARD from body center when striding.
+  // Left leg is at lx=25 (left of center), right leg at rx=33 (right of center).
+  // Forward stride = foot spreads outward: left goes more left (-x), right goes more right (+x).
+  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.35);  // always spreads LEFT
+  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.35);  // always spreads RIGHT
+  // DY: forward foot drops (closer to camera in top-down = lower on screen)
   const lLegDY = Math.max(-3, Math.min(3, Math.round(leftLegFwd  * 0.5)));
   const rLegDY = Math.max(-3, Math.min(3, Math.round(rightLegFwd * 0.5)));
 
@@ -140,9 +142,9 @@ function drawNorth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // Same split-DY logic as south view
-  const lLegDX = Math.round(leftLegFwd  *  0.12);
-  const rLegDX = Math.round(rightLegFwd * -0.12);
+  // Same outward-spread logic as south view
+  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.35);
+  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.35);
   const lLegDY = Math.max(-3, Math.min(3, Math.round(leftLegFwd  * 0.5)));
   const rLegDY = Math.max(-3, Math.min(3, Math.round(rightLegFwd * 0.5)));
   const lArmDY = Math.round(leftArmFwd  * 0.4);
