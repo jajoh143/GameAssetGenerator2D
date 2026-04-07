@@ -32,11 +32,11 @@ const IDLE_FRAMES = [
 const WALK_SOUTH_FRAMES = [
   { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // idle
   { bodyY:  0, leftLegFwd:  4, rightLegFwd: -4, leftArmFwd: -3, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact L
-  { bodyY: -1, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -4, rightArmFwd:  4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (body UP)
+  { bodyY: -2, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -4, rightArmFwd:  4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (body UP)
   { bodyY:  0, leftLegFwd:  4, rightLegFwd: -4, leftArmFwd: -3, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact return
   { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // idle
   { bodyY:  0, leftLegFwd: -4, rightLegFwd:  4, leftArmFwd:  3, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact R
-  { bodyY: -1, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  4, rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (body UP)
+  { bodyY: -2, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  4, rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // passing (body UP)
   { bodyY:  0, leftLegFwd: -4, rightLegFwd:  4, leftArmFwd:  3, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // contact return
 ];
 
@@ -47,11 +47,11 @@ const WALK_SOUTH_FRAMES = [
 const WALK_WEST_FRAMES = [
   { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0, leftLegLift: 0, rightLegLift: 0 }, // idle
   { bodyY:  0, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -5, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0, leftLegLift: 0, rightLegLift: 0 }, // contact (both planted)
-  { bodyY: -1, leftLegFwd:  3, rightLegFwd: -3, leftArmFwd: -2, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1, leftLegLift: 0, rightLegLift: 4 }, // passing — right foot lifts 4px
+  { bodyY: -2, leftLegFwd:  3, rightLegFwd: -3, leftArmFwd: -2, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1, leftLegLift: 0, rightLegLift: 4 }, // passing — right foot lifts 4px
   { bodyY:  0, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -5, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0, leftLegLift: 0, rightLegLift: 0 }, // contact return
   { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0, leftLegLift: 0, rightLegLift: 0 }, // idle
   { bodyY:  0, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  5, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0, leftLegLift: 0, rightLegLift: 0 }, // contact other side
-  { bodyY: -1, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:  2, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1, leftLegLift: 4, rightLegLift: 0 }, // passing — left foot lifts 4px
+  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:  2, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1, leftLegLift: 4, rightLegLift: 0 }, // passing — left foot lifts 4px
   { bodyY:  0, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  5, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0, leftLegLift: 0, rightLegLift: 0 }, // contact return
 ];
 

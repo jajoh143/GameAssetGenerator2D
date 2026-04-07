@@ -675,16 +675,13 @@ function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
 // ---------------------------------------------------------------------------
 
 function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
-  // Side profile torso — row-by-row for organic side silhouette:
-  //   Rows 0-2  (shoulder): full width  (w=13)
-  //   Rows 3-6  (chest):    tapered 1px at back (w=12, back edge pulls in)
-  //   Rows 7-11 (waist):    tapered 2px at back (w=11, most pull-in)
-  //   Rows 12+  (hip):      tapered 1px at back (w=12, slight flare)
-  // Front edge stays constant (facing viewer = stable silhouette).
-  const h = 16;  // updated torsoH for west
+  // Side profile torso — 5-zone SNES shading for jacket.
+  // Silhouette taper: shoulder full width, chest slight taper at back, waist narrower.
+  // Front edge (x) stays constant — stable silhouette facing the viewer.
+  // For jacket: front 2px opening shows shirt/collar suggestion.
+  const h = 16;
   const SHOULDER = 3, WAIST_S = 7, WAIST_E = 11;
 
-  // Back edge (x+w direction) varies; front edge (x) stays constant
   const rowW = (row) => {
     if (row < SHOULDER)                       return 13;  // full shoulder
     if (row >= WAIST_S && row <= WAIST_E)    return 11;  // narrow waist
@@ -696,45 +693,70 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
     hLine(ctx, clothingColors.base, x, y + row, rowW(row));
   }
 
-  // Front side highlight (left edge — lit side facing viewer)
-  vLine(ctx, clothingColors.highlight, x,     y + 1, h - 2);
+  // ── Zone 1: Front lit face (2px highlight strip — fabric faces viewer) ────
   vLine(ctx, clothingColors.highlight, x + 1, y + 1, h - 2);
 
-  // Mid-tone zone: body curves away from light at ~55-60% width
-  // Creates natural 3-tone SNES shading: lit front → base → shadow back
+  // ── Zone 2: Secondary lit zone (fabric curves away slightly) ──────────────
+  for (let row = 1; row < h - 1; row++) {
+    px(ctx, clothingColors.highlight, x + 2, y + row);
+  }
+
+  // ── Zone 3: Mid-body base zone (already filled above) ─────────────────────
+  // columns x+3 to ~55% of rowW are base color (no change needed)
+
+  // ── Zone 4: Mid-shadow transition (surface curves away from light) ────────
   for (let row = 1; row < h - 1; row++) {
     const rw = rowW(row);
-    const midX = Math.round(rw * 0.55);  // shadow starts at 55% from front
-    if (x + midX + 1 < x + rw - 3) {    // don't overlap with back shadow strip
-      px(ctx, clothingColors.shadow, x + midX, y + row);
+    // Shadow starts at ~60% from front edge
+    const midX = Math.round(rw * 0.60);
+    px(ctx, clothingColors.shadow, x + midX, y + row);
+    // Widen shadow at chest (rows 3-6) for more pronounced form read
+    if (row >= 3 && row <= 6) {
+      px(ctx, clothingColors.shadow, x + midX - 1, y + row);
     }
   }
 
-  // Back/right shadow (2px strip — back of torso away from light)
+  // ── Zone 5: Back shadow strip (away from light source — 2px) ─────────────
   for (let row = 0; row < h; row++) {
     const rw = rowW(row);
     px(ctx, clothingColors.shadow, x + rw - 2, y + row);
     px(ctx, clothingColors.shadow, x + rw - 3, y + row);
   }
 
-  // Chest prominence at rows 3-5: slight forward bulge shadow below chest
-  hLine(ctx, clothingColors.shadow, x + 2, y + 6, rowW(6) - 4);
+  // Chest prominence shadow (below pectoral)
+  hLine(ctx, clothingColors.shadow, x + 2, y + 6, rowW(6) - 5);
 
   // Bottom edge darker
-  hLine(ctx, clothingColors.shadow, x + 1, y + h - 2, rowW(h - 1) - 2);
+  hLine(ctx, clothingColors.shadow, x + 1, y + h - 2, rowW(h - 1) - 3);
 
-  // Outline: front + top + bottom solid; back edge follows rowW
+  // ── Jacket front details (lapel/collar suggestion at top 4 rows) ──────────
+  if (clothingKey && clothingKey.startsWith('jacket')) {
+    // Front opening strip: 2px wide from top, shows shirt/collar
+    const shirtCol = clothingColors.collar || clothingColors.highlight;
+    for (let row = 0; row < 5; row++) {
+      // Opening widens slightly: closed at top, open at row 4
+      const openW = Math.min(row + 1, 3);
+      hLine(ctx, shirtCol, x, y + row, openW);
+      px(ctx, clothingColors.shadow, x + openW, y + row);  // lapel shadow edge
+    }
+    // Shirt visible below lapel (faint suggestion)
+    for (let row = 5; row < 8; row++) {
+      px(ctx, clothingColors.highlight, x, y + row);
+      px(ctx, clothingColors.highlight, x + 1, y + row);
+    }
+  }
+
+  // ── Outline ────────────────────────────────────────────────────────────────
   hLine(ctx, clothingColors.outline, x, y, rowW(0));         // top
-  // Shoulder/collar top highlight
-  hLine(ctx, clothingColors.highlight, x + 2, y, rowW(0) - 4);
+  hLine(ctx, clothingColors.highlight, x + 2, y, rowW(0) - 5); // shoulder highlight
   hLine(ctx, clothingColors.outline, x, y + h - 1, rowW(h - 1));  // bottom
   vLine(ctx, clothingColors.outline, x, y, h);                // front edge
   for (let row = 0; row < h; row++) {
     px(ctx, clothingColors.shadow, x + rowW(row) - 1, y + row);  // back selout
   }
   // AA at waist step transitions
-  px(ctx, clothingColors.shadow, x + rowW(SHOULDER) - 1, y + SHOULDER);
-  px(ctx, clothingColors.shadow, x + rowW(WAIST_S) - 1,  y + WAIST_S);
+  px(ctx, clothingColors.shadow, x + rowW(SHOULDER) - 1,   y + SHOULDER);
+  px(ctx, clothingColors.shadow, x + rowW(WAIST_S) - 1,    y + WAIST_S);
   px(ctx, clothingColors.shadow, x + rowW(WAIST_E + 1) - 1, y + WAIST_E + 1);
 }
 
@@ -871,28 +893,72 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
 // ---------------------------------------------------------------------------
 
 function drawLegsWest(ctx, pantColors, frontLegX, backLegX, legTopY, frontLift=0, backLift=0) {
-  // SNES-style: each leg is a clean vertical column at its foot position.
-  // Stride shows via horizontal separation. Lift shortens from the BOTTOM (foot end only).
+  // SNES-style profile legs: taper thigh→knee→shin→ankle.
+  // Knee bump: kneecap protrudes 1px toward front (lower X in west view).
+  // Row heights: thigh 0-4, knee 5-7, shin 8-11, ankle 12.
   const legH = 13;
-  const lw   = 5;  // 5px wide legs (cleaner than 6 at this scale)
+
+  // Per-row layout [xOffset from legX, width] for front leg (west = facing left, kneecap at front = lower X)
+  // thigh: 5px at legX-2; knee: 6px at legX-3 (1px forward bump); shin: 5px at legX-2; ankle: 4px at legX-1
+  const frontRows = [
+    [-2, 5], [-2, 5], [-2, 5], [-2, 5], [-2, 5],  // 0-4: thigh 5px
+    [-3, 6], [-3, 6], [-3, 6],                      // 5-7: knee 6px (1px kneecap bump forward)
+    [-2, 5], [-2, 5], [-2, 5],                      // 8-10: shin 5px
+    [-1, 4], [-1, 4],                               // 11-12: ankle 4px
+  ];
+  // Back leg: slightly simpler (less detail = depth), no kneecap bump outward
+  const backRows = [
+    [-2, 5], [-2, 5], [-2, 5], [-2, 5], [-2, 5],
+    [-2, 5], [-2, 5], [-2, 5],
+    [-2, 5], [-2, 5], [-2, 5],
+    [-1, 4], [-1, 4],
+  ];
 
   // ── Back leg (shadow tone, drawn first so front leg is on top) ────────────
   const backH = Math.max(2, legH - Math.round(backLift));
-  const bx = backLegX - 2;
-  fillRect(ctx, pantColors.shadow, bx, legTopY, lw, backH);
-  vLine(ctx, pantColors.base, bx + 1, legTopY, backH);      // front face lighter
-  px(ctx, pantColors.base, bx + 2, legTopY + 5);            // knee hint
-  outlineRect(ctx, pantColors.outline, bx, legTopY, lw, backH);
+  for (let row = 0; row < backH; row++) {
+    const [xOff, w] = backRows[row];
+    const rx = backLegX + xOff;
+    hLine(ctx, pantColors.shadow, rx, legTopY + row, w);
+    px(ctx, pantColors.base, rx + 1, legTopY + row);  // lighter inner strip
+    // Knee hint for back leg
+    if (row === 6) px(ctx, pantColors.base, rx + 2, legTopY + row);
+    // Outline left edge
+    px(ctx, pantColors.outline, rx, legTopY + row);
+    px(ctx, pantColors.outline, rx + w - 1, legTopY + row);
+  }
+  // Top and bottom outline for back leg
+  const [bx0, bw0] = backRows[0];
+  hLine(ctx, pantColors.outline, backLegX + bx0, legTopY, bw0);
+  const [bxE, bwE] = backRows[backH - 1];
+  hLine(ctx, pantColors.outline, backLegX + bxE, legTopY + backH - 1, bwE);
 
-  // ── Front leg (base + highlight, drawn on top) ────────────────────────────
+  // ── Front leg (full detail, drawn on top) ────────────────────────────────
   const frontH = Math.max(2, legH - Math.round(frontLift));
-  const fx = frontLegX - 2;
-  fillRect(ctx, pantColors.base, fx, legTopY, lw, frontH);
-  vLine(ctx, pantColors.highlight, fx + 1, legTopY, frontH); // front edge highlight
-  vLine(ctx, pantColors.shadow,    fx + 3,  legTopY, frontH); // back edge shadow
-  px(ctx, pantColors.highlight, fx + 2, legTopY + 5);        // knee highlight
-  px(ctx, pantColors.highlight, fx + 2, legTopY + 6);
-  outlineRect(ctx, pantColors.outline, fx, legTopY, lw, frontH);
+  for (let row = 0; row < frontH; row++) {
+    const [xOff, w] = frontRows[row];
+    const fx = frontLegX + xOff;
+    hLine(ctx, pantColors.base, fx, legTopY + row, w);
+    // Front lit edge (kneecap = front = left side)
+    px(ctx, pantColors.highlight, fx + 1, legTopY + row);
+    // Back shadow strip
+    px(ctx, pantColors.shadow, fx + w - 2, legTopY + row);
+    // Knee highlight at bump row
+    if (row === 5 || row === 6) {
+      px(ctx, pantColors.highlight, fx, legTopY + row);       // kneecap tip highlight
+      px(ctx, pantColors.shadow,    fx + w - 1, legTopY + row);  // back shadow
+    }
+    // Thigh top highlight (rows 1-2 for cylinder feel)
+    if (row === 1 || row === 2) px(ctx, pantColors.highlight, fx + 2, legTopY + row);
+    // Outline left/right
+    px(ctx, pantColors.outline, fx, legTopY + row);
+    px(ctx, pantColors.outline, fx + w - 1, legTopY + row);
+  }
+  // Top and bottom outline for front leg
+  const [fx0, fw0] = frontRows[0];
+  hLine(ctx, pantColors.outline, frontLegX + fx0, legTopY, fw0);
+  const [fxE, fwE] = frontRows[frontH - 1];
+  hLine(ctx, pantColors.outline, frontLegX + fxE, legTopY + frontH - 1, fwE);
 }
 
 // ---------------------------------------------------------------------------

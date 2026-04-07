@@ -89,11 +89,11 @@ const CLOTHING = {
   // SDV/SNES art guide: shadows shift cooler (toward blue/teal),
   // highlights shift warmer (toward yellow/orange).
   jacket_grey: {
-    highlight: '#B8B0A0',  // warm: slight yellow-tan tint
+    highlight: '#D0C8B8',  // warm ivory-tan — noticeably brighter than base
     base:      '#787878',
-    shadow:    '#404454',  // cool: slight blue-grey
-    outline:   '#1C1C28',  // tinted dark navy rather than pure charcoal
-    collar:    '#585864',  // cool collar
+    shadow:    '#303448',  // cooler blue-grey, darker for more contrast
+    outline:   '#141420',
+    collar:    '#909098',  // lighter collar for front opening visibility
   },
   jacket_blue: {
     highlight: '#7098D4',  // warmer, more cyan-sky blue
