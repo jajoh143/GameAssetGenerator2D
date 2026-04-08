@@ -70,31 +70,57 @@ const WALK_NORTH_FRAMES = WALK_SOUTH_FRAMES; // same offsets, different drawing
 // WALK EAST: 8 frames - walking right (mirrored west)
 const WALK_EAST_FRAMES = WALK_WEST_FRAMES; // same offsets, mirrored at render time
 
-// ATTACK SOUTH: 6 frames - wind-up, strike, recovery
-const ATTACK_SOUTH_FRAMES = [
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0,   tilt: 0,  headBob: 0 },
-  { bodyY: -1, leftLegFwd: 0,  rightLegFwd: 2,  leftArmFwd: -2, rightArmFwd: -8, leftArmOut: 0, rightArmOut: -4,  tilt: -2, headBob: 0 },
-  { bodyY: -2, leftLegFwd: 0,  rightLegFwd: 3,  leftArmFwd: -3, rightArmFwd: -12,leftArmOut: 0, rightArmOut: -6,  tilt: -3, headBob: -1 },
-  { bodyY: -2, leftLegFwd: -2, rightLegFwd: 4,  leftArmFwd: -4, rightArmFwd: 10, leftArmOut: 0, rightArmOut: 8,   tilt: 2,  headBob: -1 },
-  { bodyY: -1, leftLegFwd: -1, rightLegFwd: 2,  leftArmFwd: -2, rightArmFwd: 5,  leftArmOut: 0, rightArmOut: 4,   tilt: 1,  headBob: 0 },
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0,   tilt: 0,  headBob: 0 },
+// ATTACK SWING SOUTH: 6 frames - melee sword/weapon swing facing camera
+// Right arm does the swing arc (wind-up back/up → strike forward+out → follow-through).
+// rightArmFwd negative = arm lifts; positive = arm swings forward/down.
+// rightArmOut positive = arm extends to the right.
+const ATTACK_SWING_SOUTH_FRAMES = [
+  { bodyY: 0,  leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0,  leftArmOut: 0, rightArmOut: 0,  tilt: 0,  headBob:  0 }, // ready
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd: 1, leftArmFwd: -2, rightArmFwd: -6,  leftArmOut: 0, rightArmOut: -3, tilt: -1, headBob:  0 }, // wind-up: arm back/up
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd: 2, leftArmFwd: -3, rightArmFwd:-12,  leftArmOut: 0, rightArmOut: -5, tilt: -2, headBob: -1 }, // apex: arm high, body tilts back
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd: 3, leftArmFwd: -4, rightArmFwd: 10,  leftArmOut: 0, rightArmOut:  8, tilt:  3, headBob:  0 }, // STRIKE: arm swings through, outward
+  { bodyY:  0, leftLegFwd: -1, rightLegFwd: 2, leftArmFwd: -2, rightArmFwd:  6,  leftArmOut: 0, rightArmOut:  5, tilt:  2, headBob:  0 }, // follow-through
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0,  leftArmOut: 0, rightArmOut:  0, tilt:  0, headBob:  0 }, // recovery
 ];
 
-// ATTACK WEST: 6 frames - side profile attack
-const ATTACK_WEST_FRAMES = [
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0,  tilt: 0,  headBob: 0 },
-  { bodyY: -1, leftLegFwd: -2, rightLegFwd: 2,  leftArmFwd: -5, rightArmFwd: 5,  leftArmOut: 0, rightArmOut: 0,  tilt: -2, headBob: 0 },
-  { bodyY: -2, leftLegFwd: -3, rightLegFwd: 3,  leftArmFwd: -10,rightArmFwd: 10, leftArmOut: 0, rightArmOut: 0,  tilt: -3, headBob: -1 },
-  { bodyY: -2, leftLegFwd: 2,  rightLegFwd: -2, leftArmFwd: 8,  rightArmFwd: -8, leftArmOut: 0, rightArmOut: 0,  tilt: 3,  headBob: -1 },
-  { bodyY: -1, leftLegFwd: 1,  rightLegFwd: -1, leftArmFwd: 4,  rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0,  tilt: 1,  headBob: 0 },
-  { bodyY: 0,  leftLegFwd: 0,  rightLegFwd: 0,  leftArmFwd: 0,  rightArmFwd: 0,  leftArmOut: 0, rightArmOut: 0,  tilt: 0,  headBob: 0 },
+// ATTACK SWING WEST: 6 frames - melee swing in side profile (facing left)
+// Front arm (left) swings: positive leftArmFwd → arm moves left (forward = strike direction).
+const ATTACK_SWING_WEST_FRAMES = [
+  { bodyY: 0,  leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // ready
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd: -6, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: -1, headBob:  0 }, // wind-up: arm pulls back (rightward)
+  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:-10, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: -2, headBob: -1 }, // apex: arm fully back, body leans
+  { bodyY: -1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd: 12, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt:  3, headBob:  0 }, // STRIKE: arm slashes forward
+  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:  8, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt:  2, headBob:  0 }, // follow-through
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt:  0, headBob:  0 }, // recovery
 ];
 
-// ATTACK NORTH: 6 frames - attacking while facing away
-const ATTACK_NORTH_FRAMES = ATTACK_SOUTH_FRAMES;
+// ATTACK SHOOT SOUTH: 6 frames - ranged weapon (gun/bow) facing camera
+// Arm raises and extends outward toward target; recoil kicks arm back on fire.
+const ATTACK_SHOOT_SOUTH_FRAMES = [
+  { bodyY: 0,  leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd: 0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // ready
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: 2, leftArmOut: 0, rightArmOut: 4, tilt: 0, headBob:  0 }, // raise arm to aim
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: 3, leftArmOut: 0, rightArmOut: 6, tilt: 1, headBob:  0 }, // arm fully extended, steady aim
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: 3, leftArmOut: 0, rightArmOut: 6, tilt: 1, headBob: -1 }, // FIRE (held frame — impact weight)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: 1, leftArmOut: 0, rightArmOut: 2, tilt: 0, headBob:  0 }, // recoil: arm kicks back
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd: 0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // lower/return
+];
 
-// ATTACK EAST: 6 frames - mirrored west
-const ATTACK_EAST_FRAMES = ATTACK_WEST_FRAMES;
+// ATTACK SHOOT WEST: 6 frames - ranged weapon in side profile (facing left)
+// Front arm (left) extends forward (to the left). Recoil snaps arm back briefly.
+const ATTACK_SHOOT_WEST_FRAMES = [
+  { bodyY: 0,  leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // ready
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  5, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // raise and extend forward
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  8, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 1, headBob:  0 }, // arm fully extended, steady aim
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  8, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 1, headBob: -1 }, // FIRE (held frame)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  4, rightArmFwd: -1, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // recoil: arm pulls back
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // lower/return
+];
+
+// North/East mirrors
+const ATTACK_SWING_NORTH_FRAMES = ATTACK_SWING_SOUTH_FRAMES;
+const ATTACK_SWING_EAST_FRAMES  = ATTACK_SWING_WEST_FRAMES;
+const ATTACK_SHOOT_NORTH_FRAMES = ATTACK_SHOOT_SOUTH_FRAMES;
+const ATTACK_SHOOT_EAST_FRAMES  = ATTACK_SHOOT_WEST_FRAMES;
 
 module.exports = {
   IDLE_FRAMES,
@@ -102,8 +128,12 @@ module.exports = {
   WALK_WEST_FRAMES,
   WALK_NORTH_FRAMES,
   WALK_EAST_FRAMES,
-  ATTACK_SOUTH_FRAMES,
-  ATTACK_WEST_FRAMES,
-  ATTACK_NORTH_FRAMES,
-  ATTACK_EAST_FRAMES,
+  ATTACK_SWING_SOUTH_FRAMES,
+  ATTACK_SWING_WEST_FRAMES,
+  ATTACK_SWING_NORTH_FRAMES,
+  ATTACK_SWING_EAST_FRAMES,
+  ATTACK_SHOOT_SOUTH_FRAMES,
+  ATTACK_SHOOT_WEST_FRAMES,
+  ATTACK_SHOOT_NORTH_FRAMES,
+  ATTACK_SHOOT_EAST_FRAMES,
 };

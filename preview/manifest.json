@@ -28,23 +28,43 @@
       "frameCount": 8
     },
     {
-      "name": "attack_south",
+      "name": "attack_swing_south",
       "row": 5,
       "frameCount": 6
     },
     {
-      "name": "attack_west",
+      "name": "attack_swing_west",
       "row": 6,
       "frameCount": 6
     },
     {
-      "name": "attack_north",
+      "name": "attack_swing_north",
       "row": 7,
       "frameCount": 6
     },
     {
-      "name": "attack_east",
+      "name": "attack_swing_east",
       "row": 8,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_shoot_south",
+      "row": 9,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_shoot_west",
+      "row": 10,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_shoot_north",
+      "row": 11,
+      "frameCount": 6
+    },
+    {
+      "name": "attack_shoot_east",
+      "row": 12,
       "frameCount": 6
     }
   ],
@@ -119,6 +139,34 @@
         "hornStyle": "straight",
         "tailStyle": "medium",
         "clothing": "apron_white",
+        "pants": "pants_black",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "human_streetwear",
+      "file": "../output/human_streetwear_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "tan",
+        "hair": "brown",
+        "hairStyle": "short",
+        "eyes": "hazel",
+        "clothing": "tshirt_grey",
+        "pants": "jeans_blue",
+        "shoes": "shoe_white"
+      }
+    },
+    {
+      "name": "human_bomber",
+      "file": "../output/human_bomber_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "light",
+        "hair": "blonde",
+        "hairStyle": "short",
+        "eyes": "blue",
+        "clothing": "bomber_olive",
         "pants": "pants_black",
         "shoes": "shoe_black"
       }

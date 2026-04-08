@@ -340,10 +340,10 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
     [0, 13],  //  9  below eye
     [0, 13],  // 10  nose / cheek
     [0, 13],  // 11  cheek
-    [0, 13],  // 12  jaw
-    [0, 12],  // 13  jaw — back tapers  (x=20-31)
-    [0, 11],  // 14  jaw               (x=20-30)
-    [0, 10],  // 15  jaw               (x=20-29)
+    [0, 13],  // 12  jaw          (x=20-32)
+    [0, 13],  // 13  jaw — hold  (x=20-32) creates jaw angle
+    [0, 11],  // 14  jaw drops 2 (x=20-30) — non-linear taper = curve
+    [0, 10],  // 15  jaw         (x=20-29)
     [1,  8],  // 16  chin              (x=21-28)
     [1,  7],  // 17  chin
     [2,  5],  // 18  chin narrows      (x=22-26)
@@ -365,8 +365,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
     px(ctx, skinColors.highlight, HX + xo + 1, HY + r);
     if (r <= 6) px(ctx, skinColors.highlight, HX + xo + 2, HY + r);
   }
-  // Back-of-head shadow (right side)
-  for (let r = 2; r <= 12; r++) {
+  // Back-of-head shadow (right side) — extend to row 13 since it holds the same width
+  for (let r = 2; r <= 13; r++) {
     const [xo, w] = S[r];
     px(ctx, skinColors.shadow, HX + xo + w - 2, HY + r);
     px(ctx, skinColors.shadow, HX + xo + w - 3, HY + r);
@@ -424,6 +424,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
   // Selout AA at dome step
   px(ctx, skinColors.shadow, HX + S[0][0], HY);
   px(ctx, skinColors.shadow, HX + S[0][0] + S[0][1] - 1, HY);
+  // Selout AA at jaw step: row 13 back=x32, row 14 back=x30 — shadow at x31,r14 softens corner
+  px(ctx, skinColors.shadow, HX + 11, HY + 14);
   // Nose outline cap
   px(ctx, outline, HX - 1, HY + 9);   // above nose
   px(ctx, outline, HX - 1, HY + 11);  // below nose
