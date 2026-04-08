@@ -238,23 +238,34 @@ function drawWest(ctx, config, offsets) {
   // Side profile centering: torso at x=20-32
   const torsoX = 20;
 
-  // Stride: front leg moves LEFT (lower x), back leg moves RIGHT (higher x)
-  // frontLeg = leftLegFwd, backLeg = rightLegFwd
-  const frontLegCenter = 26 - Math.round(leftLegFwd  * 0.9);
-  const backLegCenter  = 26 - Math.round(rightLegFwd * 0.9);
+  // Stride: compute raw screen X for each leg.
+  // In west view (facing left), lower X = more forward.
+  const leftLegX  = 26 - Math.round(leftLegFwd  * 0.9);
+  const rightLegX = 26 - Math.round(rightLegFwd * 0.9);
+
+  // Assign front/back based on actual screen position so depth is always correct:
+  // the leg at lower X (more toward direction of travel) is drawn on top.
+  let frontLegCenter, backLegCenter, frontLegLift, backLegLift;
+  if (leftLegX <= rightLegX) {
+    frontLegCenter = leftLegX;   backLegCenter = rightLegX;
+    frontLegLift   = leftLegLift; backLegLift  = rightLegLift;
+  } else {
+    frontLegCenter = rightLegX;  backLegCenter = leftLegX;
+    frontLegLift   = rightLegLift; backLegLift = leftLegLift;
+  }
 
   // Arms swing horizontally in side profile (not vertically)
   // Positive armFwd → arm swings forward = moves left (lower X in west view)
-  const frontArmDX = -Math.round(leftArmFwd  * 0.5);
-  const backArmDX  = -Math.round(rightArmFwd * 0.5);
+  const frontArmDX = -Math.round(leftArmFwd  * 0.6);
+  const backArmDX  = -Math.round(rightArmFwd * 0.6);
 
   drawGroundShadow(ctx, 26, 62 + bodyY);
 
   // --- Draw order: back-to-front ---
   // Back shoe
-  drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, leftLegLift, rightLegLift);
+  drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   // Back leg
-  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, leftLegLift, rightLegLift);
+  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
   // Back arm (drawn before torso so torso covers overlap)
   drawArmsWest(ctx, colors.clothing, colors.skin, frontArmDX, backArmDX, torsoX, torsoY);
   // Belt

@@ -39,21 +39,29 @@ const WALK_SOUTH_FRAMES = [
   { bodyY: 0, leftLegFwd: -4, rightLegFwd:  4, leftArmFwd:  3, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0 }, // contact return
 ];
 
-// WALK WEST: 8 frames - walking left (profile view — most legible direction)
-// No body bob — leg motion only.
-// Contact frame: forward leg at full height (planted on ground = naturally "extended down").
-// Passing frame: back foot lifts (shortens leg from bottom). Body stays fixed.
-// The alternation between full-length contact leg and shortened lifted leg creates the
-// "extends down → up → back to normal" rhythm the user sees.
+// WALK WEST: 8 frames - walking left (profile view)
+// Full contact→recoil→passing→high-point cycle for each leg. No idle frames.
+// Frame naming: C=contact (foot plants), R=recoil (weight over foot, other lifts),
+//               P=passing (lifted foot crosses through), H=high point (foot swings to front).
+// Arm swing opposes leg (natural balance). leftLegLift lifts front(L) leg, rightLegLift lifts back(R).
+// Depth fix in HumanCharacter.js: front/back assignment uses actual screen X, not leg identity.
 const WALK_WEST_FRAMES = [
-  { bodyY: 0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 }, // idle
-  { bodyY: 0, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -5, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 }, // contact: both legs planted at full length
-  { bodyY: 0, leftLegFwd:  3, rightLegFwd: -3, leftArmFwd: -2, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 5 }, // passing: back (right) foot lifts 5px
-  { bodyY: 0, leftLegFwd:  6, rightLegFwd: -6, leftArmFwd: -5, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 }, // contact return
-  { bodyY: 0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 }, // idle
-  { bodyY: 0, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  5, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 }, // contact: both legs planted at full length
-  { bodyY: 0, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:  2, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 5, rightLegLift: 0 }, // passing: back (left) foot lifts 5px
-  { bodyY: 0, leftLegFwd: -6, rightLegFwd:  6, leftArmFwd:  5, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 }, // contact return
+  // Frame 0 — Contact L: L foot plants far forward, R foot pushed back
+  { bodyY: 0, leftLegFwd:  8, rightLegFwd: -6, leftArmFwd: -6, rightArmFwd:  6, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 },
+  // Frame 1 — Recoil L: body passing over L foot, R foot starts to lift
+  { bodyY: 0, leftLegFwd:  5, rightLegFwd: -4, leftArmFwd: -4, rightArmFwd:  4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 3 },
+  // Frame 2 — Passing: R foot fully lifted, crossing under body
+  { bodyY: 0, leftLegFwd:  2, rightLegFwd: -1, leftArmFwd: -2, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 7 },
+  // Frame 3 — High point R: R foot swings to front, L foot pushes off
+  { bodyY: 0, leftLegFwd: -1, rightLegFwd:  5, leftArmFwd:  2, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 2 },
+  // Frame 4 — Contact R: R foot plants far forward, L foot pushed back
+  { bodyY: 0, leftLegFwd: -6, rightLegFwd:  8, leftArmFwd:  6, rightArmFwd: -6, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 0, rightLegLift: 0 },
+  // Frame 5 — Recoil R: body passing over R foot, L foot starts to lift
+  { bodyY: 0, leftLegFwd: -4, rightLegFwd:  5, leftArmFwd:  4, rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 3, rightLegLift: 0 },
+  // Frame 6 — Passing: L foot fully lifted, crossing under body
+  { bodyY: 0, leftLegFwd: -1, rightLegFwd:  2, leftArmFwd:  2, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 7, rightLegLift: 0 },
+  // Frame 7 — High point L: L foot swings to front, R foot pushes off
+  { bodyY: 0, leftLegFwd:  5, rightLegFwd: -1, leftArmFwd: -2, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: 0, leftLegLift: 2, rightLegLift: 0 },
 ];
 
 // WALK NORTH: 8 frames - walking away from camera
