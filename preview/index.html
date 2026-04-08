@@ -168,7 +168,7 @@
     /* ── Main ── */
     .main {
       flex: 1;
-      overflow-y: auto;
+      overflow-y: scroll;
       padding: 20px;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
@@ -176,7 +176,13 @@
       align-content: start;
       min-height: 0;
     }
-    /* Expanded card takes full row so nothing is cut off */
+    /* Always-visible scrollbar so users know the area is scrollable */
+    .main::-webkit-scrollbar          { width: 8px; }
+    .main::-webkit-scrollbar-track    { background: var(--panel); }
+    .main::-webkit-scrollbar-thumb    { background: var(--border); border-radius: 4px; }
+    .main::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* Expanded card takes full row */
     .char-card:not(.collapsed) {
       grid-column: 1 / -1;
     }
@@ -241,13 +247,13 @@
 
     .card-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
 
-    .live-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
-    .live-box { text-align: center; }
+    .live-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+    .live-box { text-align: center; background: var(--surface); border-radius: 6px; padding: 10px; }
     .live-box span {
       display: block;
       font-size: 0.65rem;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 6px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
     }
