@@ -871,6 +871,14 @@ function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
     drawHoodieSouth(ctx, clothingColors, x, y, w, h);
   } else if (clothingKey.startsWith('apron')) {
     drawApronSouth(ctx, clothingColors, x, y, w, h);
+  } else if (clothingKey.startsWith('shirt')) {
+    drawShirtSouth(ctx, clothingColors, x, y, w, h);
+  } else if (clothingKey.startsWith('vest')) {
+    drawVestSouth(ctx, clothingColors, x, y, w, h);
+  } else if (clothingKey.startsWith('tunic')) {
+    drawTunicSouth(ctx, clothingColors, x, y, w, h);
+  } else if (clothingKey.startsWith('robe')) {
+    drawRobeSouth(ctx, clothingColors, x, y, w, h);
   } else {
     fillRect(ctx, clothingColors.base, x, y, w, h);
     outlineRect(ctx, clothingColors.outline, x, y, w, h);
@@ -950,6 +958,16 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
     for (let row = 5; row < 8; row++) {
       px(ctx, clothingColors.highlight, x, y + row);
       px(ctx, clothingColors.highlight, x + 1, y + row);
+    }
+  }
+
+  // ── Shirt/tunic/vest/robe collar hint in west view ─────────────────────────
+  if (clothingKey && (clothingKey.startsWith('shirt') || clothingKey.startsWith('tunic') || clothingKey.startsWith('vest') || clothingKey.startsWith('robe'))) {
+    // Collar visible at front top (2px wide strip)
+    const shirtCol = clothingColors.collar || clothingColors.highlight;
+    for (let row = 0; row < 4; row++) {
+      px(ctx, shirtCol, x, y + row);
+      px(ctx, shirtCol, x + 1, y + row);
     }
   }
 
@@ -1442,6 +1460,10 @@ module.exports = {
   drawJacketSouth,
   drawHoodieSouth,
   drawApronSouth,
+  drawShirtSouth,
+  drawVestSouth,
+  drawTunicSouth,
+  drawRobeSouth,
   drawTorsoWest,
   drawBeltSouth,
   drawBeltWest,
