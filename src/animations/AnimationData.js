@@ -79,8 +79,8 @@ const WALK_EAST_FRAMES = WALK_WEST_FRAMES; // same offsets, mirrored at render t
 // rArmDY = round(rightArmFwd * 0.4); wrist Y = baseY(28) + rArmDY + 10.
 const ATTACK_SWING_SOUTH_FRAMES = [
   { bodyY: 0,  leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0,  leftArmOut: 0, rightArmOut:  0, tilt: 0,  headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd: 1, leftArmFwd: -2, rightArmFwd: -10,  leftArmOut: 0, rightArmOut: -4, tilt: -1, headBob:  0 }, // wind-up: wrist lifts
-  { bodyY: -2, leftLegFwd:  0, rightLegFwd: 2, leftArmFwd: -3, rightArmFwd: -18,  leftArmOut: 0, rightArmOut: -6, tilt: -2, headBob: -1 }, // apex: wrist high, arm foreshortened
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd: 1, leftArmFwd: -2, rightArmFwd: -22,  leftArmOut: 0, rightArmOut: -8, tilt: -1, headBob:  0 }, // wind-up: wrist lifts to shoulder level
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd: 2, leftArmFwd: -3, rightArmFwd: -40,  leftArmOut: 0, rightArmOut: -9, tilt: -2, headBob: -1 }, // apex: wrist overhead (in head area)
   { bodyY: -1, leftLegFwd: -2, rightLegFwd: 3, leftArmFwd: -4, rightArmFwd:  18,  leftArmOut: 0, rightArmOut:  8, tilt:  3, headBob:  0 }, // STRIKE: wrist swings down+out
   { bodyY:  0, leftLegFwd: -1, rightLegFwd: 2, leftArmFwd: -2, rightArmFwd:  12,  leftArmOut: 0, rightArmOut:  5, tilt:  2, headBob:  0 }, // follow-through
   { bodyY:  0, leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0,  leftArmOut: 0, rightArmOut:  0, tilt:  0, headBob:  0 }, // recovery

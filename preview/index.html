@@ -426,16 +426,175 @@ const cardsByName = {};   // name → cardId, for replace-on-regenerate
 let cardCounter = 0;
 
 const ANIM_ROWS = [
-  { name: 'idle',         frameCount: 4 },
-  { name: 'walk south',   frameCount: 8 },
-  { name: 'walk west',    frameCount: 8 },
-  { name: 'walk north',   frameCount: 8 },
-  { name: 'walk east',    frameCount: 8 },
-  { name: 'attack south', frameCount: 6 },
-  { name: 'attack west',  frameCount: 6 },
-  { name: 'attack north', frameCount: 6 },
-  { name: 'attack east',  frameCount: 6 },
+  { name: 'idle',               frameCount: 4 },
+  { name: 'walk south',         frameCount: 8 },
+  { name: 'walk west',          frameCount: 8 },
+  { name: 'walk north',         frameCount: 8 },
+  { name: 'walk east',          frameCount: 8 },
+  { name: 'attack swing south', frameCount: 6 },
+  { name: 'attack swing west',  frameCount: 6 },
+  { name: 'attack swing north', frameCount: 6 },
+  { name: 'attack swing east',  frameCount: 6 },
+  { name: 'attack shoot south', frameCount: 6 },
+  { name: 'attack shoot west',  frameCount: 6 },
+  { name: 'attack shoot north', frameCount: 6 },
+  { name: 'attack shoot east',  frameCount: 6 },
 ];
+
+// ── Weapon overlay ──────────────────────────────────────────────────────────
+// Per-frame animation offsets for weapon position computation (mirrors AnimationData.js).
+// South view: rFwd=rightArmFwd, rOut=rightArmOut; West view: lFwd=leftArmFwd
+const WPN_FRAMES = {
+  swing_s: [
+    { bodyY: 0,  rFwd:  0,  rOut:  0 },
+    { bodyY:-1,  rFwd:-22,  rOut: -8 },
+    { bodyY:-2,  rFwd:-40,  rOut: -9 },
+    { bodyY:-1,  rFwd: 18,  rOut:  8 },
+    { bodyY: 0,  rFwd: 12,  rOut:  5 },
+    { bodyY: 0,  rFwd:  0,  rOut:  0 },
+  ],
+  swing_w: [
+    { bodyY: 0,  lFwd:  0 },
+    { bodyY:-1,  lFwd:-10 },
+    { bodyY:-2,  lFwd:-17 },
+    { bodyY:-1,  lFwd: 20 },
+    { bodyY: 0,  lFwd: 13 },
+    { bodyY: 0,  lFwd:  0 },
+  ],
+  shoot_s: [
+    { bodyY: 0,  rFwd: 0, rOut: 0 },
+    { bodyY:-1,  rFwd: 2, rOut: 4 },
+    { bodyY:-1,  rFwd: 3, rOut: 6 },
+    { bodyY:-2,  rFwd: 3, rOut: 6 },
+    { bodyY:-1,  rFwd: 1, rOut: 2 },
+    { bodyY: 0,  rFwd: 0, rOut: 0 },
+  ],
+  shoot_w: [
+    { bodyY: 0,  lFwd: 0 },
+    { bodyY:-1,  lFwd: 5 },
+    { bodyY:-1,  lFwd: 8 },
+    { bodyY:-2,  lFwd: 8 },
+    { bodyY:-1,  lFwd: 4 },
+    { bodyY: 0,  lFwd: 0 },
+  ],
+};
+
+// Maps spritesheet row index → weapon type/view/frames
+const WEAPON_ROWS = {
+  5:  { type:'sword', view:'south', frames: WPN_FRAMES.swing_s },
+  6:  { type:'sword', view:'west',  frames: WPN_FRAMES.swing_w },
+  7:  { type:'sword', view:'north', frames: WPN_FRAMES.swing_s },
+  8:  { type:'sword', view:'east',  frames: WPN_FRAMES.swing_w },
+  9:  { type:'gun',   view:'south', frames: WPN_FRAMES.shoot_s },
+  10: { type:'gun',   view:'west',  frames: WPN_FRAMES.shoot_w },
+  11: { type:'gun',   view:'north', frames: WPN_FRAMES.shoot_s },
+  12: { type:'gun',   view:'east',  frames: WPN_FRAMES.shoot_w },
+};
+
+// Compute hand center in sprite coords for a given row+frame
+function getHandPos(row, frame) {
+  const info = WEAPON_ROWS[row];
+  if (!info) return null;
+  const f = info.frames[frame];
+  if (!f) return null;
+  if (info.view === 'south' || info.view === 'north') {
+    // drawArmsSouth: baseY=28, sleeveH=11, shoulderRX=41
+    const rArmDY = Math.round((f.rFwd || 0) * 0.4);
+    const hx = 41 + Math.round(f.rOut || 0);
+    const hy = 39 + rArmDY;
+    return { hx, hy, sx: 41, sy: 28, type: info.type, fireFrame: frame === 3 };
+  } else if (info.view === 'west') {
+    // drawFrontArmWest: shoulderX=17, frontY=torsoY+1, torsoY=29+bodyY, sleeveH=11
+    const bodyY = f.bodyY || 0;
+    const frontY = 30 + bodyY;
+    const frontArmDX = -Math.round((f.lFwd || 0) * 0.6);
+    return { hx: 17 + frontArmDX, hy: frontY + 11, sx: 17, sy: frontY, type: info.type, fireFrame: frame === 3 };
+  } else if (info.view === 'east') {
+    // East is a horizontal mirror (x → 63-x) of west
+    const bodyY = f.bodyY || 0;
+    const frontY = 30 + bodyY;
+    const frontArmDX = -Math.round((f.lFwd || 0) * 0.6);
+    const wx = 17 + frontArmDX;
+    return { hx: 63 - wx, hy: frontY + 11, sx: 63 - 17, sy: frontY, type: info.type, fireFrame: frame === 3 };
+  }
+  return null;
+}
+
+function drawWeaponOverlay(canvas, row, frame, spriteSize) {
+  const pos = getHandPos(row, frame);
+  if (!pos) return;
+  const scale = canvas.width / spriteSize;
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.scale(scale, scale);
+  ctx.imageSmoothingEnabled = false;
+  if (pos.type === 'sword') drawSwordPixels(ctx, pos);
+  else if (pos.type === 'gun') drawGunPixels(ctx, pos);
+  ctx.restore();
+}
+
+function drawSwordPixels(ctx, { hx, hy, sx, sy }) {
+  // Hand center
+  const hcx = hx + 2, hcy = hy + 2;
+  const dx = hcx - sx, dy = hcy - sy;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const ndx = dx / len, ndy = dy / len;
+  // Blade: 13px from hand center in arm direction
+  ctx.fillStyle = '#e0e0f0';
+  for (let i = 0; i <= 13; i++) {
+    const px = Math.round(hcx + ndx * i), py = Math.round(hcy + ndy * i);
+    ctx.fillRect(px, py, 1, 1);
+  }
+  // Blade edge highlight (second pixel from base)
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(Math.round(hcx + ndx * 2), Math.round(hcy + ndy * 2), 1, 1);
+  // Dark edge (opposite side)
+  ctx.fillStyle = '#8888aa';
+  for (let i = 3; i <= 12; i += 3) {
+    ctx.fillRect(Math.round(hcx + ndx * i + ndy), Math.round(hcy + ndy * i - ndx), 1, 1);
+  }
+  // Crossguard (3px perpendicular at hand center, gold)
+  ctx.fillStyle = '#d4a800';
+  for (let i = -3; i <= 3; i++) {
+    ctx.fillRect(Math.round(hcx - ndy * i), Math.round(hcy + ndx * i), 1, 1);
+  }
+  // Pommel (opposite from blade, dark gold)
+  ctx.fillStyle = '#8a6000';
+  ctx.fillRect(Math.round(hcx - ndx * 2), Math.round(hcy - ndy * 2), 1, 1);
+  ctx.fillRect(Math.round(hcx - ndx * 3), Math.round(hcy - ndy * 3), 1, 1);
+}
+
+function drawGunPixels(ctx, { hx, hy, sx, sy, fireFrame }) {
+  const hcx = hx + 2, hcy = hy + 2;
+  const dx = hcx - sx, dy = hcy - sy;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const ndx = dx / len, ndy = dy / len;
+  // Gun body (dark rectangle, 3px wide, 9px long in arm direction)
+  for (let i = 0; i <= 9; i++) {
+    const bx = Math.round(hcx + ndx * i), by = Math.round(hcy + ndy * i);
+    ctx.fillStyle = '#333344';
+    ctx.fillRect(bx, by, 1, 1);
+    // Thickness: 1px each side perpendicular
+    ctx.fillStyle = '#444455';
+    ctx.fillRect(Math.round(bx - ndy), Math.round(by + ndx), 1, 1);
+    ctx.fillStyle = '#222233';
+    ctx.fillRect(Math.round(bx + ndy), Math.round(by - ndx), 1, 1);
+  }
+  // Trigger guard (small square at grip, perpendicular)
+  ctx.fillStyle = '#555566';
+  ctx.fillRect(Math.round(hcx + ndy * 2), Math.round(hcy - ndx * 2), 1, 3);
+  // Muzzle flash on fire frame
+  if (fireFrame) {
+    const mx = Math.round(hcx + ndx * 13), my = Math.round(hcy + ndy * 13);
+    ctx.fillStyle = '#ffee00';
+    ctx.fillRect(mx - 1, my - 1, 3, 3);
+    ctx.fillStyle = '#ff8800';
+    ctx.fillRect(mx - 2, my,     1, 1);
+    ctx.fillRect(mx + 2, my,     1, 1);
+    ctx.fillRect(mx,     my - 2, 1, 1);
+    ctx.fillRect(mx,     my + 2, 1, 1);
+  }
+}
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot() {
@@ -759,6 +918,9 @@ function buildCard(name, filePath, frameSize, img) {
     <label>Scale:
       <input type="range" class="scale-sl" min="1" max="5" value="2" step="1">
       <span class="scale-val">2×</span>
+    </label>
+    <label title="Show weapon overlay on attack animations">
+      <input type="checkbox" class="wpn-cb"> Show Weapon
     </label>`;
   body.appendChild(controls);
 
@@ -766,10 +928,10 @@ function buildCard(name, filePath, frameSize, img) {
   const liveRow = document.createElement('div');
   liveRow.className = 'live-row';
 
-  const animState = { fps: 8, scale: 2, bg: 'transparent', frameSize, img, timers: [], canvases: [] };
+  const animState = { fps: 8, scale: 2, bg: 'transparent', frameSize, img, timers: [], canvases: [], showWeapon: false };
   liveAnimations[id] = animState;
 
-  [0, 1, 2, 5].forEach(rowIdx => { // idle, walk_south, walk_west, attack_south
+  [0, 1, 2, 5, 9].forEach(rowIdx => { // idle, walk_south, walk_west, attack_swing_south, attack_shoot_south
     const anim = ANIM_ROWS[rowIdx];
     const box  = document.createElement('div');
     box.className = 'live-box';
@@ -800,6 +962,10 @@ function buildCard(name, filePath, frameSize, img) {
   });
   controls.querySelector('.bg-sel').addEventListener('change', e => {
     animState.bg = e.target.value;
+  });
+  controls.querySelector('.wpn-cb').addEventListener('change', e => {
+    animState.showWeapon = e.target.checked;
+    restartCardTimer(id);
   });
 
   // All-frames strip
@@ -871,14 +1037,14 @@ function restartCardTimer(id) {
 
   const tid = setInterval(() => {
     Object.values(groups).forEach(g => {
-      g.canvases.forEach(cvs => drawFrame(cvs, st.img, +cvs.dataset.rowIdx, g.frame, st.frameSize, st.bg));
+      g.canvases.forEach(cvs => drawFrame(cvs, st.img, +cvs.dataset.rowIdx, g.frame, st.frameSize, st.bg, st.showWeapon));
       g.frame = (g.frame + 1) % g.frameCount;
     });
   }, 1000 / st.fps);
   st.timers.push(tid);
 }
 
-function drawFrame(canvas, img, row, col, frameSize, bg) {
+function drawFrame(canvas, img, row, col, frameSize, bg, showWeapon = false) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (bg && bg !== 'transparent') {
@@ -887,6 +1053,7 @@ function drawFrame(canvas, img, row, col, frameSize, bg) {
   }
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(img, col * frameSize, row * frameSize, frameSize, frameSize, 0, 0, canvas.width, canvas.height);
+  if (showWeapon) drawWeaponOverlay(canvas, row, col, frameSize);
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
