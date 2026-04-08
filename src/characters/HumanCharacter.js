@@ -18,6 +18,8 @@ const {
   drawShoesWest,
   drawArmsSouth,
   drawArmsWest,
+  drawBackArmWest,
+  drawFrontArmWest,
 } = require('./BaseCharacter');
 
 const FRAME_W = 64;
@@ -266,12 +268,14 @@ function drawWest(ctx, config, offsets) {
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   // Back leg
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
-  // Back arm (drawn before torso so torso covers overlap)
-  drawArmsWest(ctx, colors.clothing, colors.skin, frontArmDX, backArmDX, torsoX, torsoY);
+  // Back arm drawn BEFORE torso so torso covers overlap at shoulder
+  drawBackArmWest(ctx, colors.clothing, colors.skin, backArmDX, torsoX, torsoY);
   // Belt
   drawBeltWest(ctx, colors.belt, torsoX, beltY);
   // Torso
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
+  // Front arm drawn AFTER torso so it appears in front of body silhouette
+  drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
   // Neck (side)
   fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 2);
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 2);
