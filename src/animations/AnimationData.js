@@ -74,23 +74,29 @@ const WALK_EAST_FRAMES = WALK_WEST_FRAMES; // same offsets, mirrored at render t
 // Right arm does the swing arc (wind-up back/up → strike forward+out → follow-through).
 // rightArmFwd negative = arm lifts; positive = arm swings forward/down.
 // rightArmOut positive = arm extends to the right.
+// With the shoulder-pivot arm model, rightArmFwd controls WRIST displacement only —
+// the shoulder cap stays glued to the torso. Larger values are now safe to use.
+// rArmDY = round(rightArmFwd * 0.4); wrist Y = baseY(28) + rArmDY + 10.
 const ATTACK_SWING_SOUTH_FRAMES = [
-  { bodyY: 0,  leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0,  leftArmOut: 0, rightArmOut: 0,  tilt: 0,  headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd: 1, leftArmFwd: -2, rightArmFwd: -6,  leftArmOut: 0, rightArmOut: -3, tilt: -1, headBob:  0 }, // wind-up: arm back/up
-  { bodyY: -2, leftLegFwd:  0, rightLegFwd: 2, leftArmFwd: -3, rightArmFwd:-12,  leftArmOut: 0, rightArmOut: -5, tilt: -2, headBob: -1 }, // apex: arm high, body tilts back
-  { bodyY: -1, leftLegFwd: -2, rightLegFwd: 3, leftArmFwd: -4, rightArmFwd: 10,  leftArmOut: 0, rightArmOut:  8, tilt:  3, headBob:  0 }, // STRIKE: arm swings through, outward
-  { bodyY:  0, leftLegFwd: -1, rightLegFwd: 2, leftArmFwd: -2, rightArmFwd:  6,  leftArmOut: 0, rightArmOut:  5, tilt:  2, headBob:  0 }, // follow-through
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0,  leftArmOut: 0, rightArmOut:  0, tilt:  0, headBob:  0 }, // recovery
+  { bodyY: 0,  leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0,  leftArmOut: 0, rightArmOut:  0, tilt: 0,  headBob:  0 }, // ready
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd: 1, leftArmFwd: -2, rightArmFwd: -10,  leftArmOut: 0, rightArmOut: -4, tilt: -1, headBob:  0 }, // wind-up: wrist lifts
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd: 2, leftArmFwd: -3, rightArmFwd: -18,  leftArmOut: 0, rightArmOut: -6, tilt: -2, headBob: -1 }, // apex: wrist high, arm foreshortened
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd: 3, leftArmFwd: -4, rightArmFwd:  18,  leftArmOut: 0, rightArmOut:  8, tilt:  3, headBob:  0 }, // STRIKE: wrist swings down+out
+  { bodyY:  0, leftLegFwd: -1, rightLegFwd: 2, leftArmFwd: -2, rightArmFwd:  12,  leftArmOut: 0, rightArmOut:  5, tilt:  2, headBob:  0 }, // follow-through
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0,  leftArmOut: 0, rightArmOut:  0, tilt:  0, headBob:  0 }, // recovery
 ];
 
 // ATTACK SWING WEST: 6 frames - melee swing in side profile (facing left)
 // Front arm (left) swings: positive leftArmFwd → arm moves left (forward = strike direction).
+// frontArmDX = -round(leftArmFwd * 0.6); wrist X = shoulderX(17) + frontArmDX.
+// Negative leftArmFwd → positive DX → wrist pulls back (rightward).
+// Positive leftArmFwd → negative DX → wrist reaches forward (leftward).
 const ATTACK_SWING_WEST_FRAMES = [
   { bodyY: 0,  leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd: -6, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: -1, headBob:  0 }, // wind-up: arm pulls back (rightward)
-  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:-10, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: -2, headBob: -1 }, // apex: arm fully back, body leans
-  { bodyY: -1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd: 12, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt:  3, headBob:  0 }, // STRIKE: arm slashes forward
-  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:  8, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt:  2, headBob:  0 }, // follow-through
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd:-10, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: -1, headBob:  0 }, // wind-up: wrist pulls back
+  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:-17, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: -2, headBob: -1 }, // apex: wrist fully back, arm angled
+  { bodyY: -1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd: 20, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt:  3, headBob:  0 }, // STRIKE: wrist slashes far forward
+  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd: 13, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt:  2, headBob:  0 }, // follow-through
   { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt:  0, headBob:  0 }, // recovery
 ];
 
