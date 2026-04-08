@@ -657,6 +657,213 @@ function drawApronSouth(ctx, colors, x, y, w, h) {
   outlineRect(ctx, '#404060',      x,  y,     w,  h);
 }
 
+function drawShirtSouth(ctx, colors, x, y, w, h) {
+  // Plain collared shirt — hourglass silhouette, shirt collar at top.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 19);
+  const SHOULDER = 3, WAIST_S = 7, WAIST_E = 11;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+
+  for (let row = 0; row < numRows; row++) {
+    hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
+  }
+  // Side panel shading
+  for (let row = 0; row < numRows; row++) {
+    px(ctx, colors.highlight, rl(row) + 1, y + row);
+    px(ctx, colors.shadow,    rr(row) - 1, y + row);
+    px(ctx, colors.shadow,    rr(row) - 2, y + row);
+  }
+  // Button placket: center column
+  vLine(ctx, colors.shadow, cx, y + 2, numRows - 2);
+  vLine(ctx, colors.highlight, cx - 1, y + 2, numRows - 2);
+  // Collar: V-neck at top center
+  const collarH = 4;
+  for (let row = 0; row < collarH; row++) {
+    const cw = Math.round(6 * (collarH - row) / collarH);
+    if (cw > 0) {
+      hLine(ctx, colors.collar, cx - Math.floor(cw / 2), y + row, cw);
+    }
+  }
+  // Waist bridge + outlines
+  for (let row = WAIST_S; row <= WAIST_E; row++) {
+    px(ctx, colors.shadow, x, y + row);
+    px(ctx, colors.shadow, x + w - 1, y + row);
+  }
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+  px(ctx, colors.shadow, x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow, x + w, y);
+  for (let row = 1; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
+  }
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  px(ctx, colors.highlight, x - 1, y + 1);
+}
+
+function drawVestSouth(ctx, colors, x, y, w, h) {
+  // Leather vest over shirt: shirt visible at sides, vest in center.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 19);
+  const SHOULDER = 3, WAIST_S = 7, WAIST_E = 11;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+
+  // Shirt base (full width, lighter)
+  const shirtCol = colors.shirt || colors.highlight;
+  for (let row = 0; row < numRows; row++) {
+    hLine(ctx, shirtCol, rl(row), y + row, rr(row) - rl(row) + 1);
+    px(ctx, colors.shirt_shadow || colors.shadow, rl(row) + 1, y + row);
+    px(ctx, colors.shirt_shadow || colors.shadow, rr(row) - 1, y + row);
+  }
+  // Vest body: narrower (leaves 3px shirt visible each side)
+  const vl = (row) => rl(row) + 3;
+  const vr = (row) => rr(row) - 3;
+  for (let row = 0; row < numRows; row++) {
+    if (vr(row) > vl(row)) {
+      hLine(ctx, colors.base, vl(row), y + row, vr(row) - vl(row) + 1);
+      px(ctx, colors.highlight, vl(row) + 1, y + row);
+      px(ctx, colors.shadow,    vr(row) - 1, y + row);
+      px(ctx, colors.shadow,    vr(row),     y + row);
+    }
+  }
+  // Vest outline (inner seam)
+  for (let row = 0; row < numRows; row++) {
+    if (vr(row) > vl(row)) {
+      px(ctx, colors.outline, vl(row), y + row);
+      px(ctx, colors.outline, vr(row) + 1, y + row);
+    }
+  }
+  // Collar area: shirt collar visible at top
+  const shirtCollarW = 6;
+  fillRect(ctx, shirtCol, cx - 3, y, shirtCollarW, 3);
+  outlineRect(ctx, colors.outline, cx - 3, y, shirtCollarW, 3);
+  // Outer silhouette
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+  px(ctx, colors.shadow, x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow, x + w, y);
+  for (let row = 1; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
+  }
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  for (let row = WAIST_S; row <= WAIST_E; row++) {
+    px(ctx, colors.shadow, x, y + row);
+    px(ctx, colors.shadow, x + w - 1, y + row);
+  }
+  px(ctx, colors.highlight, x - 1, y + 1);
+}
+
+function drawTunicSouth(ctx, colors, x, y, w, h) {
+  // RPG tunic: wider cut than jacket, rounded collar, minimal seam.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 19);
+  const SHOULDER = 3, WAIST_S = 7, WAIST_E = 11;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+
+  for (let row = 0; row < numRows; row++) {
+    hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
+  }
+  // Directional shading
+  for (let row = 0; row < numRows; row++) {
+    const isShoulderRow = row < SHOULDER;
+    px(ctx, colors.highlight, rl(row) + 1, y + row);
+    if (isShoulderRow) px(ctx, colors.highlight, rl(row) + 2, y + row);
+    px(ctx, colors.shadow, rr(row) - 1, y + row);
+    px(ctx, colors.shadow, rr(row) - 2, y + row);
+  }
+  // Center seam / lacing: tunic has a lace-up opening at top center
+  const laceH = Math.min(7, numRows);
+  for (let row = 2; row < laceH; row += 2) {
+    px(ctx, colors.shadow,    cx - 1, y + row);
+    px(ctx, colors.shadow,    cx + 1, y + row);
+    px(ctx, colors.highlight, cx,     y + row);
+  }
+  // Round collar (wider than jacket)
+  const collarW = 8;
+  fillRect(ctx, colors.collar, cx - 4, y, collarW, 3);
+  hLine(ctx, colors.highlight, cx - 3, y,     collarW - 2);
+  hLine(ctx, colors.shadow,    cx - 3, y + 2, collarW - 2);
+  outlineRect(ctx, colors.outline, cx - 4, y, collarW, 3);
+  // Waist + outlines
+  for (let row = WAIST_S; row <= WAIST_E; row++) {
+    px(ctx, colors.shadow, x, y + row);
+    px(ctx, colors.shadow, x + w - 1, y + row);
+  }
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+  px(ctx, colors.shadow, x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow, x + w, y);
+  for (let row = 1; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
+  }
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  px(ctx, colors.highlight, x - 1, y + 1);
+}
+
+function drawRobeSouth(ctx, colors, x, y, w, h) {
+  // Mage robe: wide at bottom, ornate collar, deep shadow folds.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 19);
+  const SHOULDER = 3;
+  // Robes don't taper at waist — they flare wider at bottom
+  const rl = (row) => row < SHOULDER ? x - 1 : row > 11 ? x - 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row > 11 ? x + w : x + w - 1;
+
+  for (let row = 0; row < numRows; row++) {
+    hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
+  }
+  // Directional shading
+  for (let row = 0; row < numRows; row++) {
+    px(ctx, colors.highlight, rl(row) + 1, y + row);
+    if (row < SHOULDER) px(ctx, colors.highlight, rl(row) + 2, y + row);
+    px(ctx, colors.shadow, rr(row) - 1, y + row);
+    px(ctx, colors.shadow, rr(row) - 2, y + row);
+  }
+  // Deep fold shadows: robe has fabric bunching
+  const fold1 = Math.floor(numRows * 0.4);
+  const fold2 = Math.floor(numRows * 0.7);
+  for (const fr of [fold1, fold2]) {
+    hLine(ctx, colors.shadow, rl(fr) + 2, y + fr, (rr(fr) - rl(fr)) - 3);
+  }
+  // Center ornament stripe (robe has a decorative front panel)
+  const panelW = 4;
+  for (let row = 3; row < numRows; row++) {
+    hLine(ctx, colors.collar, cx - 2, y + row, panelW);
+    px(ctx, colors.highlight, cx - 1, y + row);
+    px(ctx, colors.shadow,    cx + 1, y + row);
+  }
+  // Wide collar / hood base
+  const collarW = 10;
+  fillRect(ctx, colors.collar, cx - 5, y, collarW, 4);
+  hLine(ctx, colors.highlight, cx - 4, y,     collarW - 2);
+  hLine(ctx, colors.shadow,    cx - 4, y + 3, collarW - 2);
+  outlineRect(ctx, colors.outline, cx - 5, y, collarW, 4);
+  // Outlines
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+  px(ctx, colors.shadow, x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow, x + w, y);
+  for (let row = 1; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
+  }
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  px(ctx, colors.highlight, x - 1, y + 1);
+}
+
 function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
   if (clothingKey.startsWith('jacket')) {
     drawJacketSouth(ctx, clothingColors, x, y, w, h);
@@ -877,13 +1084,15 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
   hLine(ctx, pantColors.outline, lx, lBotY, rows[legH - 1][1]);
   hLine(ctx, pantColors.outline, rx, rBotY, rows[legH - 1][1]);
 
-  // Inner thigh gap: filled dark throughout (not transparent background).
-  // Research: gap should be character's darkest shade — it's in deep shadow.
-  const gapX = lx + rows[0][1];       // x=31 (left leg right edge + 1)
-  const gapW = rx - gapX;             // 33-31=2px gap
+  // Inner thigh gap: transparent (shows background through).
+  // The inner shadow pixels already drawn on each leg's edge (selout) suggest depth.
+  // Only the top 2 rows get a crotch-shadow hint where legs meet at the belt.
+  const gapX = lx + rows[0][1];
+  const gapW = rx - gapX;
   if (gapW > 0) {
-    fillRect(ctx, pantColors.shadow,  gapX, y,     gapW, legH);   // fill gap dark all the way down
-    hLine(ctx, pantColors.outline, gapX, y,     gapW);            // darker top edge (crotch shadow)
+    ctx.clearRect(gapX, y, gapW, legH);   // ensure gap is transparent
+    // Tiny crotch shadow hint at top (legs converge here under belt)
+    hLine(ctx, pantColors.shadow,  gapX, y,     gapW);
     hLine(ctx, pantColors.outline, gapX, y + 1, gapW);
   }
 }
