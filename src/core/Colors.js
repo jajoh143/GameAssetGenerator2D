@@ -179,6 +179,62 @@ const CLOTHING = {
     outline:   '#0E0020',
     collar:    '#4A2078',
   },
+  tshirt_white: {
+    highlight: '#FFFFFF',
+    base:      '#ECF0F8',
+    shadow:    '#8888B0',
+    outline:   '#282840',
+    collar:    '#C8D0E8',
+  },
+  tshirt_grey: {
+    highlight: '#D0D0DC',
+    base:      '#888898',
+    shadow:    '#404050',
+    outline:   '#181820',
+    collar:    '#A0A0B0',
+  },
+  tshirt_black: {
+    highlight: '#505060',
+    base:      '#1C1C2C',
+    shadow:    '#080810',
+    outline:   '#000004',
+    collar:    '#303040',
+  },
+  tshirt_red: {
+    highlight: '#F08888',
+    base:      '#C82020',
+    shadow:    '#700808',
+    outline:   '#280000',
+    collar:    '#A01818',
+  },
+  tshirt_navy: {
+    highlight: '#5870A8',
+    base:      '#283870',
+    shadow:    '#0C1438',
+    outline:   '#040810',
+    collar:    '#1C2C58',
+  },
+  bomber_black: {
+    highlight: '#585868',
+    base:      '#202028',
+    shadow:    '#0A0A10',
+    outline:   '#000004',
+    collar:    '#303038',
+  },
+  bomber_olive: {
+    highlight: '#989868',
+    base:      '#606040',
+    shadow:    '#2C2C18',
+    outline:   '#0E0E04',
+    collar:    '#484830',
+  },
+  bomber_navy: {
+    highlight: '#3848A0',
+    base:      '#182060',
+    shadow:    '#080C28',
+    outline:   '#020410',
+    collar:    '#243080',
+  },
 };
 
 const PANTS = {

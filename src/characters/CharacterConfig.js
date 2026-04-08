@@ -85,6 +85,26 @@ const PRESETS = {
     pants:      'pants_black',
     shoes:      'shoe_black',
   },
+  human_streetwear: {
+    type:       'human',
+    skin:       'tan',
+    hair:       'brown',
+    hairStyle:  'short',
+    eyes:       'hazel',
+    clothing:   'tshirt_grey',
+    pants:      'jeans_blue',
+    shoes:      'shoe_white',
+  },
+  human_bomber: {
+    type:       'human',
+    skin:       'light',
+    hair:       'blonde',
+    hairStyle:  'short',
+    eyes:       'blue',
+    clothing:   'bomber_olive',
+    pants:      'pants_black',
+    shoes:      'shoe_black',
+  },
 };
 
 module.exports = {
