@@ -287,12 +287,131 @@
     .strip-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     .strip-table td { padding: 2px 4px; vertical-align: middle; white-space: nowrap; }
     .strip-label { color: var(--muted); font-size: 0.68rem; width: 90px; }
-    .strip-frames { display: flex; gap: 2px; }
+    .strip-frames { display: flex; gap: 2px; flex-wrap: wrap; }
     .strip-frame canvas {
       display: block;
       image-rendering: pixelated;
       border: 1px solid var(--border);
       border-radius: 2px;
+    }
+
+    /* ── Sidebar toggle (mobile only) ── */
+    #sidebar-toggle {
+      display: none;
+      width: 100%;
+      background: var(--surface);
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #sidebar-toggle:hover { background: #1e2f52; }
+    #sidebar-toggle .toggle-arrow { font-size: 0.7rem; transition: transform 0.2s; }
+    #sidebar-toggle.open .toggle-arrow { transform: rotate(180deg); }
+
+    /* ── Weapon gallery ── */
+    .weapon-gallery {
+      grid-column: 1 / -1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .weapon-gallery h2 {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .weapon-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .weapon-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      cursor: default;
+      transition: border-color 0.15s;
+    }
+    .weapon-item:hover { border-color: var(--accent); }
+    .weapon-item canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .weapon-item span {
+      display: block;
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 767px) {
+      body { overflow-y: auto; height: auto; min-height: 100vh; }
+
+      .layout {
+        flex-direction: column;
+        overflow: visible;
+        flex: none;
+      }
+
+      #sidebar-toggle { display: flex; }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow: hidden;
+        max-height: 0;
+        padding: 0 14px;
+        gap: 0;
+        transition: max-height 0.35s ease, padding 0.2s ease, gap 0.2s ease;
+      }
+      .sidebar.open {
+        max-height: 2000px;
+        padding: 16px 14px;
+        gap: 18px;
+        overflow-y: visible;
+      }
+
+      .main {
+        overflow: visible;
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+      .char-card:not(.collapsed) { grid-column: 1; }
+
+      .live-row { gap: 10px; }
+      .live-box { padding: 8px; }
+
+      .card-controls { gap: 8px; }
+      .card-controls input[type=range] { width: 60px; }
+
+      .card-actions { gap: 5px; }
+      .card-btn { padding: 4px 8px; font-size: 0.7rem; }
+
+      header { padding: 8px 12px; gap: 10px; }
+      header span { display: none; }
+      header h1 { font-size: 0.88rem; }
+
+      .weapon-grid { gap: 8px; }
     }
   </style>
 </head>
@@ -307,6 +426,10 @@
     <button id="clear-btn" class="card-btn" style="display:none">Clear All</button>
   </div>
 </header>
+
+<button id="sidebar-toggle" aria-expanded="false">
+  ⚙ Customize Character <span class="toggle-arrow">▼</span>
+</button>
 
 <div class="layout">
 
@@ -617,13 +740,78 @@ async function loadManifest() {
     const r = await fetch('/manifest.json?t=' + Date.now());
     if (!r.ok) return;
     const manifest = await r.json();
-    if (!manifest.characters || !manifest.characters.length) return;
-    document.getElementById('empty-state').style.display = 'none';
-    for (const char of manifest.characters) {
-      const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
-      loadAndShowCard(char.name, filePath, manifest.frameWidth || 64);
+    if (manifest.characters && manifest.characters.length) {
+      document.getElementById('empty-state').style.display = 'none';
+      for (const char of manifest.characters) {
+        const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
+        loadAndShowCard(char.name, filePath, manifest.frameWidth || 64);
+      }
+    }
+    if (manifest.weapons && manifest.weapons.length) {
+      loadWeaponGallery(manifest.weapons);
     }
   } catch (_) { /* manifest may not exist yet, ignore */ }
+}
+
+// ── Weapon gallery ─────────────────────────────────────────────────────────
+function loadWeaponGallery(weapons) {
+  // Remove existing gallery if present
+  const existing = document.getElementById('weapon-gallery');
+  if (existing) existing.remove();
+
+  const gallery = document.createElement('div');
+  gallery.className = 'weapon-gallery';
+  gallery.id = 'weapon-gallery';
+
+  const title = document.createElement('h2');
+  title.textContent = 'Weapon Sprites';
+  gallery.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.className = 'weapon-grid';
+
+  weapons.forEach(w => {
+    const filePath = w.file.replace(/^\.\.\/output\//, '/output/');
+    const meta = w.meta || {};
+    const scale = 4; // show at 4× for visibility
+    const item = document.createElement('div');
+    item.className = 'weapon-item';
+    item.title = `${w.name} · grip (${meta.gripX},${meta.gripY})`;
+
+    const cvs = document.createElement('canvas');
+    cvs.width  = (meta.frameSize || 32) * scale;
+    cvs.height = (meta.frameSize || 32) * scale;
+
+    const lbl = document.createElement('span');
+    lbl.textContent = w.name.replace(/_/g, ' ');
+
+    const img = new Image();
+    img.onload = () => {
+      const ctx = cvs.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+      // Draw grip cross-hair
+      const gx = (meta.gripX || 0) * scale;
+      const gy = (meta.gripY || 0) * scale;
+      ctx.strokeStyle = 'rgba(100,200,255,0.7)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gx - 4, gy); ctx.lineTo(gx + 4, gy);
+      ctx.moveTo(gx, gy - 4); ctx.lineTo(gx, gy + 4);
+      ctx.stroke();
+    };
+    img.src = filePath + '?t=' + Date.now();
+
+    item.appendChild(cvs);
+    item.appendChild(lbl);
+    grid.appendChild(item);
+  });
+
+  gallery.appendChild(grid);
+
+  // Insert before empty-state (or at end of main)
+  const main = document.getElementById('main');
+  main.appendChild(gallery);
 }
 
 // ── Populate sidebar ───────────────────────────────────────────────────────
@@ -916,8 +1104,8 @@ function buildCard(name, filePath, frameSize, img) {
       <span class="fps-val">8</span>
     </label>
     <label>Scale:
-      <input type="range" class="scale-sl" min="1" max="5" value="2" step="1">
-      <span class="scale-val">2×</span>
+      <input type="range" class="scale-sl" min="1" max="5" step="1">
+      <span class="scale-val"></span>
     </label>
     <label title="Show weapon overlay on attack animations">
       <input type="checkbox" class="wpn-cb"> Show Weapon
@@ -928,7 +1116,8 @@ function buildCard(name, filePath, frameSize, img) {
   const liveRow = document.createElement('div');
   liveRow.className = 'live-row';
 
-  const animState = { fps: 8, scale: 2, bg: 'transparent', frameSize, img, timers: [], canvases: [], showWeapon: false };
+  const defaultScale = window.innerWidth < 768 ? 1 : 2;
+  const animState = { fps: 8, scale: defaultScale, bg: 'transparent', frameSize, img, timers: [], canvases: [], showWeapon: false };
   liveAnimations[id] = animState;
 
   [0, 1, 2, 5, 9].forEach(rowIdx => { // idle, walk_south, walk_west, attack_swing_south, attack_shoot_south
@@ -950,6 +1139,11 @@ function buildCard(name, filePath, frameSize, img) {
   body.appendChild(liveRow);
 
   // Wire card controls
+  // Set initial slider value to match computed default scale
+  const scaleSl = controls.querySelector('.scale-sl');
+  scaleSl.value = defaultScale;
+  controls.querySelector('.scale-val').textContent = defaultScale + '×';
+
   controls.querySelector('.fps-sl').addEventListener('input', e => {
     animState.fps = +e.target.value;
     controls.querySelector('.fps-val').textContent = e.target.value;
@@ -1062,6 +1256,14 @@ function setStatus(msg, cls) {
   el.textContent = msg;
   el.className   = cls || '';
 }
+
+// ── Mobile sidebar toggle ──────────────────────────────────────────────────
+document.getElementById('sidebar-toggle').addEventListener('click', function() {
+  const sidebar = document.querySelector('.sidebar');
+  const isOpen  = sidebar.classList.toggle('open');
+  this.classList.toggle('open', isOpen);
+  this.setAttribute('aria-expanded', isOpen);
+});
 
 boot();
 </script>

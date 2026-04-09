@@ -171,5 +171,217 @@
         "shoes": "shoe_black"
       }
     }
+  ],
+  "weapons": [
+    {
+      "name": "short_sword_iron",
+      "file": "../output/weapons/short_sword_iron.png",
+      "meta": {
+        "type": "melee",
+        "variant": "short_sword",
+        "material": "iron",
+        "label": "Short Sword",
+        "frameSize": 32,
+        "gripX": 7,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "short_sword_steel",
+      "file": "../output/weapons/short_sword_steel.png",
+      "meta": {
+        "type": "melee",
+        "variant": "short_sword",
+        "material": "steel",
+        "label": "Short Sword",
+        "frameSize": 32,
+        "gripX": 7,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "short_sword_gold",
+      "file": "../output/weapons/short_sword_gold.png",
+      "meta": {
+        "type": "melee",
+        "variant": "short_sword",
+        "material": "gold",
+        "label": "Short Sword",
+        "frameSize": 32,
+        "gripX": 7,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "long_sword_steel",
+      "file": "../output/weapons/long_sword_steel.png",
+      "meta": {
+        "type": "melee",
+        "variant": "long_sword",
+        "material": "steel",
+        "label": "Long Sword",
+        "frameSize": 32,
+        "gripX": 7,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "long_sword_dark",
+      "file": "../output/weapons/long_sword_dark.png",
+      "meta": {
+        "type": "melee",
+        "variant": "long_sword",
+        "material": "dark",
+        "label": "Long Sword",
+        "frameSize": 32,
+        "gripX": 7,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "dagger_iron",
+      "file": "../output/weapons/dagger_iron.png",
+      "meta": {
+        "type": "melee",
+        "variant": "dagger",
+        "material": "iron",
+        "label": "Dagger",
+        "frameSize": 32,
+        "gripX": 5,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "dagger_gold",
+      "file": "../output/weapons/dagger_gold.png",
+      "meta": {
+        "type": "melee",
+        "variant": "dagger",
+        "material": "gold",
+        "label": "Dagger",
+        "frameSize": 32,
+        "gripX": 5,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "axe_iron",
+      "file": "../output/weapons/axe_iron.png",
+      "meta": {
+        "type": "melee",
+        "variant": "axe",
+        "material": "iron",
+        "label": "Axe",
+        "frameSize": 32,
+        "gripX": 5,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "axe_dark",
+      "file": "../output/weapons/axe_dark.png",
+      "meta": {
+        "type": "melee",
+        "variant": "axe",
+        "material": "dark",
+        "label": "Axe",
+        "frameSize": 32,
+        "gripX": 5,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "pistol_black",
+      "file": "../output/weapons/pistol_black.png",
+      "meta": {
+        "type": "ranged",
+        "variant": "pistol",
+        "material": "black",
+        "label": "Pistol",
+        "frameSize": 32,
+        "gripX": 10,
+        "gripY": 21,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "pistol_chrome",
+      "file": "../output/weapons/pistol_chrome.png",
+      "meta": {
+        "type": "ranged",
+        "variant": "pistol",
+        "material": "chrome",
+        "label": "Pistol",
+        "frameSize": 32,
+        "gripX": 10,
+        "gripY": 21,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "rifle_black",
+      "file": "../output/weapons/rifle_black.png",
+      "meta": {
+        "type": "ranged",
+        "variant": "rifle",
+        "material": "black",
+        "label": "Rifle",
+        "frameSize": 32,
+        "gripX": 9,
+        "gripY": 18,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "rifle_wood",
+      "file": "../output/weapons/rifle_wood.png",
+      "meta": {
+        "type": "ranged",
+        "variant": "rifle",
+        "material": "wood",
+        "label": "Rifle",
+        "frameSize": 32,
+        "gripX": 9,
+        "gripY": 18,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shotgun_black",
+      "file": "../output/weapons/shotgun_black.png",
+      "meta": {
+        "type": "ranged",
+        "variant": "shotgun",
+        "material": "black",
+        "label": "Shotgun",
+        "frameSize": 32,
+        "gripX": 8,
+        "gripY": 19,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shotgun_wood",
+      "file": "../output/weapons/shotgun_wood.png",
+      "meta": {
+        "type": "ranged",
+        "variant": "shotgun",
+        "material": "wood",
+        "label": "Shotgun",
+        "frameSize": 32,
+        "gripX": 8,
+        "gripY": 19,
+        "neutralAngleDeg": 0
+      }
+    }
   ]
 }
