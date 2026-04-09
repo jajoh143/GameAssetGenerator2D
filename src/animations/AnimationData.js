@@ -71,54 +71,64 @@ const WALK_NORTH_FRAMES = WALK_SOUTH_FRAMES; // same offsets, different drawing
 const WALK_EAST_FRAMES = WALK_WEST_FRAMES; // same offsets, mirrored at render time
 
 // ATTACK SWING SOUTH: 6 frames - melee sword/weapon swing facing camera
-// Right arm does the swing arc (wind-up back/up → strike forward+out → follow-through).
-// rightArmFwd negative = arm lifts; positive = arm swings forward/down.
-// rightArmOut positive = arm extends to the right.
-// With the shoulder-pivot arm model, rightArmFwd controls WRIST displacement only —
-// the shoulder cap stays glued to the torso. Larger values are now safe to use.
-// rArmDY = round(rightArmFwd * 0.4); wrist Y = baseY(28) + rArmDY + 10.
+// Fluidity principles applied:
+//   F0 — Anticipation: arm pulls slightly opposite direction before committing
+//   F1 — Wind-up: arm lifts aggressively, body rises
+//   F2 — Apex: arm at maximum height overhead
+//   F3 — MID-SWING (smear): arm mid-arc, passing straight-down (fastest point)
+//          This splits the old single F2→F3 jump (ΔrFwd=58) into two smaller
+//          jumps (≈30 each), so the eye perceives speed rather than a teleport.
+//   F4 — Strike: arm fully committed down-right, body leans in
+//   F5 — Recovery: arm settles back toward rest
+//
+// rArmDY = round(rightArmFwd * 0.4); wrist Y = 28 + rArmDY + 11
+// wrist X = 41 + round(rightArmOut)
 const ATTACK_SWING_SOUTH_FRAMES = [
-  { bodyY: 0,  leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0,  leftArmOut: 0, rightArmOut:  0, tilt: 0,  headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd: 1, leftArmFwd: -2, rightArmFwd: -22,  leftArmOut: 0, rightArmOut: -8, tilt: -1, headBob:  0 }, // wind-up: wrist lifts to shoulder level
-  { bodyY: -2, leftLegFwd:  0, rightLegFwd: 2, leftArmFwd: -3, rightArmFwd: -40,  leftArmOut: 0, rightArmOut: -9, tilt: -2, headBob: -1 }, // apex: wrist overhead (in head area)
-  { bodyY: -1, leftLegFwd: -2, rightLegFwd: 3, leftArmFwd: -4, rightArmFwd:  18,  leftArmOut: 0, rightArmOut:  8, tilt:  3, headBob:  0 }, // STRIKE: wrist swings down+out
-  { bodyY:  0, leftLegFwd: -1, rightLegFwd: 2, leftArmFwd: -2, rightArmFwd:  12,  leftArmOut: 0, rightArmOut:  5, tilt:  2, headBob:  0 }, // follow-through
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0,  leftArmOut: 0, rightArmOut:  0, tilt:  0, headBob:  0 }, // recovery
+  { bodyY: 0,  leftLegFwd: -1, rightLegFwd:  1, leftArmFwd:  1, rightArmFwd:  -5, leftArmOut: 0, rightArmOut:  -2, tilt:  0, headBob:  0 }, // anticipation
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd: -2, rightArmFwd: -22, leftArmOut: 0, rightArmOut:  -8, tilt:  0, headBob:  0 }, // wind-up: arm lifts to shoulder
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd: -40, leftArmOut: 0, rightArmOut:  -9, tilt:  0, headBob: -1 }, // apex: wrist overhead
+  { bodyY: -2, leftLegFwd: -1, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd: -10, leftArmOut: 0, rightArmOut:   0, tilt:  0, headBob:  0 }, // mid-swing smear: arm straight-down (mid-arc, fast)
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  20, leftArmOut: 0, rightArmOut:  10, tilt:  0, headBob:  0 }, // STRIKE: wrist extends lower-right
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd: -1, rightArmFwd:   8, leftArmOut: 0, rightArmOut:   4, tilt:  0, headBob:  0 }, // recovery
 ];
 
 // ATTACK SWING WEST: 6 frames - melee swing in side profile (facing left)
-// Front arm (left) swings: positive leftArmFwd → arm moves left (forward = strike direction).
-// frontArmDX = -round(leftArmFwd * 0.6); wrist X = shoulderX(17) + frontArmDX.
-// Negative leftArmFwd → positive DX → wrist pulls back (rightward).
-// Positive leftArmFwd → negative DX → wrist reaches forward (leftward).
+// Same smear-frame approach: F3 is the mid-arc neutral position, splitting
+// the old single ΔlFwd=37 jump into two ≈20-unit steps.
+// frontArmDX = -round(leftArmFwd * 0.6); wrist X = shoulderX(17) + frontArmDX
 const ATTACK_SWING_WEST_FRAMES = [
-  { bodyY: 0,  leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd:-10, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: -1, headBob:  0 }, // wind-up: wrist pulls back
-  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd:-17, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: -2, headBob: -1 }, // apex: wrist fully back, arm angled
-  { bodyY: -1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd: 20, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt:  3, headBob:  0 }, // STRIKE: wrist slashes far forward
-  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd: 13, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt:  2, headBob:  0 }, // follow-through
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt:  0, headBob:  0 }, // recovery
+  { bodyY: 0,  leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:  -3, rightArmFwd:  1, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // anticipation: slight forward lean, arm barely forward
+  { bodyY: -1, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd: -12, rightArmFwd:  3, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // wind-up: arm pulls back
+  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -20, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob: -1 }, // apex: arm fully back
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd:   0, rightArmFwd: -1, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // mid-swing smear: arm at neutral (fast)
+  { bodyY: -1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd:  22, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // STRIKE: arm extended fully forward
+  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:  10, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0,  headBob:  0 }, // recovery
 ];
 
-// ATTACK SHOOT SOUTH: 6 frames - ranged weapon (gun/bow) facing camera
-// Arm raises and extends outward toward target; recoil kicks arm back on fire.
+// ATTACK SHOOT SOUTH: 6 frames - gun/wand facing camera
+// Key improvement: arm raised to SHOULDER HEIGHT (wrist reaches y≈29 at apex,
+// vs y≈40 before = barely moved). For guns the arm extends diagonally forward-up;
+// for wands it reads as the spellcasting pose.
+// F3 FIRE: bodyY=-2 + headBob=-2 = body and head commit forward into the shot.
+// F4 RECOIL: arm kicks slightly up-back (realistic gun recoil / wand kickback).
 const ATTACK_SHOOT_SOUTH_FRAMES = [
-  { bodyY: 0,  leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd: 0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: 2, leftArmOut: 0, rightArmOut: 4, tilt: 0, headBob:  0 }, // raise arm to aim
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: 3, leftArmOut: 0, rightArmOut: 6, tilt: 1, headBob:  0 }, // arm fully extended, steady aim
-  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: 3, leftArmOut: 0, rightArmOut: 6, tilt: 1, headBob: -1 }, // FIRE (held frame — impact weight)
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: 1, leftArmOut: 0, rightArmOut: 2, tilt: 0, headBob:  0 }, // recoil: arm kicks back
-  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd: 0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // lower/return
+  { bodyY: 0,  leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0, leftArmOut: 0, rightArmOut:  0, tilt: 0, headBob:  0 }, // ready
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -15, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // raise: arm lifts and extends (wrist ≈ y=33)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: -25, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob:  0 }, // aim: arm at shoulder height (wrist ≈ y=29)
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: -25, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob: -2 }, // FIRE: body + head commit forward, arm held
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -28, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // recoil: arm kicks up-back (wrist ≈ y=28)
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0, leftArmOut: 0, rightArmOut:  0, tilt: 0, headBob:  0 }, // lower/return
 ];
 
-// ATTACK SHOOT WEST: 6 frames - ranged weapon in side profile (facing left)
-// Front arm (left) extends forward (to the left). Recoil snaps arm back briefly.
+// ATTACK SHOOT WEST: 6 frames - gun/wand in side profile (facing left)
+// Arm extends forward (leftward) more aggressively; body commits on FIRE.
+// F4 recoil: arm snaps back slightly from the shot.
 const ATTACK_SHOOT_WEST_FRAMES = [
   { bodyY: 0,  leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  5, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // raise and extend forward
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  8, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 1, headBob:  0 }, // arm fully extended, steady aim
-  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  8, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 1, headBob: -1 }, // FIRE (held frame)
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  4, rightArmFwd: -1, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // recoil: arm pulls back
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  8, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // raise and extend forward
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 14, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // aim: arm fully extended forward
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 14, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -2 }, // FIRE: body + head commit into shot
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 10, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // recoil: arm snaps back slightly
   { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // lower/return
 ];
 

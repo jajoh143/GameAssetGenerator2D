@@ -568,37 +568,41 @@ const ANIM_ROWS = [
 // Per-frame animation offsets for weapon position computation (mirrors AnimationData.js).
 // South view: rFwd=rightArmFwd, rOut=rightArmOut; West view: lFwd=leftArmFwd
 const WPN_FRAMES = {
+  // Mirrors ATTACK_SWING_SOUTH_FRAMES (6 frames with anticipation + mid-swing smear)
   swing_s: [
-    { bodyY: 0,  rFwd:  0,  rOut:  0 },
-    { bodyY:-1,  rFwd:-22,  rOut: -8 },
-    { bodyY:-2,  rFwd:-40,  rOut: -9 },
-    { bodyY:-1,  rFwd: 18,  rOut:  8 },
-    { bodyY: 0,  rFwd: 12,  rOut:  5 },
-    { bodyY: 0,  rFwd:  0,  rOut:  0 },
+    { bodyY: 0,  rFwd:  -5, rOut:  -2 }, // anticipation
+    { bodyY:-1,  rFwd: -22, rOut:  -8 }, // wind-up
+    { bodyY:-2,  rFwd: -40, rOut:  -9 }, // apex: wrist overhead
+    { bodyY:-2,  rFwd: -10, rOut:   0 }, // mid-swing smear (arm straight-down)
+    { bodyY:-1,  rFwd:  20, rOut:  10 }, // STRIKE: lower-right
+    { bodyY: 0,  rFwd:   8, rOut:   4 }, // recovery
   ],
+  // Mirrors ATTACK_SWING_WEST_FRAMES (6 frames with anticipation + mid-swing smear)
   swing_w: [
-    { bodyY: 0,  lFwd:  0 },
-    { bodyY:-1,  lFwd:-10 },
-    { bodyY:-2,  lFwd:-17 },
-    { bodyY:-1,  lFwd: 20 },
-    { bodyY: 0,  lFwd: 13 },
-    { bodyY: 0,  lFwd:  0 },
+    { bodyY: 0,  lFwd:  -3 }, // anticipation
+    { bodyY:-1,  lFwd: -12 }, // wind-up: arm pulls back
+    { bodyY:-2,  lFwd: -20 }, // apex: arm fully back
+    { bodyY:-2,  lFwd:   0 }, // mid-swing smear: neutral
+    { bodyY:-1,  lFwd:  22 }, // STRIKE: arm extended fully forward
+    { bodyY: 0,  lFwd:  10 }, // recovery
   ],
+  // Mirrors ATTACK_SHOOT_SOUTH_FRAMES — arm raised to shoulder height
   shoot_s: [
-    { bodyY: 0,  rFwd: 0, rOut: 0 },
-    { bodyY:-1,  rFwd: 2, rOut: 4 },
-    { bodyY:-1,  rFwd: 3, rOut: 6 },
-    { bodyY:-2,  rFwd: 3, rOut: 6 },
-    { bodyY:-1,  rFwd: 1, rOut: 2 },
-    { bodyY: 0,  rFwd: 0, rOut: 0 },
+    { bodyY: 0,  rFwd:   0, rOut:  0 }, // ready
+    { bodyY:-1,  rFwd: -15, rOut:  5 }, // raise: wrist ≈ y=33
+    { bodyY:-1,  rFwd: -25, rOut:  8 }, // aim: wrist ≈ y=29 (shoulder height)
+    { bodyY:-2,  rFwd: -25, rOut:  8 }, // FIRE: body+head commit, arm held
+    { bodyY:-1,  rFwd: -28, rOut:  5 }, // recoil: arm kicks up-back
+    { bodyY: 0,  rFwd:   0, rOut:  0 }, // lower/return
   ],
+  // Mirrors ATTACK_SHOOT_WEST_FRAMES — arm extends aggressively forward
   shoot_w: [
-    { bodyY: 0,  lFwd: 0 },
-    { bodyY:-1,  lFwd: 5 },
-    { bodyY:-1,  lFwd: 8 },
-    { bodyY:-2,  lFwd: 8 },
-    { bodyY:-1,  lFwd: 4 },
-    { bodyY: 0,  lFwd: 0 },
+    { bodyY: 0,  lFwd:  0 }, // ready
+    { bodyY:-1,  lFwd:  8 }, // raise and extend forward
+    { bodyY:-1,  lFwd: 14 }, // aim: arm fully extended forward
+    { bodyY:-2,  lFwd: 14 }, // FIRE: body+head commit into shot
+    { bodyY:-1,  lFwd: 10 }, // recoil: arm snaps back slightly
+    { bodyY: 0,  lFwd:  0 }, // lower/return
   ],
 };
 
