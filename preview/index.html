@@ -750,6 +750,8 @@ async function loadManifest() {
         const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
         loadAndShowCard(char.name, filePath, manifest.frameWidth || 64);
       }
+      // Scroll main to top so character cards are visible after images load
+      setTimeout(() => document.getElementById('main').scrollTop = 0, 300);
     }
     if (manifest.weapons && manifest.weapons.length) {
       loadWeaponGallery(manifest.weapons);
@@ -970,7 +972,7 @@ async function generate() {
     if (!r.ok || !data.success) throw new Error(data.error || 'Unknown error');
 
     setStatus('Done!', 'ok');
-    loadAndShowCard(data.name, data.file, frameSize);
+    loadAndShowCard(data.name, data.file, frameSize, true);
   } catch (e) {
     setStatus('Error: ' + e.message, 'err');
   } finally {
@@ -995,7 +997,7 @@ function buildConfig() {
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────
-function loadAndShowCard(name, filePath, frameSize) {
+function loadAndShowCard(name, filePath, frameSize, scrollToCard = false) {
   const img = new Image();
   img.onload = () => {
     // Replace existing card for same name (e.g. re-generating)
@@ -1007,6 +1009,7 @@ function loadAndShowCard(name, filePath, frameSize) {
     cardsByName[name] = card.dataset.cardId;
     updateClearBtn();
     startCardAnims(card.dataset.cardId, img, frameSize);
+    if (scrollToCard) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   img.onerror = () => setStatus('Failed to load spritesheet image.', 'err');
   img.src = filePath + '?t=' + Date.now();
@@ -1085,7 +1088,8 @@ function buildCard(name, filePath, frameSize, img) {
     card.classList.toggle('collapsed');
   });
   // Start collapsed so all cards are visible in the list
-  card.classList.add('collapsed');
+  // (only auto-collapse cards generated interactively; manifest-loaded cards expand by default)
+  // card.classList.add('collapsed');  -- removed: cards from manifest start expanded
 
   // Body
   const body = document.createElement('div');
