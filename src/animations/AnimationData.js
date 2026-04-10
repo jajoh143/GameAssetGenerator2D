@@ -106,17 +106,20 @@ const ATTACK_SWING_WEST_FRAMES = [
 ];
 
 // ATTACK SHOOT SOUTH: 6 frames - gun/wand facing camera
-// Key improvement: arm raised to SHOULDER HEIGHT (wrist reaches y≈29 at apex,
-// vs y≈40 before = barely moved). For guns the arm extends diagonally forward-up;
-// for wands it reads as the spellcasting pose.
-// F3 FIRE: bodyY=-2 + headBob=-2 = body and head commit forward into the shot.
-// F4 RECOIL: arm kicks slightly up-back (realistic gun recoil / wand kickback).
+// Arm raised to EYE/FACE level — works for both guns (forward-aim) and wands (casting pose).
+// rightArmFwd=-12: wrist Y = 28 + round(-12*0.4) + 11 = 34px (≈5px above shoulder = near eye level)
+// rightArmOut=+8: arm extends diagonally outward — weapon barrel points toward viewer/target
+// This split (up + out) is the key: it reads as aiming forward, not pointing at the sky.
+// For gun: reads as raised-and-aimed (the lateral extension dominates perception).
+// For wand: reads as casting pose (wrist near face level, weapon angled outward).
+// F3 FIRE: bodyY=-2 + headBob=-2 = body and head commit into the shot.
+// F4 RECOIL: arm kicks slightly higher (rFwd=-15) — wand/gun kickback.
 const ATTACK_SHOOT_SOUTH_FRAMES = [
   { bodyY: 0,  leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0, leftArmOut: 0, rightArmOut:  0, tilt: 0, headBob:  0 }, // ready
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -15, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // raise: arm lifts and extends (wrist ≈ y=33)
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: -25, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob:  0 }, // aim: arm at shoulder height (wrist ≈ y=29)
-  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: -25, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob: -2 }, // FIRE: body + head commit forward, arm held
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -28, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // recoil: arm kicks up-back (wrist ≈ y=28)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd:  -6, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // raise: arm lifts and extends (wrist ≈ y=37)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: -12, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob:  0 }, // aim: wrist near eye level (wrist ≈ y=34)
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -3, rightArmFwd: -12, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob: -2 }, // FIRE: body + head commit forward, arm held
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -15, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // recoil: arm kicks slightly higher
   { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0, leftArmOut: 0, rightArmOut:  0, tilt: 0, headBob:  0 }, // lower/return
 ];
 

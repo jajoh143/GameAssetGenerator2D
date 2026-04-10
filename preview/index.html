@@ -586,13 +586,13 @@ const WPN_FRAMES = {
     { bodyY:-1,  lFwd:  22 }, // STRIKE: arm extended fully forward
     { bodyY: 0,  lFwd:  10 }, // recovery
   ],
-  // Mirrors ATTACK_SHOOT_SOUTH_FRAMES — arm raised to shoulder height
+  // Mirrors ATTACK_SHOOT_SOUTH_FRAMES — arm raised to eye/face level (gun + wand)
   shoot_s: [
     { bodyY: 0,  rFwd:   0, rOut:  0 }, // ready
-    { bodyY:-1,  rFwd: -15, rOut:  5 }, // raise: wrist ≈ y=33
-    { bodyY:-1,  rFwd: -25, rOut:  8 }, // aim: wrist ≈ y=29 (shoulder height)
-    { bodyY:-2,  rFwd: -25, rOut:  8 }, // FIRE: body+head commit, arm held
-    { bodyY:-1,  rFwd: -28, rOut:  5 }, // recoil: arm kicks up-back
+    { bodyY:-1,  rFwd:  -6, rOut:  5 }, // raise: wrist ≈ y=37
+    { bodyY:-1,  rFwd: -12, rOut:  8 }, // aim: wrist ≈ y=34 (near eye level)
+    { bodyY:-2,  rFwd: -12, rOut:  8 }, // FIRE: body+head commit, arm held
+    { bodyY:-1,  rFwd: -15, rOut:  5 }, // recoil: arm kicks slightly higher
     { bodyY: 0,  rFwd:   0, rOut:  0 }, // lower/return
   ],
   // Mirrors ATTACK_SHOOT_WEST_FRAMES — arm extends aggressively forward
