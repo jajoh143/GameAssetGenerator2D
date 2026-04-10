@@ -89,11 +89,11 @@ const CLOTHING = {
   // SDV/SNES art guide: shadows shift cooler (toward blue/teal),
   // highlights shift warmer (toward yellow/orange).
   jacket_grey: {
-    highlight: '#B8B0A0',  // warm: slight yellow-tan tint
+    highlight: '#D0C8B8',  // warm ivory-tan — noticeably brighter than base
     base:      '#787878',
-    shadow:    '#404454',  // cool: slight blue-grey
-    outline:   '#1C1C28',  // tinted dark navy rather than pure charcoal
-    collar:    '#585864',  // cool collar
+    shadow:    '#303448',  // cooler blue-grey, darker for more contrast
+    outline:   '#141420',
+    collar:    '#909098',  // lighter collar for front opening visibility
   },
   jacket_blue: {
     highlight: '#7098D4',  // warmer, more cyan-sky blue
@@ -134,6 +134,107 @@ const CLOTHING = {
     base_base:      '#7878A0',
     base_shadow:    '#484870',
   },
+  shirt_white: {
+    highlight: '#FFFFFF',
+    base:      '#E8E8F0',
+    shadow:    '#9898B8',
+    outline:   '#303050',
+    collar:    '#D0D0E8',
+  },
+  shirt_red: {
+    highlight: '#F07868',
+    base:      '#C82020',
+    shadow:    '#700808',
+    outline:   '#280200',
+    collar:    '#A81818',
+  },
+  shirt_blue: {
+    highlight: '#70A8E8',
+    base:      '#2868C0',
+    shadow:    '#0C3070',
+    outline:   '#040E28',
+    collar:    '#1C58A8',
+  },
+  vest_leather: {
+    highlight: '#C09858',
+    base:      '#805830',
+    shadow:    '#402010',
+    outline:   '#180800',
+    collar:    '#987040',
+    // shirt visible at sides/collar
+    shirt:     '#D0C8A0',
+    shirt_shadow: '#A09868',
+  },
+  tunic_green: {
+    highlight: '#80C060',
+    base:      '#4A8030',
+    shadow:    '#224810',
+    outline:   '#0A1C02',
+    collar:    '#5A9840',
+  },
+  robe_purple: {
+    highlight: '#A070D0',
+    base:      '#60309A',
+    shadow:    '#2C0E50',
+    outline:   '#0E0020',
+    collar:    '#4A2078',
+  },
+  tshirt_white: {
+    highlight: '#FFFFFF',
+    base:      '#ECF0F8',
+    shadow:    '#8888B0',
+    outline:   '#282840',
+    collar:    '#C8D0E8',
+  },
+  tshirt_grey: {
+    highlight: '#D0D0DC',
+    base:      '#888898',
+    shadow:    '#404050',
+    outline:   '#181820',
+    collar:    '#A0A0B0',
+  },
+  tshirt_black: {
+    highlight: '#505060',
+    base:      '#1C1C2C',
+    shadow:    '#080810',
+    outline:   '#000004',
+    collar:    '#303040',
+  },
+  tshirt_red: {
+    highlight: '#F08888',
+    base:      '#C82020',
+    shadow:    '#700808',
+    outline:   '#280000',
+    collar:    '#A01818',
+  },
+  tshirt_navy: {
+    highlight: '#5870A8',
+    base:      '#283870',
+    shadow:    '#0C1438',
+    outline:   '#040810',
+    collar:    '#1C2C58',
+  },
+  bomber_black: {
+    highlight: '#585868',
+    base:      '#202028',
+    shadow:    '#0A0A10',
+    outline:   '#000004',
+    collar:    '#303038',
+  },
+  bomber_olive: {
+    highlight: '#989868',
+    base:      '#606040',
+    shadow:    '#2C2C18',
+    outline:   '#0E0E04',
+    collar:    '#484830',
+  },
+  bomber_navy: {
+    highlight: '#3848A0',
+    base:      '#182060',
+    shadow:    '#080C28',
+    outline:   '#020410',
+    collar:    '#243080',
+  },
 };
 
 const PANTS = {
@@ -161,6 +262,24 @@ const PANTS = {
     shadow:    '#060606',
     outline:   '#000000',
   },
+  pants_brown: {
+    highlight: '#9A7248',
+    base:      '#6A4020',
+    shadow:    '#361C08',
+    outline:   '#140800',
+  },
+  pants_green: {
+    highlight: '#609848',
+    base:      '#386828',
+    shadow:    '#1A3410',
+    outline:   '#081202',
+  },
+  pants_red: {
+    highlight: '#C85050',
+    base:      '#881818',
+    shadow:    '#440808',
+    outline:   '#1A0000',
+  },
 };
 
 const SHOES = {
@@ -181,6 +300,24 @@ const SHOES = {
     base:      '#D8D8D8',
     shadow:    '#A0A0A0',
     outline:   '#606060',
+  },
+  shoe_red: {
+    highlight: '#C84040',
+    base:      '#881010',
+    shadow:    '#440808',
+    outline:   '#1A0000',
+  },
+  shoe_grey: {
+    highlight: '#A0A0A0',
+    base:      '#686868',
+    shadow:    '#383838',
+    outline:   '#141414',
+  },
+  shoe_tan: {
+    highlight: '#C8A070',
+    base:      '#906040',
+    shadow:    '#503018',
+    outline:   '#200C00',
   },
 };
 

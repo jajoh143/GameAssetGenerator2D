@@ -18,6 +18,8 @@ const {
   drawShoesWest,
   drawArmsSouth,
   drawArmsWest,
+  drawBackArmWest,
+  drawFrontArmWest,
 } = require('./BaseCharacter');
 
 const FRAME_W = 64;
@@ -53,6 +55,7 @@ function drawSouth(ctx, config, offsets) {
     bodyY = 0,
     leftLegFwd  = 0, rightLegFwd  = 0,
     leftArmFwd  = 0, rightArmFwd  = 0,
+    leftArmOut  = 0, rightArmOut  = 0,
     headBob = 0,
   } = offsets;
 
@@ -78,10 +81,14 @@ function drawSouth(ctx, config, offsets) {
   // Thigh rows stay fixed (belt junction stays clean).
   // Forward leg: knee-to-ankle drops 2px. Back leg: rises 2px.
   // Near-zero DX: feet stay under the body, no sideways shuffle.
-  const lLegDX = 0;
-  const rLegDX = 0;
-  const lLegDY = Math.max(-2, Math.min(2, Math.round(leftLegFwd  * 0.35)));
-  const rLegDY = Math.max(-2, Math.min(2, Math.round(rightLegFwd * 0.35)));
+  // Lateral spread: each foot steps OUTWARD from body center when striding.
+  // Left leg is at lx=25 (left of center), right leg at rx=33 (right of center).
+  // Forward stride = foot spreads outward: left goes more left (-x), right goes more right (+x).
+  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.35);  // always spreads LEFT
+  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.35);  // always spreads RIGHT
+  // DY: forward foot drops (closer to camera in top-down = lower on screen)
+  const lLegDY = Math.max(-3, Math.min(3, Math.round(leftLegFwd  * 0.5)));
+  const rLegDY = Math.max(-3, Math.min(3, Math.round(rightLegFwd * 0.5)));
 
   // Arm Y offsets
   const lArmDY = Math.round(leftArmFwd  * 0.4);
@@ -99,7 +106,7 @@ function drawSouth(ctx, config, offsets) {
   // Torso (18px wide, x=23-40) — narrower body matches reference proportions
   drawTorsoSouth(ctx, config.clothing, colors.clothing, 23, torsoY, 18, torsoH);
   // Arms (drawn over torso edges)
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY);
+  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut);
   // Neck
   drawNeckSouth(ctx, colors.skin, neckY);
   // Head
@@ -119,6 +126,7 @@ function drawNorth(ctx, config, offsets) {
     bodyY = 0,
     leftLegFwd  = 0, rightLegFwd  = 0,
     leftArmFwd  = 0, rightArmFwd  = 0,
+    leftArmOut  = 0, rightArmOut  = 0,
     headBob = 0,
   } = offsets;
 
@@ -136,11 +144,11 @@ function drawNorth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // Same split-DY logic as south view
-  const lLegDX = 0;
-  const rLegDX = 0;
-  const lLegDY = Math.max(-2, Math.min(2, Math.round(leftLegFwd  * 0.35)));
-  const rLegDY = Math.max(-2, Math.min(2, Math.round(rightLegFwd * 0.35)));
+  // Same outward-spread logic as south view
+  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.35);
+  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.35);
+  const lLegDY = Math.max(-3, Math.min(3, Math.round(leftLegFwd  * 0.5)));
+  const rLegDY = Math.max(-3, Math.min(3, Math.round(rightLegFwd * 0.5)));
   const lArmDY = Math.round(leftArmFwd  * 0.4);
   const rArmDY = Math.round(rightArmFwd * 0.4);
 
@@ -193,7 +201,7 @@ function drawNorth(ctx, config, offsets) {
     hLine(ctx, colors.clothing.outline, bBotL, by + bN - 1, bBotR - bBotL + 1);
   }
 
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY);
+  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut);
   drawNeckSouth(ctx, colors.skin, neckY);
 
   ctx.save();
@@ -212,6 +220,7 @@ function drawWest(ctx, config, offsets) {
     bodyY = 0,
     leftLegFwd  = 0, rightLegFwd  = 0,
     leftArmFwd  = 0, rightArmFwd  = 0,
+    leftLegLift = 0, rightLegLift = 0,
     headBob = 0,
   } = offsets;
 
@@ -231,27 +240,42 @@ function drawWest(ctx, config, offsets) {
   // Side profile centering: torso at x=20-32
   const torsoX = 20;
 
-  // Stride: front leg moves LEFT (lower x), back leg moves RIGHT (higher x)
-  // frontLeg = leftLegFwd, backLeg = rightLegFwd
-  const frontLegCenter = 26 - Math.round(leftLegFwd  * 0.9);
-  const backLegCenter  = 26 - Math.round(rightLegFwd * 0.9);
+  // Stride: compute raw screen X for each leg.
+  // In west view (facing left), lower X = more forward.
+  const leftLegX  = 26 - Math.round(leftLegFwd  * 0.9);
+  const rightLegX = 26 - Math.round(rightLegFwd * 0.9);
 
-  const frontArmDY = Math.round(leftArmFwd  * 0.4);
-  const backArmDY  = Math.round(rightArmFwd * 0.4);
+  // Assign front/back based on actual screen position so depth is always correct:
+  // the leg at lower X (more toward direction of travel) is drawn on top.
+  let frontLegCenter, backLegCenter, frontLegLift, backLegLift;
+  if (leftLegX <= rightLegX) {
+    frontLegCenter = leftLegX;   backLegCenter = rightLegX;
+    frontLegLift   = leftLegLift; backLegLift  = rightLegLift;
+  } else {
+    frontLegCenter = rightLegX;  backLegCenter = leftLegX;
+    frontLegLift   = rightLegLift; backLegLift = leftLegLift;
+  }
+
+  // Arms swing horizontally in side profile (not vertically)
+  // Positive armFwd → arm swings forward = moves left (lower X in west view)
+  const frontArmDX = -Math.round(leftArmFwd  * 0.6);
+  const backArmDX  = -Math.round(rightArmFwd * 0.6);
 
   drawGroundShadow(ctx, 26, 62 + bodyY);
 
   // --- Draw order: back-to-front ---
   // Back shoe
-  drawShoesWest(ctx, colors.shoes, backLegCenter, frontLegCenter, shoeY);
+  drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   // Back leg
-  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY);
-  // Back arm (drawn before torso so torso covers overlap)
-  drawArmsWest(ctx, colors.clothing, colors.skin, frontArmDY, backArmDY, torsoX, torsoY);
+  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
+  // Back arm drawn BEFORE torso so torso covers overlap at shoulder
+  drawBackArmWest(ctx, colors.clothing, colors.skin, backArmDX, torsoX, torsoY);
   // Belt
   drawBeltWest(ctx, colors.belt, torsoX, beltY);
   // Torso
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
+  // Front arm drawn AFTER torso so it appears in front of body silhouette
+  drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
   // Neck (side)
   fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 2);
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 2);

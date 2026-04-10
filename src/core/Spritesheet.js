@@ -10,21 +10,25 @@ const FRAME_H = 64;
 
 // Row definitions: [name, frameCount]
 const ROWS = [
-  { name: 'idle',         frameCount: 4  },
-  { name: 'walk_south',   frameCount: 8  },
-  { name: 'walk_west',    frameCount: 8  },
-  { name: 'walk_north',   frameCount: 8  },
-  { name: 'walk_east',    frameCount: 8  },
-  { name: 'attack_south', frameCount: 6  },
-  { name: 'attack_west',  frameCount: 6  },
-  { name: 'attack_north', frameCount: 6  },
-  { name: 'attack_east',  frameCount: 6  },
+  { name: 'idle',               frameCount: 4 },
+  { name: 'walk_south',         frameCount: 8 },
+  { name: 'walk_west',          frameCount: 8 },
+  { name: 'walk_north',         frameCount: 8 },
+  { name: 'walk_east',          frameCount: 8 },
+  { name: 'attack_swing_south', frameCount: 6 },
+  { name: 'attack_swing_west',  frameCount: 6 },
+  { name: 'attack_swing_north', frameCount: 6 },
+  { name: 'attack_swing_east',  frameCount: 6 },
+  { name: 'attack_shoot_south', frameCount: 6 },
+  { name: 'attack_shoot_west',  frameCount: 6 },
+  { name: 'attack_shoot_north', frameCount: 6 },
+  { name: 'attack_shoot_east',  frameCount: 6 },
 ];
 
 const SHEET_COLS = 8; // max frames in a row
-const SHEET_ROWS = ROWS.length; // 9
+const SHEET_ROWS = ROWS.length; // 13
 const SHEET_W = SHEET_COLS * FRAME_W; // 512
-const SHEET_H = SHEET_ROWS * FRAME_H; // 576
+const SHEET_H = SHEET_ROWS * FRAME_H; // 832
 
 /**
  * Build a spritesheet from an array of row frame arrays.

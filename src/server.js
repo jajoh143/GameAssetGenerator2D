@@ -5,13 +5,16 @@ const fs      = require('fs');
 const path    = require('path');
 
 const { generateSpritesheet }  = require('./generators/CharacterGenerator');
+const { generateAllWeapons }   = require('./generators/WeaponGenerator');
 const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
+const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
   SKIN_TONES, HAIR_COLORS, CLOTHING, PANTS, SHOES, DEMON_SKIN,
 } = require('./core/Colors');
 
-const PORT       = 3000;
-const OUTPUT_DIR = path.join(__dirname, '..', 'output');
+const PORT        = 3000;
+const OUTPUT_DIR  = path.join(__dirname, '..', 'output');
+const WEAPONS_DIR = path.join(OUTPUT_DIR, 'weapons');
 const PREVIEW_DIR = path.join(__dirname, '..', 'preview');
 
 const MIME = {
@@ -117,12 +120,58 @@ async function handleRequest(req, res) {
   if (pathname === '/' || pathname === '/index.html') {
     serveFile(res, path.join(PREVIEW_DIR, 'index.html')); return;
   }
-  // Static: /output/ files
+  // Static: /output/ files (characters + weapons)
   if (pathname.startsWith('/output/')) {
     serveFile(res, path.join(OUTPUT_DIR, pathname.slice(8))); return;
   }
   // Static: anything else in preview/
   serveFile(res, path.join(PREVIEW_DIR, pathname));
+}
+
+// ─── startup asset generation ─────────────────────────────────────────────────
+
+function regenerateAll() {
+  if (!fs.existsSync(OUTPUT_DIR))  fs.mkdirSync(OUTPUT_DIR,  { recursive: true });
+  if (!fs.existsSync(WEAPONS_DIR)) fs.mkdirSync(WEAPONS_DIR, { recursive: true });
+
+  const { resolveConfig } = require('./characters/CharacterConfig');
+
+  const manifest = {
+    frameWidth:  FRAME_W,
+    frameHeight: FRAME_H,
+    animations:  ROWS.map((r, i) => ({ name: r.name, row: i, frameCount: r.frameCount })),
+    characters:  [],
+    weapons:     [],
+  };
+
+  // Characters
+  let charDone = 0;
+  for (const [name, config] of Object.entries(PRESETS)) {
+    try {
+      const cfg = resolveConfig(config);
+      const out = path.join(OUTPUT_DIR, `${name}_spritesheet.png`);
+      generateSpritesheet(cfg, out, 64);
+      manifest.characters.push({ name, file: `../output/${name}_spritesheet.png`, config });
+      charDone++;
+    } catch (e) {
+      console.error(`  [presets] failed ${name}:`, e.message);
+    }
+  }
+
+  // Weapons
+  let weaponEntries = [];
+  try {
+    weaponEntries = generateAllWeapons(WEAPONS_DIR, 32);
+    manifest.weapons = weaponEntries;
+  } catch (e) {
+    console.error('  [weapons] generation failed:', e.message);
+  }
+
+  // Write manifest so preview page has up-to-date data
+  const manifestPath = path.join(PREVIEW_DIR, 'manifest.json');
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}`);
 }
 
 // ─── start ───────────────────────────────────────────────────────────────────
@@ -137,4 +186,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log('\n  GameAssetGenerator2D');
   console.log(`  http://localhost:${PORT}\n`);
+  console.log('  Generating assets...');
+  regenerateAll();
+  console.log('  Ready.\n');
 });

@@ -6,6 +6,7 @@ const { ANIMATION_ROWS, getFrames, getDirection } = require('../animations/Anima
 const { generateFrame: generateHumanFrame } = require('../characters/HumanCharacter');
 const { generateFrame: generateDemonFrame } = require('../characters/DemonCharacter');
 const { resolveConfig } = require('../characters/CharacterConfig');
+const { buildMeta, saveMeta } = require('../core/MetaExport');
 
 /**
  * Generate a complete spritesheet for a character.
@@ -26,6 +27,10 @@ function generateSpritesheet(rawConfig, outputPath, frameSize = 64) {
 
   const sheet = buildSpritesheet(rowFrames, frameSize);
   saveSpritesheet(sheet, outputPath);
+
+  const meta = buildMeta(frameSize, ANIMATION_ROWS, getFrames, getDirection);
+  saveMeta(meta, outputPath);
+
   return outputPath;
 }
 
