@@ -165,9 +165,11 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   px(ctx, skinColors.highlight, 37, eyeY + 3);  // right cheek
   px(ctx, skinColors.highlight, 38, eyeY + 3);
 
-  // ── Nose (simplified — 2 nostril dots; bridge handled by face shading) ───
-  // Research: SNES small sprites often omit nose or use 1-2 shadow pixels only.
+  // ── Nose (bridge tip + nostrils) ────────────────────────────────────────
   const noseY = HY + 12;   // y=17
+  // Nose tip: 2px centered shadow 1 row above nostrils — suggests the nose bridge
+  px(ctx, skinColors.shadow, 31, noseY - 1);  // nose tip center-left
+  px(ctx, skinColors.shadow, 32, noseY - 1);  // nose tip center-right
   px(ctx, skinColors.shadow, 30, noseY);  // left nostril dot
   px(ctx, skinColors.shadow, 33, noseY);  // right nostril dot
 
@@ -387,7 +389,13 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
   px(ctx, skinColors.shadow, HX, eyeY + 1);  // lower lid shadow
   // Nose tip — 1px protrusion at HX-1 (row 10)
   px(ctx, skinColors.base, HX - 1, HY + 10);
-  // (No mouth — too small at this scale; jaw/chin silhouette reads as face)
+  // Mouth hint — 1px line at row 13 (subtle; reads as closed mouth in profile)
+  px(ctx, skinColors.shadow, HX, HY + 13);
+  // Ear — small curved shape mid-head, behind the jawline (~2/3 back from face)
+  // Positioned at rows 10-12, x=HX+8 to HX+9 (mid-right of head silhouette)
+  px(ctx, skinColors.shadow,    HX + 9,  HY + 10);  // ear top rim
+  px(ctx, skinColors.highlight, HX + 8,  HY + 11);  // ear bowl (catches light)
+  px(ctx, skinColors.shadow,    HX + 9,  HY + 12);  // ear bottom rim
 
   // ── Hair ──────────────────────────────────────────────────────────────────
   // Top dome: rows 0-6, follows oval
@@ -525,6 +533,12 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   vLine(ctx, colors.shadow,    shirtLx + shirtW - 2, y, numRows);  // shadow face
   // Center highlight column — shirt front catches light, reads as rounded
   vLine(ctx, colors.highlight, cx, y + 1, numRows - 2);
+
+  // Shirt buttons: 1px dots down center placket (rows 9, 12, 15)
+  // Drawn over center highlight so they appear as slightly darker studs
+  for (const btnRow of [9, 12, 15]) {
+    if (btnRow < numRows) px(ctx, colors.shadow, cx, y + btnRow);
+  }
 
   // ── 6. Lapels: V opens from closed (row 0) to fully open (row 7) ─────────
   const lapelH = Math.min(8, numRows);
@@ -1395,7 +1409,8 @@ function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY, lShoeDY=0, rSh
   fillRect(ctx, shoeColors.base, lx, ly, 10, 4);
   hLine(ctx, shoeColors.highlight, lx + 2, ly, 7);
   hLine(ctx, shoeColors.highlight, lx + 3, ly + 1, 4);
-  hLine(ctx, shoeColors.shadow, lx, ly + 2, 10);
+  // Midsole line: 1px highlight stripe separating upper from sole
+  hLine(ctx, shoeColors.highlight, lx + 1, ly + 2, 8);
   hLine(ctx, shoeColors.shadow, lx, ly + 3, 10);
   erasePixel(ctx, lx, ly);
   px(ctx, shoeColors.shadow, lx + 1, ly);
@@ -1407,7 +1422,8 @@ function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY, lShoeDY=0, rSh
   fillRect(ctx, shoeColors.base, rx, ry, 10, 4);
   hLine(ctx, shoeColors.highlight, rx + 1, ry, 7);
   hLine(ctx, shoeColors.highlight, rx + 3, ry + 1, 4);
-  hLine(ctx, shoeColors.shadow, rx, ry + 2, 10);
+  // Midsole line: 1px highlight stripe separating upper from sole
+  hLine(ctx, shoeColors.highlight, rx + 1, ry + 2, 8);
   hLine(ctx, shoeColors.shadow, rx, ry + 3, 10);
   erasePixel(ctx, rx + 9, ry);
   px(ctx, shoeColors.shadow, rx + 8, ry);
