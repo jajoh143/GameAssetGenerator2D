@@ -21,49 +21,119 @@ function resolveColors(config) {
 // Draw curved horns above the head (south view)
 function drawHornsSouth(ctx, colors, hornStyle, headY) {
   const hy = headY - 4; // just above head
+  const { base: hb, highlight: hh, shadow: hs, outline: ho } = colors.horn;
 
   if (hornStyle === 'curved') {
-    // Left curved horn
-    fillRect(ctx, colors.horn.base,      24, hy,     4, 5);
-    fillRect(ctx, colors.horn.highlight, 24, hy,     2, 3);
-    pixel(ctx, colors.horn.shadow,       26, hy + 4);
-    // Curve tip
-    fillRect(ctx, colors.horn.base,      22, hy - 3, 3, 3);
-    fillRect(ctx, colors.horn.shadow,    22, hy - 4, 2, 2);
-    outlineRect(ctx, colors.horn.outline, 22, hy - 4, 5, 9);
+    // Left curved horn: body at x=24-27, tip curves up+left to x=22-24
+    fillRect(ctx, hb, 24, hy,     4, 5); // body
+    fillRect(ctx, hb, 22, hy - 3, 3, 4); // curved tip
+    // Shading: highlight on upper-left, shadow on lower-right
+    fillRect(ctx, hh, 24, hy,     2, 3); // body highlight
+    pixel(ctx, hh,   22, hy - 3);        // tip highlight
+    pixel(ctx, hs,   27, hy + 3);        // body shadow
+    pixel(ctx, hs,   27, hy + 4);
+    pixel(ctx, hs,   24, hy - 1);        // inner curve shadow
+    // Outline following the L-shaped silhouette (no outlineRect)
+    // Tip top:
+    pixel(ctx, ho, 21, hy - 4); pixel(ctx, ho, 22, hy - 4); pixel(ctx, ho, 23, hy - 4); pixel(ctx, ho, 24, hy - 4);
+    // Tip left side:
+    pixel(ctx, ho, 21, hy - 3); pixel(ctx, ho, 21, hy - 2); pixel(ctx, ho, 21, hy - 1); pixel(ctx, ho, 21, hy);
+    // Tip-to-body step (inner notch):
+    pixel(ctx, ho, 22, hy); pixel(ctx, ho, 23, hy);
+    // Body left side:
+    pixel(ctx, ho, 23, hy + 1); pixel(ctx, ho, 23, hy + 2); pixel(ctx, ho, 23, hy + 3); pixel(ctx, ho, 23, hy + 4);
+    // Body bottom:
+    pixel(ctx, ho, 24, hy + 5); pixel(ctx, ho, 25, hy + 5); pixel(ctx, ho, 26, hy + 5); pixel(ctx, ho, 27, hy + 5);
+    // Body right side:
+    pixel(ctx, ho, 28, hy + 4); pixel(ctx, ho, 28, hy + 3); pixel(ctx, ho, 28, hy + 2); pixel(ctx, ho, 28, hy + 1); pixel(ctx, ho, 28, hy);
+    // Outer corner body-to-tip:
+    pixel(ctx, ho, 27, hy - 1); pixel(ctx, ho, 26, hy - 1); pixel(ctx, ho, 25, hy - 1);
+    // Tip right side:
+    pixel(ctx, ho, 25, hy - 2); pixel(ctx, ho, 25, hy - 3);
 
-    // Right curved horn (mirror)
-    fillRect(ctx, colors.horn.base,      36, hy,     4, 5);
-    fillRect(ctx, colors.horn.highlight, 38, hy,     2, 3);
-    pixel(ctx, colors.horn.shadow,       37, hy + 4);
-    fillRect(ctx, colors.horn.base,      39, hy - 3, 3, 3);
-    fillRect(ctx, colors.horn.shadow,    40, hy - 4, 2, 2);
-    outlineRect(ctx, colors.horn.outline, 36, hy - 4, 5, 9);
+    // Right curved horn (mirror about x=32):
+    fillRect(ctx, hb, 36, hy,     4, 5);
+    fillRect(ctx, hb, 39, hy - 3, 3, 4);
+    fillRect(ctx, hh, 38, hy,     2, 3);
+    pixel(ctx, hh,   42, hy - 3);
+    pixel(ctx, hs,   36, hy + 3); pixel(ctx, hs, 36, hy + 4);
+    pixel(ctx, hs,   39, hy - 1);
+    // Outline:
+    pixel(ctx, ho, 39, hy - 4); pixel(ctx, ho, 40, hy - 4); pixel(ctx, ho, 41, hy - 4); pixel(ctx, ho, 42, hy - 4);
+    pixel(ctx, ho, 43, hy - 3); pixel(ctx, ho, 43, hy - 2); pixel(ctx, ho, 43, hy - 1); pixel(ctx, ho, 43, hy);
+    pixel(ctx, ho, 41, hy); pixel(ctx, ho, 40, hy);
+    pixel(ctx, ho, 40, hy + 1); pixel(ctx, ho, 40, hy + 2); pixel(ctx, ho, 40, hy + 3); pixel(ctx, ho, 40, hy + 4);
+    pixel(ctx, ho, 39, hy + 5); pixel(ctx, ho, 38, hy + 5); pixel(ctx, ho, 37, hy + 5); pixel(ctx, ho, 36, hy + 5);
+    pixel(ctx, ho, 35, hy + 4); pixel(ctx, ho, 35, hy + 3); pixel(ctx, ho, 35, hy + 2); pixel(ctx, ho, 35, hy + 1); pixel(ctx, ho, 35, hy);
+    pixel(ctx, ho, 36, hy - 1); pixel(ctx, ho, 37, hy - 1); pixel(ctx, ho, 38, hy - 1);
+    pixel(ctx, ho, 38, hy - 2); pixel(ctx, ho, 38, hy - 3);
 
   } else if (hornStyle === 'straight') {
-    // Left straight horn pointing up
-    fillRect(ctx, colors.horn.base,      25, hy - 5, 3, 7);
-    fillRect(ctx, colors.horn.highlight, 25, hy - 5, 1, 5);
-    pixel(ctx, colors.horn.shadow,       27, hy + 1);
-    outlineRect(ctx, colors.horn.outline, 25, hy - 6, 3, 8);
+    // Left straight horn — tapers to a point at top
+    hLine(ctx, hb, 25, hy,     3, 5); // base (3px)
+    hLine(ctx, hb, 25, hy - 2, 2, 3); // mid (2px)  — use hLine for fill
+    fillRect(ctx, hb, 25, hy,     3, 5);
+    fillRect(ctx, hb, 25, hy - 2, 2, 3);
+    pixel(ctx, hb, 25, hy - 5); pixel(ctx, hb, 26, hy - 5); // tip
+    fillRect(ctx, hh, 25, hy - 5, 1, 8); // left highlight strip
+    pixel(ctx, hs, 27, hy + 3); pixel(ctx, hs, 27, hy + 4); // shadow right
+    // Per-pixel outline:
+    pixel(ctx, ho, 25, hy - 6); pixel(ctx, ho, 26, hy - 6); // tip top
+    pixel(ctx, ho, 24, hy - 5); pixel(ctx, ho, 24, hy - 4); pixel(ctx, ho, 24, hy - 3); // left side
+    pixel(ctx, ho, 24, hy - 2); pixel(ctx, ho, 24, hy - 1); pixel(ctx, ho, 24, hy);
+    pixel(ctx, ho, 24, hy + 1); pixel(ctx, ho, 24, hy + 2); pixel(ctx, ho, 24, hy + 3); pixel(ctx, ho, 24, hy + 4);
+    pixel(ctx, ho, 25, hy + 5); pixel(ctx, ho, 26, hy + 5); pixel(ctx, ho, 27, hy + 5); // bottom
+    pixel(ctx, ho, 28, hy + 4); pixel(ctx, ho, 28, hy + 3); pixel(ctx, ho, 28, hy + 2);
+    pixel(ctx, ho, 28, hy + 1); pixel(ctx, ho, 28, hy); pixel(ctx, ho, 28, hy - 1);
+    pixel(ctx, ho, 27, hy - 2); pixel(ctx, ho, 27, hy - 3); pixel(ctx, ho, 27, hy - 4);
+    pixel(ctx, ho, 27, hy - 5); pixel(ctx, ho, 26, hy - 6); // right to tip
 
-    // Right straight horn
-    fillRect(ctx, colors.horn.base,      36, hy - 5, 3, 7);
-    fillRect(ctx, colors.horn.highlight, 38, hy - 5, 1, 5);
-    pixel(ctx, colors.horn.shadow,       36, hy + 1);
-    outlineRect(ctx, colors.horn.outline, 36, hy - 6, 3, 8);
+    // Right straight horn (mirror about x=32):
+    fillRect(ctx, hb, 36, hy,     3, 5);
+    fillRect(ctx, hb, 37, hy - 2, 2, 3);
+    pixel(ctx, hb, 37, hy - 5); pixel(ctx, hb, 38, hy - 5);
+    fillRect(ctx, hh, 37, hy - 5, 1, 8);
+    pixel(ctx, hs, 36, hy + 3); pixel(ctx, hs, 36, hy + 4);
+    pixel(ctx, ho, 37, hy - 6); pixel(ctx, ho, 38, hy - 6);
+    pixel(ctx, ho, 36, hy - 5); pixel(ctx, ho, 36, hy - 4); pixel(ctx, ho, 36, hy - 3);
+    pixel(ctx, ho, 36, hy - 2); pixel(ctx, ho, 36, hy - 1); pixel(ctx, ho, 36, hy);
+    pixel(ctx, ho, 35, hy + 1); pixel(ctx, ho, 35, hy + 2); pixel(ctx, ho, 35, hy + 3); pixel(ctx, ho, 35, hy + 4);
+    pixel(ctx, ho, 36, hy + 5); pixel(ctx, ho, 37, hy + 5); pixel(ctx, ho, 38, hy + 5);
+    pixel(ctx, ho, 39, hy + 4); pixel(ctx, ho, 39, hy + 3); pixel(ctx, ho, 39, hy + 2);
+    pixel(ctx, ho, 39, hy + 1); pixel(ctx, ho, 39, hy); pixel(ctx, ho, 39, hy - 1);
+    pixel(ctx, ho, 39, hy - 2); pixel(ctx, ho, 39, hy - 3); pixel(ctx, ho, 39, hy - 4);
+    pixel(ctx, ho, 38, hy - 5); pixel(ctx, ho, 38, hy - 6);
 
   } else {
-    // Ram horns (sweeping outward)
-    fillRect(ctx, colors.horn.base,      20, hy - 1, 6, 4);
-    fillRect(ctx, colors.horn.base,      17, hy + 2, 4, 3);
-    fillRect(ctx, colors.horn.highlight, 20, hy - 1, 2, 2);
-    outlineRect(ctx, colors.horn.outline, 17, hy - 1, 9, 6);
+    // Ram horns: sweep outward, each is wide L-shape
+    // Left ram horn
+    fillRect(ctx, hb, 19, hy - 1, 7, 4); // top sweep
+    fillRect(ctx, hb, 16, hy + 2, 5, 4); // downward curl
+    fillRect(ctx, hh, 19, hy - 1, 3, 2); // highlight
+    pixel(ctx, hs, 15, hy + 4); pixel(ctx, hs, 16, hy + 5); // shadow curl tip
+    // Outline:
+    pixel(ctx, ho, 18, hy - 2); pixel(ctx, ho, 19, hy - 2); pixel(ctx, ho, 20, hy - 2);
+    pixel(ctx, ho, 21, hy - 2); pixel(ctx, ho, 22, hy - 2); pixel(ctx, ho, 23, hy - 2); pixel(ctx, ho, 24, hy - 2);
+    pixel(ctx, ho, 25, hy - 1); pixel(ctx, ho, 26, hy); pixel(ctx, ho, 26, hy + 1); pixel(ctx, ho, 26, hy + 2);
+    pixel(ctx, ho, 25, hy + 3); pixel(ctx, ho, 24, hy + 3); pixel(ctx, ho, 23, hy + 3); pixel(ctx, ho, 22, hy + 3);
+    pixel(ctx, ho, 21, hy + 4); pixel(ctx, ho, 20, hy + 5); pixel(ctx, ho, 19, hy + 6);
+    pixel(ctx, ho, 18, hy + 6); pixel(ctx, ho, 17, hy + 6); pixel(ctx, ho, 16, hy + 6); pixel(ctx, ho, 15, hy + 5);
+    pixel(ctx, ho, 15, hy + 4); pixel(ctx, ho, 15, hy + 3); pixel(ctx, ho, 15, hy + 2);
+    pixel(ctx, ho, 16, hy + 1); pixel(ctx, ho, 17, hy); pixel(ctx, ho, 17, hy - 1); pixel(ctx, ho, 18, hy - 2);
 
-    fillRect(ctx, colors.horn.base,      38, hy - 1, 6, 4);
-    fillRect(ctx, colors.horn.base,      43, hy + 2, 4, 3);
-    fillRect(ctx, colors.horn.highlight, 42, hy - 1, 2, 2);
-    outlineRect(ctx, colors.horn.outline, 38, hy - 1, 9, 6);
+    // Right ram horn (mirror about x=32)
+    fillRect(ctx, hb, 38, hy - 1, 7, 4);
+    fillRect(ctx, hb, 43, hy + 2, 5, 4);
+    fillRect(ctx, hh, 41, hy - 1, 3, 2);
+    pixel(ctx, hs, 48, hy + 4); pixel(ctx, hs, 47, hy + 5);
+    pixel(ctx, ho, 39, hy - 2); pixel(ctx, ho, 40, hy - 2); pixel(ctx, ho, 41, hy - 2);
+    pixel(ctx, ho, 42, hy - 2); pixel(ctx, ho, 43, hy - 2); pixel(ctx, ho, 44, hy - 2); pixel(ctx, ho, 45, hy - 2);
+    pixel(ctx, ho, 37, hy - 1); pixel(ctx, ho, 36, hy); pixel(ctx, ho, 36, hy + 1); pixel(ctx, ho, 36, hy + 2);
+    pixel(ctx, ho, 37, hy + 3); pixel(ctx, ho, 38, hy + 3); pixel(ctx, ho, 39, hy + 3); pixel(ctx, ho, 40, hy + 3);
+    pixel(ctx, ho, 41, hy + 4); pixel(ctx, ho, 42, hy + 5); pixel(ctx, ho, 43, hy + 6);
+    pixel(ctx, ho, 44, hy + 6); pixel(ctx, ho, 45, hy + 6); pixel(ctx, ho, 46, hy + 6); pixel(ctx, ho, 47, hy + 5);
+    pixel(ctx, ho, 47, hy + 4); pixel(ctx, ho, 47, hy + 3); pixel(ctx, ho, 47, hy + 2);
+    pixel(ctx, ho, 46, hy + 1); pixel(ctx, ho, 45, hy); pixel(ctx, ho, 45, hy - 1); pixel(ctx, ho, 45, hy - 2);
   }
 }
 
@@ -71,77 +141,185 @@ function drawHornsSouth(ctx, colors, hornStyle, headY) {
 function drawTailSouth(ctx, colors, tailStyle, beltY) {
   const tx = 46; // tail emerges from right hip area
   const ty = beltY;
+  const { base: tb, highlight: th, shadow: ts, outline: to } = colors.tail;
 
   if (tailStyle === 'long') {
-    // Long swooping tail
-    vLine(ctx, colors.tail.base, tx, ty, 8);
-    fillRect(ctx, colors.tail.base, tx + 1, ty + 5, 4, 5);
-    fillRect(ctx, colors.tail.base, tx + 4, ty + 8, 3, 6);
-    // Arrowhead tip
-    fillRect(ctx, colors.tail.base,      tx + 5, ty + 12, 5, 3);
-    fillRect(ctx, colors.tail.highlight, tx + 6, ty + 12, 3, 2);
-    // Outline
-    fillRect(ctx, colors.tail.outline, tx - 1, ty, 1, 8);
-    fillRect(ctx, colors.tail.outline, tx + 5, ty + 12, 1, 4);
-    fillRect(ctx, colors.tail.outline, tx + 9, ty + 13, 1, 2);
+    // Long swooping tail: body widens and curves right, ends in arrowhead
+    hLine(ctx, tb, tx,     ty,     2);  // root 2px wide
+    hLine(ctx, tb, tx,     ty + 1, 3);
+    hLine(ctx, tb, tx,     ty + 2, 3);
+    hLine(ctx, tb, tx + 1, ty + 3, 3); // start curving right
+    hLine(ctx, tb, tx + 1, ty + 4, 4);
+    hLine(ctx, tb, tx + 2, ty + 5, 4);
+    hLine(ctx, tb, tx + 2, ty + 6, 5);
+    hLine(ctx, tb, tx + 2, ty + 7, 5);
+    hLine(ctx, tb, tx + 3, ty + 8, 5);
+    // Arrowhead
+    hLine(ctx, tb, tx + 1, ty + 9,  9); // arrowhead base (wide)
+    hLine(ctx, tb, tx + 2, ty + 10, 7);
+    hLine(ctx, tb, tx + 3, ty + 11, 5);
+    hLine(ctx, tb, tx + 4, ty + 12, 3);
+    pixel(ctx, tb, tx + 5, ty + 13);   // arrowhead tip
+    // Highlights (upper-left of curve — light from top-left)
+    pixel(ctx, th, tx,     ty);
+    pixel(ctx, th, tx,     ty + 2);
+    pixel(ctx, th, tx + 1, ty + 4);
+    pixel(ctx, th, tx + 2, ty + 6);
+    // Shadows (lower-right of curve)
+    pixel(ctx, ts, tx + 2, ty + 1);
+    pixel(ctx, ts, tx + 3, ty + 3);
+    pixel(ctx, ts, tx + 5, ty + 5);
+    pixel(ctx, ts, tx + 6, ty + 7);
+    // Outline — per-pixel, follows silhouette curve
+    pixel(ctx, to, tx,     ty - 1); pixel(ctx, to, tx + 1, ty - 1); // top of root
+    // Left edge (steps right as tail curves):
+    pixel(ctx, to, tx - 1, ty);     pixel(ctx, to, tx - 1, ty + 1); pixel(ctx, to, tx - 1, ty + 2);
+    pixel(ctx, to, tx - 1, ty + 3); // still left at row 3 (hLine starts at tx+1)
+    pixel(ctx, to, tx,     ty + 4); pixel(ctx, to, tx,     ty + 5);
+    pixel(ctx, to, tx + 1, ty + 6); pixel(ctx, to, tx + 1, ty + 7); pixel(ctx, to, tx + 1, ty + 8);
+    pixel(ctx, to, tx + 2, ty + 9); // transition to arrowhead
+    pixel(ctx, to, tx,     ty + 9); // left arrowhead flange
+    pixel(ctx, to, tx + 1, ty + 10); pixel(ctx, to, tx + 2, ty + 11); pixel(ctx, to, tx + 3, ty + 12);
+    pixel(ctx, to, tx + 4, ty + 13); pixel(ctx, to, tx + 5, ty + 14); // arrowhead tip bottom
+    // Right edge (steps right as tail widens):
+    pixel(ctx, to, tx + 2, ty);     pixel(ctx, to, tx + 3, ty + 1);
+    pixel(ctx, to, tx + 3, ty + 2); pixel(ctx, to, tx + 4, ty + 3);
+    pixel(ctx, to, tx + 5, ty + 4); pixel(ctx, to, tx + 6, ty + 5);
+    pixel(ctx, to, tx + 7, ty + 6); pixel(ctx, to, tx + 7, ty + 7); pixel(ctx, to, tx + 8, ty + 8);
+    pixel(ctx, to, tx + 10,ty + 9); // right arrowhead flange
+    pixel(ctx, to, tx + 9, ty + 10); pixel(ctx, to, tx + 8, ty + 11);
+    pixel(ctx, to, tx + 7, ty + 12); pixel(ctx, to, tx + 6, ty + 13);
+    pixel(ctx, to, tx + 5, ty + 14); // tip (same pixel as left edge)
 
   } else if (tailStyle === 'medium') {
-    vLine(ctx, colors.tail.base, tx, ty, 6);
-    fillRect(ctx, colors.tail.base, tx + 1, ty + 4, 3, 5);
-    fillRect(ctx, colors.tail.base, tx + 3, ty + 7, 4, 3);
-    fillRect(ctx, colors.tail.base, tx + 4, ty + 8, 3, 2); // tip
-    fillRect(ctx, colors.tail.outline, tx - 1, ty, 1, 7);
+    hLine(ctx, tb, tx,     ty,     2);
+    hLine(ctx, tb, tx,     ty + 1, 3);
+    hLine(ctx, tb, tx + 1, ty + 2, 3);
+    hLine(ctx, tb, tx + 1, ty + 3, 4);
+    hLine(ctx, tb, tx + 2, ty + 4, 4);
+    // Arrowhead
+    hLine(ctx, tb, tx + 1, ty + 5, 7);
+    hLine(ctx, tb, tx + 2, ty + 6, 5);
+    hLine(ctx, tb, tx + 3, ty + 7, 3);
+    pixel(ctx, tb, tx + 4, ty + 8);
+    pixel(ctx, th, tx, ty);     pixel(ctx, th, tx + 1, ty + 3);
+    pixel(ctx, ts, tx + 2, ty + 1); pixel(ctx, ts, tx + 4, ty + 4);
+    // Outline
+    pixel(ctx, to, tx,     ty - 1); pixel(ctx, to, tx + 1, ty - 1);
+    pixel(ctx, to, tx - 1, ty);     pixel(ctx, to, tx - 1, ty + 1); pixel(ctx, to, tx - 1, ty + 2);
+    pixel(ctx, to, tx,     ty + 3); pixel(ctx, to, tx,     ty + 4);
+    pixel(ctx, to, tx,     ty + 5); // arrowhead left flange
+    pixel(ctx, to, tx + 1, ty + 6); pixel(ctx, to, tx + 2, ty + 7);
+    pixel(ctx, to, tx + 3, ty + 8); pixel(ctx, to, tx + 4, ty + 9); // tip bottom
+    pixel(ctx, to, tx + 2, ty);     pixel(ctx, to, tx + 3, ty + 1);
+    pixel(ctx, to, tx + 4, ty + 2); pixel(ctx, to, tx + 5, ty + 3); pixel(ctx, to, tx + 6, ty + 4);
+    pixel(ctx, to, tx + 8, ty + 5); // right arrowhead flange
+    pixel(ctx, to, tx + 7, ty + 6); pixel(ctx, to, tx + 6, ty + 7);
+    pixel(ctx, to, tx + 5, ty + 8); pixel(ctx, to, tx + 4, ty + 9); // tip bottom
 
   } else {
-    // Short tail
-    vLine(ctx, colors.tail.base, tx, ty, 4);
-    fillRect(ctx, colors.tail.base, tx + 1, ty + 3, 3, 3);
-    fillRect(ctx, colors.tail.outline, tx - 1, ty, 1, 5);
+    // Short stubby tail with arrowhead
+    hLine(ctx, tb, tx,     ty,     2);
+    hLine(ctx, tb, tx,     ty + 1, 3);
+    hLine(ctx, tb, tx + 1, ty + 2, 3);
+    hLine(ctx, tb, tx,     ty + 3, 5); // arrowhead base
+    hLine(ctx, tb, tx + 1, ty + 4, 3);
+    pixel(ctx, tb, tx + 2, ty + 5);
+    pixel(ctx, th, tx, ty);
+    pixel(ctx, ts, tx + 1, ty + 1);
+    // Outline
+    pixel(ctx, to, tx,     ty - 1); pixel(ctx, to, tx + 1, ty - 1);
+    pixel(ctx, to, tx - 1, ty);     pixel(ctx, to, tx - 1, ty + 1); pixel(ctx, to, tx - 1, ty + 2);
+    pixel(ctx, to, tx - 1, ty + 3); // arrowhead left flange
+    pixel(ctx, to, tx,     ty + 4); pixel(ctx, to, tx + 1, ty + 5);
+    pixel(ctx, to, tx + 2, ty + 6); // tip bottom
+    pixel(ctx, to, tx + 2, ty);     pixel(ctx, to, tx + 3, ty + 1);
+    pixel(ctx, to, tx + 4, ty + 2);
+    pixel(ctx, to, tx + 5, ty + 3); // right arrowhead flange
+    pixel(ctx, to, tx + 4, ty + 4); pixel(ctx, to, tx + 3, ty + 5);
+    pixel(ctx, to, tx + 2, ty + 6); // tip bottom
   }
 }
 
-// Draw demon head south (uses skin + horns)
+// Draw demon head south — oval face shape matching human proportions, demon skin + features
 function drawDemonHeadSouth(ctx, colors, config) {
-  const { fillRect: fr, pixel: px, hLine: hl, outlineRect: or } = require('../core/Canvas');
-  const headX = 23, headY = 4, headW = 18, headH = 18;
+  const sk = colors.skin;
+  const hair = colors.hair;
+  const outline = sk.outline || '#280000';
+  const HX = 22, HY = 5;
 
-  // Demon head fill (same shape as human but with demon skin)
-  fillRect(ctx, colors.skin.base, headX, headY, headW, headH);
-  fillRect(ctx, colors.skin.highlight, headX + 2, headY + 2, 6, 5);
-  fillRect(ctx, colors.skin.shadow, headX + headW - 5, headY + 4, 4, headH - 8);
-  fillRect(ctx, colors.skin.shadow, headX + 3, headY + headH - 5, headW - 6, 4);
-  outlineRect(ctx, colors.skin.outline || '#280000', headX, headY, headW, headH);
+  // ── Oval face (matches human head row widths) ──────────────────────────────
+  hLine(ctx, sk.base, 25, HY + 7,  14);
+  hLine(ctx, sk.base, 24, HY + 8,  16);
+  fillRect(ctx, sk.base, 23, HY + 9,  18, 3);  // cheeks — widest
+  fillRect(ctx, sk.base, 24, HY + 12, 16, 2);
+  fillRect(ctx, sk.base, 25, HY + 14, 14, 2);
+  hLine(ctx, sk.base, 26, HY + 16, 12);
+  hLine(ctx, sk.base, 27, HY + 17, 10);
+  hLine(ctx, sk.base, 28, HY + 18,  8);
+  hLine(ctx, sk.base, 29, HY + 19,  6);
+  hLine(ctx, sk.base, 30, HY + 20,  4);
 
-  // Glowing eyes (brighter for demon)
-  const eyeY = headY + 9;
+  // ── Form shading — light from top-left ────────────────────────────────────
+  fillRect(ctx, sk.highlight, 24, HY + 8,  3, 3); // left cheek highlight
+  hLine(ctx,   sk.highlight,  25, HY + 7,  2);     // forehead left
+  vLine(ctx,   sk.shadow,     36, HY + 9,  5);     // right-center falloff
+  vLine(ctx,   sk.shadow,     37, HY + 9,  3);
+  vLine(ctx,   sk.shadow,     38, HY + 8,  7);     // edge shadow
+  vLine(ctx,   sk.shadow,     39, HY + 8,  5);
+  pixel(ctx,   sk.shadow,     40, HY + 9);
+  pixel(ctx,   sk.shadow,     40, HY + 10);
+  pixel(ctx,   sk.shadow,     40, HY + 11);
+  // Bottom chin (under-lit)
+  hLine(ctx, sk.shadow, 25, HY + 14, 14);
+  hLine(ctx, sk.shadow, 26, HY + 16, 12);
+  hLine(ctx, sk.shadow, 27, HY + 17, 10);
+  hLine(ctx, sk.shadow, 28, HY + 18,  8);
+  hLine(ctx, sk.shadow, 29, HY + 19,  6);
+  hLine(ctx, sk.shadow, 30, HY + 20,  4);
+
+  // ── Oval outline ──────────────────────────────────────────────────────────
+  pixel(ctx, outline, 25, HY + 7); pixel(ctx, outline, 24, HY + 8);
+  vLine(ctx, outline, 23, HY + 9, 3);
+  pixel(ctx, outline, 24, HY + 12); pixel(ctx, outline, 24, HY + 13);
+  pixel(ctx, outline, 25, HY + 14); pixel(ctx, outline, 25, HY + 15);
+  pixel(ctx, outline, 26, HY + 16); pixel(ctx, outline, 27, HY + 17);
+  pixel(ctx, outline, 28, HY + 18); pixel(ctx, outline, 29, HY + 19);
+  pixel(ctx, outline, 38, HY + 7); pixel(ctx, outline, 39, HY + 8);
+  vLine(ctx, outline, 40, HY + 9, 3);
+  pixel(ctx, outline, 39, HY + 12); pixel(ctx, outline, 39, HY + 13);
+  pixel(ctx, outline, 38, HY + 14); pixel(ctx, outline, 38, HY + 15);
+  pixel(ctx, outline, 37, HY + 16); pixel(ctx, outline, 36, HY + 17);
+  pixel(ctx, outline, 35, HY + 18); pixel(ctx, outline, 34, HY + 19);
+  hLine(ctx, outline, 30, HY + 20, 4); // chin tip
+
+  // ── Glowing demon eyes ────────────────────────────────────────────────────
+  const eyeY = HY + 9;
   fillRect(ctx, '#FF6600', 26, eyeY, 3, 2);
   fillRect(ctx, '#FF6600', 35, eyeY, 3, 2);
-  fillRect(ctx, '#FFDD00', 27, eyeY, 1, 1);
-  fillRect(ctx, '#FFDD00', 36, eyeY, 1, 1);
-  // Brow ridges (heavier than human)
-  hLine(ctx, colors.skin.shadow, 25, eyeY - 2, 5);
-  hLine(ctx, colors.skin.shadow, 34, eyeY - 2, 5);
+  pixel(ctx, '#FFDD00', 27, eyeY); pixel(ctx, '#FFDD00', 36, eyeY); // bright pupils
+  // Heavy brow ridge with shadow beneath
+  hLine(ctx, sk.shadow, 25, eyeY - 2, 5);
+  hLine(ctx, sk.shadow, 34, eyeY - 2, 5);
+  hLine(ctx, outline,   25, eyeY - 3, 5); // brow outline
+  hLine(ctx, outline,   34, eyeY - 3, 5);
 
-  // Nose
-  pixel(ctx, colors.skin.shadow, 31, headY + 13);
-  pixel(ctx, colors.skin.shadow, 31, headY + 14);
+  // ── Nose + snarl mouth ────────────────────────────────────────────────────
+  pixel(ctx, sk.shadow, 31, HY + 13); pixel(ctx, sk.shadow, 32, HY + 13);
+  pixel(ctx, sk.shadow, 30, HY + 14); pixel(ctx, sk.shadow, 33, HY + 14); // nostrils
+  hLine(ctx, outline,   29, HY + 15, 6);
+  pixel(ctx, '#FF4444', 30, HY + 16); pixel(ctx, '#FF4444', 33, HY + 16); // fangs hint
 
-  // Mouth (slight snarl)
-  hLine(ctx, colors.skin.outline || '#280000', 29, headY + 15, 6);
-  pixel(ctx, '#FF4444', 30, headY + 16);
-  pixel(ctx, '#FF4444', 33, headY + 16);
+  // ── Hair covering top of head ─────────────────────────────────────────────
+  fillRect(ctx, hair.base,      HX,     HY,     20, 6);
+  fillRect(ctx, hair.highlight, HX + 2, HY,     14, 3);
+  fillRect(ctx, hair.shadow,    HX,     HY + 4, 20, 2);
+  fillRect(ctx, hair.base,      HX,     HY,      2, 11); // left sideburn
+  fillRect(ctx, hair.base,      HX + 18,HY,      2, 11); // right sideburn
+  hLine(ctx, '#111111', HX + 1, HY,  18); // hair top outline
 
-  // Hair / head covering
-  const hair = colors.hair;
-  fillRect(ctx, hair.base, headX, headY, headW, 6);
-  fillRect(ctx, hair.highlight, headX + 2, headY, headW - 5, 3);
-  fillRect(ctx, hair.shadow, headX, headY + 4, headW, 2);
-  fillRect(ctx, hair.base, headX, headY, 2, 11);
-  fillRect(ctx, hair.base, headX + headW - 2, headY, 2, 11);
-  outlineRect(ctx, '#111111', headX, headY, headW, 6);
-
-  // Horns drawn on top of hair
-  drawHornsSouth(ctx, colors, config.hornStyle || 'curved', headY);
+  // ── Horns drawn on top of hair ────────────────────────────────────────────
+  drawHornsSouth(ctx, colors, config.hornStyle || 'curved', HY);
 }
 
 /**
