@@ -246,9 +246,9 @@
     }
     .card-btn:hover { border-color: var(--accent); color: var(--accent2); }
 
-    .card-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+    .card-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; min-height: 180px; }
 
-    .live-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+    .live-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; min-height: 148px; }
     .live-box { text-align: center; background: var(--surface); border-radius: 6px; padding: 10px; }
     .live-box span {
       display: block;
@@ -264,6 +264,7 @@
       image-rendering: crisp-edges;
       border: 1px solid var(--border);
       border-radius: 3px;
+      min-height: 64px;  /* fallback if JS canvas.height fails */
     }
 
     .card-controls {
@@ -773,8 +774,11 @@ async function loadManifest() {
         const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
         loadAndShowCard(char.name, filePath, manifest.frameWidth || 64);
       }
-      // Scroll main to top so character cards are visible after images load
-      setTimeout(() => document.getElementById('main').scrollTop = 0, 300);
+      // After all images load, ensure all cards are expanded and scroll to top
+      setTimeout(() => {
+        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('collapsed'));
+        document.getElementById('main').scrollTop = 0;
+      }, 600);
     }
     if (manifest.weapons && manifest.weapons.length) {
       loadWeaponGallery(manifest.weapons);
@@ -1197,8 +1201,11 @@ function buildCard(name, filePath, frameSize, img) {
     cvs.dataset.frameCount = anim.frameCount;
     cvs.dataset.curFrame   = 0;
     // Set correct size immediately so canvas is never the browser default 300×150
-    cvs.width  = frameSize * defaultScale;
-    cvs.height = frameSize * defaultScale;
+    const initSz = frameSize * defaultScale;
+    cvs.width  = initSz;
+    cvs.height = initSz;
+    cvs.style.width  = initSz + 'px';  // explicit inline style wins over any CSS override
+    cvs.style.height = initSz + 'px';
     const lbl = document.createElement('span');
     lbl.textContent = anim.name;
     box.appendChild(cvs);
@@ -1282,6 +1289,8 @@ function resizeCardCanvases(id) {
   st.canvases.forEach(cvs => {
     cvs.width  = sz;
     cvs.height = sz;
+    cvs.style.width  = sz + 'px';
+    cvs.style.height = sz + 'px';
   });
 }
 

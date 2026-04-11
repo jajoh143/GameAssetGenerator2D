@@ -32,7 +32,12 @@ function serveFile(res, filePath) {
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not found'); return; }
     const mime = MIME[path.extname(filePath)] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': mime });
+    const headers = { 'Content-Type': mime };
+    // Prevent browser from caching HTML/JSON so users always see the latest page
+    if (mime === 'text/html' || mime === 'application/json') {
+      headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+    }
+    res.writeHead(200, headers);
     res.end(data);
   });
 }
