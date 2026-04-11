@@ -170,6 +170,48 @@
         "pants": "pants_black",
         "shoes": "shoe_black"
       }
+    },
+    {
+      "name": "fairy_crystal",
+      "file": "../output/fairy_crystal_spritesheet.png",
+      "config": {
+        "type": "fairy",
+        "fairySkin": "peach",
+        "hair": "blonde",
+        "eyes": "blue",
+        "wingStyle": "butterfly",
+        "wingColor": "crystal",
+        "fairyDress": "petal_pink",
+        "glowColor": "golden"
+      }
+    },
+    {
+      "name": "fairy_forest",
+      "file": "../output/fairy_forest_spritesheet.png",
+      "config": {
+        "type": "fairy",
+        "fairySkin": "mint",
+        "hair": "dark_brown",
+        "eyes": "green",
+        "wingStyle": "dragonfly",
+        "wingColor": "emerald",
+        "fairyDress": "forest_green",
+        "glowColor": "emerald"
+      }
+    },
+    {
+      "name": "pixie_twilight",
+      "file": "../output/pixie_twilight_spritesheet.png",
+      "config": {
+        "type": "fairy",
+        "fairySkin": "lavender",
+        "hair": "white",
+        "eyes": "violet",
+        "wingStyle": "butterfly",
+        "wingColor": "twilight",
+        "fairyDress": "violet",
+        "glowColor": "violet"
+      }
     }
   ],
   "weapons": [
