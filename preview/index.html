@@ -137,7 +137,8 @@
     }
     input[type=text]:focus { outline: none; border-color: var(--accent); }
 
-    #demon-section { display: none; }
+    #demon-section  { display: none; }
+    #fairy-section  { display: none; }
 
     .generate-btn {
       width: 100%;
@@ -441,6 +442,7 @@
       <div class="btn-row" id="type-row">
         <button class="toggle-btn active" data-val="human">Human</button>
         <button class="toggle-btn"        data-val="demon">Demon</button>
+        <button class="toggle-btn"        data-val="fairy">Fairy</button>
       </div>
     </div>
 
@@ -497,6 +499,26 @@
       </div>
     </div>
 
+    <div id="fairy-section">
+      <div class="section-label">Fairy Skin</div>
+      <div class="swatches" id="fairy-skin-swatches"></div>
+
+      <div class="section-label" style="margin-top:14px">Wing Style</div>
+      <div class="btn-row" id="wing-style-row">
+        <button class="toggle-btn active" data-val="butterfly">Butterfly</button>
+        <button class="toggle-btn"        data-val="dragonfly">Dragonfly</button>
+      </div>
+
+      <div class="section-label" style="margin-top:14px">Wing Color</div>
+      <div class="swatches" id="wing-color-swatches"></div>
+
+      <div class="section-label" style="margin-top:14px">Dress</div>
+      <select id="fairy-dress-select"></select>
+
+      <div class="section-label" style="margin-top:14px">Glow Color</div>
+      <div class="swatches" id="glow-color-swatches"></div>
+    </div>
+
     <div>
       <div class="section-label">Sprite Size</div>
       <div class="btn-row" id="size-row">
@@ -540,6 +562,7 @@ const state = {
   type: 'human', skin: null, hair: null, hairStyle: 'short',
   clothing: null, pants: null, shoes: null,
   demonSkin: null, hornStyle: 'curved', tailStyle: 'long',
+  fairySkin: null, wingStyle: 'butterfly', wingColor: null, fairyDress: null, glowColor: null,
   frameSize: 64, name: '',
 };
 
@@ -828,6 +851,11 @@ function populateSidebar() {
   buildSelect('clothing-select', options.clothing, 'clothing');
   buildSelect('pants-select',    options.pants,    'pants');
   buildSelect('shoes-select',    options.shoes,    'shoes');
+  // Fairy controls
+  if (options.fairySkins)  buildSwatches('fairy-skin-swatches',  options.fairySkins,  'fairySkin');
+  if (options.wingColors)  buildSwatches('wing-color-swatches',  options.wingColors,  'wingColor');
+  if (options.glowColors)  buildSwatches('glow-color-swatches',  options.glowColors,  'glowColor');
+  if (options.fairyDresses) buildSelect('fairy-dress-select', Object.keys(options.fairyDresses), 'fairyDress');
   buildPresets();
 
   const d = options.defaults;
@@ -837,6 +865,11 @@ function populateSidebar() {
   setSelectVal('clothing-select', d.clothing); state.clothing = d.clothing;
   setSelectVal('pants-select',    d.pants);    state.pants    = d.pants;
   setSelectVal('shoes-select',    d.shoes);    state.shoes    = d.shoes;
+  // Fairy defaults
+  if (d.fairySkin)  { activateSwatch('fairy-skin-swatches', d.fairySkin, 'fairySkin'); }
+  if (d.wingColor)  { activateSwatch('wing-color-swatches', d.wingColor, 'wingColor'); }
+  if (d.glowColor)  { activateSwatch('glow-color-swatches', d.glowColor, 'glowColor'); }
+  if (d.fairyDress) { setSelectVal('fairy-dress-select', d.fairyDress); state.fairyDress = d.fairyDress; }
 }
 
 function buildSwatches(containerId, palette, stateKey) {
@@ -902,6 +935,12 @@ function applyConfig(cfg) {
   if (cfg.demonSkin) activateSwatch('demon-skin-swatches', cfg.demonSkin, 'demonSkin');
   if (cfg.hornStyle) activateToggle('horn-row',  cfg.hornStyle, 'hornStyle');
   if (cfg.tailStyle) activateToggle('tail-row',  cfg.tailStyle, 'tailStyle');
+  // Fairy fields
+  if (cfg.fairySkin) activateSwatch('fairy-skin-swatches', cfg.fairySkin, 'fairySkin');
+  if (cfg.wingStyle) activateToggle('wing-style-row', cfg.wingStyle, 'wingStyle');
+  if (cfg.wingColor) activateSwatch('wing-color-swatches', cfg.wingColor, 'wingColor');
+  if (cfg.fairyDress){ state.fairyDress = cfg.fairyDress; setSelectVal('fairy-dress-select', cfg.fairyDress); }
+  if (cfg.glowColor) activateSwatch('glow-color-swatches', cfg.glowColor, 'glowColor');
 }
 
 // ── Toggle rows ────────────────────────────────────────────────────────────
@@ -925,12 +964,21 @@ function setType(val) {
   activateToggle('type-row', val, 'type');
   document.getElementById('demon-section').style.display      = val === 'demon' ? '' : 'none';
   document.getElementById('human-skin-section').style.display = val === 'human' ? '' : 'none';
+  document.getElementById('fairy-section').style.display      = val === 'fairy' ? '' : 'none';
+  // Hair + human clothing controls hidden for fairy (fairy uses dress instead)
+  const hideHumanGear = val === 'fairy';
+  ['clothing-select', 'pants-select', 'shoes-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.closest('div').style.display = hideHumanGear ? 'none' : '';
+  });
+  document.getElementById('hair-style-row').closest('div').style.display = hideHumanGear ? 'none' : '';
 }
 
 wireToggleRow('type-row',       'type',      setType);
 wireToggleRow('hair-style-row', 'hairStyle', null);
 wireToggleRow('horn-row',       'hornStyle', null);
 wireToggleRow('tail-row',       'tailStyle', null);
+wireToggleRow('wing-style-row', 'wingStyle', null);
 wireToggleRow('size-row',       'frameSize', null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
@@ -981,17 +1029,28 @@ async function generate() {
 }
 
 function buildConfig() {
-  const cfg = {
-    type: state.type,
-    hair: state.hair, hairStyle: state.hairStyle,
-    clothing: state.clothing, pants: state.pants, shoes: state.shoes,
-  };
+  const cfg = { type: state.type, hair: state.hair };
   if (state.type === 'human') {
-    cfg.skin = state.skin;
-  } else {
+    cfg.skin      = state.skin;
+    cfg.hairStyle = state.hairStyle;
+    cfg.clothing  = state.clothing;
+    cfg.pants     = state.pants;
+    cfg.shoes     = state.shoes;
+  } else if (state.type === 'demon') {
+    cfg.hairStyle = state.hairStyle;
+    cfg.clothing  = state.clothing;
+    cfg.pants     = state.pants;
+    cfg.shoes     = state.shoes;
     cfg.demonSkin = state.demonSkin;
     cfg.hornStyle = state.hornStyle;
     cfg.tailStyle = state.tailStyle;
+  } else if (state.type === 'fairy') {
+    cfg.eyes      = state.eyes;
+    cfg.fairySkin = state.fairySkin;
+    cfg.wingStyle = state.wingStyle;
+    cfg.wingColor = state.wingColor;
+    cfg.fairyDress = state.fairyDress;
+    cfg.glowColor = state.glowColor;
   }
   return cfg;
 }
@@ -1102,7 +1161,7 @@ function buildCard(name, filePath, frameSize, img) {
     <label>Bg:
       <select class="bg-sel">
         <option value="transparent">Transparent</option>
-        <option value="#1a1a2e">Dark</option>
+        <option value="#1a1a2e" selected>Dark</option>
         <option value="#ffffff">White</option>
         <option value="#3a7d44">Green</option>
       </select>
@@ -1125,7 +1184,7 @@ function buildCard(name, filePath, frameSize, img) {
   liveRow.className = 'live-row';
 
   const defaultScale = window.innerWidth < 768 ? 1 : 2;
-  const animState = { fps: 8, scale: defaultScale, bg: 'transparent', frameSize, img, timers: [], canvases: [], showWeapon: false };
+  const animState = { fps: 8, scale: defaultScale, bg: '#1a1a2e', frameSize, img, timers: [], canvases: [], showWeapon: false };
   liveAnimations[id] = animState;
 
   [0, 1, 2, 5, 9].forEach(rowIdx => { // idle, walk_south, walk_west, attack_swing_south, attack_shoot_south
@@ -1137,6 +1196,9 @@ function buildCard(name, filePath, frameSize, img) {
     cvs.dataset.rowIdx     = rowIdx;
     cvs.dataset.frameCount = anim.frameCount;
     cvs.dataset.curFrame   = 0;
+    // Set correct size immediately so canvas is never the browser default 300×150
+    cvs.width  = frameSize * defaultScale;
+    cvs.height = frameSize * defaultScale;
     const lbl = document.createElement('span');
     lbl.textContent = anim.name;
     box.appendChild(cvs);
@@ -1235,6 +1297,11 @@ function restartCardTimer(id) {
     const ri = +cvs.dataset.rowIdx;
     if (!groups[ri]) groups[ri] = { canvases: [], frame: 0, frameCount: +cvs.dataset.frameCount };
     groups[ri].canvases.push(cvs);
+  });
+
+  // Draw first frame immediately so sprites are visible before the first interval tick
+  Object.values(groups).forEach(g => {
+    g.canvases.forEach(cvs => drawFrame(cvs, st.img, +cvs.dataset.rowIdx, g.frame, st.frameSize, st.bg, st.showWeapon));
   });
 
   const tid = setInterval(() => {

@@ -10,6 +10,7 @@ const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
   SKIN_TONES, HAIR_COLORS, CLOTHING, PANTS, SHOES, DEMON_SKIN,
+  FAIRY_SKIN, FAIRY_WING, FAIRY_DRESS, FAIRY_GLOW,
 } = require('./core/Colors');
 
 const PORT        = 3000;
@@ -68,6 +69,12 @@ function handleOptions(res) {
     demonSkins:  paletteMap(DEMON_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
+    // Fairy options
+    fairySkins:  paletteMap(FAIRY_SKIN),
+    wingStyles:  ['butterfly', 'dragonfly'],
+    wingColors:  Object.fromEntries(Object.entries(FAIRY_WING).map(([k, v]) => [k, v.outer])),
+    fairyDresses: Object.fromEntries(Object.entries(FAIRY_DRESS).map(([k, v]) => [k, v.base])),
+    glowColors:  Object.fromEntries(Object.entries(FAIRY_GLOW).map(([k, v]) => [k, v.bright])),
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
     frameSizes:  [64, 96, 128],

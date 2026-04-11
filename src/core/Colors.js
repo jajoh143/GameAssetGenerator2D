@@ -324,22 +324,39 @@ const SHOES = {
 // Demon-specific skin tones
 const DEMON_SKIN = {
   crimson: {
-    highlight: '#E84040',
-    base:      '#A01818',
-    shadow:    '#600808',
-    outline:   '#280000',
+    highlight:   '#E84040',
+    base:        '#A01818',
+    shadow:      '#600808',
+    deep_shadow: '#350202',
+    outline:     '#280000',
   },
   dark_red: {
-    highlight: '#A02828',
-    base:      '#681010',
-    shadow:    '#380404',
-    outline:   '#180000',
+    highlight:   '#A02828',
+    base:        '#681010',
+    shadow:      '#380404',
+    deep_shadow: '#1C0000',
+    outline:     '#180000',
   },
   purple: {
-    highlight: '#9848B8',
-    base:      '#602880',
-    shadow:    '#300848',
-    outline:   '#100018',
+    highlight:   '#9848B8',
+    base:        '#602880',
+    shadow:      '#300848',
+    deep_shadow: '#180020',
+    outline:     '#100018',
+  },
+  obsidian: {
+    highlight:   '#504858',
+    base:        '#281828',
+    shadow:      '#100C10',
+    deep_shadow: '#060408',
+    outline:     '#020004',
+  },
+  toxic_green: {
+    highlight:   '#70D848',
+    base:        '#388018',
+    shadow:      '#184408',
+    deep_shadow: '#0A2002',
+    outline:     '#041000',
   },
 };
 
@@ -415,6 +432,130 @@ const EYE_COLORS = {
 // Shadow ellipse under character
 const GROUND_SHADOW = 'rgba(0,0,0,0.25)';
 
+// ─── Fairy / Pixie palettes ────────────────────────────────────────────────
+
+// Fairy skin tones — pastels with warm highlights
+const FAIRY_SKIN = {
+  peach: {
+    highlight: '#FFE8D8',
+    base:      '#F0C8A8',
+    shadow:    '#C89070',
+    outline:   '#6A3820',
+  },
+  lavender: {
+    highlight: '#E8D8FF',
+    base:      '#C0A0E8',
+    shadow:    '#8060B0',
+    outline:   '#381848',
+  },
+  mint: {
+    highlight: '#C8F8E8',
+    base:      '#90D8B8',
+    shadow:    '#50A880',
+    outline:   '#184830',
+  },
+  rose: {
+    highlight: '#FFD8D8',
+    base:      '#F0A8A8',
+    shadow:    '#C06868',
+    outline:   '#5A1818',
+  },
+  azure: {
+    highlight: '#D0ECFF',
+    base:      '#90C8F0',
+    shadow:    '#4888C0',
+    outline:   '#103858',
+  },
+};
+
+// Fairy wing color palettes — iridescent multi-tone
+const FAIRY_WING = {
+  crystal: {
+    outer:     '#C8F0FF',   // edge — pale sky blue
+    inner:     '#90D8F0',   // inner fill — deeper cyan
+    vein:      '#60A8D0',   // vein lines
+    shimmer:   '#FFFFFF',   // highlight glint
+    outline:   '#3080A8',
+  },
+  rose_gold: {
+    outer:     '#FFD8E8',
+    inner:     '#F0A8C0',
+    vein:      '#C07890',
+    shimmer:   '#FFFFFF',
+    outline:   '#804060',
+  },
+  emerald: {
+    outer:     '#C0F0C8',
+    inner:     '#80D090',
+    vein:      '#40A058',
+    shimmer:   '#DAFFDC',
+    outline:   '#205830',
+  },
+  twilight: {
+    outer:     '#D8C0FF',
+    inner:     '#A870E8',
+    vein:      '#7040B0',
+    shimmer:   '#F0E0FF',
+    outline:   '#300868',
+  },
+  amber: {
+    outer:     '#FFE8A0',
+    inner:     '#F0C040',
+    vein:      '#C08020',
+    shimmer:   '#FFFFF0',
+    outline:   '#604000',
+  },
+};
+
+// Fairy dress / clothing colors
+const FAIRY_DRESS = {
+  lily_white: {
+    highlight: '#FFFFFF',
+    base:      '#F0ECE0',
+    shadow:    '#C0B8A0',
+    outline:   '#605840',
+  },
+  petal_pink: {
+    highlight: '#FFD8E8',
+    base:      '#E89EB8',
+    shadow:    '#A86080',
+    outline:   '#481828',
+  },
+  forest_green: {
+    highlight: '#90D880',
+    base:      '#508840',
+    shadow:    '#285020',
+    outline:   '#0C2008',
+  },
+  sky_blue: {
+    highlight: '#B8E0FF',
+    base:      '#70A8E0',
+    shadow:    '#2870B0',
+    outline:   '#083858',
+  },
+  violet: {
+    highlight: '#D0A8FF',
+    base:      '#9060C8',
+    shadow:    '#482878',
+    outline:   '#180828',
+  },
+  moonbeam: {
+    highlight: '#FFFFFF',
+    base:      '#D8D0F0',
+    shadow:    '#9090C0',
+    outline:   '#303060',
+  },
+};
+
+// Fairy glow / aura color (used for sparkle and ambient halo)
+const FAIRY_GLOW = {
+  golden:  { bright: '#FFEE88', mid: '#FFD020', soft: '#C09808' },
+  silver:  { bright: '#FFFFFF', mid: '#D8E8FF', soft: '#90A8D0' },
+  rose:    { bright: '#FFD8E8', mid: '#FF90B0', soft: '#C05878' },
+  emerald: { bright: '#C8FFD0', mid: '#40E060', soft: '#208040' },
+  violet:  { bright: '#F0D8FF', mid: '#C070FF', soft: '#7030B8' },
+};
+
 module.exports = {
   SKIN_TONES,
   HAIR_COLORS,
@@ -426,4 +567,8 @@ module.exports = {
   DEMON_PARTS,
   BELT,
   GROUND_SHADOW,
+  FAIRY_SKIN,
+  FAIRY_WING,
+  FAIRY_DRESS,
+  FAIRY_GLOW,
 };

@@ -5,6 +5,7 @@ const { ROWS, buildSpritesheet, saveSpritesheet } = require('../core/Spritesheet
 const { ANIMATION_ROWS, getFrames, getDirection } = require('../animations/Animator');
 const { generateFrame: generateHumanFrame } = require('../characters/HumanCharacter');
 const { generateFrame: generateDemonFrame } = require('../characters/DemonCharacter');
+const { generateFrame: generateFairyFrame } = require('../characters/FairyCharacter');
 const { resolveConfig } = require('../characters/CharacterConfig');
 const { buildMeta, saveMeta } = require('../core/MetaExport');
 
@@ -18,7 +19,10 @@ const { buildMeta, saveMeta } = require('../core/MetaExport');
  */
 function generateSpritesheet(rawConfig, outputPath, frameSize = 64) {
   const config = resolveConfig(rawConfig);
-  const generateFrame = config.type === 'demon' ? generateDemonFrame : generateHumanFrame;
+  const generateFrame =
+    config.type === 'demon' ? generateDemonFrame :
+    config.type === 'fairy' ? generateFairyFrame :
+    generateHumanFrame;
 
   const rowFrames = ANIMATION_ROWS.map((animName) => {
     const offsets = getFrames(animName);
@@ -42,7 +46,10 @@ function generateSpritesheet(rawConfig, outputPath, frameSize = 64) {
  */
 function generateSpritesheetCanvas(rawConfig, frameSize = 64) {
   const config = resolveConfig(rawConfig);
-  const generateFrame = config.type === 'demon' ? generateDemonFrame : generateHumanFrame;
+  const generateFrame =
+    config.type === 'demon' ? generateDemonFrame :
+    config.type === 'fairy' ? generateFairyFrame :
+    generateHumanFrame;
 
   const rowFrames = ANIMATION_ROWS.map((animName) => {
     const offsets = getFrames(animName);

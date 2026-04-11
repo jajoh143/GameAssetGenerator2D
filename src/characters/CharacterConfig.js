@@ -5,7 +5,7 @@
  * All fields are optional - missing ones will use these defaults.
  */
 const DEFAULT_CONFIG = {
-  type:       'human',      // 'human' | 'demon'
+  type:       'human',      // 'human' | 'demon' | 'fairy'
   skin:       'medium',     // skin tone key from Colors.SKIN_TONES
   hair:       'black',      // hair color key from Colors.HAIR_COLORS
   hairStyle:  'short',      // 'short' | 'medium' | 'long'
@@ -18,6 +18,13 @@ const DEFAULT_CONFIG = {
   demonSkin:  'crimson',    // key from Colors.DEMON_SKIN (overrides skin for demon)
   hornStyle:  'curved',     // 'curved' | 'straight' | 'ram'
   tailStyle:  'long',       // 'long' | 'medium' | 'short'
+
+  // Fairy-only
+  fairySkin:  'peach',      // key from Colors.FAIRY_SKIN
+  wingStyle:  'butterfly',  // 'butterfly' | 'dragonfly'
+  wingColor:  'crystal',    // key from Colors.FAIRY_WING
+  fairyDress: 'petal_pink', // key from Colors.FAIRY_DRESS
+  glowColor:  'golden',     // key from Colors.FAIRY_GLOW
 };
 
 /**
@@ -104,6 +111,36 @@ const PRESETS = {
     clothing:   'bomber_olive',
     pants:      'pants_black',
     shoes:      'shoe_black',
+  },
+  fairy_crystal: {
+    type:       'fairy',
+    fairySkin:  'peach',
+    hair:       'blonde',
+    eyes:       'blue',
+    wingStyle:  'butterfly',
+    wingColor:  'crystal',
+    fairyDress: 'petal_pink',
+    glowColor:  'golden',
+  },
+  fairy_forest: {
+    type:       'fairy',
+    fairySkin:  'mint',
+    hair:       'dark_brown',
+    eyes:       'green',
+    wingStyle:  'dragonfly',
+    wingColor:  'emerald',
+    fairyDress: 'forest_green',
+    glowColor:  'emerald',
+  },
+  pixie_twilight: {
+    type:       'fairy',
+    fairySkin:  'lavender',
+    hair:       'white',
+    eyes:       'violet',
+    wingStyle:  'butterfly',
+    wingColor:  'twilight',
+    fairyDress: 'violet',
+    glowColor:  'violet',
   },
 };
 

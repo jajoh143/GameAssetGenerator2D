@@ -6,6 +6,51 @@ const { drawGroundShadow, drawShoe, drawLeg, drawBelt, drawTorso, drawArm, drawN
 const { drawSouth: humanSouth, drawNorth: humanNorth, drawWest: humanWest, drawEast: humanEast, resolveColors: humanColors } = require('./HumanCharacter');
 const { resolveConfig } = require('./CharacterConfig');
 
+// Draw a dark aura around the character — 1-pixel deep_shadow halo at key silhouette points
+function drawDarkAura(ctx, by) {
+  const auraColor = 'rgba(40,0,60,0.55)';
+  // Silhouette outer ring: encircles head + body + extremity tips
+  // Head halo (rows 3-26, x=20-43)
+  hLine(ctx, auraColor, 21, 3 + by, 22);           // top of head
+  for (let y = 4; y <= 26; y++) {
+    pixel(ctx, auraColor, 20, y + by);
+    pixel(ctx, auraColor, 43, y + by);
+  }
+  // Horn gaps: skip horn rows to avoid covering detail
+  // Body sides (rows 27-52)
+  for (let y = 27; y <= 52; y++) {
+    pixel(ctx, auraColor, 19, y + by);
+    pixel(ctx, auraColor, 44, y + by);
+  }
+  // Foot halo
+  hLine(ctx, auraColor, 20, 63 + by, 12);
+  hLine(ctx, auraColor, 32, 63 + by, 12);
+}
+
+// Draw claw tips at the end of each arm hand area
+function drawClaws(ctx, skinColors, armLY, armRY) {
+  const claw = DEMON_PARTS.claw;
+  // Left hand claws — three small downward-pointing spikes (each 1×2)
+  const lhx = 20, lhy = armLY;
+  pixel(ctx, claw.base,    lhx,     lhy + 3);
+  pixel(ctx, claw.shadow,  lhx,     lhy + 4);
+  pixel(ctx, claw.base,    lhx + 2, lhy + 3);
+  pixel(ctx, claw.shadow,  lhx + 2, lhy + 4);
+  pixel(ctx, claw.base,    lhx + 4, lhy + 3);
+  pixel(ctx, claw.shadow,  lhx + 4, lhy + 4);
+  pixel(ctx, claw.highlight, lhx + 1, lhy + 3);
+
+  // Right hand claws — mirror about x=32
+  const rhx = 39, rhy = armRY;
+  pixel(ctx, claw.base,    rhx,     rhy + 3);
+  pixel(ctx, claw.shadow,  rhx,     rhy + 4);
+  pixel(ctx, claw.base,    rhx + 2, rhy + 3);
+  pixel(ctx, claw.shadow,  rhx + 2, rhy + 4);
+  pixel(ctx, claw.base,    rhx + 4, rhy + 3);
+  pixel(ctx, claw.shadow,  rhx + 4, rhy + 4);
+  pixel(ctx, claw.highlight, rhx + 3, rhy + 3);
+}
+
 const FRAME_W = 64;
 const FRAME_H = 64;
 
@@ -295,12 +340,32 @@ function drawDemonHeadSouth(ctx, colors, config) {
 
   // ── Glowing demon eyes ────────────────────────────────────────────────────
   const eyeY = HY + 9;
+  // Outer glow halo: 1 row above + below, 1 col left + right of each eye block
+  const glowHalo = 'rgba(255,100,0,0.45)';
+  hLine(ctx, glowHalo, 25, eyeY - 1, 5);   // left eye top halo
+  hLine(ctx, glowHalo, 25, eyeY + 2, 5);   // left eye bottom halo
+  pixel(ctx, glowHalo, 25, eyeY);
+  pixel(ctx, glowHalo, 25, eyeY + 1);
+  pixel(ctx, glowHalo, 29, eyeY);
+  pixel(ctx, glowHalo, 29, eyeY + 1);
+  hLine(ctx, glowHalo, 34, eyeY - 1, 5);   // right eye top halo
+  hLine(ctx, glowHalo, 34, eyeY + 2, 5);   // right eye bottom halo
+  pixel(ctx, glowHalo, 34, eyeY);
+  pixel(ctx, glowHalo, 34, eyeY + 1);
+  pixel(ctx, glowHalo, 38, eyeY);
+  pixel(ctx, glowHalo, 38, eyeY + 1);
+  // Eye fill (on top of halo)
   fillRect(ctx, '#FF6600', 26, eyeY, 3, 2);
   fillRect(ctx, '#FF6600', 35, eyeY, 3, 2);
   pixel(ctx, '#FFDD00', 27, eyeY); pixel(ctx, '#FFDD00', 36, eyeY); // bright pupils
+  pixel(ctx, '#FFFFFF', 26, eyeY); pixel(ctx, '#FFFFFF', 35, eyeY); // specular glint
   // Heavy brow ridge with shadow beneath
   hLine(ctx, sk.shadow, 25, eyeY - 2, 5);
   hLine(ctx, sk.shadow, 34, eyeY - 2, 5);
+  // Deep shadow under brow for extra menace
+  const deepShadow = sk.deep_shadow || sk.shadow;
+  hLine(ctx, deepShadow, 25, eyeY - 1, 5);
+  hLine(ctx, deepShadow, 34, eyeY - 1, 5);
   hLine(ctx, outline,   25, eyeY - 3, 5); // brow outline
   hLine(ctx, outline,   34, eyeY - 3, 5);
 
@@ -337,8 +402,15 @@ function generateFrame(rawConfig, animationName, frameOffset) {
 
   switch (direction) {
     case 'south': {
+      // Dark aura drawn first (behind everything)
+      drawDarkAura(ctx, by);
       // Draw human body with demon skin and head
       humanSouth(ctx, config, off);
+      // Claws over arm area
+      const lArmDY = Math.round((off.leftArmFwd  || 0) * 0.4);
+      const rArmDY = Math.round((off.rightArmFwd || 0) * 0.4);
+      const armBaseY = 26 + by;
+      drawClaws(ctx, colors.skin, armBaseY + lArmDY + 10, armBaseY + rArmDY + 10);
       // Re-draw head with demon features
       ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 24 : 24); // clear head area
       ctx.save();
@@ -350,12 +422,14 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       break;
     }
     case 'north': {
+      drawDarkAura(ctx, by);
       humanNorth(ctx, config, off);
       // Tail still visible from behind
       drawTailSouth(ctx, colors, config.tailStyle || 'long', 42 + by);
       break;
     }
     case 'west': {
+      drawDarkAura(ctx, by);
       humanWest(ctx, config, off);
       // Side horn (one visible)
       ctx.save();
