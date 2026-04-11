@@ -64,11 +64,12 @@ function drawSouth(ctx, config, offsets) {
   // --- Ground shadow ---
   drawGroundShadow(ctx, 32, 62 + bodyY);
 
-  // Layout constants (measured from bottom)
+  // Layout constants (measured from bottom).
+  // legH=17 (was 13) for more realistic proportions; head moved up 4px in BaseCharacter (HY 5→1).
   const shoeH  = 4;
-  const legH   = 13;
+  const legH   = 17;
   const beltH  = 2;
-  const torsoH = 17;  // reduced 2px; head grew 3px, neck shrunk 1px → net +0 total
+  const torsoH = 17;
   const neckH  = 2;
 
   const shoeY  = base - shoeH;
@@ -105,8 +106,8 @@ function drawSouth(ctx, config, offsets) {
   drawBeltSouth(ctx, colors.belt, 24, beltY);
   // Torso (18px wide, x=23-40) — narrower body matches reference proportions
   drawTorsoSouth(ctx, config.clothing, colors.clothing, 23, torsoY, 18, torsoH);
-  // Arms (drawn over torso edges)
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut);
+  // Arms (drawn over torso edges) — pass torsoY so shoulder anchor follows body
+  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck
   drawNeckSouth(ctx, colors.skin, neckY);
   // Head
@@ -133,7 +134,7 @@ function drawNorth(ctx, config, offsets) {
   const base = 64 + bodyY;
 
   const shoeH  = 4;
-  const legH   = 13;
+  const legH   = 17;
   const beltH  = 2;
   const torsoH = 17;
   const neckH  = 2;
@@ -201,7 +202,7 @@ function drawNorth(ctx, config, offsets) {
     hLine(ctx, colors.clothing.outline, bBotL, by + bN - 1, bBotR - bBotL + 1);
   }
 
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut);
+  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   drawNeckSouth(ctx, colors.skin, neckY);
 
   ctx.save();
@@ -227,7 +228,7 @@ function drawWest(ctx, config, offsets) {
   const base = 64 + bodyY;
 
   const shoeH  = 4;
-  const legH   = 13;
+  const legH   = 17;
   const beltH  = 2;
   const torsoH = 16;
 

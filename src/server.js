@@ -62,7 +62,7 @@ function handleOptions(res) {
   json(res, 200, {
     skinTones:   paletteMap(SKIN_TONES),
     hairColors:  paletteMap(HAIR_COLORS),
-    hairStyles:  ['short', 'medium', 'long'],
+    hairStyles:  ['short', 'medium', 'long', 'curly', 'undercut'],
     clothing:    Object.keys(CLOTHING),
     pants:       Object.keys(PANTS),
     shoes:       Object.keys(SHOES),

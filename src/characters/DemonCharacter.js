@@ -407,25 +407,27 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       // Draw human body with demon skin and head
       humanSouth(ctx, config, off);
       // Claws over arm area
+      // armBaseY: new torsoY = 24 (legH=17), so anchor = torsoY - 2 = 22
       const lArmDY = Math.round((off.leftArmFwd  || 0) * 0.4);
       const rArmDY = Math.round((off.rightArmFwd || 0) * 0.4);
-      const armBaseY = 26 + by;
+      const armBaseY = 22 + by;
       drawClaws(ctx, colors.skin, armBaseY + lArmDY + 10, armBaseY + rArmDY + 10);
       // Re-draw head with demon features
-      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 24 : 24); // clear head area
+      // Human head now at HY=1 (y=1-21), clear y=0-21 to make room for demon head at HY=5
+      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 22 : 22);
       ctx.save();
       ctx.translate(0, by + (off.headBob || 0));
       drawDemonHeadSouth(ctx, colors, config);
       ctx.restore();
-      // Draw tail on top of belt area
-      drawTailSouth(ctx, colors, config.tailStyle || 'long', 42 + by);
+      // Draw tail on top of belt area (new beltY=41 with legH=17, tail root 3px above = 38)
+      drawTailSouth(ctx, colors, config.tailStyle || 'long', 38 + by);
       break;
     }
     case 'north': {
       drawDarkAura(ctx, by);
       humanNorth(ctx, config, off);
-      // Tail still visible from behind
-      drawTailSouth(ctx, colors, config.tailStyle || 'long', 42 + by);
+      // Tail still visible from behind (new tail Y: 38)
+      drawTailSouth(ctx, colors, config.tailStyle || 'long', 38 + by);
       break;
     }
     case 'west': {
@@ -434,8 +436,8 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       // Side horn (one visible)
       ctx.save();
       ctx.translate(0, by + (off.headBob || 0));
-      // Single horn in profile at top-left of head
-      const hornY = 4 - 5;
+      // Single horn in profile at top of head (new HY=1, horn at y=0)
+      const hornY = 0;
       fillRect(ctx, colors.horn.base, 27, hornY, 3, 6);
       fillRect(ctx, colors.horn.base, 25, hornY - 3, 3, 4);
       outlineRect(ctx, colors.horn.outline, 25, hornY - 3, 5, 9);
@@ -467,7 +469,7 @@ function generateFrameDirect(ctx, config, colors, off, direction) {
   humanWest(ctx, config, off);
   ctx.save();
   ctx.translate(0, by + (off.headBob || 0));
-  const hornY = 4 - 5;
+  const hornY = 0;
   fillRect(ctx, colors.horn.base, 27, hornY, 3, 6);
   fillRect(ctx, colors.horn.base, 25, hornY - 3, 3, 4);
   outlineRect(ctx, colors.horn.outline, 25, hornY - 3, 5, 9);

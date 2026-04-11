@@ -235,6 +235,41 @@ const CLOTHING = {
     outline:   '#020410',
     collar:    '#243080',
   },
+  coat_tan: {
+    highlight: '#D4B068',
+    base:      '#A07830',
+    shadow:    '#6A4818',
+    outline:   '#2A1808',
+    collar:    '#B88840',
+  },
+  coat_brown: {
+    highlight: '#9A6030',
+    base:      '#6A3C18',
+    shadow:    '#3A1C08',
+    outline:   '#180C00',
+    collar:    '#7A4820',
+  },
+  coat_grey: {
+    highlight: '#C8C0B0',
+    base:      '#807870',
+    shadow:    '#484038',
+    outline:   '#181410',
+    collar:    '#908880',
+  },
+  coat_navy: {
+    highlight: '#5878B0',
+    base:      '#203070',
+    shadow:    '#101838',
+    outline:   '#080C1C',
+    collar:    '#304090',
+  },
+  coat_olive: {
+    highlight: '#A0A040',
+    base:      '#686820',
+    shadow:    '#383808',
+    outline:   '#181800',
+    collar:    '#787830',
+  },
 };
 
 const PANTS = {
