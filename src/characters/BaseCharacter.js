@@ -210,23 +210,31 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   px(ctx, hairColors.shadow, headX + headW - 1, headY);   // right corner shadow
 
   // Highlight curve: suggests hair parted upper-left, catching light
-  // Row 1: wide highlight arc (12px, centered left of part)
+  // Row 1: wide highlight arc, bright left-of-part zone
   hLine(ctx, hairColors.highlight, headX + 2, headY + 1, headW - 6);
-  // Row 2: narrower (hair curves away from light toward right)
-  hLine(ctx, hairColors.highlight, headX + 2, headY + 2, headW - 8);
+  // Brightest pixel at the "part" — single-pixel accent
+  px(ctx, hairColors.highlight, headX + 2, headY + 0);
+  // Row 2: narrower, shifts right 1px (dome curves away from viewer)
+  hLine(ctx, hairColors.highlight, headX + 3, headY + 2, headW - 9);
 
-  // Strand texture: alternating shadow pixels on rows 3-4 (hair depth)
-  // Odd columns = shadow dither suggesting individual hair strands
+  // Strand texture: staggered pairs to suggest flow direction (left-to-right diagonal)
+  // Row 3: shadow at every 3rd pixel starting at dx=1
   for (let dx = 1; dx < headW - 1; dx += 3) {
     px(ctx, hairColors.shadow, headX + dx, headY + 3);
   }
-  for (let dx = 2; dx < headW - 1; dx += 3) {
+  // Bright accent at the crown of the highlight (between first two shadow dots)
+  px(ctx, hairColors.highlight, headX + 2, headY + 3);
+  // Row 4: shadow shifted +2 from row 3 to create diagonal feel
+  for (let dx = 3; dx < headW - 1; dx += 3) {
     px(ctx, hairColors.shadow, headX + dx, headY + 4);
   }
 
-  // Dark hairline: bottom 2 rows of hair band are shadow — hair meets face
-  hLine(ctx, hairColors.shadow, headX, headY + 5, headW);
-  hLine(ctx, hairColors.shadow, headX, headY + 6, headW);
+  // Hairline arch: sides are darker (shadow) than the center (base) —
+  // mimics a natural M-shaped hairline rather than a flat dark bar.
+  hLine(ctx, hairColors.shadow, headX,          headY + 5, 5);             // left dark
+  hLine(ctx, hairColors.base,   headX + 5,      headY + 5, headW - 10);    // center lighter
+  hLine(ctx, hairColors.shadow, headX + headW - 5, headY + 5, 5);          // right dark
+  hLine(ctx, hairColors.shadow, headX,          headY + 6, headW);         // full shadow at boundary
 
   // Hair-to-skin bleed: where sideburns meet the face, add 1px shadow pixels
   // at the inner sideburn edge on the skin side — softens the color jump
@@ -243,40 +251,50 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
   const sideburnMedEnd   = headY + 21;  // reaches below chin into neck
   const sideburnLongEnd  = headY + 26;  // drapes over shoulder
 
-  // Always draw base sideburns (short length)
-  vLine(ctx, hairColors.base, headX,     headY, sideburnShortEnd - headY);
-  vLine(ctx, hairColors.base, headX + 1, headY, sideburnShortEnd - headY);
-  vLine(ctx, hairColors.base, headX + headW - 2, headY, sideburnShortEnd - headY);
-  vLine(ctx, hairColors.base, headX + headW - 1, headY, sideburnShortEnd - headY);
+  // Sideburns: 3px wide (outer 2px = base, inner 1px = shadow for smooth skin transition)
+  // The shadow inner column replaces the old separate "bleed" pixels — consistent all the way down.
+  // Left sideburn
+  vLine(ctx, hairColors.base,   headX,         headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.base,   headX + 1,     headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.shadow, headX + 2,     headY, sideburnShortEnd - headY);
+  // Right sideburn
+  vLine(ctx, hairColors.shadow, headX + headW - 3, headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.base,   headX + headW - 2, headY, sideburnShortEnd - headY);
+  vLine(ctx, hairColors.base,   headX + headW - 1, headY, sideburnShortEnd - headY);
 
   if (hairStyle === 'medium') {
-    vLine(ctx, hairColors.base, headX,             sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
-    vLine(ctx, hairColors.base, headX + 1,         sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
-    vLine(ctx, hairColors.base, headX + headW - 2, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
-    vLine(ctx, hairColors.base, headX + headW - 1, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX,             sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX + 1,         sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.shadow, headX + 2,         sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.shadow, headX + headW - 3, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX + headW - 2, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX + headW - 1, sideburnShortEnd, sideburnMedEnd - sideburnShortEnd);
+    // Tip: last 2 rows fade to shadow (softens the cut-off)
+    px(ctx, hairColors.shadow, headX,             sideburnMedEnd - 2);
+    px(ctx, hairColors.shadow, headX + 1,         sideburnMedEnd - 2);
+    px(ctx, hairColors.shadow, headX + headW - 2, sideburnMedEnd - 2);
+    px(ctx, hairColors.shadow, headX + headW - 1, sideburnMedEnd - 2);
+    px(ctx, hairColors.shadow, headX,             sideburnMedEnd - 1);
+    px(ctx, hairColors.shadow, headX + 1,         sideburnMedEnd - 1);
+    px(ctx, hairColors.shadow, headX + headW - 2, sideburnMedEnd - 1);
+    px(ctx, hairColors.shadow, headX + headW - 1, sideburnMedEnd - 1);
   } else if (hairStyle === 'long') {
-    vLine(ctx, hairColors.base, headX,             sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
-    vLine(ctx, hairColors.base, headX + 1,         sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
-    vLine(ctx, hairColors.base, headX + headW - 2, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
-    vLine(ctx, hairColors.base, headX + headW - 1, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX,             sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX + 1,         sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.shadow, headX + 2,         sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.shadow, headX + headW - 3, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX + headW - 2, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    vLine(ctx, hairColors.base,   headX + headW - 1, sideburnShortEnd, sideburnLongEnd - sideburnShortEnd);
+    // Tips: fade to shadow over last 3 rows (hair tapers to a point)
+    for (let tipY = sideburnLongEnd - 3; tipY < sideburnLongEnd; tipY++) {
+      px(ctx, hairColors.shadow, headX,             tipY);
+      px(ctx, hairColors.shadow, headX + 1,         tipY);
+      px(ctx, hairColors.shadow, headX + headW - 2, tipY);
+      px(ctx, hairColors.shadow, headX + headW - 1, tipY);
+    }
   }
 
-  // Hair-skin shadow bleed: soft 1px transition at sideburn inner edge.
-  // Replaces the hard skin↔hair color jump with a shadow pixel,
-  // using sel-out (shadow color not black) on the skin side of the seam.
-  // Rows HY+9 to HY+11: cheek rows where face is widest (x=24 meets sideburn x=23)
-  px(ctx, hairColors.shadow, headX + 2, headY + 9);   // left cheek top
-  px(ctx, hairColors.shadow, headX + 2, headY + 10);  // left cheek mid
-  px(ctx, hairColors.shadow, headX + 2, headY + 11);  // left cheek bot
-  px(ctx, hairColors.shadow, headX + headW - 3, headY + 9);   // right cheek top
-  px(ctx, hairColors.shadow, headX + headW - 3, headY + 10);  // right cheek mid
-  px(ctx, hairColors.shadow, headX + headW - 3, headY + 11);  // right cheek bot
-  // Hairline row HY+7: face first appears (x=25), sideburn at x=22-23.
-  // x=24 is a gap — fill with hair shadow to close it.
-  px(ctx, hairColors.shadow, headX + 2, headY + 7);   // left hairline fill
-  px(ctx, hairColors.shadow, headX + headW - 3, headY + 7);   // right hairline fill
-
-  // Replace black sideburn outer outline with hair shadow (sel-out on side silhouette)
+  // Sel-out: replace black outer silhouette with hair shadow on the top dome rows only
   vLine(ctx, hairColors.shadow, headX,             headY, 7);
   vLine(ctx, hairColors.shadow, headX + headW - 1, headY, 7);
 
@@ -295,17 +313,31 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
   // Skin (neck/lower-head area at bottom — 9px to match extended head height)
   fillRect(ctx, skinColors.base, HX + 2, HY + 12, HW - 4, 9);
 
-  // Hair covers most of back
+  // Hair covers most of back (north view: all hair, neck skin shows at bottom)
   fillRect(ctx, hairColors.base, HX, HY, HW, HH - 5);
-  // Highlight stripe
+  // Highlight: crown catches light — bright center-top, narrowing down
   hLine(ctx, hairColors.highlight, HX + 3, HY + 1, HW - 8);
-  hLine(ctx, hairColors.highlight, HX + 2, HY + 2, HW - 6);
-  // Shadow at hair bottom edge
+  hLine(ctx, hairColors.highlight, HX + 4, HY + 2, HW - 10);
+  // Single bright accent pixel at the very crown center
+  px(ctx, hairColors.highlight, HX + HW / 2 - 1, HY);
+  // Strand texture rows 3-5: staggered shadow dots (same technique as south view)
+  for (let dx = 1; dx < HW - 1; dx += 3) {
+    px(ctx, hairColors.shadow, HX + dx, HY + 3);
+  }
+  for (let dx = 3; dx < HW - 1; dx += 3) {
+    px(ctx, hairColors.shadow, HX + dx, HY + 4);
+  }
+  for (let dx = 2; dx < HW - 1; dx += 3) {
+    px(ctx, hairColors.shadow, HX + dx, HY + 5);
+  }
+  // Shadow at hair bottom edge (where hair meets the exposed neckline skin)
   hLine(ctx, hairColors.shadow, HX, HY + HH - 7, HW);
   hLine(ctx, hairColors.shadow, HX, HY + HH - 6, HW);
 
   if (hairStyle === 'long') {
     fillRect(ctx, hairColors.base, HX + 1, HY + HH - 5, HW - 2, 5);
+    // Long hair tips: fade to shadow over last 2 rows
+    hLine(ctx, hairColors.shadow, HX + 1, HY + HH - 2, HW - 2);
     hLine(ctx, hairColors.shadow, HX + 1, HY + HH - 1, HW - 2);
   }
 
@@ -408,17 +440,28 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
   hLine(ctx, hairColors.shadow, HX + S[5][0], HY + 5, S[5][1]);
   hLine(ctx, hairColors.shadow, HX + S[6][0], HY + 6, S[6][1]);
 
-  // Back-of-head hair strip (2px, right side)
+  // Back-of-head hair strip (3px: outer 2px = base, inner 1px = shadow for depth)
   const backHairEnd = hairStyle === 'short' ? 13 : hairStyle === 'medium' ? 17 : HH;
   for (let r = 0; r < backHairEnd; r++) {
     const [xo, w] = S[r];
+    if (w >= 3) px(ctx, hairColors.shadow, HX + xo + w - 3, HY + r); // depth strip
     px(ctx, hairColors.base, HX + xo + w - 2, HY + r);
     px(ctx, hairColors.base, HX + xo + w - 1, HY + r);
   }
+  // Highlight on the back-hair dome crest (row 1): light catches the top
+  {
+    const [xo, w] = S[1];
+    px(ctx, hairColors.highlight, HX + xo + w - 2, HY + 1);
+  }
   if (hairStyle === 'long') {
     const [lxo, lw] = S[HH - 1];
-    vLine(ctx, hairColors.base, HX + lxo + lw - 2, HY + HH, 5);
-    vLine(ctx, hairColors.base, HX + lxo + lw - 1, HY + HH, 5);
+    const bx = HX + lxo + lw - 1; // rightmost x at chin level
+    // Long trailing section: 3px wide at top, tapers to 1px at bottom
+    vLine(ctx, hairColors.base,   bx,     HY + HH, 5); // outer column
+    vLine(ctx, hairColors.base,   bx - 1, HY + HH, 3); // mid column (shorter)
+    px(ctx,   hairColors.shadow,  bx - 1, HY + HH + 3); // tip shadow
+    px(ctx,   hairColors.shadow,  bx,     HY + HH + 3);
+    px(ctx,   hairColors.shadow,  bx,     HY + HH + 4); // very tip
   }
 
   // ── Outline (per-row, follows oval) ───────────────────────────────────────
