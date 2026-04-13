@@ -171,10 +171,9 @@
       flex: 1;
       overflow-y: scroll;
       padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(540px, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 16px;
-      align-content: start;
       min-height: 0;
     }
     /* Always-visible scrollbar so users know the area is scrollable */
@@ -183,13 +182,7 @@
     .main::-webkit-scrollbar-thumb    { background: var(--border); border-radius: 4px; }
     .main::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-    /* Expanded card takes full row */
-    .char-card:not(.collapsed) {
-      grid-column: 1 / -1;
-    }
-
     .empty-state {
-      grid-column: 1 / -1;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -320,7 +313,6 @@
 
     /* ── Weapon gallery ── */
     .weapon-gallery {
-      grid-column: 1 / -1;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -395,10 +387,8 @@
 
       .main {
         overflow: visible;
-        grid-template-columns: 1fr;
         padding: 12px;
       }
-      .char-card:not(.collapsed) { grid-column: 1; }
 
       .live-row { gap: 10px; }
       .live-box { padding: 8px; }
