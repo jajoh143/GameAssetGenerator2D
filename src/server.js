@@ -10,6 +10,7 @@ const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
   SKIN_TONES, HAIR_COLORS, CLOTHING, PANTS, SHOES, DEMON_SKIN,
+  FAIRY_SKIN, FAIRY_WING, FAIRY_DRESS, FAIRY_GLOW,
 } = require('./core/Colors');
 
 const PORT        = 3000;
@@ -31,7 +32,12 @@ function serveFile(res, filePath) {
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not found'); return; }
     const mime = MIME[path.extname(filePath)] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': mime });
+    const headers = { 'Content-Type': mime };
+    // Prevent browser from caching HTML/JSON so users always see the latest page
+    if (mime === 'text/html' || mime === 'application/json') {
+      headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+    }
+    res.writeHead(200, headers);
     res.end(data);
   });
 }
@@ -61,13 +67,19 @@ function handleOptions(res) {
   json(res, 200, {
     skinTones:   paletteMap(SKIN_TONES),
     hairColors:  paletteMap(HAIR_COLORS),
-    hairStyles:  ['short', 'medium', 'long'],
+    hairStyles:  ['short', 'medium', 'long', 'curly', 'undercut'],
     clothing:    Object.keys(CLOTHING),
     pants:       Object.keys(PANTS),
     shoes:       Object.keys(SHOES),
     demonSkins:  paletteMap(DEMON_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
+    // Fairy options
+    fairySkins:  paletteMap(FAIRY_SKIN),
+    wingStyles:  ['butterfly', 'dragonfly'],
+    wingColors:  Object.fromEntries(Object.entries(FAIRY_WING).map(([k, v]) => [k, v.outer])),
+    fairyDresses: Object.fromEntries(Object.entries(FAIRY_DRESS).map(([k, v]) => [k, v.base])),
+    glowColors:  Object.fromEntries(Object.entries(FAIRY_GLOW).map(([k, v]) => [k, v.bright])),
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
     frameSizes:  [64, 96, 128],
@@ -150,7 +162,7 @@ function regenerateAll() {
     try {
       const cfg = resolveConfig(config);
       const out = path.join(OUTPUT_DIR, `${name}_spritesheet.png`);
-      generateSpritesheet(cfg, out, 64);
+      generateSpritesheet(cfg, out, 96);
       manifest.characters.push({ name, file: `../output/${name}_spritesheet.png`, config });
       charDone++;
     } catch (e) {

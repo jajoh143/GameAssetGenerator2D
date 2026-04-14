@@ -1,6 +1,6 @@
 {
-  "frameWidth": 64,
-  "frameHeight": 64,
+  "frameWidth": 96,
+  "frameHeight": 96,
   "animations": [
     {
       "name": "idle",
@@ -169,6 +169,104 @@
         "clothing": "bomber_olive",
         "pants": "pants_black",
         "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "human_detective",
+      "file": "../output/human_detective_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "light",
+        "hair": "dark_brown",
+        "hairStyle": "undercut",
+        "eyes": "brown",
+        "clothing": "coat_tan",
+        "pants": "pants_black",
+        "shoes": "shoe_brown"
+      }
+    },
+    {
+      "name": "human_noir",
+      "file": "../output/human_noir_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "medium",
+        "hair": "black",
+        "hairStyle": "short",
+        "eyes": "grey",
+        "clothing": "coat_grey",
+        "pants": "jeans_dark",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "human_ranger",
+      "file": "../output/human_ranger_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "tan",
+        "hair": "brown",
+        "hairStyle": "medium",
+        "eyes": "hazel",
+        "clothing": "coat_brown",
+        "pants": "jeans_dark",
+        "shoes": "shoe_brown"
+      }
+    },
+    {
+      "name": "human_sailor",
+      "file": "../output/human_sailor_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "light",
+        "hair": "black",
+        "hairStyle": "short",
+        "eyes": "blue",
+        "clothing": "coat_navy",
+        "pants": "pants_black",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "fairy_crystal",
+      "file": "../output/fairy_crystal_spritesheet.png",
+      "config": {
+        "type": "fairy",
+        "fairySkin": "peach",
+        "hair": "blonde",
+        "eyes": "blue",
+        "wingStyle": "butterfly",
+        "wingColor": "crystal",
+        "fairyDress": "petal_pink",
+        "glowColor": "golden"
+      }
+    },
+    {
+      "name": "fairy_forest",
+      "file": "../output/fairy_forest_spritesheet.png",
+      "config": {
+        "type": "fairy",
+        "fairySkin": "mint",
+        "hair": "dark_brown",
+        "eyes": "green",
+        "wingStyle": "dragonfly",
+        "wingColor": "emerald",
+        "fairyDress": "forest_green",
+        "glowColor": "emerald"
+      }
+    },
+    {
+      "name": "pixie_twilight",
+      "file": "../output/pixie_twilight_spritesheet.png",
+      "config": {
+        "type": "fairy",
+        "fairySkin": "lavender",
+        "hair": "white",
+        "eyes": "violet",
+        "wingStyle": "butterfly",
+        "wingColor": "twilight",
+        "fairyDress": "violet",
+        "glowColor": "violet"
       }
     }
   ],
