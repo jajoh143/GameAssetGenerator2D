@@ -336,39 +336,41 @@ function drawDemonHeadSouth(ctx, colors, config) {
   pixel(ctx, outline, 50, HY + 27);
   hLine(ctx, outline, 45, HY + 28, 6); // chin tip bottom
 
-  // ── Glowing demon eyes (5px wide × 4px tall) ─────────────────────────────
-  const eyeY = HY + 14;   // y=22 with HY=8
-  const glowHalo = 'rgba(255,100,0,0.45)';
-  // Left eye halo + fill at x=40-44
-  hLine(ctx, glowHalo, 39, eyeY - 1, 7);
-  hLine(ctx, glowHalo, 39, eyeY + 4, 7);
-  pixel(ctx, glowHalo, 39, eyeY); pixel(ctx, glowHalo, 39, eyeY + 1);
-  pixel(ctx, glowHalo, 45, eyeY); pixel(ctx, glowHalo, 45, eyeY + 1);
-  fillRect(ctx, '#FF6600', 40, eyeY, 5, 3);
-  pixel(ctx, '#FFDD00', 42, eyeY);               // bright pupil
-  pixel(ctx, '#FFFFFF', 40, eyeY);               // specular glint
-  // Right eye halo + fill at x=51-55
-  hLine(ctx, glowHalo, 50, eyeY - 1, 7);
-  hLine(ctx, glowHalo, 50, eyeY + 4, 7);
-  pixel(ctx, glowHalo, 50, eyeY); pixel(ctx, glowHalo, 50, eyeY + 1);
-  pixel(ctx, glowHalo, 56, eyeY); pixel(ctx, glowHalo, 56, eyeY + 1);
-  fillRect(ctx, '#FF6600', 51, eyeY, 5, 3);
-  pixel(ctx, '#FFDD00', 53, eyeY);
-  pixel(ctx, '#FFFFFF', 55, eyeY);
-  // Heavy brow ridge
-  hLine(ctx, sk.shadow,    39, eyeY - 3, 8);
-  hLine(ctx, sk.shadow,    50, eyeY - 3, 8);
+  // ── Glowing demon eyes (3px wide × 2px tall slits) ────────────────────────
+  const eyeY = HY + 15;
+  const glowHalo = 'rgba(255,100,0,0.3)';
+
+  // Left eye glow halo (reduced)
+  hLine(ctx, glowHalo, 40, eyeY - 1, 5);
+  pixel(ctx, glowHalo, 40, eyeY + 2);
+  pixel(ctx, glowHalo, 44, eyeY + 2);
+
+  // Left eye fill (x=41-43, 2 rows)
+  fillRect(ctx, '#FF6600', 41, eyeY, 3, 2);
+  pixel(ctx, '#FFDD00', 42, eyeY);               // bright center
+  pixel(ctx, '#FFFFFF', 41, eyeY);                // specular glint
+
+  // Right eye glow halo (reduced)
+  hLine(ctx, glowHalo, 49, eyeY - 1, 5);
+  pixel(ctx, glowHalo, 49, eyeY + 2);
+  pixel(ctx, glowHalo, 53, eyeY + 2);
+
+  // Right eye fill (x=50-52, 2 rows)
+  fillRect(ctx, '#FF6600', 50, eyeY, 3, 2);
+  pixel(ctx, '#FFDD00', 51, eyeY);
+  pixel(ctx, '#FFFFFF', 52, eyeY);
+
+  // Brow ridge (reduced to 5px wide × 2 rows)
   const deepShadow = sk.deep_shadow || sk.shadow;
-  hLine(ctx, deepShadow,   39, eyeY - 2, 8);
-  hLine(ctx, deepShadow,   50, eyeY - 2, 8);
-  hLine(ctx, outline,      39, eyeY - 4, 8);   // brow outline
-  hLine(ctx, outline,      50, eyeY - 4, 8);
+  hLine(ctx, deepShadow, 40, eyeY - 2, 5);
+  hLine(ctx, outline,    40, eyeY - 3, 5);
+  hLine(ctx, deepShadow, 49, eyeY - 2, 5);
+  hLine(ctx, outline,    49, eyeY - 3, 5);
 
   // ── Nose + snarl mouth ────────────────────────────────────────────────────
-  pixel(ctx, sk.shadow, 47, HY + 19); pixel(ctx, sk.shadow, 48, HY + 19); // nose tip
-  pixel(ctx, sk.shadow, 45, HY + 20); pixel(ctx, sk.shadow, 50, HY + 20); // nostrils
-  hLine(ctx, outline,   44, HY + 22, 8);  // mouth line
-  pixel(ctx, '#FF4444', 45, HY + 23); pixel(ctx, '#FF4444', 50, HY + 23); // fangs
+  pixel(ctx, sk.shadow, 48, HY + 20);                                       // single nose shadow
+  hLine(ctx, outline,   45, HY + 22, 6);                                    // mouth line (narrower)
+  pixel(ctx, '#FF4444', 46, HY + 23); pixel(ctx, '#FF4444', 50, HY + 23);  // fangs
 
   // ── Hair covering top of head (10 rows, HW wide) ─────────────────────────
   fillRect(ctx, hair.base,      HX,      HY,      HW,    10);

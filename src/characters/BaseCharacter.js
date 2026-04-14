@@ -93,64 +93,27 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // Chin bottom
   hLine(ctx, outline, 43, HY + 29, 9);
 
-  // ── Eyebrows (2-row arch, chibi — slightly thicker) ──────────────────────
+  // ── Eyebrows (subtle 3px lines) ───────────────────────────────────────────
   const browY = HY + 13;   // y=14
-  hLine(ctx, hairColors.base,  39, browY,     5);  // left brow outer (5px)
-  px(ctx, hairColors.shadow,   43, browY);          // darker inner end
-  px(ctx, hairColors.base,     44, browY + 1);      // arch drop
-  px(ctx, hairColors.base,     49, browY + 1);      // right arch drop
-  px(ctx, hairColors.shadow,   50, browY);          // darker inner end
-  hLine(ctx, hairColors.base,  51, browY,     5);  // right brow outer (5px)
+  hLine(ctx, hairColors.shadow, 41, browY, 3);   // left brow (3px)
+  hLine(ctx, hairColors.shadow, 50, browY, 3);   // right brow (3px)
 
-  // ── Eyes: chibi style (5×5 blocks — large iris fills most of eye) ────────
-  const eyeY = HY + 14;   // y=15 — one row below brow
+  // ── Eyes: minimal dot style (3×2 dark blocks) ───────────────────────────
+  const eyeY = HY + 15;   // y=16 — spacing below brow
 
-  // Left eye (x=40-44): upper lash + 3-row iris fill + lower lash
-  hLine(ctx, eyeColors.lash,    40, eyeY,     5);           // upper lash (5px)
-  fillRect(ctx, eyeColors.iris, 40, eyeY + 1, 5, 3);       // iris fill (3 rows)
-  px(ctx, eyeColors.pupil,      42, eyeY + 2);              // pupil at center
-  px(ctx, '#FFFFFF',            40, eyeY + 1);              // shine upper-left
-  px(ctx, '#FFFFFF',            41, eyeY + 1);              // extra shine
-  px(ctx, eyeColors.lash,       41, eyeY + 4);              // lower lash
-  px(ctx, eyeColors.lash,       42, eyeY + 4);
-  px(ctx, eyeColors.lash,       43, eyeY + 4);
+  // Left eye (x=41-43, 2 rows)
+  fillRect(ctx, eyeColors.iris, 41, eyeY, 3, 2);
+  px(ctx, '#FFFFFF',            41, eyeY);        // shine upper-left
 
-  // Right eye (x=49-53): mirror, shine at upper-right
-  hLine(ctx, eyeColors.lash,    49, eyeY,     5);
-  fillRect(ctx, eyeColors.iris, 49, eyeY + 1, 5, 3);
-  px(ctx, eyeColors.pupil,      51, eyeY + 2);
-  px(ctx, '#FFFFFF',            53, eyeY + 1);              // shine upper-right
-  px(ctx, '#FFFFFF',            52, eyeY + 1);              // extra shine
-  px(ctx, eyeColors.lash,       50, eyeY + 4);
-  px(ctx, eyeColors.lash,       51, eyeY + 4);
-  px(ctx, eyeColors.lash,       52, eyeY + 4);
+  // Right eye (x=50-52, 2 rows)
+  fillRect(ctx, eyeColors.iris, 50, eyeY, 3, 2);
+  px(ctx, '#FFFFFF',            52, eyeY);        // shine upper-right
 
-  // ── Cheek blush (3px wide each side) ────────────────────────────────────
-  px(ctx, skinColors.highlight, 36, eyeY + 6);
-  px(ctx, skinColors.highlight, 37, eyeY + 6);
-  px(ctx, skinColors.highlight, 38, eyeY + 6);
-  px(ctx, skinColors.highlight, 57, eyeY + 6);
-  px(ctx, skinColors.highlight, 58, eyeY + 6);
-  px(ctx, skinColors.highlight, 59, eyeY + 6);
+  // ── Nose: single subtle shadow pixel ─────────────────────────────────────
+  px(ctx, skinColors.shadow, 48, HY + 22);
 
-  // ── Nose: chibi style (2 center pixels + 2 nostril dots) ─────────────────
-  const noseY = HY + 22;   // y=23
-  px(ctx, skinColors.shadow, 47, noseY);
-  px(ctx, skinColors.shadow, 48, noseY);
-  px(ctx, skinColors.shadow, 45, noseY + 1);   // left nostril hint
-  px(ctx, skinColors.shadow, 50, noseY + 1);   // right nostril hint
-
-  // ── Mouth: chibi curved smile ─────────────────────────────────────────────
-  const mouthY = HY + 25;   // y=26
-  // Corner upturns (one row above center line)
-  px(ctx, skinColors.shadow,    43, mouthY - 1);
-  px(ctx, skinColors.shadow,    52, mouthY - 1);
-  // Main smile line (8px) + corner joins
-  px(ctx, skinColors.shadow,    43, mouthY);
-  hLine(ctx, skinColors.shadow, 44, mouthY, 8);
-  px(ctx, skinColors.shadow,    52, mouthY);
-  // Lower lip highlight (centered, 5px)
-  hLine(ctx, skinColors.highlight, 46, mouthY + 1, 6);
+  // ── Mouth: subtle shadow line ────────────────────────────────────────────
+  hLine(ctx, skinColors.shadow, 46, HY + 25, 4);
 
   // ── Hair ─────────────────────────────────────────────────────────────────
   drawHairSouth(ctx, hairColors, hairStyle, HX, HY, HW);
@@ -399,16 +362,13 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
   }
 
   // ── Face features ─────────────────────────────────────────────────────────
-  // Eyebrow at row 10 (4px)
-  hLine(ctx, hairColors.base, HX, HY + 10, 4);
-  // Eye at row 12 (2px dark + white shine)
-  const eyeY = HY + 12;
-  px(ctx, '#FFFFFF',         HX,     eyeY);
-  px(ctx, '#1A0800',         HX + 1, eyeY);
-  px(ctx, '#1A0800',         HX + 2, eyeY);
-  px(ctx, skinColors.shadow, HX,     eyeY + 1);  // lower lid
+  // Eyebrow at row 10 (3px, subtle)
+  hLine(ctx, hairColors.shadow, HX, HY + 10, 3);
+  // Eye at row 12 (1px shine + 1px dark)
+  px(ctx, '#FFFFFF', HX,     HY + 12);
+  px(ctx, '#1A0800', HX + 1, HY + 12);
   // Nose at row 15
-  px(ctx, skinColors.base, HX - 1, HY + 15);
+  px(ctx, skinColors.shadow, HX - 1, HY + 15);
   // Mouth at row 20
   px(ctx, skinColors.shadow, HX, HY + 20);
   // Ear at rows 15-18, behind face (x=HX+12 to HX+14)

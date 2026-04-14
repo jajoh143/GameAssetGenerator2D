@@ -223,37 +223,23 @@ function drawFairyHeadSouth(ctx, skinColors, hairColors, eyeKey) {
   px(ctx, outline, HX + HW - 7, HY + HH - 1);
   px(ctx, outline, HX + HW - 4, HY + HH - 3);
 
-  // ── Eyes: large chibi eyes (4×4) ─────────────────────────────────────────
+  // ── Eyes: minimal dots (2×2) ──────────────────────────────────────────────
   const eyeColors = Colors.EYE_COLORS[eyeKey] || Colors.EYE_COLORS.blue;
-  const eyeY = HY + 10;
+  const eyeY = HY + 11;
 
-  // Left eye (x=HX+4..HX+7)
-  fillRect(ctx, eyeColors.lash,  HX + 4, eyeY,     4, 1);  // upper lash
-  fillRect(ctx, eyeColors.iris,  HX + 4, eyeY + 1, 4, 3);  // iris fill
-  px(ctx, eyeColors.pupil, HX + 5, eyeY + 2);              // pupil center
-  px(ctx, '#FFFFFF',       HX + 4, eyeY + 1);              // shine upper-left
-  px(ctx, eyeColors.lash,  HX + 5, eyeY + 4);              // lower lash
+  // Left eye (2x2 at HX+5..HX+6)
+  fillRect(ctx, eyeColors.iris, HX + 5, eyeY, 2, 2);
+  px(ctx, '#FFFFFF', HX + 5, eyeY);                         // shine
 
-  // Right eye (x=HX+HW-8..HX+HW-5)
-  fillRect(ctx, eyeColors.lash,  HX + HW - 8, eyeY,     4, 1);
-  fillRect(ctx, eyeColors.iris,  HX + HW - 8, eyeY + 1, 4, 3);
-  px(ctx, eyeColors.pupil, HX + HW - 7, eyeY + 2);
-  px(ctx, '#FFFFFF',       HX + HW - 5, eyeY + 1);         // shine upper-right
-  px(ctx, eyeColors.lash,  HX + HW - 6, eyeY + 4);
+  // Right eye (2x2 at HX+HW-7..HX+HW-6)
+  fillRect(ctx, eyeColors.iris, HX + HW - 7, eyeY, 2, 2);
+  px(ctx, '#FFFFFF', HX + HW - 6, eyeY);                    // shine
 
-  // ── Cheek blush ───────────────────────────────────────────────────────────
-  px(ctx, skinColors.highlight, HX + 3,      eyeY + 6);
-  px(ctx, skinColors.highlight, HX + 4,      eyeY + 6);
-  px(ctx, skinColors.highlight, HX + HW - 5, eyeY + 6);
-  px(ctx, skinColors.highlight, HX + HW - 4, eyeY + 6);
-
-  // ── Tiny nose and smile ───────────────────────────────────────────────────
-  px(ctx, skinColors.shadow, HX + 12, eyeY + 7);
+  // ── Nose: single pixel ───────────────────────────────────────────────────
   px(ctx, skinColors.shadow, HX + 13, eyeY + 7);
-  // Smile
-  px(ctx, skinColors.shadow, HX + 9,  eyeY + 10);
-  hLine(ctx, skinColors.shadow, HX + 10, eyeY + 11, 6);
-  px(ctx, skinColors.shadow, HX + 16, eyeY + 10);
+
+  // ── Mouth: subtle 3px line ───────────────────────────────────────────────
+  hLine(ctx, skinColors.shadow, HX + 11, eyeY + 10, 3);
 
   // ── Hair: simple cap with highlight ──────────────────────────────────────
   fillRect(ctx, hairColors.base, HX, HY - 3, HW, 7);  // hair cap
@@ -389,9 +375,8 @@ function drawFairySideView(ctx, colors, offsets, facing) {
   fillRect(ctx, colors.hair.base, 30, 9 + by, 18, 10);
   hLine(ctx, colors.hair.highlight, 33, 9 + by, 10);
   px(ctx, skinC.shadow, 29, 18 + by); // ear
-  // Profile eye
-  px(ctx, Colors.EYE_COLORS.blue.iris,  30, 21 + by + headBob);
-  px(ctx, Colors.EYE_COLORS.blue.pupil, 30, 22 + by + headBob);
+  // Profile eye (single pixel)
+  px(ctx, Colors.EYE_COLORS.blue.iris, 30, 21 + by + headBob);
 
   // Torso
   fillRect(ctx, colors.dress.base, tx, ty, 15, 15);
