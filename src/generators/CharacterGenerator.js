@@ -17,7 +17,7 @@ const { buildMeta, saveMeta } = require('../core/MetaExport');
  * @param {number} [frameSize=64] - Output frame size in pixels (64 | 96 | 128)
  * @returns {string}           - Resolved output path
  */
-function generateSpritesheet(rawConfig, outputPath, frameSize = 64) {
+function generateSpritesheet(rawConfig, outputPath, frameSize = 96) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
     config.type === 'demon' ? generateDemonFrame :
@@ -44,7 +44,7 @@ function generateSpritesheet(rawConfig, outputPath, frameSize = 64) {
  * @param {object} rawConfig
  * @param {number} [frameSize=64]
  */
-function generateSpritesheetCanvas(rawConfig, frameSize = 64) {
+function generateSpritesheetCanvas(rawConfig, frameSize = 96) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
     config.type === 'demon' ? generateDemonFrame :

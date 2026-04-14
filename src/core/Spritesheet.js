@@ -5,8 +5,8 @@ const path = require('path');
 const { makeCanvas, blit } = require('./Canvas');
 
 // Spritesheet layout constants
-const FRAME_W = 64;
-const FRAME_H = 64;
+const FRAME_W = 96;
+const FRAME_H = 96;
 
 // Row definitions: [name, frameCount]
 const ROWS = [

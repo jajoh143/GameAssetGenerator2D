@@ -1,6 +1,6 @@
 {
-  "frameWidth": 64,
-  "frameHeight": 64,
+  "frameWidth": 96,
+  "frameHeight": 96,
   "animations": [
     {
       "name": "idle",
