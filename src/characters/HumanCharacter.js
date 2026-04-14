@@ -22,8 +22,8 @@ const {
   drawFrontArmWest,
 } = require('./BaseCharacter');
 
-const FRAME_W = 64;
-const FRAME_H = 64;
+const FRAME_W = 96;
+const FRAME_H = 96;
 
 // ---------------------------------------------------------------------------
 // Color resolver
@@ -52,24 +52,28 @@ function resolveColors(config) {
 function drawSouth(ctx, config, offsets) {
   const colors = resolveColors(config);
   const {
-    bodyY = 0,
+    bodyY: rawBodyY = 0,
     leftLegFwd  = 0, rightLegFwd  = 0,
     leftArmFwd  = 0, rightArmFwd  = 0,
     leftArmOut  = 0, rightArmOut  = 0,
-    headBob = 0,
+    headBob: rawHeadBob = 0,
   } = offsets;
 
-  const base = 64 + bodyY; // bottom anchor
+  // Scale pixel offsets from 64px animation data to 96px frame
+  const bodyY  = Math.round(rawBodyY   * 1.5);
+  const headBob = Math.round(rawHeadBob * 1.5);
+
+  const base = 96 + bodyY; // bottom anchor (96px frame)
 
   // --- Ground shadow ---
-  drawGroundShadow(ctx, 32, 62 + bodyY);
+  drawGroundShadow(ctx, 48, 94 + bodyY, 21, 5);
 
-  // Layout constants (measured from bottom)
-  const shoeH  = 4;
-  const legH   = 13;
-  const beltH  = 2;
-  const torsoH = 17;  // reduced 2px; head grew 3px, neck shrunk 1px → net +0 total
-  const neckH  = 2;
+  // Layout constants scaled ×1.5 from 64px baseline.
+  const shoeH  = 6;
+  const legH   = 26;
+  const beltH  = 3;
+  const torsoH = 26;
+  const neckH  = 3;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -77,41 +81,31 @@ function drawSouth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // South-facing walk: depth is shown via split DY on knee-to-ankle rows.
-  // Thigh rows stay fixed (belt junction stays clean).
-  // Forward leg: knee-to-ankle drops 2px. Back leg: rises 2px.
-  // Near-zero DX: feet stay under the body, no sideways shuffle.
-  // Lateral spread: each foot steps OUTWARD from body center when striding.
-  // Left leg is at lx=25 (left of center), right leg at rx=33 (right of center).
-  // Forward stride = foot spreads outward: left goes more left (-x), right goes more right (+x).
-  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.35);  // always spreads LEFT
-  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.35);  // always spreads RIGHT
-  // DY: forward foot drops (closer to camera in top-down = lower on screen)
-  const lLegDY = Math.max(-3, Math.min(3, Math.round(leftLegFwd  * 0.5)));
-  const rLegDY = Math.max(-3, Math.min(3, Math.round(rightLegFwd * 0.5)));
+  // Leg spread/depth multipliers scaled ×1.5 for 96px proportions.
+  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.53);
+  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.53);
+  const lLegDY = Math.max(-5, Math.min(5, Math.round(leftLegFwd  * 0.75)));
+  const rLegDY = Math.max(-5, Math.min(5, Math.round(rightLegFwd * 0.75)));
 
-  // Arm Y offsets
-  const lArmDY = Math.round(leftArmFwd  * 0.4);
-  const rArmDY = Math.round(rightArmFwd * 0.4);
+  // Arm Y offsets scaled ×1.5
+  const lArmDY = Math.round(leftArmFwd  * 0.6);
+  const rArmDY = Math.round(rightArmFwd * 0.6);
 
   // --- Draw order: back-to-front ---
-  // Forward leg: brighter (base tone). Back leg: darker (shadow tone) — SNES depth technique.
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
-  // Shoes use same DY as leg lower portion so they stay connected
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  // Legs (split DY: thigh fixed, knee-below shifts; color-differentiated for depth)
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
-  // Belt
-  drawBeltSouth(ctx, colors.belt, 24, beltY);
-  // Torso (18px wide, x=23-40) — narrower body matches reference proportions
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 23, torsoY, 18, torsoH);
-  // Arms (drawn over torso edges)
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut);
+  // Belt: x=35 (was 24, scaled ×1.5)
+  drawBeltSouth(ctx, colors.belt, 35, beltY);
+  // Torso: x=35, w=27 (scaled from x=23, w=18)
+  drawTorsoSouth(ctx, config.clothing, colors.clothing, 35, torsoY, 27, torsoH);
+  // Arms (shoulder anchors scaled to 96px)
+  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck
   drawNeckSouth(ctx, colors.skin, neckY);
   // Head
   ctx.save();
-  ctx.translate(0, headBob || 0);
+  ctx.translate(0, headBob);
   drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes);
   ctx.restore();
 }
@@ -123,20 +117,23 @@ function drawSouth(ctx, config, offsets) {
 function drawNorth(ctx, config, offsets) {
   const colors = resolveColors(config);
   const {
-    bodyY = 0,
+    bodyY: rawBodyY2 = 0,
     leftLegFwd  = 0, rightLegFwd  = 0,
     leftArmFwd  = 0, rightArmFwd  = 0,
     leftArmOut  = 0, rightArmOut  = 0,
-    headBob = 0,
+    headBob: rawHeadBob2 = 0,
   } = offsets;
 
-  const base = 64 + bodyY;
+  const bodyY  = Math.round(rawBodyY2   * 1.5);
+  const headBob = Math.round(rawHeadBob2 * 1.5);
 
-  const shoeH  = 4;
-  const legH   = 13;
-  const beltH  = 2;
-  const torsoH = 17;
-  const neckH  = 2;
+  const base = 96 + bodyY;
+
+  const shoeH  = 6;
+  const legH   = 26;
+  const beltH  = 3;
+  const torsoH = 26;
+  const neckH  = 3;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -144,46 +141,45 @@ function drawNorth(ctx, config, offsets) {
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
-  // Same outward-spread logic as south view
-  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.35);
-  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.35);
-  const lLegDY = Math.max(-3, Math.min(3, Math.round(leftLegFwd  * 0.5)));
-  const rLegDY = Math.max(-3, Math.min(3, Math.round(rightLegFwd * 0.5)));
-  const lArmDY = Math.round(leftArmFwd  * 0.4);
-  const rArmDY = Math.round(rightArmFwd * 0.4);
+  const lLegDX = -Math.round(Math.abs(leftLegFwd)  * 0.53);
+  const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.53);
+  const lLegDY = Math.max(-5, Math.min(5, Math.round(leftLegFwd  * 0.75)));
+  const rLegDY = Math.max(-5, Math.min(5, Math.round(rightLegFwd * 0.75)));
+  const lArmDY = Math.round(leftArmFwd  * 0.6);
+  const rArmDY = Math.round(rightArmFwd * 0.6);
 
-  drawGroundShadow(ctx, 32, 62 + bodyY);
+  drawGroundShadow(ctx, 48, 94 + bodyY, 21, 5);
 
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
-  drawBeltSouth(ctx, colors.belt,   24, beltY);
+  drawBeltSouth(ctx, colors.belt, 35, beltY);
 
-  // Back of torso — hourglass silhouette matching front jacket
+  // Back of torso — hourglass silhouette matching front jacket (scaled ×1.5)
   {
-    const bx = 23, bw = 18, by = torsoY, bN = Math.min(torsoH, 19);
-    const bSHOULDER = 3, bWS = 7, bWE = 11;
+    const bx = 35, bw = 27, by = torsoY, bN = Math.min(torsoH, 28);
+    const bSHOULDER = 4, bWS = 10, bWE = 17;
     const brl = (r) => {
-      if (r < bSHOULDER)            return bx - 1;
-      if (r >= bWS && r <= bWE)    return bx + 1;  // waist taper
+      if (r < bSHOULDER)          return bx - 1;
+      if (r >= bWS && r <= bWE)  return bx + 1;  // waist taper
       return bx;
     };
     const brr = (r) => {
-      if (r < bSHOULDER)            return bx + bw;
-      if (r >= bWS && r <= bWE)    return bx + bw - 2;  // waist taper
+      if (r < bSHOULDER)          return bx + bw;
+      if (r >= bWS && r <= bWE)  return bx + bw - 2;  // waist taper
       return bx + bw - 1;
     };
 
     for (let r = 0; r < bN; r++) {
       hLine(ctx, colors.clothing.base, brl(r), by + r, brr(r) - brl(r) + 1);
     }
-    // Side panel shadows + center back highlight (back-lit rim light simulation)
+    // Side panel shadows + center back highlight (back-lit rim light)
     for (let r = 0; r < bN; r++) {
       pixel(ctx, colors.clothing.shadow,    brl(r) + 1, by + r);
       pixel(ctx, colors.clothing.shadow,    brr(r) - 1, by + r);
       pixel(ctx, colors.clothing.highlight, Math.floor((brl(r) + brr(r)) / 2), by + r);
     }
-    // Waist bridge pixels (same as front)
+    // Waist bridge pixels
     for (let r = bWS; r <= bWE; r++) {
       pixel(ctx, colors.clothing.shadow, bx, by + r);
       pixel(ctx, colors.clothing.shadow, bx + bw - 1, by + r);
@@ -201,11 +197,11 @@ function drawNorth(ctx, config, offsets) {
     hLine(ctx, colors.clothing.outline, bBotL, by + bN - 1, bBotR - bBotL + 1);
   }
 
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut);
+  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   drawNeckSouth(ctx, colors.skin, neckY);
 
   ctx.save();
-  ctx.translate(0, headBob || 0);
+  ctx.translate(0, headBob);
   drawHeadNorth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
   ctx.restore();
 }
@@ -217,33 +213,36 @@ function drawNorth(ctx, config, offsets) {
 function drawWest(ctx, config, offsets) {
   const colors = resolveColors(config);
   const {
-    bodyY = 0,
+    bodyY: rawBodyY3 = 0,
     leftLegFwd  = 0, rightLegFwd  = 0,
     leftArmFwd  = 0, rightArmFwd  = 0,
     leftLegLift = 0, rightLegLift = 0,
-    headBob = 0,
+    headBob: rawHeadBob3 = 0,
   } = offsets;
 
-  const base = 64 + bodyY;
+  const bodyY  = Math.round(rawBodyY3   * 1.5);
+  const headBob = Math.round(rawHeadBob3 * 1.5);
 
-  const shoeH  = 4;
-  const legH   = 13;
-  const beltH  = 2;
-  const torsoH = 16;
+  const base = 96 + bodyY;
+
+  const shoeH  = 6;
+  const legH   = 26;
+  const beltH  = 3;
+  const torsoH = 24;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
   const beltY  = legY - beltH;
   const torsoY = beltY - torsoH;
-  const neckY  = torsoY - 2;
+  const neckY  = torsoY - 3;
 
-  // Side profile centering: torso at x=20-32
-  const torsoX = 20;
+  // Side profile centering: torso at x=30-49 (scaled from x=20-32)
+  const torsoX = 30;
 
   // Stride: compute raw screen X for each leg.
   // In west view (facing left), lower X = more forward.
-  const leftLegX  = 26 - Math.round(leftLegFwd  * 0.9);
-  const rightLegX = 26 - Math.round(rightLegFwd * 0.9);
+  const leftLegX  = 39 - Math.round(leftLegFwd  * 1.35);
+  const rightLegX = 39 - Math.round(rightLegFwd * 1.35);
 
   // Assign front/back based on actual screen position so depth is always correct:
   // the leg at lower X (more toward direction of travel) is drawn on top.
@@ -258,10 +257,10 @@ function drawWest(ctx, config, offsets) {
 
   // Arms swing horizontally in side profile (not vertically)
   // Positive armFwd → arm swings forward = moves left (lower X in west view)
-  const frontArmDX = -Math.round(leftArmFwd  * 0.6);
-  const backArmDX  = -Math.round(rightArmFwd * 0.6);
+  const frontArmDX = -Math.round(leftArmFwd  * 0.9);
+  const backArmDX  = -Math.round(rightArmFwd * 0.9);
 
-  drawGroundShadow(ctx, 26, 62 + bodyY);
+  drawGroundShadow(ctx, 39, 94 + bodyY, 21, 5);
 
   // --- Draw order: back-to-front ---
   // Back shoe
@@ -276,12 +275,12 @@ function drawWest(ctx, config, offsets) {
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
   // Front arm drawn AFTER torso so it appears in front of body silhouette
   drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
-  // Neck (side)
-  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 2);
-  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 2);
+  // Neck (side) — scaled from 6×2 to 9×3
+  fillRect(ctx, colors.skin.base, torsoX + 4, neckY, 9, 3);
+  outlineRect(ctx, colors.skin.outline, torsoX + 4, neckY, 9, 3);
   // Head
   ctx.save();
-  ctx.translate(0, headBob || 0);
+  ctx.translate(0, headBob);
   drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
   ctx.restore();
 }
