@@ -320,26 +320,27 @@ function drawDemonHeadSouth(ctx, colors, config) {
   hLine(ctx, hair.shadow, HX - 1, HY + 7, 30);
   hLine(ctx, hair.shadow, HX, HY + 8, 28);
 
-  // ── FACE WINDOW (demon skin) ─────────────────────────────────────────────
+  // ── FACE WINDOW (demon skin — wider, matching human) ──────────────────────
   const FACE = [
-    [40, 16], [39, 18], [38, 20], [38, 20],
-    [38, 20], [39, 18], [40, 16], [41, 14],
-    [42, 12], [43, 10],
+    [39, 18], [37, 22], [36, 24], [36, 24],
+    [36, 24], [36, 24], [37, 22], [38, 20],
+    [39, 18], [40, 16], [41, 15],
   ];
+  const faceStart = 7;
   for (let i = 0; i < FACE.length; i++) {
-    hLine(ctx, sk.base, FACE[i][0], HY + 8 + i, FACE[i][1]);
+    hLine(ctx, sk.base, FACE[i][0], HY + faceStart + i, FACE[i][1]);
   }
 
   // Face shading
-  fillRect(ctx, sk.highlight, 39, HY + 9, 3, 2);
-  for (let i = 1; i < FACE.length - 2; i++) {
-    pixel(ctx, sk.shadow, FACE[i][0] + FACE[i][1] - 2, HY + 8 + i);
+  fillRect(ctx, sk.highlight, 38, HY + 8, 3, 2);
+  for (let i = 2; i < FACE.length - 3; i++) {
+    pixel(ctx, sk.shadow, FACE[i][0] + FACE[i][1] - 2, HY + faceStart + i);
   }
 
   // Face outline
   for (let i = 0; i < FACE.length; i++) {
-    pixel(ctx, outline, FACE[i][0], HY + 8 + i);
-    pixel(ctx, outline, FACE[i][0] + FACE[i][1] - 1, HY + 8 + i);
+    pixel(ctx, outline, FACE[i][0], HY + faceStart + i);
+    pixel(ctx, outline, FACE[i][0] + FACE[i][1] - 1, HY + faceStart + i);
   }
 
   // ── Glowing demon eyes ───────────────────────────────────────────────────

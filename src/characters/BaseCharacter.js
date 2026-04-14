@@ -83,27 +83,28 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   hLine(ctx, hairColors.shadow, HX, HY + 8, 28);
 
   // ── FACE WINDOW — skin cutout within the head shape ──────────────────────
+  // Wider face, less aggressive hair wrap — 2-3px hair on each side
   const FACE = [
-    [40, 16],  //  8 (y=13): narrow forehead
-    [39, 18],  //  9 (y=14): forehead widens
-    [38, 20],  // 10 (y=15): cheeks (eyes here)
-    [38, 20],  // 11 (y=16): cheeks
-    [38, 20],  // 12 (y=17): nose area
-    [39, 18],  // 13 (y=18): mouth area
-    [40, 16],  // 14 (y=19): jaw
-    [41, 14],  // 15 (y=20): lower jaw
-    [42, 12],  // 16 (y=21): chin
-    [43, 10],  // 17 (y=22): chin taper
+    [39, 18],  //  7 (y=12): forehead top
+    [37, 22],  //  8 (y=13): forehead widens
+    [36, 24],  //  9 (y=14): cheeks (brows/eyes here)
+    [36, 24],  // 10 (y=15): cheeks
+    [36, 24],  // 11 (y=16): nose area
+    [36, 24],  // 12 (y=17): mouth area
+    [37, 22],  // 13 (y=18): jaw
+    [38, 20],  // 14 (y=19): jaw
+    [39, 18],  // 15 (y=20): lower jaw
+    [40, 16],  // 16 (y=21): chin
+    [41, 15],  // 17 (y=22): chin bottom
   ];
-  const faceStartRow = 8; // face starts at HEAD row 8 (y = HY + 8 = 13)
+  const faceStartRow = 7; // face starts at HEAD row 7 (y = HY + 7 = 12)
   for (let i = 0; i < FACE.length; i++) {
     hLine(ctx, skinColors.base, FACE[i][0], HY + faceStartRow + i, FACE[i][1]);
   }
 
   // ── Face shading ─────────────────────────────────────────────────────────
-  fillRect(ctx, skinColors.highlight, 39, HY + 9, 3, 2);  // forehead highlight
-  // Right edge shadow within face area
-  for (let i = 1; i < FACE.length - 2; i++) {
+  fillRect(ctx, skinColors.highlight, 38, HY + 8, 3, 2);
+  for (let i = 2; i < FACE.length - 3; i++) {
     const [fx, fw] = FACE[i];
     px(ctx, skinColors.shadow, fx + fw - 2, HY + faceStartRow + i);
   }
@@ -117,7 +118,7 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 42, HY + 9, 3);   // left brow
+  hLine(ctx, hairColors.shadow, 41, HY + 9, 3);   // left brow
   hLine(ctx, hairColors.shadow, 50, HY + 9, 3);   // right brow
 
   // ── Eyes ──────────────────────────────────────────────────────────────────
