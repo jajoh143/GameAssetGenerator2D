@@ -188,6 +188,7 @@
       align-items: center;
       justify-content: center;
       min-height: 300px;
+      flex-shrink: 0;
       color: var(--muted);
       gap: 10px;
     }
@@ -200,6 +201,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       overflow: hidden;
+      flex-shrink: 0;   /* must not compress — let the parent scroll instead */
     }
     .card-header {
       display: flex;
@@ -317,6 +319,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 14px;
+      flex-shrink: 0;
     }
     .weapon-gallery h2 {
       font-size: 0.72rem;
