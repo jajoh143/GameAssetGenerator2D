@@ -31,8 +31,8 @@ function drawGroundShadow(ctx, cx, y, w=14, h=3) {
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // Default eye colors if not provided (backwards-compat)
   eyeColors = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  // 96px head: HX=34, HY=1, HW=28. Center x=48.
-  const HX = 34, HY = 1, HW = 28;
+  // 96px head: HX=34, HY=5, HW=28. Center x=48. Pushed down to meet neck at y=32.
+  const HX = 34, HY = 5, HW = 28;
   const outline = '#111111';
 
   // ── Oval face shape (max 25px wide, gradual taper to rounded chin) ────────
@@ -247,8 +247,8 @@ function drawHairSouth(ctx, hairColors, hairStyle, headX, headY, headW) {
 // ---------------------------------------------------------------------------
 
 function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
-  // 96px head: HX=34, HY=1, HW=28, HH=28
-  const HX = 34, HY = 1, HW = 28, HH = 28;
+  // 96px head: HX=34, HY=5, HW=28, HH=28
+  const HX = 34, HY = 5, HW = 28, HH = 28;
   const outline = '#111111';
 
   // Skin at neck/lower-back area
@@ -320,8 +320,8 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
-  // 96px profile head: HX=31, HY=1. 29 rows. Width up to 17px.
-  const HX = 31, HY = 1;
+  // 96px profile head: HX=31, HY=5. 29 rows. Width up to 17px.
+  const HX = 31, HY = 5;
   const outline = '#111111';
 
   const S = [
