@@ -304,15 +304,15 @@ function drawDemonHeadSouth(ctx, colors, config) {
     [36, 25],  // HY+15: widest
     [36, 25],  // HY+16: widest
     [36, 24],  // HY+17: taper begins
-    [37, 22],  // HY+18: mid jaw
-    [38, 20],  // HY+19: lower jaw
-    [39, 18],  // HY+20: jaw
-    [40, 16],  // HY+21: pre-chin
-    [41, 14],  // HY+22: pre-chin
-    [42, 13],  // HY+23: chin
-    [43, 11],  // HY+24: chin taper
-    [43, 11],  // HY+25: chin
-    [44,  9],  // HY+26: chin bottom
+    [37, 23],  // HY+18: jaw
+    [37, 22],  // HY+19: jaw
+    [38, 20],  // HY+20: lower jaw
+    [39, 18],  // HY+21: lower jaw
+    [40, 17],  // HY+22: pre-chin
+    [40, 16],  // HY+23: pre-chin
+    [41, 15],  // HY+24: chin
+    [41, 14],  // HY+25: chin taper
+    [42, 13],  // HY+26: chin bottom
   ];
   for (let i = 0; i < FACE.length; i++) {
     hLine(ctx, sk.base, FACE[i][0], HY + 10 + i, FACE[i][1]);
@@ -326,9 +326,9 @@ function drawDemonHeadSouth(ctx, colors, config) {
   pixel(ctx, sk.shadow, 60, HY + 14);
   pixel(ctx, sk.shadow, 60, HY + 15);
   // Chin shadow
-  hLine(ctx, sk.shadow, 40, HY + 21, 16);
-  hLine(ctx, sk.shadow, 43, HY + 24, 11);
-  hLine(ctx, sk.shadow, 44, HY + 26,  9);
+  hLine(ctx, sk.shadow, 39, HY + 21, 18);
+  hLine(ctx, sk.shadow, 41, HY + 24, 15);
+  hLine(ctx, sk.shadow, 42, HY + 26, 13);
 
   // ── Oval outline (generated from silhouette) ─────────────────────────────
   for (let i = 0; i < FACE.length; i++) {
