@@ -241,21 +241,35 @@ function drawFairyHeadSouth(ctx, skinColors, hairColors, eyeKey) {
   // ── Mouth: subtle 3px line ───────────────────────────────────────────────
   hLine(ctx, skinColors.shadow, HX + 11, eyeY + 10, 3);
 
-  // ── Hair: simple cap with highlight ──────────────────────────────────────
-  fillRect(ctx, hairColors.base, HX, HY - 3, HW, 7);  // hair cap
-  px(ctx, hairColors.shadow, HX,           HY - 3);
-  px(ctx, hairColors.shadow, HX + HW - 1,  HY - 3);
-  hLine(ctx, hairColors.highlight, HX + 4, HY - 3, HW - 10);
-  hLine(ctx, hairColors.highlight, HX + 3, HY - 2, HW - 8);
-  px(ctx, hairColors.highlight, HX + HW / 2 - 1, HY - 3);
+  // ── Hair: dome-shaped cap ─────────────────────────────────────────────────
+  const DOME = [
+    [4, HW - 8],   // row -3: crown (narrow)
+    [2, HW - 4],   // row -2: widening
+    [0, HW],       // row -1: matches head
+    [-1, HW + 2],  // row 0: volume overhang
+    [-1, HW + 2],  // row 1: volume
+    [0, HW],       // row 2: transition
+    [0, HW],       // row 3: hairline
+  ];
+  for (let r = 0; r < DOME.length; r++) {
+    const [off, w] = DOME[r];
+    hLine(ctx, hairColors.base, HX + off, HY - 3 + r, w);
+  }
+  // Crown highlights
+  hLine(ctx, hairColors.highlight, HX + 4, HY - 2, HW - 10);
+  hLine(ctx, hairColors.highlight, HX + 3, HY - 1, HW - 8);
+  px(ctx, hairColors.highlight, HX + Math.floor(HW / 2), HY - 3);
+  // Hairline shadow
   hLine(ctx, hairColors.shadow, HX, HY + 3, HW);
   // Side locks
   pixel(ctx, hairColors.base, HX - 1, HY + 3);
   pixel(ctx, hairColors.base, HX - 1, HY + 4);
   pixel(ctx, hairColors.base, HX + HW, HY + 3);
   pixel(ctx, hairColors.base, HX + HW, HY + 4);
-  // Outline top of hair
-  hLine(ctx, outline, HX + 2, HY - 4, HW - 4);
+  // Dome outline
+  px(ctx, hairColors.shadow, HX + 4, HY - 3);
+  px(ctx, hairColors.shadow, HX + HW - 5, HY - 3);
+  hLine(ctx, outline, HX + 5, HY - 4, HW - 10);
 }
 
 // ─── Fairy body (chibi proportions, 96px) ────────────────────────────────────

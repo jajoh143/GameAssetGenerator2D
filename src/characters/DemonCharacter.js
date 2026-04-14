@@ -291,94 +291,123 @@ function drawDemonHeadSouth(ctx, colors, config) {
   const sk = colors.skin;
   const hair = colors.hair;
   const outline = sk.outline || '#280000';
-  // HX=33, HY=8 — shifted down slightly from human (HY=1) to leave room for horns
-  const HX = 33, HY = 8, HW = 30;
+  // HX=35, HY=8 — shifted down slightly from human (HY=1) to leave room for horns
+  const HX = 35, HY = 8, HW = 26;
 
-  // ── Oval face (96px scaled, same structure as human head) ─────────────────
-  hLine(ctx, sk.base, 37, HY + 10, 21);   // y=18: 21px
-  hLine(ctx, sk.base, 36, HY + 11, 24);   // y=19: 24px
-  fillRect(ctx, sk.base, 35, HY + 12, 27, 3);  // y=20-22: cheeks 27px
-  fillRect(ctx, sk.base, 35, HY + 15, 27, 3);  // y=23-25: 27px
-  fillRect(ctx, sk.base, 36, HY + 18, 24, 3);  // y=26-28: lower jaw 24px
-  fillRect(ctx, sk.base, 37, HY + 21, 21, 3);  // y=29-31: pre-chin 21px
-  fillRect(ctx, sk.base, 40, HY + 24, 15, 2);  // y=32-33: chin 15px
-  hLine(ctx, sk.base,   43, HY + 26,  9);      // y=34: chin taper 9px
-  hLine(ctx, sk.base,   45, HY + 27,  6);      // y=35: chin tip 6px
+  // ── Oval face (narrower oval — same structure as human) ──────────────────
+  const FACE = [
+    [40, 16],  // HY+10: forehead top
+    [39, 18],  // HY+11: forehead
+    [38, 20],  // HY+12: temples
+    [37, 22],  // HY+13: upper cheeks
+    [37, 23],  // HY+14: widest
+    [37, 23],  // HY+15: widest
+    [37, 23],  // HY+16: widest
+    [37, 22],  // HY+17: taper begins
+    [38, 20],  // HY+18: mid jaw
+    [39, 18],  // HY+19: lower jaw
+    [40, 16],  // HY+20: jaw
+    [41, 14],  // HY+21: pre-chin
+    [42, 12],  // HY+22: pre-chin
+    [43, 10],  // HY+23: chin
+    [44,  8],  // HY+24: chin taper
+    [45,  7],  // HY+25: chin
+    [46,  5],  // HY+26: chin narrow
+    [47,  3],  // HY+27: chin tip
+  ];
+  for (let i = 0; i < FACE.length; i++) {
+    hLine(ctx, sk.base, FACE[i][0], HY + 10 + i, FACE[i][1]);
+  }
 
   // ── Form shading ──────────────────────────────────────────────────────────
-  fillRect(ctx, sk.highlight, 36, HY + 11, 4, 4); // left cheek highlight
-  hLine(ctx,   sk.highlight,  37, HY + 10, 3);     // forehead
-  vLine(ctx,   sk.shadow,     57, HY + 13, 7);     // right-center falloff
-  vLine(ctx,   sk.shadow,     58, HY + 13, 5);
-  vLine(ctx,   sk.shadow,     59, HY + 12, 10);    // edge shadow
-  vLine(ctx,   sk.shadow,     60, HY + 12,  7);
-  pixel(ctx,   sk.shadow,     61, HY + 13);
-  pixel(ctx,   sk.shadow,     61, HY + 14);
-  pixel(ctx,   sk.shadow,     61, HY + 15);
+  fillRect(ctx, sk.highlight, 38, HY + 11, 4, 3);
+  hLine(ctx, sk.highlight, 39, HY + 10, 3);
+  vLine(ctx, sk.shadow, 57, HY + 13, 7);
+  vLine(ctx, sk.shadow, 58, HY + 13, 5);
+  pixel(ctx, sk.shadow, 59, HY + 14);
+  pixel(ctx, sk.shadow, 59, HY + 15);
   // Chin shadow
-  hLine(ctx, sk.shadow, 37, HY + 21, 21);
-  hLine(ctx, sk.shadow, 40, HY + 24, 15);
-  hLine(ctx, sk.shadow, 43, HY + 26,  9);
-  hLine(ctx, sk.shadow, 45, HY + 27,  6);
+  hLine(ctx, sk.shadow, 41, HY + 21, 14);
+  hLine(ctx, sk.shadow, 44, HY + 24,  8);
+  hLine(ctx, sk.shadow, 46, HY + 26,  5);
+  hLine(ctx, sk.shadow, 47, HY + 27,  3);
 
-  // ── Oval outline ──────────────────────────────────────────────────────────
-  pixel(ctx, outline, 37, HY + 10); pixel(ctx, outline, 36, HY + 11);
-  vLine(ctx, outline, 35, HY + 12, 3);
-  pixel(ctx, outline, 36, HY + 18); pixel(ctx, outline, 36, HY + 19);
-  pixel(ctx, outline, 37, HY + 21); pixel(ctx, outline, 38, HY + 22);
-  pixel(ctx, outline, 40, HY + 24); pixel(ctx, outline, 43, HY + 26);
-  pixel(ctx, outline, 45, HY + 27); pixel(ctx, outline, 44, HY + 28);
-  pixel(ctx, outline, 57, HY + 10); pixel(ctx, outline, 58, HY + 11);
-  vLine(ctx, outline, 61, HY + 12, 3);
-  pixel(ctx, outline, 59, HY + 18); pixel(ctx, outline, 59, HY + 19);
-  pixel(ctx, outline, 58, HY + 21); pixel(ctx, outline, 57, HY + 22);
-  pixel(ctx, outline, 55, HY + 24); pixel(ctx, outline, 52, HY + 26);
-  pixel(ctx, outline, 50, HY + 27);
-  hLine(ctx, outline, 45, HY + 28, 6); // chin tip bottom
+  // ── Oval outline (generated from silhouette) ─────────────────────────────
+  for (let i = 0; i < FACE.length; i++) {
+    const [fx, fw] = FACE[i];
+    const y = HY + 10 + i;
+    pixel(ctx, outline, fx, y);
+    pixel(ctx, outline, fx + fw - 1, y);
+  }
+  hLine(ctx, outline, FACE[FACE.length - 1][0], HY + 10 + FACE.length, FACE[FACE.length - 1][1]);
 
   // ── Glowing demon eyes (3px wide × 2px tall slits) ────────────────────────
   const eyeY = HY + 15;
   const glowHalo = 'rgba(255,100,0,0.3)';
 
-  // Left eye glow halo (reduced)
-  hLine(ctx, glowHalo, 40, eyeY - 1, 5);
-  pixel(ctx, glowHalo, 40, eyeY + 2);
-  pixel(ctx, glowHalo, 44, eyeY + 2);
+  // Left eye glow halo
+  hLine(ctx, glowHalo, 41, eyeY - 1, 5);
+  pixel(ctx, glowHalo, 41, eyeY + 2);
+  pixel(ctx, glowHalo, 45, eyeY + 2);
 
-  // Left eye fill (x=41-43, 2 rows)
-  fillRect(ctx, '#FF6600', 41, eyeY, 3, 2);
-  pixel(ctx, '#FFDD00', 42, eyeY);               // bright center
-  pixel(ctx, '#FFFFFF', 41, eyeY);                // specular glint
+  // Left eye fill (x=42-44, 2 rows)
+  fillRect(ctx, '#FF6600', 42, eyeY, 3, 2);
+  pixel(ctx, '#FFDD00', 43, eyeY);               // bright center
+  pixel(ctx, '#FFFFFF', 42, eyeY);                // specular glint
 
-  // Right eye glow halo (reduced)
-  hLine(ctx, glowHalo, 49, eyeY - 1, 5);
-  pixel(ctx, glowHalo, 49, eyeY + 2);
-  pixel(ctx, glowHalo, 53, eyeY + 2);
+  // Right eye glow halo
+  hLine(ctx, glowHalo, 48, eyeY - 1, 5);
+  pixel(ctx, glowHalo, 48, eyeY + 2);
+  pixel(ctx, glowHalo, 52, eyeY + 2);
 
-  // Right eye fill (x=50-52, 2 rows)
-  fillRect(ctx, '#FF6600', 50, eyeY, 3, 2);
-  pixel(ctx, '#FFDD00', 51, eyeY);
-  pixel(ctx, '#FFFFFF', 52, eyeY);
+  // Right eye fill (x=49-51, 2 rows)
+  fillRect(ctx, '#FF6600', 49, eyeY, 3, 2);
+  pixel(ctx, '#FFDD00', 50, eyeY);
+  pixel(ctx, '#FFFFFF', 51, eyeY);
 
-  // Brow ridge (reduced to 5px wide × 2 rows)
+  // Brow ridge (5px wide × 2 rows)
   const deepShadow = sk.deep_shadow || sk.shadow;
-  hLine(ctx, deepShadow, 40, eyeY - 2, 5);
-  hLine(ctx, outline,    40, eyeY - 3, 5);
-  hLine(ctx, deepShadow, 49, eyeY - 2, 5);
-  hLine(ctx, outline,    49, eyeY - 3, 5);
+  hLine(ctx, deepShadow, 41, eyeY - 2, 5);
+  hLine(ctx, outline,    41, eyeY - 3, 5);
+  hLine(ctx, deepShadow, 48, eyeY - 2, 5);
+  hLine(ctx, outline,    48, eyeY - 3, 5);
 
   // ── Nose + snarl mouth ────────────────────────────────────────────────────
-  pixel(ctx, sk.shadow, 48, HY + 20);                                       // single nose shadow
-  hLine(ctx, outline,   45, HY + 22, 6);                                    // mouth line (narrower)
-  pixel(ctx, '#FF4444', 46, HY + 23); pixel(ctx, '#FF4444', 50, HY + 23);  // fangs
+  pixel(ctx, sk.shadow, 48, HY + 20);
+  hLine(ctx, outline,   45, HY + 22, 6);
+  pixel(ctx, '#FF4444', 46, HY + 23); pixel(ctx, '#FF4444', 50, HY + 23);
 
-  // ── Hair covering top of head (10 rows, HW wide) ─────────────────────────
-  fillRect(ctx, hair.base,      HX,      HY,      HW,    10);
-  fillRect(ctx, hair.highlight, HX +  3, HY,      HW-9,   4);
-  fillRect(ctx, hair.shadow,    HX,      HY + 7,  HW,     3);
-  fillRect(ctx, hair.base,      HX,      HY,       3,    17); // left sideburn
-  fillRect(ctx, hair.base,      HX+HW-3, HY,       3,    17); // right sideburn
-  hLine(ctx, '#111111', HX + 1, HY, HW - 2); // hair top outline
+  // ── Hair dome (same shape as human but simplified) ────────────────────────
+  const DOME = [
+    [4,  18], [2,  22], [0,  26], [-1, 28],
+    [-2, 30], [-2, 30], [-2, 30], [-1, 28],
+    [0,  26], [0,  26],
+  ];
+  for (let r = 0; r < DOME.length; r++) {
+    const [off, w] = DOME[r];
+    hLine(ctx, hair.base, HX + off, HY + r, w);
+  }
+  hLine(ctx, hair.highlight, HX + 4, HY + 1, 12);
+  hLine(ctx, hair.highlight, HX + 2, HY + 2, 14);
+  hLine(ctx, hair.shadow, HX, HY + 7, 28);
+  hLine(ctx, hair.shadow, HX, HY + 8, 26);
+  hLine(ctx, hair.shadow, HX, HY + 9, 26);
+  // Sideburns (tapered)
+  for (let r = 0; r < 17; r++) {
+    const w = r < 10 ? 3 : r < 14 ? 2 : 1;
+    const col = r >= 14 ? hair.shadow : hair.base;
+    for (let i = 0; i < w; i++) {
+      pixel(ctx, i === w - 1 ? hair.shadow : col, HX + i, HY + r);
+      pixel(ctx, i === 0 ? hair.shadow : col, HX + HW - 1 - i, HY + r);
+    }
+  }
+  // Dome outline
+  for (let r = 0; r < DOME.length; r++) {
+    const [off, w] = DOME[r];
+    pixel(ctx, hair.shadow, HX + off, HY + r);
+    pixel(ctx, hair.shadow, HX + off + w - 1, HY + r);
+  }
+  hLine(ctx, '#111111', HX + 5, HY, 16);
 
   // ── Horns drawn on top of hair ────────────────────────────────────────────
   drawHornsSouth(ctx, colors, config.hornStyle || 'curved', HY);
