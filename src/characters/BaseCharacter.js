@@ -36,6 +36,7 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
 
   // ── HEAD SHAPE — unified silhouette drawn in hair color first ────────────
   // [offset from HX, width] — hair defines the full head shape
+  // More oval: wide dome, tapers through face to chin
   const HEAD = [
     [4,  20],  //  0 (y= 5): crown top
     [2,  24],  //  1 (y= 6): upper dome
@@ -45,19 +46,18 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
     [-2, 32],  //  5 (y=10): max volume
     [-2, 32],  //  6 (y=11): max volume
     [-1, 30],  //  7 (y=12): contracts
-    [0,  28],  //  8 (y=13): head width
-    [0,  28],  //  9 (y=14): hairline / forehead
-    [0,  28],  // 10 (y=15): eye zone
-    [0,  28],  // 11 (y=16): eye zone
-    [0,  28],  // 12 (y=17): nose
-    [0,  28],  // 13 (y=18): mouth
-    [1,  26],  // 14 (y=19): jaw
-    [2,  24],  // 15 (y=20): jaw
-    [3,  22],  // 16 (y=21): jaw taper
-    [4,  20],  // 17 (y=22): lower jaw
-    [5,  18],  // 18 (y=23): chin
-    [6,  16],  // 19 (y=24): chin
-    [7,  15],  // 20 (y=25): chin bottom
+    [0,  28],  //  8 (y=13): hairline
+    [0,  28],  //  9 (y=14): forehead
+    [1,  26],  // 10 (y=15): cheeks taper
+    [1,  26],  // 11 (y=16): cheeks
+    [1,  26],  // 12 (y=17): nose
+    [2,  24],  // 13 (y=18): mouth — tapers more
+    [2,  24],  // 14 (y=19): jaw
+    [3,  22],  // 15 (y=20): jaw taper
+    [4,  20],  // 16 (y=21): lower jaw
+    [5,  18],  // 17 (y=22): chin
+    [6,  16],  // 18 (y=23): chin
+    [7,  15],  // 19 (y=24): chin bottom
   ];
 
   // Fill entire head shape with hair base color
@@ -83,19 +83,19 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   hLine(ctx, hairColors.shadow, HX, HY + 8, 28);
 
   // ── FACE WINDOW — skin cutout within the head shape ──────────────────────
-  // Wider face, less aggressive hair wrap — 2-3px hair on each side
+  // Face fits within tapered head — hair wraps 2px on each side
   const FACE = [
     [39, 18],  //  7 (y=12): forehead top
     [37, 22],  //  8 (y=13): forehead widens
-    [36, 24],  //  9 (y=14): cheeks (brows/eyes here)
-    [36, 24],  // 10 (y=15): cheeks
-    [36, 24],  // 11 (y=16): nose area
-    [36, 24],  // 12 (y=17): mouth area
-    [37, 22],  // 13 (y=18): jaw
-    [38, 20],  // 14 (y=19): jaw
-    [39, 18],  // 15 (y=20): lower jaw
-    [40, 16],  // 16 (y=21): chin
-    [41, 15],  // 17 (y=22): chin bottom
+    [37, 22],  //  9 (y=14): cheeks (brows/eyes here)
+    [37, 22],  // 10 (y=15): cheeks
+    [37, 22],  // 11 (y=16): cheeks
+    [37, 22],  // 12 (y=17): nose area
+    [38, 20],  // 13 (y=18): mouth area
+    [39, 18],  // 14 (y=19): jaw
+    [40, 16],  // 15 (y=20): lower jaw
+    [41, 15],  // 16 (y=21): chin
+    [42, 14],  // 17 (y=22): chin bottom
   ];
   const faceStartRow = 7; // face starts at HEAD row 7 (y = HY + 7 = 12)
   for (let i = 0; i < FACE.length; i++) {
@@ -203,9 +203,9 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
   const HEAD = [
     [4,  20], [2,  24], [0,  28], [-1, 30],
     [-2, 32], [-2, 32], [-2, 32], [-1, 30],
-    [0,  28], [0,  28], [0,  28], [0,  28],
-    [0,  28], [0,  28], [1,  26], [2,  24],
-    [3,  22], [4,  20], [5,  18], [6,  16], [7,  15],
+    [0,  28], [0,  28], [1,  26], [1,  26],
+    [1,  26], [2,  24], [2,  24], [3,  22],
+    [4,  20], [5,  18], [6,  16], [7,  15],
   ];
 
   // Skin at neck/lower-back area
@@ -1483,8 +1483,8 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   //
   // Anti-banding: shadow strip width varies. Widens at mid-bicep, elbow, forearm.
   // torsoY: top of torso, used as the shoulder anchor Y (default 28 for legacy compat).
-  const lx = 27;                // left arm shoulder outer-edge anchor (fixed, 96px)
-  const shoulderRX = 62;        // right arm shoulder left-edge anchor (fixed, 96px)
+  const lx = 25;                // left arm shoulder outer-edge anchor (fixed, 96px)
+  const shoulderRX = 64;        // right arm shoulder left-edge anchor (fixed, 96px)
   const baseY = torsoY;
   const baseAW = 7, sleeveH = 16, handH = 6;
   const maxRow = sleeveH - 1;  // 15
