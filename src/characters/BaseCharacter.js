@@ -48,28 +48,20 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   hLine(ctx, skinColors.base,   46, HY + 28,   4);     // y=29:  4px chin tip
 
   // ── Face sphere shading (light from upper-left) ───────────────────────────
-  // Highlight: tight 4×3 cluster on forehead/left cheek
-  fillRect(ctx, skinColors.highlight, 36, HY + 11, 4, 3);
-  hLine(ctx, skinColors.highlight, 37, HY + 10, 3);
+  // Highlight: tight 5×3 cluster on forehead/left cheek
+  fillRect(ctx, skinColors.highlight, 36, HY + 11, 5, 3);
+  hLine(ctx, skinColors.highlight, 37, HY + 10, 4);
 
-  // Mid-shadow (right-center falloff)
-  vLine(ctx, skinColors.shadow, 57, HY + 13, 7);
-  vLine(ctx, skinColors.shadow, 58, HY + 13, 5);
-  // Edge shadow (right)
+  // Edge shadow (right outer edge only — no interior columns)
   vLine(ctx, skinColors.shadow, 59, HY + 12, 10);
   vLine(ctx, skinColors.shadow, 60, HY + 12,  7);
   px(ctx, skinColors.shadow, 61, HY + 13);
   px(ctx, skinColors.shadow, 61, HY + 14);
   px(ctx, skinColors.shadow, 61, HY + 15);
-  // Brow-cast shadow (center forehead)
-  hLine(ctx, skinColors.shadow, 41, HY + 10, 8);
 
-  // Chin shadow (under-lit)
-  hLine(ctx, skinColors.shadow, 37, HY + 21, 21);
-  hLine(ctx, skinColors.shadow, 40, HY + 24, 15);
+  // Chin shadow (minimal — 2 subtle lines only)
+  hLine(ctx, skinColors.shadow, 41, HY + 24, 12);
   hLine(ctx, skinColors.shadow, 43, HY + 26,  9);
-  hLine(ctx, skinColors.shadow, 45, HY + 27,  6);
-  hLine(ctx, skinColors.shadow, 46, HY + 28,  4);
 
   // ── Oval outline ─────────────────────────────────────────────────────────
   // Left side
