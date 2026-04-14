@@ -41,11 +41,13 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   fillRect(ctx, skinColors.base, 35, HY + 12, 27, 3); // y=13-15: 27px forehead/cheeks
   fillRect(ctx, skinColors.base, 35, HY + 15, 27, 3); // y=16-18: 27px cheeks
   fillRect(ctx, skinColors.base, 36, HY + 18, 24, 3); // y=19-21: 24px lower jaw
-  fillRect(ctx, skinColors.base, 37, HY + 21, 21, 3); // y=22-24: 21px pre-chin
-  fillRect(ctx, skinColors.base, 40, HY + 24,  15, 2); // y=25-26: 15px chin
-  hLine(ctx, skinColors.base,   43, HY + 26,   9);     // y=27:  9px chin taper
-  hLine(ctx, skinColors.base,   45, HY + 27,   6);     // y=28:  6px
-  hLine(ctx, skinColors.base,   46, HY + 28,   4);     // y=29:  4px chin tip
+  fillRect(ctx, skinColors.base, 37, HY + 21, 21, 2); // y=22-23: 21px jaw
+  hLine(ctx, skinColors.base,   38, HY + 23,  19);    // y=24: 19px (1px/side)
+  hLine(ctx, skinColors.base,   39, HY + 24,  17);    // y=25: 17px (1px/side)
+  hLine(ctx, skinColors.base,   40, HY + 25,  15);    // y=26: 15px (1px/side)
+  hLine(ctx, skinColors.base,   41, HY + 26,  13);    // y=27: 13px (1px/side)
+  hLine(ctx, skinColors.base,   42, HY + 27,  11);    // y=28: 11px (1px/side)
+  hLine(ctx, skinColors.base,   43, HY + 28,   9);    // y=29:  9px rounded chin
 
   // ── Face sphere shading (light from upper-left) ───────────────────────────
   // Highlight: tight 5×3 cluster on forehead/left cheek
@@ -59,10 +61,6 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   px(ctx, skinColors.shadow, 61, HY + 14);
   px(ctx, skinColors.shadow, 61, HY + 15);
 
-  // Chin shadow (minimal — 2 subtle lines only)
-  hLine(ctx, skinColors.shadow, 41, HY + 24, 12);
-  hLine(ctx, skinColors.shadow, 43, HY + 26,  9);
-
   // ── Oval outline ─────────────────────────────────────────────────────────
   // Left side
   px(ctx, outline, 37, HY + 10);
@@ -70,27 +68,30 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   vLine(ctx, outline, 35, HY + 12, 3);   // cheeks widest
   px(ctx, outline, 36, HY + 18);
   px(ctx, outline, 36, HY + 19);
-  px(ctx, outline, 37, HY + 21);
-  px(ctx, outline, 38, HY + 22);
-  px(ctx, outline, 40, HY + 24);
-  px(ctx, outline, 43, HY + 26);
-  px(ctx, outline, 45, HY + 27);
-  px(ctx, outline, 46, HY + 28);
+  px(ctx, outline, 37, HY + 21);  // 21px row 1
+  px(ctx, outline, 37, HY + 22);  // 21px row 2
+  px(ctx, outline, 38, HY + 23);  // 19px
+  px(ctx, outline, 39, HY + 24);  // 17px
+  px(ctx, outline, 40, HY + 25);  // 15px
+  px(ctx, outline, 41, HY + 26);  // 13px
+  px(ctx, outline, 42, HY + 27);  // 11px
+  px(ctx, outline, 43, HY + 28);  // 9px
   // Right side (mirror)
   px(ctx, outline, 57, HY + 10);
   px(ctx, outline, 58, HY + 11);
   vLine(ctx, outline, 61, HY + 12, 3);   // cheeks widest
   px(ctx, outline, 59, HY + 18);
   px(ctx, outline, 59, HY + 19);
-  px(ctx, outline, 57, HY + 21);
-  px(ctx, outline, 56, HY + 22);
-  px(ctx, outline, 55, HY + 23);
-  px(ctx, outline, 54, HY + 24);
-  px(ctx, outline, 52, HY + 26);
-  px(ctx, outline, 50, HY + 27);
-  px(ctx, outline, 49, HY + 28);
-  // Chin tip bottom
-  hLine(ctx, outline, 46, HY + 29, 4);
+  px(ctx, outline, 57, HY + 21);  // 21px row 1
+  px(ctx, outline, 57, HY + 22);  // 21px row 2
+  px(ctx, outline, 56, HY + 23);  // 19px (38+19-1=56)
+  px(ctx, outline, 55, HY + 24);  // 17px (39+17-1=55)
+  px(ctx, outline, 54, HY + 25);  // 15px (40+15-1=54)
+  px(ctx, outline, 53, HY + 26);  // 13px (41+13-1=53)
+  px(ctx, outline, 52, HY + 27);  // 11px (42+11-1=52)
+  px(ctx, outline, 51, HY + 28);  // 9px  (43+9-1=51)
+  // Chin bottom
+  hLine(ctx, outline, 43, HY + 29, 9);
 
   // ── Eyebrows (2-row arch, chibi — slightly thicker) ──────────────────────
   const browY = HY + 13;   // y=14
