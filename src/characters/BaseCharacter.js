@@ -359,17 +359,17 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
     [0, 19],  // 17
     [0, 19],  // 18
     [0, 19],  // 19  jaw widest
-    [0, 17],  // 20  jaw taper
-    [0, 16],  // 21
-    [0, 15],  // 22
-    [1, 13],  // 23  chin start
-    [2, 11],  // 24
-    [3,  9],  // 25  chin narrows
-    [4,  7],  // 26
-    [5,  5],  // 27  chin tip
-    [6,  4],  // 28
-    [7,  3],  // 29  chin point
-    [8,  3],  // 30  chin bottom
+    [0, 18],  // 20  jaw taper (right side -1 only)
+    [1, 16],  // 21  both sides taper 1px
+    [2, 14],  // 22  1px each side
+    [3, 12],  // 23  1px each side
+    [4, 10],  // 24  1px each side
+    [5,  9],  // 25  left tapers; right holds at x=43
+    [6,  8],  // 26  left tapers; right holds
+    [7,  7],  // 27  left tapers; right holds
+    [8,  6],  // 28  left tapers; right holds
+    [9,  5],  // 29  left tapers; right holds
+    [10, 4],  // 30  chin bottom (wider, rounder)
   ];
   const HH = S.length;  // 31
 
@@ -392,8 +392,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
     px(ctx, skinColors.shadow, HX + xo + w - 2, HY + r);
     px(ctx, skinColors.shadow, HX + xo + w - 3, HY + r);
   }
-  // Chin underside shadow
-  for (let r = 22; r < HH; r++) {
+  // Chin underside shadow — only bottom rows to avoid dark block over whole chin
+  for (let r = 26; r < HH; r++) {
     const [xo, w] = S[r];
     hLine(ctx, skinColors.shadow, HX + xo + 1, HY + r, Math.max(1, w - 2));
   }
