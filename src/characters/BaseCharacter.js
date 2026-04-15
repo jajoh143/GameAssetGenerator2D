@@ -30,13 +30,13 @@ function drawGroundShadow(ctx, cx, y, w=14, h=3) {
 
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   eyeColors = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  const HX = 35, HY = 12, HW = 22;
+  const HX = 35, HY = 22, HW = 22;
   const cx = HX + Math.floor(HW / 2); // center x ≈ 46
   const outline = '#111111';
 
   // ── HEAD SHAPE — compact oval, no overhang ──────────────────────────────
   // [offset from HX, width] — hair defines full silhouette
-  // Max 22px wide. Chin at y=31 meets neck at y=32.
+  // Max 22px wide. Chin at y=41 meets neck at y=42.
   const HEAD = [
     [5, 12],  //  0 (y=12): crown top
     [3, 16],  //  1 (y=13): upper dome
@@ -189,7 +189,7 @@ function drawHairSouth() {}
 // ---------------------------------------------------------------------------
 
 function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
-  const HX = 35, HY = 12, HW = 22;
+  const HX = 35, HY = 22, HW = 22;
   const outline = '#111111';
 
   // Same compact HEAD shape as south view — all hair, no face window
@@ -248,8 +248,8 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
-  // Profile head: HX=31, HY=12. 20 rows — chin at y=31 meets neck at y=32.
-  const HX = 31, HY = 12;
+  // Profile head: HX=31, HY=22. 20 rows — chin at y=41 meets neck at y=42.
+  const HX = 31, HY = 22;
   const outline = '#111111';
 
   // Compact profile silhouette — max 15px wide
@@ -348,8 +348,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawNeckSouth(ctx, skinColors, baseY) {
-  // neck scaled ×1.5: 15px wide × 3px, centered at x=41-55 (center=48)
-  const NX = 41, NW = 15, NH = 3;
+  // Proportional neck: 11px wide × 2px
+  const NX = 43, NW = 11, NH = 2;
   fillRect(ctx, skinColors.base, NX, baseY, NW, NH);
   vLine(ctx, skinColors.highlight, NX + 1, baseY, NH);
   vLine(ctx, skinColors.shadow,    NX + NW - 2, baseY, NH);
@@ -1071,13 +1071,13 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
   // For jacket: front 2px opening shows shirt/collar suggestion.
   // For coats: h extended by 13 rows to cover upper legs in side view.
   const isCoat = clothingKey && clothingKey.startsWith('coat');
-  const h = isCoat ? 43 : 24;
-  const SHOULDER = 4, WAIST_S = 10, WAIST_E = 16;
+  const h = isCoat ? 35 : 20;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 13;
 
   const rowW = (row) => {
-    if (row < SHOULDER)                       return 19;  // full shoulder
-    if (row >= WAIST_S && row <= WAIST_E)    return 16;  // narrow waist
-    return 18;                                             // chest/hip
+    if (row < SHOULDER)                       return 16;  // full shoulder
+    if (row >= WAIST_S && row <= WAIST_E)    return 13;  // narrow waist
+    return 15;                                             // chest/hip
   };
 
   // Fill row by row
@@ -1182,8 +1182,8 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 // ---------------------------------------------------------------------------
 
 function drawBeltSouth(ctx, beltColors, x, y) {
-  // Belt / hip band: 24px wide, anchors torso-to-leg transition.
-  const w = 24, h = 3;
+  // Belt / hip band: 20px wide, anchors torso-to-leg transition.
+  const w = 20, h = 3;
   fillRect(ctx, beltColors.base, x, y, w, h);
   // Highlight on belt top row (belt leather catches light from above)
   hLine(ctx, beltColors.highlight, x + 1, y, w - 2);
@@ -1210,7 +1210,7 @@ function drawBeltSouth(ctx, beltColors, x, y) {
 }
 
 function drawBeltWest(ctx, beltColors, x, y) {
-  const w = 19, h = 3;
+  const w = 16, h = 3;
   fillRect(ctx, beltColors.base, x, y, w, h);
   hLine(ctx, beltColors.highlight, x + 1, y, w - 2);
   hLine(ctx, beltColors.shadow,    x + 1, y + 2, w - 2);
@@ -1232,21 +1232,21 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
   //   this is the SNES standard for south-facing walk depth differentiation.
   //
   // Split DY: thigh rows (0-5) fixed at baseY, knee-to-ankle (6+) shift.
-  const legH = 26;
-  const KNEE_ROW = 7;
-  // At 96px: lx=38, rx=50 gives 3px inner gap with 9px thigh width
-  const lx = 38 + Math.round(lLegDX);
-  const rx = 50 + Math.round(rLegDX);
+  const legH = 22;
+  const KNEE_ROW = 6;
+  // Narrower legs: lx=40, rx=49, 7px thigh with 2px inner gap
+  const lx = 40 + Math.round(lLegDX);
+  const rx = 49 + Math.round(rLegDX);
   const y  = baseY;
 
-  // Organic leg shape: thigh → knee (narrow) → calf swell → shin → ankle
+  // Organic leg shape: thigh → knee → calf swell → shin → ankle
   const rows = [
-    [0, 9], [0, 9], [0, 9], [0, 9], [0, 9], [0, 9],  // 0-5: thigh 9px
-    [0, 8], [0, 8], [0, 8],                            // 6-8: thigh-to-knee taper
-    [0, 7], [0, 7], [0, 7], [0, 7], [0, 7],           // 9-13: knee 7px (narrowest)
-    [0, 8], [0, 8], [0, 8], [0, 8],                   // 14-17: calf swell 8px
-    [0, 7], [0, 7], [0, 7], [0, 7],                   // 18-21: lower shin 7px
-    [0, 6], [0, 6], [0, 6], [0, 6],                   // 22-25: ankle 6px
+    [0, 7], [0, 7], [0, 7], [0, 7], [0, 7],  // 0-4: thigh 7px
+    [0, 6], [0, 6], [0, 6],                   // 5-7: knee taper 6px
+    [0, 5], [0, 5], [0, 5],                   // 8-10: knee 5px
+    [0, 6], [0, 6], [0, 6], [0, 6],           // 11-14: calf swell 6px
+    [0, 5], [0, 5], [0, 5], [0, 5],           // 15-18: lower shin 5px
+    [0, 4], [0, 4], [0, 4],                   // 19-21: ankle 4px
   ];
 
   // Forward-leg color differentiation (SNES technique: brighter = forward, darker = behind)
@@ -1317,22 +1317,22 @@ function drawLegsWest(ctx, pantColors, frontLegX, backLegX, legTopY, frontLift=0
   // SNES-style profile legs: taper thigh→knee→shin→ankle.
   // Knee bump: kneecap protrudes 1px toward front (lower X in west view).
   // 26 rows scaled from 17-row 64px layout.
-  const legH = 26;
+  const legH = 22;
 
-  // Per-row layout [xOffset from legX, width] for front leg (west = facing left, kneecap at front = lower X)
-  // thigh: 7px at legX-3; knee: 9px at legX-4 (1px forward bump); shin: 7px at legX-3; ankle: 6px at legX-2
+  // Narrower profile legs: thigh 6px, knee bump 7px, shin 5px, ankle 4px
   const frontRows = [
-    [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7],  // 0-8: thigh 7px
-    [-4, 9], [-4, 9], [-4, 9], [-4, 9], [-4, 9],                                        // 9-13: knee 9px (kneecap bump)
-    [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7],            // 14-21: shin 7px
-    [-2, 6], [-2, 6], [-2, 6], [-2, 6],                                                  // 22-25: ankle 6px
+    [-2, 6], [-2, 6], [-2, 6], [-2, 6], [-2, 6],  // 0-4: thigh
+    [-3, 7], [-3, 7], [-3, 7], [-3, 7],            // 5-8: knee bump
+    [-2, 6], [-2, 6], [-2, 6], [-2, 6],            // 9-12: calf
+    [-2, 5], [-2, 5], [-2, 5], [-2, 5], [-2, 5],   // 13-17: shin
+    [-1, 4], [-1, 4], [-1, 4], [-1, 4],            // 18-21: ankle
   ];
-  // Back leg: slightly simpler (less detail = depth), no kneecap bump outward
   const backRows = [
-    [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7],
-    [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7],
-    [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-3, 7],
+    [-2, 6], [-2, 6], [-2, 6], [-2, 6], [-2, 6],
     [-2, 6], [-2, 6], [-2, 6], [-2, 6],
+    [-2, 6], [-2, 6], [-2, 6], [-2, 6],
+    [-2, 5], [-2, 5], [-2, 5], [-2, 5], [-2, 5],
+    [-1, 4], [-1, 4], [-1, 4], [-1, 4],
   ];
 
   // ── Back leg (shadow tone, drawn first so front leg is on top) ────────────
@@ -1387,40 +1387,27 @@ function drawLegsWest(ctx, pantColors, frontLegX, backLegX, legTopY, frontLift=0
 // ---------------------------------------------------------------------------
 
 function drawShoesSouth(ctx, shoeColors, lShoeDX, rShoeDX, baseY, lShoeDY=0, rShoeDY=0) {
-  // Left shoe: x=35, 15px wide, 6px tall (scaled ×1.5 from 64px)
-  // Right shoe: x=51, 15px wide
-  const lx = 35 + Math.round(lShoeDX);
-  const rx = 51 + Math.round(rShoeDX);
-  const ly = baseY + Math.round(lShoeDY);   // left foot Y (forward = slightly lower)
-  const ry = baseY + Math.round(rShoeDY);   // right foot Y
+  const sw = 11, sh = 5;
+  const lx = 38 + Math.round(lShoeDX);
+  const rx = 48 + Math.round(rShoeDX);
+  const ly = baseY + Math.round(lShoeDY);
+  const ry = baseY + Math.round(rShoeDY);
 
   // ── Left shoe ─────────────────────────────────────────────────────────────
-  fillRect(ctx, shoeColors.base, lx, ly, 15, 6);
-  hLine(ctx, shoeColors.highlight, lx + 3, ly, 10);
-  hLine(ctx, shoeColors.highlight, lx + 4, ly + 1, 6);
-  // Midsole line: highlight stripe separating upper from sole
-  hLine(ctx, shoeColors.highlight, lx + 2, ly + 3, 11);
-  hLine(ctx, shoeColors.shadow, lx, ly + 4, 15);
-  hLine(ctx, shoeColors.shadow, lx, ly + 5, 15);
-  erasePixel(ctx, lx, ly);
-  px(ctx, shoeColors.shadow, lx + 1, ly);
-  px(ctx, shoeColors.highlight, lx + 14, ly);
-  outlineRect(ctx, shoeColors.outline, lx, ly, 15, 6);
-  px(ctx, shoeColors.shadow, lx + 3, ly + 1);
+  fillRect(ctx, shoeColors.base, lx, ly, sw, sh);
+  hLine(ctx, shoeColors.highlight, lx + 2, ly, sw - 3);
+  hLine(ctx, shoeColors.highlight, lx + 3, ly + 1, sw - 5);
+  hLine(ctx, shoeColors.shadow, lx, ly + sh - 2, sw);
+  hLine(ctx, shoeColors.shadow, lx, ly + sh - 1, sw);
+  outlineRect(ctx, shoeColors.outline, lx, ly, sw, sh);
 
   // ── Right shoe ────────────────────────────────────────────────────────────
-  fillRect(ctx, shoeColors.base, rx, ry, 15, 6);
-  hLine(ctx, shoeColors.highlight, rx + 2, ry, 10);
-  hLine(ctx, shoeColors.highlight, rx + 4, ry + 1, 6);
-  // Midsole line
-  hLine(ctx, shoeColors.highlight, rx + 2, ry + 3, 11);
-  hLine(ctx, shoeColors.shadow, rx, ry + 4, 15);
-  hLine(ctx, shoeColors.shadow, rx, ry + 5, 15);
-  erasePixel(ctx, rx + 14, ry);
-  px(ctx, shoeColors.shadow, rx + 13, ry);
-  px(ctx, shoeColors.highlight, rx, ry);
-  outlineRect(ctx, shoeColors.outline, rx, ry, 15, 6);
-  px(ctx, shoeColors.shadow, rx + 11, ry + 1);
+  fillRect(ctx, shoeColors.base, rx, ry, sw, sh);
+  hLine(ctx, shoeColors.highlight, rx + 1, ry, sw - 3);
+  hLine(ctx, shoeColors.highlight, rx + 2, ry + 1, sw - 5);
+  hLine(ctx, shoeColors.shadow, rx, ry + sh - 2, sw);
+  hLine(ctx, shoeColors.shadow, rx, ry + sh - 1, sw);
+  outlineRect(ctx, shoeColors.outline, rx, ry, sw, sh);
 }
 
 // ---------------------------------------------------------------------------
@@ -1432,20 +1419,17 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
   const frontY = shoeY - Math.round(frontLift);
   const backY  = shoeY - Math.round(backLift);
 
-  // Back shoe (dimmer, drawn first) — 12px wide, centered on backX
-  fillRect(ctx, shoeColors.shadow, backX - 4, backY, 12, 6);
-  hLine(ctx, shoeColors.shadow, backX - 4, backY + 5, 12);
-  outlineRect(ctx, shoeColors.outline, backX - 4, backY, 12, 6);
+  // Back shoe (dimmer, drawn first)
+  fillRect(ctx, shoeColors.shadow, backX - 3, backY, 10, 5);
+  hLine(ctx, shoeColors.shadow, backX - 3, backY + 4, 10);
+  outlineRect(ctx, shoeColors.outline, backX - 3, backY, 10, 5);
 
   // Front shoe: pointing left (toe at lower-x = facing direction)
-  fillRect(ctx, shoeColors.base, frontX - 9, frontY, 19, 6);
-  hLine(ctx, shoeColors.highlight, frontX - 8, frontY, 16);
-  hLine(ctx, shoeColors.shadow,    frontX - 9, frontY + 4, 19);
-  hLine(ctx, shoeColors.shadow,    frontX - 9, frontY + 5, 19);
-  // Toe and heel corners (rounded look)
-  px(ctx, shoeColors.shadow, frontX - 9, frontY);
-  px(ctx, shoeColors.shadow, frontX + 9, frontY);
-  outlineRect(ctx, shoeColors.outline, frontX - 9, frontY, 19, 6);
+  fillRect(ctx, shoeColors.base, frontX - 7, frontY, 15, 5);
+  hLine(ctx, shoeColors.highlight, frontX - 6, frontY, 12);
+  hLine(ctx, shoeColors.shadow,    frontX - 7, frontY + 3, 15);
+  hLine(ctx, shoeColors.shadow,    frontX - 7, frontY + 4, 15);
+  outlineRect(ctx, shoeColors.outline, frontX - 7, frontY, 15, 5);
 }
 
 // ---------------------------------------------------------------------------
@@ -1472,15 +1456,15 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   //
   // Anti-banding: shadow strip width varies. Widens at mid-bicep, elbow, forearm.
   // torsoY: top of torso, used as the shoulder anchor Y (default 28 for legacy compat).
-  const lx = 25;                // left arm shoulder outer-edge anchor (fixed, 96px)
-  const shoulderRX = 64;        // right arm shoulder left-edge anchor (fixed, 96px)
+  const lx = 31;                // left arm shoulder outer-edge anchor
+  const shoulderRX = 60;        // right arm shoulder left-edge anchor
   const baseY = torsoY;
-  const baseAW = 7, sleeveH = 16, handH = 6;
-  const maxRow = sleeveH - 1;  // 15
+  const baseAW = 5, sleeveH = 13, handH = 4;
+  const maxRow = sleeveH - 1;  // 12
 
   // Organic arm profile: shoulder dome → bicep → elbow bump → forearm taper → wrist
-  const bulge   = [0, 2, 2, 1, 1, 0, 1, 1, -1, -1, -1, -1, -1, -2, -2, -2];
-  const shadowW = [1, 1, 1, 2, 1, 1, 2,  2,  2,  2,  1,  1,  2,  2,  2,  1];
+  const bulge   = [0, 1, 1, 1, 0, 0, 0, -1, -1, -1, -1, -1, -1];
+  const shadowW = [1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,  1];
 
   // Left arm: Y-pivot only (lArmOut=0 in current frames, no lateral swing)
   const lRowY = (row) => baseY + Math.round(lArmDY * row / maxRow) + row;
@@ -1500,8 +1484,8 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
     const ry = lRowY(row);
     hLine(ctx, clothingColors.base, rowLx, ry, rowW);
     px(ctx, clothingColors.highlight, rowLx, ry);
-    if (row === 1 || row === 2 || row === 3) px(ctx, clothingColors.highlight, rowLx + 1, ry);
-    if (row === 11 || row === 12) px(ctx, clothingColors.highlight, rowLx + 1, ry);
+    if (row === 1 || row === 2) px(ctx, clothingColors.highlight, rowLx + 1, ry);
+    if (row === 9 || row === 10) px(ctx, clothingColors.highlight, rowLx + 1, ry);
     const sw = shadowW[row];
     for (let i = 0; i < sw; i++) {
       px(ctx, clothingColors.shadow, rowLx + rowW - 1 - i, ry);
@@ -1568,10 +1552,9 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
 // ---------------------------------------------------------------------------
 
 function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, torsoY) {
-  // Shoulder-pivot: shoulder (row 0) stays at torsoX+13, wrist slides by backArmDX.
-  const sleeveH = 16, handH = 7, aw = 6;
+  const sleeveH = 13, handH = 4, aw = 5;
   const backY      = torsoY + 1;
-  const shoulderX  = torsoX + 13;
+  const shoulderX  = torsoX + 11;
   const maxRow     = sleeveH - 1;
   const rowX = (row) => shoulderX + Math.round(backArmDX * row / maxRow);
   const wristX = shoulderX + Math.round(backArmDX);
@@ -1580,22 +1563,19 @@ function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, tor
     const rx = rowX(row);
     hLine(ctx, clothingColors.shadow, rx, backY + row, aw);
     px(ctx, clothingColors.base, rx + 1, backY + row);
-    // per-row side outlines
     px(ctx, clothingColors.outline, rx,          backY + row);
     px(ctx, clothingColors.outline, rx + aw - 1, backY + row);
   }
-  hLine(ctx, clothingColors.outline, rowX(0),   backY,          aw);  // top edge
-  hLine(ctx, clothingColors.outline, rowX(maxRow), backY + maxRow, aw);  // bottom edge
+  hLine(ctx, clothingColors.outline, rowX(0),   backY,          aw);
+  hLine(ctx, clothingColors.outline, rowX(maxRow), backY + maxRow, aw);
   fillRect(ctx, skinColors.shadow, wristX, backY + sleeveH, aw, handH);
   outlineRect(ctx, skinColors.outline, wristX, backY + sleeveH, aw, handH);
 }
 
 function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, torsoY) {
-  // Shoulder-pivot: shoulder (row 0) stays at torsoX-4, wrist slides by frontArmDX.
-  // The arm appears angled rather than rigidly translated — shoulder stays on torso.
-  const sleeveH = 16, handH = 7, aw = 6;
+  const sleeveH = 13, handH = 4, aw = 5;
   const frontY     = torsoY + 1;
-  const shoulderX  = torsoX - 4;
+  const shoulderX  = torsoX - 3;
   const maxRow     = sleeveH - 1;
   const rowX = (row) => shoulderX + Math.round(frontArmDX * row / maxRow);
   const wristX = shoulderX + Math.round(frontArmDX);
@@ -1608,17 +1588,12 @@ function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, t
     px(ctx, clothingColors.outline,   rx,          frontY + row);
     px(ctx, clothingColors.outline,   rx + aw - 1, frontY + row);
   }
-  // Shoulder dome highlight (top 2 rows stay at shoulderX)
   px(ctx, clothingColors.highlight, shoulderX + 1, frontY);
   px(ctx, clothingColors.highlight, shoulderX + 1, frontY + 1);
-  // Elbow fold shadow
-  px(ctx, clothingColors.shadow, rowX(7) + 1, frontY + 7);
-  px(ctx, clothingColors.shadow, rowX(7) + 2, frontY + 7);
-  // Top and bottom row outlines
+  px(ctx, clothingColors.shadow, rowX(6) + 1, frontY + 6);
   hLine(ctx, clothingColors.outline, rowX(0),      frontY,          aw);
   hLine(ctx, clothingColors.outline, rowX(maxRow),  frontY + maxRow, aw);
 
-  // Hand / fist at wrist end
   fillRect(ctx, skinColors.base, wristX, frontY + sleeveH, aw, handH);
   vLine(ctx, skinColors.highlight, wristX, frontY + sleeveH, handH);
   outlineRect(ctx, skinColors.outline, wristX, frontY + sleeveH, aw, handH);

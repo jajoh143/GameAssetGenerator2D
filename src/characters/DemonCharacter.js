@@ -291,7 +291,7 @@ function drawDemonHeadSouth(ctx, colors, config) {
   const sk = colors.skin;
   const hair = colors.hair;
   const outline = sk.outline || '#280000';
-  const HX = 35, HY = 12, HW = 22;
+  const HX = 35, HY = 22, HW = 22;
 
   // ── COMPACT HEAD SHAPE (matches human redesign) ─────────────────────────
   const HEAD = [
@@ -404,27 +404,26 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       // Draw human body with demon skin and head
       humanSouth(ctx, config, off);
       // Claws over arm area
-      // At 96px: torsoY = 35+by, arm sleeveH=16, handH=6, so wrist = torsoY + 22
-      const lArmDY = Math.round((off.leftArmFwd  || 0) * 0.6);
-      const rArmDY = Math.round((off.rightArmFwd || 0) * 0.6);
-      const armBaseY = 35 + by;
-      drawClaws(ctx, colors.skin, armBaseY + lArmDY + 22, armBaseY + rArmDY + 22);
-      // Re-draw head with demon features
-      // Demon head at HY=8, clear rows 0..39 to remove human head (HY=1, ends ~y=32)
-      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 40 : 40);
+      // torsoY = 42+by, arm sleeveH=13, handH=4, so wrist = torsoY + 17
+      const lArmDY = Math.round((off.leftArmFwd  || 0) * 0.5);
+      const rArmDY = Math.round((off.rightArmFwd || 0) * 0.5);
+      const armBaseY = 42 + by;
+      drawClaws(ctx, colors.skin, armBaseY + lArmDY + 17, armBaseY + rArmDY + 17);
+      // Re-draw head with demon features — clear above neck (y=42)
+      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 44 : 44);
       ctx.save();
       ctx.translate(0, by + headBobScaled);
       drawDemonHeadSouth(ctx, colors, config);
       ctx.restore();
-      // Draw tail on top of belt area (96px: beltY = 61+by)
-      drawTailSouth(ctx, colors, config.tailStyle || 'long', 61 + by);
+      // Draw tail on top of belt area (beltY = 66+by)
+      drawTailSouth(ctx, colors, config.tailStyle || 'long', 66 + by);
       break;
     }
     case 'north': {
       drawDarkAura(ctx, by);
       humanNorth(ctx, config, off);
-      // Tail still visible from behind (96px beltY = 61+by)
-      drawTailSouth(ctx, colors, config.tailStyle || 'long', 61 + by);
+      // Tail still visible from behind (beltY = 66+by)
+      drawTailSouth(ctx, colors, config.tailStyle || 'long', 66 + by);
       break;
     }
     case 'west': {
@@ -439,9 +438,9 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       fillRect(ctx, colors.horn.base, 38, hornY - 4, 4, 6);
       outlineRect(ctx, colors.horn.outline, 38, hornY - 4, 8, 14);
       ctx.restore();
-      // Side tail (96px: beltY_west ≈ 61+by, tail at right of torso x≈56)
-      vLine(ctx, colors.tail.base, 56, 62 + by, 9);
-      fillRect(ctx, colors.tail.base, 57, 71 + by, 6, 6);
+      // Side tail (beltY_west ≈ 66+by)
+      vLine(ctx, colors.tail.base, 52, 67 + by, 8);
+      fillRect(ctx, colors.tail.base, 53, 75 + by, 5, 5);
       break;
     }
     case 'east': {
