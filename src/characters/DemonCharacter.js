@@ -293,13 +293,13 @@ function drawDemonHeadSouth(ctx, colors, config) {
   const outline = sk.outline || '#280000';
   const HX = 35, HY = 26, HW = 22;
 
-  // ── ROUNDED HEAD SHAPE (matches human — wider jaw) ──────────────────────
+  // ── CIRCULAR HEAD (matches human — stays wide through jaw) ───────────────
   const HEAD = [
     [5, 12], [3, 16], [2, 18], [1, 20],
     [1, 20], [1, 20], [1, 20], [1, 20],
     [2, 18], [2, 18], [2, 18], [2, 18],
-    [2, 18], [2, 18], [3, 16], [3, 16],
-    [4, 14], [5, 12], [6, 10], [7,  8],
+    [2, 18], [2, 18], [2, 18], [2, 18],
+    [3, 16], [4, 14], [5, 12], [7,  8],
   ];
 
   // Fill entire head with hair
@@ -323,9 +323,9 @@ function drawDemonHeadSouth(ctx, colors, config) {
   // ── FACE WINDOW (demon skin) ──────────────────────────────────────────────
   const FACE = [
     [41, 14], [40, 16], [40, 16], [40, 16],
-    [40, 16], [40, 16], [40, 16], [41, 14],
-    [41, 14], [42, 12], [43, 10], [44,  8],
-    [45,  6],
+    [40, 16], [40, 16], [40, 16], [40, 16],
+    [40, 16], [41, 14], [42, 12], [43, 10],
+    [44,  8],
   ];
   const faceStart = 7;
   for (let i = 0; i < FACE.length; i++) {
