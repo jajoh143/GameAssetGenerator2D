@@ -95,10 +95,10 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
-  // Belt: x=35 (was 24, scaled ×1.5)
-  drawBeltSouth(ctx, colors.belt, 35, beltY);
-  // Torso: x=35, w=27 (scaled from x=23, w=18)
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 35, torsoY, 27, torsoH);
+  // Belt: x=33 (wider to match broader torso)
+  drawBeltSouth(ctx, colors.belt, 33, beltY);
+  // Torso: x=33, w=31 (wider shoulders for better proportions vs head)
+  drawTorsoSouth(ctx, config.clothing, colors.clothing, 33, torsoY, 31, torsoH);
   // Arms (shoulder anchors scaled to 96px)
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck

@@ -30,22 +30,22 @@
     {
       "name": "attack_swing_south",
       "row": 5,
-      "frameCount": 6
+      "frameCount": 8
     },
     {
       "name": "attack_swing_west",
       "row": 6,
-      "frameCount": 6
+      "frameCount": 8
     },
     {
       "name": "attack_swing_north",
       "row": 7,
-      "frameCount": 6
+      "frameCount": 8
     },
     {
       "name": "attack_swing_east",
       "row": 8,
-      "frameCount": 6
+      "frameCount": 8
     },
     {
       "name": "attack_shoot_south",
