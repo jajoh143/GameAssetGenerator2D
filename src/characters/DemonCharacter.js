@@ -291,15 +291,15 @@ function drawDemonHeadSouth(ctx, colors, config) {
   const sk = colors.skin;
   const hair = colors.hair;
   const outline = sk.outline || '#280000';
-  const HX = 34, HY = 8, HW = 28;
+  const HX = 35, HY = 12, HW = 22;
 
-  // ── UNIFIED HEAD SHAPE (same approach as human — hair wraps head) ────────
+  // ── COMPACT HEAD SHAPE (matches human redesign) ─────────────────────────
   const HEAD = [
-    [4,  20], [2,  24], [0,  28], [-1, 30],
-    [-2, 32], [-2, 32], [-2, 32], [-1, 30],
-    [0,  28], [0,  28], [1,  26], [1,  26],
-    [1,  26], [2,  24], [2,  24], [3,  22],
-    [4,  20], [5,  18], [6,  16], [7,  15],
+    [5, 12], [3, 16], [2, 18], [1, 20],
+    [1, 20], [1, 20], [1, 20], [1, 20],
+    [2, 18], [2, 18], [2, 18], [2, 18],
+    [3, 16], [3, 16], [4, 14], [5, 12],
+    [6, 10], [7,  8], [8,  6], [9,  4],
   ];
 
   // Fill entire head with hair
@@ -309,22 +309,23 @@ function drawDemonHeadSouth(ctx, colors, config) {
   }
 
   // Hair highlights and texture
-  hLine(ctx, hair.highlight, HX + 4, HY + 1, 14);
-  hLine(ctx, hair.highlight, HX + 2, HY + 2, 18);
+  hLine(ctx, hair.highlight, HX + 5, HY, 8);
+  hLine(ctx, hair.highlight, HX + 3, HY + 1, 12);
+  hLine(ctx, hair.highlight, HX + 2, HY + 2, 14);
   for (let r = 3; r <= 6; r++) {
     const [off, w] = HEAD[r];
-    for (let dx = 3 + (r - 3) * 2; dx < w - 3; dx += 6) {
+    for (let dx = 3; dx < w - 3; dx += 5) {
       pixel(ctx, hair.shadow, HX + off + dx, HY + r);
     }
   }
-  hLine(ctx, hair.shadow, HX - 1, HY + 7, 30);
-  hLine(ctx, hair.shadow, HX, HY + 8, 28);
+  hLine(ctx, hair.shadow, HX + 1, HY + 7, 20);
 
-  // ── FACE WINDOW (demon skin — wider, matching human) ──────────────────────
+  // ── FACE WINDOW (demon skin) ──────────────────────────────────────────────
   const FACE = [
-    [39, 18], [37, 22], [37, 22], [37, 22],
-    [37, 22], [37, 22], [38, 20], [39, 18],
-    [40, 16], [41, 15], [42, 14],
+    [41, 14], [40, 16], [40, 16], [40, 16],
+    [40, 16], [40, 16], [41, 14], [42, 12],
+    [43, 10], [44,  8], [45,  6], [46,  4],
+    [47,  3],
   ];
   const faceStart = 7;
   for (let i = 0; i < FACE.length; i++) {
@@ -332,8 +333,8 @@ function drawDemonHeadSouth(ctx, colors, config) {
   }
 
   // Face shading
-  fillRect(ctx, sk.highlight, 38, HY + 8, 3, 2);
-  for (let i = 2; i < FACE.length - 3; i++) {
+  fillRect(ctx, sk.highlight, 41, HY + 8, 2, 2);
+  for (let i = 2; i < FACE.length - 4; i++) {
     pixel(ctx, sk.shadow, FACE[i][0] + FACE[i][1] - 2, HY + faceStart + i);
   }
 
@@ -363,9 +364,9 @@ function drawDemonHeadSouth(ctx, colors, config) {
   hLine(ctx, outline,    49, eyeY - 3, 5);
 
   // Nose + snarl mouth
-  pixel(ctx, sk.shadow, 48, HY + 13);
-  hLine(ctx, outline,   45, HY + 14, 6);
-  pixel(ctx, '#FF4444', 46, HY + 15); pixel(ctx, '#FF4444', 50, HY + 15);
+  pixel(ctx, sk.shadow, 47, HY + 13);
+  hLine(ctx, outline,   44, HY + 14, 6);
+  pixel(ctx, '#FF4444', 45, HY + 15); pixel(ctx, '#FF4444', 49, HY + 15);
 
   // Head silhouette outline
   for (let r = 0; r < HEAD.length; r++) {
@@ -373,7 +374,7 @@ function drawDemonHeadSouth(ctx, colors, config) {
     pixel(ctx, hair.shadow, HX + off, HY + r);
     pixel(ctx, hair.shadow, HX + off + w - 1, HY + r);
   }
-  hLine(ctx, '#111111', HX + 5, HY, 18);
+  hLine(ctx, '#111111', HX + 5, HY, 10);
   const last = HEAD[HEAD.length - 1];
   hLine(ctx, '#111111', HX + last[0], HY + HEAD.length, last[1]);
 
