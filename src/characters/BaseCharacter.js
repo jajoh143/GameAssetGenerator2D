@@ -361,31 +361,21 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  // SNES RPG body structure — organic hourglass silhouette:
-  //   Rows 0-2  (shoulder): 20px  lx=22  rx=41  (shoulder cap)
-  //   Rows 3-6  (chest):    18px  lx=23  rx=40
-  //   Rows 7-11 (waist):    16px  lx=24  rx=39  ← taper -1px each side
-  //   Rows 12+  (hips):     18px  lx=23  rx=40  ← flare back out
-  //
-  // DIRECTIONAL form shading (light from upper-left):
-  //   Left panel: highlight on 2nd pixel → lit face of cylinder
-  //   Right panel: 2px shadow strip → shadow face
-  //   Waist: shadow on inset pixels to sell the pull-in
-  //   Shirt: center column highlight for shirt-front volume
-
-  const cx = Math.floor(x + w / 2);   // = 48 at 96px
-  const numRows = Math.min(h, 28);
-  const SHOULDER = 4;
-  const WAIST_S = 10, WAIST_E = 16;   // waist taper row range (scaled ×1.5)
+  // Hourglass silhouette: shoulder cap → defined chest → tapered waist → hip flare
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 24);
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
 
   const rl = (row) => {
-    if (row < SHOULDER)                       return x - 1;
-    if (row >= WAIST_S && row <= WAIST_E)    return x + 1;
-    return x;
+    if (row < SHOULDER)                       return x - 1;   // shoulder cap
+    if (row >= WAIST_S && row <= WAIST_E)    return x + 2;   // waist taper
+    if (row > WAIST_E)                        return x + 1;   // hip
+    return x;                                                  // chest
   };
   const rr = (row) => {
     if (row < SHOULDER)                       return x + w;
-    if (row >= WAIST_S && row <= WAIST_E)    return x + w - 2;
+    if (row >= WAIST_S && row <= WAIST_E)    return x + w - 3;
+    if (row > WAIST_E)                        return x + w - 2;
     return x + w - 1;
   };
 
@@ -404,7 +394,7 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   }
 
   // ── 3. Fold shadow notches ───────────────────────────────────────────────
-  const shirtW = 12, shirtLx = cx - 6;   // shirt x=42-53 at 96px
+  const shirtW = 10, shirtLx = cx - 5;   // shirt panel centered
   const foldRow1 = Math.floor(numRows * 0.45);
   const foldRow2 = numRows - 4;
   for (const fr of [foldRow1, foldRow2]) {
@@ -490,18 +480,19 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
-  const SHOULDER = 4;
-  const WAIST_S = 10, WAIST_E = 16;
+  const numRows = Math.min(h, 24);
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
 
   const rl = (row) => {
     if (row < SHOULDER)                     return x - 1;
-    if (row >= WAIST_S && row <= WAIST_E)  return x + 1;
+    if (row >= WAIST_S && row <= WAIST_E)  return x + 2;
+    if (row > WAIST_E)                      return x + 1;
     return x;
   };
   const rr = (row) => {
     if (row < SHOULDER)                     return x + w;
-    if (row >= WAIST_S && row <= WAIST_E)  return x + w - 2;
+    if (row >= WAIST_S && row <= WAIST_E)  return x + w - 3;
+    if (row > WAIST_E)                      return x + w - 2;
     return x + w - 1;
   };
 
@@ -597,9 +588,9 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
   // Plain collared shirt — hourglass silhouette, shirt collar at top.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 4, WAIST_S = 10, WAIST_E = 16;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -644,9 +635,9 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
   // Leather vest over shirt: shirt visible at sides, vest in center.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 4, WAIST_S = 10, WAIST_E = 16;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
 
   // Shirt base (full width, lighter)
   const shirtCol = colors.shirt || colors.highlight;
@@ -700,9 +691,9 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
   // RPG tunic: wider cut than jacket, rounded collar, minimal seam.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 4, WAIST_S = 10, WAIST_E = 16;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -750,11 +741,11 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
 function drawRobeSouth(ctx, colors, x, y, w, h) {
   // Mage robe: wide at bottom, ornate collar, deep shadow folds.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
-  const SHOULDER = 4;
-  // Robes don't taper at waist — they flare wider at bottom
-  const rl = (row) => row < SHOULDER ? x - 1 : row > 16 ? x - 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row > 16 ? x + w : x + w - 1;
+  const numRows = Math.min(h, 24);
+  const SHOULDER = 3;
+  // Robes have minimal taper — flare wider at bottom
+  const rl = (row) => row < SHOULDER ? x - 1 : row > 14 ? x - 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row > 14 ? x + w : x + w - 1;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -805,9 +796,9 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
   // Crew-neck T-shirt: clean silhouette, round neckline, no buttons/placket.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 4, WAIST_S = 10, WAIST_E = 16;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -852,12 +843,12 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
 function drawBomberSouth(ctx, colors, x, y, w, h) {
   // Bomber jacket: boxy silhouette, ribbed collar+hem, center zipper.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
-  const SHOULDER = 4;
-  // Boxy cut: very shallow waist taper (1px each side, rows 12-16)
-  const WAIST_S = 12, WAIST_E = 16;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 2 : x + w - 1;
+  const numRows = Math.min(h, 24);
+  const SHOULDER = 3;
+  // Boxy cut: shallow waist taper
+  const WAIST_S = 10, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -931,23 +922,25 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
   //   Rows 12+  (hip/skirt):    x=23-40 (18px) → flares to x=21-42 at bottom
 
   const cx     = Math.floor(x + w / 2);  // = 48
-  const SHOULDER = 4, WAIST_S = 10, WAIST_E = 16;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
   const tailH  = 19;                     // coat extension below normal hem
   const totalH = h + tailH;
 
   const rl = (row) => {
-    if (row < SHOULDER)                     return x - 1;                                    // shoulder: x=22
-    if (row >= WAIST_S && row <= WAIST_E)  return x + 1;                                    // waist taper: x=24
-    if (row < h)                             return x;                                       // hip: x=23
-    const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);                               // tail flare
-    return x - flare;                                                                         // x=22 → x=21
+    if (row < SHOULDER)                     return x - 1;
+    if (row >= WAIST_S && row <= WAIST_E)  return x + 2;
+    if (row > WAIST_E && row < h)          return x + 1;
+    if (row < h)                             return x;
+    const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
+    return x - flare;
   };
   const rr = (row) => {
-    if (row < SHOULDER)                     return x + w;                                    // shoulder: x=41
-    if (row >= WAIST_S && row <= WAIST_E)  return x + w - 2;                                // waist: x=39
-    if (row < h)                             return x + w - 1;                               // hip: x=40
+    if (row < SHOULDER)                     return x + w;
+    if (row >= WAIST_S && row <= WAIST_E)  return x + w - 3;
+    if (row > WAIST_E && row < h)          return x + w - 2;
+    if (row < h)                             return x + w - 1;
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
-    return x + w - 1 + flare;                                                                // x=40 → x=42
+    return x + w - 1 + flare;
   };
 
   // ── 1. Base fill ─────────────────────────────────────────────────────────

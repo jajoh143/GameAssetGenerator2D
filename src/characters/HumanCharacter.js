@@ -156,15 +156,17 @@ function drawNorth(ctx, config, offsets) {
   // Back of torso — hourglass silhouette
   {
     const bx = 36, bw = 23, by = torsoY, bN = Math.min(torsoH, 24);
-    const bSHOULDER = 3, bWS = 8, bWE = 14;
+    const bSHOULDER = 3, bWS = 8, bWE = 15;
     const brl = (r) => {
       if (r < bSHOULDER)          return bx - 1;
-      if (r >= bWS && r <= bWE)  return bx + 1;  // waist taper
+      if (r >= bWS && r <= bWE)  return bx + 2;  // waist taper
+      if (r > bWE)                return bx + 1;  // hip
       return bx;
     };
     const brr = (r) => {
       if (r < bSHOULDER)          return bx + bw;
-      if (r >= bWS && r <= bWE)  return bx + bw - 2;  // waist taper
+      if (r >= bWS && r <= bWE)  return bx + bw - 3;  // waist taper
+      if (r > bWE)                return bx + bw - 2;  // hip
       return bx + bw - 1;
     };
 
