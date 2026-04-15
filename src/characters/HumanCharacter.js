@@ -68,11 +68,11 @@ function drawSouth(ctx, config, offsets) {
   // --- Ground shadow ---
   drawGroundShadow(ctx, 48, 94 + bodyY, 18, 4);
 
-  // Proportional body stack — reduced to match compact head.
+  // Proportional body stack — smaller torso, balanced with head.
   const shoeH  = 5;
   const legH   = 22;
   const beltH  = 3;
-  const torsoH = 22;
+  const torsoH = 18;
   const neckH  = 2;
 
   const shoeY  = base - shoeH;
@@ -95,8 +95,8 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
-  drawBeltSouth(ctx, colors.belt, 36, beltY);
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 36, torsoY, 25, torsoH);
+  drawBeltSouth(ctx, colors.belt, 37, beltY);
+  drawTorsoSouth(ctx, config.clothing, colors.clothing, 37, torsoY, 22, torsoH);
   // Arms
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck
@@ -130,7 +130,7 @@ function drawNorth(ctx, config, offsets) {
   const shoeH  = 5;
   const legH   = 22;
   const beltH  = 3;
-  const torsoH = 22;
+  const torsoH = 18;
   const neckH  = 2;
 
   const shoeY  = base - shoeH;
@@ -151,12 +151,12 @@ function drawNorth(ctx, config, offsets) {
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
-  drawBeltSouth(ctx, colors.belt, 36, beltY);
+  drawBeltSouth(ctx, colors.belt, 37, beltY);
 
   // Back of torso — hourglass silhouette
   {
-    const bx = 36, bw = 23, by = torsoY, bN = Math.min(torsoH, 24);
-    const bSHOULDER = 3, bWS = 8, bWE = 15;
+    const bx = 37, bw = 20, by = torsoY, bN = Math.min(torsoH, 20);
+    const bSHOULDER = 3, bWS = 7, bWE = 13;
     const brl = (r) => {
       if (r < bSHOULDER)          return bx - 1;
       if (r >= bWS && r <= bWE)  return bx + 2;  // waist taper
@@ -228,7 +228,7 @@ function drawWest(ctx, config, offsets) {
   const shoeH  = 5;
   const legH   = 22;
   const beltH  = 3;
-  const torsoH = 20;
+  const torsoH = 16;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;

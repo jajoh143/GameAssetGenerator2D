@@ -30,34 +30,34 @@ function drawGroundShadow(ctx, cx, y, w=14, h=3) {
 
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   eyeColors = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  const HX = 35, HY = 22, HW = 22;
+  const HX = 35, HY = 26, HW = 22;
   const cx = HX + Math.floor(HW / 2); // center x ≈ 46
   const outline = '#111111';
 
-  // ── HEAD SHAPE — compact oval, no overhang ──────────────────────────────
-  // [offset from HX, width] — hair defines full silhouette
-  // Max 22px wide. Chin at y=41 meets neck at y=42.
+  // ── HEAD SHAPE — rounded oval with wide jaw ────────────────────────────
+  // Max 20px wide. Chin at y=45 meets neck at y=46.
+  // Jaw stays wide longer for rounded face (not pointed).
   const HEAD = [
-    [5, 12],  //  0 (y=12): crown top
-    [3, 16],  //  1 (y=13): upper dome
-    [2, 18],  //  2 (y=14): dome
-    [1, 20],  //  3 (y=15): max width
-    [1, 20],  //  4 (y=16): max width
-    [1, 20],  //  5 (y=17): max width
-    [1, 20],  //  6 (y=18): temple
-    [1, 20],  //  7 (y=19): hairline — faceStartRow
-    [2, 18],  //  8 (y=20): forehead
-    [2, 18],  //  9 (y=21): brow level
-    [2, 18],  // 10 (y=22): eye zone
-    [2, 18],  // 11 (y=23): eye zone
-    [3, 16],  // 12 (y=24): nose zone
-    [3, 16],  // 13 (y=25): mouth zone
-    [4, 14],  // 14 (y=26): jaw begins
-    [5, 12],  // 15 (y=27): jaw
-    [6, 10],  // 16 (y=28): lower jaw
-    [7,  8],  // 17 (y=29): chin
-    [8,  6],  // 18 (y=30): chin
-    [9,  4],  // 19 (y=31): chin tip
+    [5, 12],  //  0: crown top
+    [3, 16],  //  1: upper dome
+    [2, 18],  //  2: dome
+    [1, 20],  //  3: max width
+    [1, 20],  //  4: max width
+    [1, 20],  //  5: max width
+    [1, 20],  //  6: temple
+    [1, 20],  //  7: hairline — faceStartRow
+    [2, 18],  //  8: forehead
+    [2, 18],  //  9: brow level
+    [2, 18],  // 10: eye zone
+    [2, 18],  // 11: eye zone
+    [2, 18],  // 12: nose zone (wider — was 16)
+    [2, 18],  // 13: mouth zone (wider — was 16)
+    [3, 16],  // 14: jaw (wider — was 14)
+    [3, 16],  // 15: jaw (wider — was 12)
+    [4, 14],  // 16: lower jaw (wider — was 10)
+    [5, 12],  // 17: chin (wider — was 8)
+    [6, 10],  // 18: chin (wider — was 6)
+    [7,  8],  // 19: chin base (wider — was 4)
   ];
 
   // Fill entire head shape with hair base color
@@ -82,20 +82,21 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
 
   // ── FACE WINDOW — skin cutout within the head shape ──────────────────────
   // Face centered ~x=48. Hair wraps as sideburns on each side.
+  // Rounder face: jaw stays wide, chin tapers gently (not pointed)
   const FACE = [
-    [41, 14],  //  7 (y=19): hairline narrow
-    [40, 16],  //  8 (y=20): forehead
-    [40, 16],  //  9 (y=21): brow level
-    [40, 16],  // 10 (y=22): eye zone
-    [40, 16],  // 11 (y=23): eye zone
-    [40, 16],  // 12 (y=24): nose zone
-    [41, 14],  // 13 (y=25): mouth zone
-    [42, 12],  // 14 (y=26): jaw
-    [43, 10],  // 15 (y=27): lower jaw
-    [44,  8],  // 16 (y=28): chin
-    [45,  6],  // 17 (y=29): chin
-    [46,  4],  // 18 (y=30): chin bottom
-    [47,  3],  // 19 (y=31): chin point
+    [41, 14],  //  7: hairline narrow
+    [40, 16],  //  8: forehead
+    [40, 16],  //  9: brow level
+    [40, 16],  // 10: eye zone
+    [40, 16],  // 11: eye zone
+    [40, 16],  // 12: nose zone
+    [40, 16],  // 13: mouth zone (wider — was 14)
+    [41, 14],  // 14: jaw (wider — was 12)
+    [41, 14],  // 15: jaw (wider — was 10)
+    [42, 12],  // 16: lower jaw (wider — was 8)
+    [43, 10],  // 17: chin (wider — was 6)
+    [44,  8],  // 18: chin (wider — was 4)
+    [45,  6],  // 19: chin base (wider — was 3)
   ];
   const faceStartRow = 7;
   for (let i = 0; i < FACE.length; i++) {
@@ -189,16 +190,16 @@ function drawHairSouth() {}
 // ---------------------------------------------------------------------------
 
 function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
-  const HX = 35, HY = 22, HW = 22;
+  const HX = 35, HY = 26, HW = 22;
   const outline = '#111111';
 
-  // Same compact HEAD shape as south view — all hair, no face window
+  // Same rounded HEAD shape as south view — all hair, no face window
   const HEAD = [
     [5, 12], [3, 16], [2, 18], [1, 20],
     [1, 20], [1, 20], [1, 20], [1, 20],
     [2, 18], [2, 18], [2, 18], [2, 18],
-    [3, 16], [3, 16], [4, 14], [5, 12],
-    [6, 10], [7,  8], [8,  6], [9,  4],
+    [2, 18], [2, 18], [3, 16], [3, 16],
+    [4, 14], [5, 12], [6, 10], [7,  8],
   ];
 
   // Skin at neck/lower-back area (visible below hairline at back)
@@ -248,8 +249,8 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
-  // Profile head: HX=31, HY=22. 20 rows — chin at y=41 meets neck at y=42.
-  const HX = 31, HY = 22;
+  // Profile head: HX=31, HY=26. 20 rows — chin at y=45 meets neck at y=46.
+  const HX = 31, HY = 26;
   const outline = '#111111';
 
   // Compact profile silhouette — max 15px wide
@@ -1064,7 +1065,7 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
   // For jacket: front 2px opening shows shirt/collar suggestion.
   // For coats: h extended by 13 rows to cover upper legs in side view.
   const isCoat = clothingKey && clothingKey.startsWith('coat');
-  const h = isCoat ? 35 : 20;
+  const h = isCoat ? 30 : 16;
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 13;
 
   const rowW = (row) => {

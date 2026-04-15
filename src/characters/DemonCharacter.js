@@ -291,15 +291,15 @@ function drawDemonHeadSouth(ctx, colors, config) {
   const sk = colors.skin;
   const hair = colors.hair;
   const outline = sk.outline || '#280000';
-  const HX = 35, HY = 22, HW = 22;
+  const HX = 35, HY = 26, HW = 22;
 
-  // ── COMPACT HEAD SHAPE (matches human redesign) ─────────────────────────
+  // ── ROUNDED HEAD SHAPE (matches human — wider jaw) ──────────────────────
   const HEAD = [
     [5, 12], [3, 16], [2, 18], [1, 20],
     [1, 20], [1, 20], [1, 20], [1, 20],
     [2, 18], [2, 18], [2, 18], [2, 18],
-    [3, 16], [3, 16], [4, 14], [5, 12],
-    [6, 10], [7,  8], [8,  6], [9,  4],
+    [2, 18], [2, 18], [3, 16], [3, 16],
+    [4, 14], [5, 12], [6, 10], [7,  8],
   ];
 
   // Fill entire head with hair
@@ -323,9 +323,9 @@ function drawDemonHeadSouth(ctx, colors, config) {
   // ── FACE WINDOW (demon skin) ──────────────────────────────────────────────
   const FACE = [
     [41, 14], [40, 16], [40, 16], [40, 16],
-    [40, 16], [40, 16], [41, 14], [42, 12],
-    [43, 10], [44,  8], [45,  6], [46,  4],
-    [47,  3],
+    [40, 16], [40, 16], [40, 16], [41, 14],
+    [41, 14], [42, 12], [43, 10], [44,  8],
+    [45,  6],
   ];
   const faceStart = 7;
   for (let i = 0; i < FACE.length; i++) {
@@ -407,10 +407,10 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       // torsoY = 42+by, arm sleeveH=13, handH=4, so wrist = torsoY + 17
       const lArmDY = Math.round((off.leftArmFwd  || 0) * 0.5);
       const rArmDY = Math.round((off.rightArmFwd || 0) * 0.5);
-      const armBaseY = 42 + by;
+      const armBaseY = 48 + by;
       drawClaws(ctx, colors.skin, armBaseY + lArmDY + 17, armBaseY + rArmDY + 17);
-      // Re-draw head with demon features — clear above neck (y=42)
-      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 44 : 44);
+      // Re-draw head with demon features — clear above neck (y=46)
+      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 48 : 48);
       ctx.save();
       ctx.translate(0, by + headBobScaled);
       drawDemonHeadSouth(ctx, colors, config);
