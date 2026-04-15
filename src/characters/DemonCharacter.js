@@ -7,46 +7,28 @@ const { drawSouth: humanSouth, drawNorth: humanNorth, drawWest: humanWest, drawE
 const { resolveConfig } = require('./CharacterConfig');
 
 // Draw a dark aura around the character — 1-pixel deep_shadow halo at key silhouette points
-function drawDarkAura(ctx, by) {
-  const auraColor = 'rgba(40,0,60,0.55)';
-  // Scaled ×1.5 from 64px. Center x=48 (was 32).
-  // Head halo (rows 4-39, x=31-65)
-  hLine(ctx, auraColor, 32, 4 + by, 32);           // top of head
-  for (let y = 5; y <= 39; y++) {
-    pixel(ctx, auraColor, 31, y + by);
-    pixel(ctx, auraColor, 64, y + by);
-  }
-  // Body sides (rows 40-78)
-  for (let y = 40; y <= 78; y++) {
-    pixel(ctx, auraColor, 29, y + by);
-    pixel(ctx, auraColor, 66, y + by);
-  }
-  // Foot halo
-  hLine(ctx, auraColor, 30, 94 + by, 18);
-  hLine(ctx, auraColor, 48, 94 + by, 18);
+function drawDarkAura(/* ctx, by */) {
+  // Disabled — translucent aura pixels create visible box artifacts on
+  // transparent backgrounds. Demon identity comes from horns/skin/tail.
 }
 
 // Draw claw tips at the end of each arm hand area
 function drawClaws(ctx, skinColors, armLY, armRY) {
   const claw = DEMON_PARTS.claw;
-  // Left hand claws — three small downward-pointing spikes. Scaled ×1.5.
-  // lhx=27 matches left arm shoulder anchor at 96px
-  const lhx = 27, lhy = armLY;
+  // Left hand claws — two small downward spikes under 3px arm (lx=34)
+  const lhx = 34, lhy = armLY;
   pixel(ctx, claw.base,    lhx,     lhy + 4);
   pixel(ctx, claw.shadow,  lhx,     lhy + 5);
-  pixel(ctx, claw.base,    lhx + 3, lhy + 4);
-  pixel(ctx, claw.shadow,  lhx + 3, lhy + 5);
-  pixel(ctx, claw.base,    lhx + 6, lhy + 4);
-  pixel(ctx, claw.shadow,  lhx + 6, lhy + 5);
+  pixel(ctx, claw.base,    lhx + 2, lhy + 4);
+  pixel(ctx, claw.shadow,  lhx + 2, lhy + 5);
   pixel(ctx, claw.highlight, lhx + 1, lhy + 4);
 
-  // Right hand claws — scaled to 96px. rhx=62 matches right arm shoulder at 96px.
-  const rhx = 62, rhy = armRY;
+  // Right hand claws — under 3px arm (shoulderRX=59)
+  const rhx = 59, rhy = armRY;
   pixel(ctx, claw.base,    rhx,     rhy + 4);
   pixel(ctx, claw.shadow,  rhx,     rhy + 5);
-  pixel(ctx, claw.base,    rhx + 3, rhy + 4);
-  pixel(ctx, claw.shadow,  rhx + 3, rhy + 5);
-  pixel(ctx, claw.base,    rhx + 6, rhy + 4);
+  pixel(ctx, claw.base,    rhx + 2, rhy + 4);
+  pixel(ctx, claw.shadow,  rhx + 2, rhy + 5);
   pixel(ctx, claw.shadow,  rhx + 6, rhy + 5);
   pixel(ctx, claw.highlight, rhx + 4, rhy + 4);
 }
@@ -409,8 +391,8 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       const rArmDY = Math.round((off.rightArmFwd || 0) * 0.5);
       const armBaseY = 48 + by;
       drawClaws(ctx, colors.skin, armBaseY + lArmDY + 17, armBaseY + rArmDY + 17);
-      // Re-draw head with demon features — clear above neck (y=46)
-      ctx.clearRect(0, 0, FRAME_W, by < 0 ? -by + 48 : 48);
+      // Re-draw head with demon features — clear above neck (neckY=46)
+      ctx.clearRect(0, 0, FRAME_W, 46 + Math.min(by, 0));
       ctx.save();
       ctx.translate(0, by + headBobScaled);
       drawDemonHeadSouth(ctx, colors, config);
@@ -432,11 +414,11 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       // Side horn (one visible) — scaled ×1.5 for 96px frame
       ctx.save();
       ctx.translate(0, by + headBobScaled);
-      // Single horn in profile: x=41 (was 27), scaled from center
-      const hornY = 0;
-      fillRect(ctx, colors.horn.base, 41, hornY, 4, 9);
-      fillRect(ctx, colors.horn.base, 38, hornY - 4, 4, 6);
-      outlineRect(ctx, colors.horn.outline, 38, hornY - 4, 8, 14);
+      // Single horn in profile — above head at HY=26
+      const hornY = 22;
+      fillRect(ctx, colors.horn.base, 41, hornY, 4, 7);
+      fillRect(ctx, colors.horn.base, 39, hornY - 3, 3, 5);
+      outlineRect(ctx, colors.horn.outline, 39, hornY - 3, 6, 11);
       ctx.restore();
       // Side tail (beltY_west ≈ 66+by)
       vLine(ctx, colors.tail.base, 52, 67 + by, 8);
@@ -466,10 +448,10 @@ function generateFrameDirect(ctx, config, colors, off, direction) {
   humanWest(ctx, config, off);
   ctx.save();
   ctx.translate(0, by + headBobScaled);
-  const hornY = 0;
-  fillRect(ctx, colors.horn.base, 41, hornY, 4, 9);
-  fillRect(ctx, colors.horn.base, 38, hornY - 4, 4, 6);
-  outlineRect(ctx, colors.horn.outline, 38, hornY - 4, 8, 14);
+  const hornY = 22;
+  fillRect(ctx, colors.horn.base, 41, hornY, 4, 7);
+  fillRect(ctx, colors.horn.base, 39, hornY - 3, 3, 5);
+  outlineRect(ctx, colors.horn.outline, 39, hornY - 3, 6, 11);
   ctx.restore();
   vLine(ctx, colors.tail.base, 56, 62 + by, 9);
   fillRect(ctx, colors.tail.base, 57, 71 + by, 6, 6);
