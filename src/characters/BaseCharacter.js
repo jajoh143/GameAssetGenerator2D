@@ -362,16 +362,16 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  // Hourglass silhouette: shoulder cap → defined chest → tapered waist → hip flare
+  // Clean jacket: subtle 3-tone shading, small collar hint, no prominent shirt panel
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 24);
-  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
+  const numRows = Math.min(h, 20);
+  const SHOULDER = 3, WAIST_S = 7, WAIST_E = 13;
 
   const rl = (row) => {
-    if (row < SHOULDER)                       return x - 1;   // shoulder cap
-    if (row >= WAIST_S && row <= WAIST_E)    return x + 2;   // waist taper
-    if (row > WAIST_E)                        return x + 1;   // hip
-    return x;                                                  // chest
+    if (row < SHOULDER)                       return x - 1;
+    if (row >= WAIST_S && row <= WAIST_E)    return x + 2;
+    if (row > WAIST_E)                        return x + 1;
+    return x;
   };
   const rr = (row) => {
     if (row < SHOULDER)                       return x + w;
@@ -385,104 +385,45 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
 
-  // ── 2. Directional form shading ──────────────────────────────────────────
+  // ── 2. Subtle directional shading (left lit, right shadow) ───────────────
   for (let row = 0; row < numRows; row++) {
-    const isShoulderRow = row < SHOULDER;
     px(ctx, colors.highlight, rl(row) + 1, y + row);
-    if (isShoulderRow) px(ctx, colors.highlight, rl(row) + 2, y + row);
     px(ctx, colors.shadow, rr(row) - 1, y + row);
-    px(ctx, colors.shadow, rr(row) - 2, y + row);
   }
 
-  // ── 3. Fold shadow notches ───────────────────────────────────────────────
-  const shirtW = 10, shirtLx = cx - 5;   // shirt panel centered
-  const foldRow1 = Math.floor(numRows * 0.45);
-  const foldRow2 = numRows - 4;
-  for (const fr of [foldRow1, foldRow2]) {
-    const frl = rl(fr) + 2;
-    const frr = rr(fr) - 2;
-    if (shirtLx - frl > 0) hLine(ctx, colors.shadow, frl, y + fr, shirtLx - frl);
-    if (frr - (shirtLx + shirtW) > 0) hLine(ctx, colors.shadow, shirtLx + shirtW, y + fr, frr - shirtLx - shirtW);
-  }
-
-  // ── 4. Deep fold shadow (enhanced clothing shadows) ──────────────────────
-  const deepFold = colors.deep_shadow || colors.shadow;
-  const foldCenter = Math.floor(numRows * 0.55);
-  hLine(ctx, deepFold, shirtLx + 1, y + foldCenter, shirtW - 2);
-
-  // ── 5. Inner shirt panel ─────────────────────────────────────────────────
-  const shirtCol = colors.collar || colors.highlight;
-  fillRect(ctx, shirtCol, shirtLx, y, shirtW, numRows);
-  vLine(ctx, colors.shadow,    shirtLx,              y, numRows);
-  vLine(ctx, colors.shadow,    shirtLx + shirtW - 1, y, numRows);
-  vLine(ctx, colors.highlight, shirtLx + 1,          y, numRows);
-  vLine(ctx, colors.shadow,    shirtLx + shirtW - 2, y, numRows);
-  vLine(ctx, colors.highlight, cx, y + 1, numRows - 2);
-
-  // Shirt buttons at scaled rows 14, 19, 24
-  for (const btnRow of [14, 19, 24]) {
-    if (btnRow < numRows) px(ctx, colors.shadow, cx, y + btnRow);
-  }
-
-  // ── 6. Lapels ─────────────────────────────────────────────────────────────
-  const lapelH = Math.min(12, numRows);
-  for (let row = 0; row < lapelH; row++) {
-    const lw = Math.round(4 * (lapelH - 1 - row) / (lapelH - 1));
-    if (lw > 0) {
-      hLine(ctx, colors.highlight, shirtLx,          y + row, lw);
-      px(ctx,   colors.shadow,     shirtLx + lw - 1, y + row);
-      hLine(ctx, colors.base,  shirtLx + shirtW - lw, y + row, lw);
-      px(ctx,   colors.shadow, shirtLx + shirtW - lw, y + row);
-    }
-  }
-
-  // ── 7. AA at silhouette steps + waist bridge ─────────────────────────────
-  px(ctx, colors.shadow, x - 1, y + SHOULDER);
-  px(ctx, colors.shadow, x + w, y + SHOULDER);
-  px(ctx, colors.shadow, x, y + WAIST_S);
-  px(ctx, colors.shadow, x + w - 1, y + WAIST_S);
-  px(ctx, colors.shadow, x, y + WAIST_E + 1);
-  px(ctx, colors.shadow, x + w - 1, y + WAIST_E + 1);
+  // ── 3. Gentle waist shadow (not full-width fold lines) ───────────────────
   for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x,         y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
+    px(ctx, colors.shadow, rl(row) + 1, y + row);  // left waist crease
+    px(ctx, colors.shadow, rr(row) - 1, y + row);  // right waist crease
   }
 
-  // ── 8. Armpit crease ─────────────────────────────────────────────────────
+  // ── 4. Center seam + small collar ────────────────────────────────────────
+  // Thin center seam line (jacket opening)
+  vLine(ctx, colors.shadow, cx, y + 3, numRows - 3);
+  // Small collar: just 3 rows at top, 6px wide
+  const colW = 6, colX = cx - 3;
+  const colCol = colors.collar || colors.highlight;
+  fillRect(ctx, colCol, colX, y, colW, 3);
+  px(ctx, colors.shadow, colX, y + 2);
+  px(ctx, colors.shadow, colX + colW - 1, y + 2);
+
+  // ── 5. Selout outline ────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
-
-  // ── 9. Selective outlining ────────────────────────────────────────────────
-  px(ctx, colors.shadow,  x - 1, y);
-  hLine(ctx, colors.outline, x, y, w);
-  px(ctx, colors.shadow,  x + w, y);
+  hLine(ctx, colors.outline, x - 1, y, w + 2);
   for (let row = 1; row < numRows - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
   }
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
-
-  // ── 10. Shoulder cap + rounded corners + hip flare + cylinder ────────────
-  px(ctx, colors.highlight, x - 1, y + 1);
-  erasePixel(ctx, x - 1, y);
-  px(ctx, colors.shadow, x - 1, y);
-  erasePixel(ctx, x + w, y);
-  px(ctx, colors.shadow, x + w, y);
-  px(ctx, colors.highlight, rl(WAIST_E + 1) + 1, y + WAIST_E + 1);
-  // Cylinder mid-shadow at right-center
-  for (let row = 4; row <= 9; row++) {
-    px(ctx, colors.shadow, cx + 5, y + row);
-  }
-  // Underpectoral fold
-  hLine(ctx, colors.shadow,    shirtLx + 1, y + 10, shirtW - 2);
-  hLine(ctx, deepFold,         shirtLx + 2, y + 10, shirtW - 4);
 }
 
 function drawHoodieSouth(ctx, colors, x, y, w, h) {
+  // Clean hoodie: subtle shading, small hood collar, center zip, small pocket
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 24);
-  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
+  const numRows = Math.min(h, 20);
+  const SHOULDER = 3, WAIST_S = 7, WAIST_E = 13;
 
   const rl = (row) => {
     if (row < SHOULDER)                     return x - 1;
@@ -500,41 +441,25 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
+  // Subtle directional shading
   for (let row = 0; row < numRows; row++) {
     px(ctx, colors.highlight, rl(row) + 1, y + row);
     px(ctx, colors.shadow,    rr(row) - 1, y + row);
-    px(ctx, colors.shadow,    rr(row) - 2, y + row);
-  }
-  for (let row = 1; row < Math.min(10, numRows); row++) {
-    if (row % 2 === 1) px(ctx, colors.highlight, rl(row) + 2, y + row);
   }
 
-  const hFold1 = Math.floor(numRows * 0.35);
-  const hFold2 = Math.floor(numRows * 0.65);
-  const hFold3 = numRows - 4;
-  const deepFold = colors.deep_shadow || colors.shadow;
-  for (const fr of [hFold1, hFold2, hFold3]) {
-    hLine(ctx, colors.shadow, rl(fr) + 2, y + fr, rr(fr) - rl(fr) - 3);
-    hLine(ctx, deepFold, rl(fr) + 3, y + fr + 1, rr(fr) - rl(fr) - 5);
-  }
-
-  // Hood collar
-  const hoodX = cx - 5;
-  fillRect(ctx, colors.collar, hoodX, y, 10, 4);
-  vLine(ctx, colors.highlight, hoodX + 1, y, 4);
-  vLine(ctx, colors.shadow,    hoodX + 8, y, 4);
-  outlineRect(ctx, colors.outline, hoodX, y, 10, 4);
+  // Hood collar: small, 8px wide × 3 rows
+  const hoodX = cx - 4;
+  fillRect(ctx, colors.collar, hoodX, y, 8, 3);
+  outlineRect(ctx, colors.outline, hoodX, y, 8, 3);
 
   // Center zipper
-  vLine(ctx, colors.shadow, cx, y + 4, numRows - 4);
+  vLine(ctx, colors.shadow, cx, y + 3, numRows - 3);
 
-  // Kangaroo pocket
-  const pkx = cx - 6;
-  const pky = y + Math.floor(numRows * 0.58);
-  const pkw = 12, pkh = Math.max(4, Math.floor(numRows * 0.32));
+  // Small kangaroo pocket
+  const pkw = 8, pkh = 3;
+  const pkx = cx - Math.floor(pkw / 2);
+  const pky = y + Math.floor(numRows * 0.6);
   fillRect(ctx, colors.shadow, pkx, pky, pkw, pkh);
-  vLine(ctx, colors.highlight, pkx + 1,       pky, pkh);
-  vLine(ctx, colors.shadow,    pkx + pkw - 2,  pky, pkh);
   outlineRect(ctx, colors.outline, pkx, pky, pkw, pkh);
 
   px(ctx, colors.shadow, x - 1, y - 1);
@@ -924,7 +849,7 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
 
   const cx     = Math.floor(x + w / 2);  // = 48
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
-  const tailH  = 19;                     // coat extension below normal hem
+  const tailH  = 8;                      // coat extension — shows most of the legs
   const totalH = h + tailH;
 
   const rl = (row) => {
@@ -1065,7 +990,7 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
   // For jacket: front 2px opening shows shirt/collar suggestion.
   // For coats: h extended by 13 rows to cover upper legs in side view.
   const isCoat = clothingKey && clothingKey.startsWith('coat');
-  const h = isCoat ? 30 : 16;
+  const h = isCoat ? 22 : 16;
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 13;
 
   const rowW = (row) => {
