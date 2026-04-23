@@ -1061,11 +1061,15 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   px(ctx, clothingColors.shadow,     x - 1, y + 2);
   px(ctx, clothingColors.shadow,     x + w, y + 2);
 
-  // Neckline valley — shadow strip at center of rows 0-1 creates M-shaped silhouette:
-  //   shoulder hump | neckline valley | shoulder hump
-  const valL = x + 6, valW = w - 12;   // for x=37,w=22: x=43..52 (10px valley)
-  hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, valL,     y,     valW);
-  hLine(ctx, clothingColors.shadow,                               valL + 1, y + 1, valW - 2);
+  // M-shaped neckline: dips only at shoulder-to-neck transitions, not across neck column
+  const neckL = 27, neckR = 37;                // NX=27, NX+NW-1=37
+  const leftDipW  = neckL - (x + 2);           // 27 - 23 = 4  → x=23..26
+  const rightDipX = neckR + 1;                 // 38
+  const rightDipW = (x + w) - rightDipX;       // 43 - 38 = 5  → x=38..42
+  if (leftDipW  > 0) hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, x + 2,      y,     leftDipW);
+  if (rightDipW > 0) hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, rightDipX,  y,     rightDipW);
+  if (leftDipW  > 1) hLine(ctx, clothingColors.shadow,                               x + 2,      y + 1, leftDipW - 1);
+  if (rightDipW > 1) hLine(ctx, clothingColors.shadow,                               rightDipX,  y + 1, rightDipW - 1);
 
   // Shoulder cap: 2 highlight rows, lit from upper-left (now spanning wider shoulder)
   hLine(ctx, clothingColors.highlight, x + 1, y,     Math.floor(w * 0.45));
