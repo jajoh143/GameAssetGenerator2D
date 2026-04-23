@@ -1012,7 +1012,22 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
 // ---------------------------------------------------------------------------
 
 function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
-  // Shoulder cap: 2 highlight rows, lit from upper-left
+  // Wider shoulder pads — extend rows 0-1 outward 2px each side for chunky chibi build.
+  // Row 0-1: outer 2px cap extensions (base fill); row 2: 1px transition cap.
+  fillRect(ctx, clothingColors.base, x - 2, y,     2, 2);        // left shoulder pad
+  fillRect(ctx, clothingColors.base, x + w, y,     2, 2);         // right shoulder pad
+  px(ctx, clothingColors.base,       x - 1, y + 2);                // left transition row
+  px(ctx, clothingColors.base,       x + w, y + 2);                // right transition row
+  // Shoulder pad outline (selout dark edges)
+  px(ctx, clothingColors.shadow,     x - 2, y);
+  px(ctx, clothingColors.shadow,     x - 2, y + 1);
+  px(ctx, clothingColors.shadow,     x + w + 1, y);
+  px(ctx, clothingColors.shadow,     x + w + 1, y + 1);
+  // Step AA at shoulder-pad→chest transition
+  px(ctx, clothingColors.shadow,     x - 1, y + 2);
+  px(ctx, clothingColors.shadow,     x + w, y + 2);
+
+  // Shoulder cap: 2 highlight rows, lit from upper-left (now spanning wider shoulder)
   hLine(ctx, clothingColors.highlight, x + 1, y,     Math.floor(w * 0.45));
   hLine(ctx, clothingColors.highlight, x + 1, y + 1, Math.floor(w * 0.30));
 
@@ -1475,48 +1490,71 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=0, rArmOut=0, torsoY=28) {
-  // Shoulder cap rows 0-1: 6px wide, outer edge shifts 1px outward.
-  // Inner edge stays at 38 throughout, preserving arm-to-waist gap.
-  const lx = 34;                // left arm outer-edge (body rows)
-  const shoulderRX = 59;        // right arm left-edge
-  const lCapX = lx - 1;         // = 33, outer edge of left shoulder cap
+  // Organic arm shape: 7px deltoid cap → 6px bicep → 5px elbow pinch → 6px forearm → 4px wrist
+  // Inner edge stays fixed to preserve arm-to-waist gap; outer edge varies for the curve.
+  const lx = 34;                // left arm body outer-edge
+  const shoulderRX = 59;        // right arm inner (torso-side) edge
   const baseY = torsoY;
   const sleeveH = 13, handH = 4;
   const maxRow = sleeveH - 1;
-  const capRows = 2;            // rows 0-1 = deltoid shoulder cap
-  const capAW   = 6;            // shoulder cap width (1px wider on outer edge)
-  const baseAW  = 5;            // upper arm width
-  const elbowRow = 8;
-  const wristAW = 4;
-  const armW = (row) => row < capRows ? capAW : row < elbowRow ? baseAW : wristAW;
+  const deepShadow = clothingColors.deep_shadow || clothingColors.shadow;
 
-  // Left arm: cap rows use lCapX, body rows use lx
-  const lRowX = (row) => (row < capRows ? lCapX : lx) + Math.round(lArmOut * row / maxRow);
+  // Row zones:  0-1 cap (7px), 2-4 bicep (6px), 5-6 elbow (5px), 7-9 forearm (6px), 10-12 wrist (4px)
+  const armW = (row) => {
+    if (row < 2)  return 7;   // deltoid cap
+    if (row < 5)  return 6;   // bicep
+    if (row < 7)  return 5;   // elbow pinch
+    if (row < 10) return 6;   // forearm
+    return 4;                 // wrist
+  };
+  // Left arm outer-edge shift per row zone (negative values push OUT from body)
+  const lShift = (row) => {
+    if (row < 2)  return -2;  // cap extends 2px further left
+    if (row < 5)  return -1;  // bicep 1px further left
+    if (row < 7)  return  0;  // elbow back to base
+    if (row < 10) return -1;  // forearm 1px further left
+    return 0;                 // wrist back to base
+  };
+
+  // Left arm X position (lRowX) uses the row-dependent shift
+  const lRowX = (row) => lx + lShift(row) + Math.round(lArmOut * row / maxRow);
   const lRowY = (row) => baseY + Math.round(lArmDY * row / maxRow) + row;
-  const lArmX = lx    + Math.round(lArmOut);
+  const lArmX = lx    + lShift(maxRow) + Math.round(lArmOut);
   const lArmY = baseY + Math.round(lArmDY);
 
-  // Right arm: cap rows same start, aw expands rightward via armW
+  // Right arm stays anchored at shoulderRX (inner edge toward torso);
+  // width expands rightward through armW.
   const rRowX = (row) => shoulderRX + Math.round(rArmOut * row / maxRow);
   const rRowY = (row) => baseY      + Math.round(rArmDY  * row / maxRow) + row;
   const rArmX = shoulderRX + Math.round(rArmOut);
   const rArmY = baseY      + Math.round(rArmDY);
 
-  // ── Left arm (lit side — deltoid cap + cylinder shading) ─────────────────
+  // ── Left arm (lit side — deltoid cap + cylinder + forearm flare) ─────────
   for (let row = 0; row < sleeveH; row++) {
     const rX = lRowX(row);
     const ry = lRowY(row);
     const aw = armW(row);
     hLine(ctx, clothingColors.base,   rX,     ry, aw);
     px(ctx, clothingColors.shadow,    rX,     ry);        // outer selout
-    px(ctx, clothingColors.highlight, rX + 1, ry);        // highlight peak
-    if (row === 0) hLine(ctx, clothingColors.highlight, rX + 1, ry, aw - 1);  // cap crown highlight
-    if (row >= capRows && row < elbowRow) px(ctx, clothingColors.shadow, rX + aw - 2, ry);  // secondary cylinder shadow
+    px(ctx, clothingColors.highlight, rX + 1, ry);        // highlight column
+    if (row === 0) hLine(ctx, clothingColors.highlight, rX + 1, ry, aw - 2);  // deltoid crown highlight
+    if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rX + aw - 2, ry);  // secondary cylinder shadow
     px(ctx, clothingColors.shadow,    rX + aw - 1, ry);   // inner shadow (toward torso)
   }
-  // AA pixel at cap→body transition (blends 6px→5px step on outer edge)
-  px(ctx, clothingColors.shadow, lCapX, baseY + capRows);
   hLine(ctx, clothingColors.shadow, lRowX(maxRow), lRowY(maxRow), armW(maxRow));
+
+  // Armhole socket shadow — darker pixels at the top of the arm where it meets the torso.
+  // Creates the "arm plugs into shoulder" depth crease.
+  px(ctx, deepShadow, lRowX(0) + armW(0) - 1, baseY);       // top-inner corner
+  px(ctx, deepShadow, lRowX(1) + armW(1) - 1, baseY + 1);   // 2nd row socket
+  // Left cap→bicep step AA (7→6 px)
+  px(ctx, clothingColors.shadow, lRowX(0), baseY + 2);
+  // Bicep→elbow step AA (6→5 px)
+  px(ctx, clothingColors.shadow, lRowX(2), baseY + 5);
+  // Elbow→forearm step AA (5→6 px, outer flare)
+  px(ctx, clothingColors.shadow, lRowX(7), baseY + 6);
+  // Forearm→wrist step AA (6→4 px)
+  px(ctx, clothingColors.shadow, lRowX(9), baseY + 10);
 
   // Left hand / fist (4px wide with knuckle highlights)
   const lhw = 4;
@@ -1527,7 +1565,7 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   hLine(ctx, skinColors.shadow,     lhx,     lArmY + sleeveH + handH - 1, lhw);
   outlineRect(ctx, skinColors.outline, lhx,  lArmY + sleeveH, lhw, handH);
 
-  // ── Right arm (shadow side — deltoid cap + muted cylinder) ───────────────
+  // ── Right arm (shadow side — deltoid cap + muted cylinder + forearm flare) ──
   for (let row = 0; row < sleeveH; row++) {
     const rx = rRowX(row);
     const ry = rRowY(row);
@@ -1535,13 +1573,20 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
     hLine(ctx, clothingColors.base,  rx,         ry, aw);
     px(ctx, clothingColors.shadow,   rx,         ry);     // inner shadow (toward torso)
     px(ctx, clothingColors.shadow,   rx + 1,     ry);     // secondary inner shadow
-    if (row === 0) hLine(ctx, clothingColors.shadow, rx + 1, ry, aw - 1);  // cap crown (dark, shadow side)
-    if (row >= capRows && row < elbowRow) px(ctx, clothingColors.shadow, rx + aw - 2, ry);  // near-outer shadow step
+    if (row === 0) hLine(ctx, clothingColors.shadow, rx + 1, ry, aw - 2);  // dark deltoid crown
+    if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rx + aw - 2, ry);  // cylinder shadow
     px(ctx, clothingColors.shadow,   rx + aw - 1, ry);    // outer selout
   }
-  // AA pixel at cap→body transition (right arm, blends 6px→5px step on outer right edge)
-  px(ctx, clothingColors.shadow, shoulderRX + capAW, baseY + capRows);
   hLine(ctx, clothingColors.shadow, rRowX(maxRow), rRowY(maxRow), armW(maxRow));
+
+  // Armhole socket shadow (right)
+  px(ctx, deepShadow, rRowX(0), baseY);        // top-inner corner
+  px(ctx, deepShadow, rRowX(1), baseY + 1);    // 2nd row socket
+  // Step AA on right (outer edge shifts)
+  px(ctx, clothingColors.shadow, rRowX(0) + 6, baseY + 2);  // cap→bicep step
+  px(ctx, clothingColors.shadow, rRowX(2) + 5, baseY + 5);  // bicep→elbow step
+  px(ctx, clothingColors.shadow, rRowX(7) + 4, baseY + 6);  // elbow→forearm step
+  px(ctx, clothingColors.shadow, rRowX(9) + 5, baseY + 10); // forearm→wrist step
 
   // Right hand / fist (4px wide)
   const rhw = 4;

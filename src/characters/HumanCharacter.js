@@ -68,9 +68,9 @@ function drawSouth(ctx, config, offsets) {
   // --- Ground shadow ---
   drawGroundShadow(ctx, 48, 94 + bodyY, 18, 4);
 
-  // Proportional body stack — smaller torso, balanced with head.
+  // Proportional body stack — chibi proportions: shorter legs make head relatively larger.
   const shoeH  = 5;
-  const legH   = 22;
+  const legH   = 18;
   const beltH  = 3;
   const torsoH = 18;
   const neckH  = 2;
@@ -128,7 +128,7 @@ function drawNorth(ctx, config, offsets) {
   const base = 96 + bodyY;
 
   const shoeH  = 5;
-  const legH   = 22;
+  const legH   = 18;    // shorter legs for chibi proportions
   const beltH  = 3;
   const torsoH = 18;
   const neckH  = 2;
@@ -226,7 +226,7 @@ function drawWest(ctx, config, offsets) {
   const base = 96 + bodyY;
 
   const shoeH  = 5;
-  const legH   = 22;
+  const legH   = 18;    // chibi proportions
   const beltH  = 3;
   const torsoH = 16;
 
