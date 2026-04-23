@@ -30,8 +30,8 @@ function drawGroundShadow(ctx, cx, y, w=14, h=3) {
 
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   eyeColors = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  const HX = 33, HY = 26, HW = 30;
-  const cx = HX + Math.floor(HW / 2); // center x = 48
+  const HX = 17, HY = 26, HW = 30;
+  const cx = HX + Math.floor(HW / 2); // center x = 32
   const outline = '#111111';
 
   // ── HEAD SHAPE — chibi: taller rounder skull (24 rows, 28px wide at max) ──
@@ -1634,6 +1634,21 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   fillRect(ctx, skinColors.base,    rhx, rArmY + sleeveH, rhw, handH);
   hLine(ctx, skinColors.shadow,     rhx, rArmY + sleeveH + handH - 1, rhw);
   outlineRect(ctx, skinColors.outline, rhx, rArmY + sleeveH, rhw, handH);
+
+  // Shoulder bridge: fill the gap between arm shoulder cap and neck at baseY.
+  // Neck spans x=27-37 (NX=27, NW=11); left arm inner edge at x=22, right arm inner at x=43.
+  const neckL = 27, neckR = 37;
+  const lBridgeX = lRowX(0) + armW(0);         // = 23 (just inside left arm)
+  const lBridgeW = neckL - lBridgeX;           // = 4 (fills x=23-26)
+  const rBridgeX = neckR + 1;                   // = 38
+  const rBridgeW = rRowX(0) - rBridgeX;        // = 5 (fills x=38-42)
+  if (lBridgeW > 0) hLine(ctx, clothingColors.base, lBridgeX, baseY, lBridgeW);
+  if (rBridgeW > 0) hLine(ctx, clothingColors.base, rBridgeX, baseY, rBridgeW);
+  // Shadow at bridge edges for depth
+  px(ctx, clothingColors.shadow, lBridgeX,           baseY);  // bridge outer-left edge
+  px(ctx, clothingColors.shadow, neckL - 1, baseY);            // bridge→neck transition left
+  px(ctx, clothingColors.shadow, rBridgeX,           baseY);   // bridge→neck transition right
+  px(ctx, clothingColors.shadow, rBridgeX + rBridgeW - 1, baseY); // bridge outer-right edge
 }
 
 // ---------------------------------------------------------------------------
