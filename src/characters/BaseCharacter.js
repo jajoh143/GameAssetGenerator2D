@@ -401,15 +401,13 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   const SHOULDER = 3, WAIST_S = 7, WAIST_E = 13;
 
   const rl = (row) => {
-    if (row < SHOULDER)                       return x - 1;
-    if (row >= WAIST_S && row <= WAIST_E)    return x + 2;
-    if (row > WAIST_E)                        return x + 1;
+    if (row < SHOULDER)                      return x - 1;
+    if (row >= WAIST_S && row <= WAIST_E)   return x + 2;
     return x;
   };
   const rr = (row) => {
-    if (row < SHOULDER)                       return x + w;
-    if (row >= WAIST_S && row <= WAIST_E)    return x + w - 3;
-    if (row > WAIST_E)                        return x + w - 2;
+    if (row < SHOULDER)                      return x + w;
+    if (row >= WAIST_S && row <= WAIST_E)   return x + w - 3;
     return x + w - 1;
   };
 
@@ -470,13 +468,11 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)                     return x - 1;
     if (row >= WAIST_S && row <= WAIST_E)  return x + 2;
-    if (row > WAIST_E)                      return x + 1;
     return x;
   };
   const rr = (row) => {
     if (row < SHOULDER)                     return x + w;
     if (row >= WAIST_S && row <= WAIST_E)  return x + w - 3;
-    if (row > WAIST_E)                      return x + w - 2;
     return x + w - 1;
   };
 
@@ -571,8 +567,8 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : x + w - 1;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -618,8 +614,8 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : x + w - 1;
 
   // Shirt base (full width, lighter)
   const shirtCol = colors.shirt || colors.highlight;
@@ -674,8 +670,8 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : x + w - 1;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -779,8 +775,8 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : x + w - 1;
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -829,8 +825,8 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
   const SHOULDER = 3;
   // Boxy cut: shallow waist taper
   const WAIST_S = 10, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : row > WAIST_E ? x + 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : row > WAIST_E ? x + w - 2 : x + w - 1;
+  const rl = (row) => row < SHOULDER ? x - 1 : row >= WAIST_S && row <= WAIST_E ? x + 2 : x;
+  const rr = (row) => row < SHOULDER ? x + w : row >= WAIST_S && row <= WAIST_E ? x + w - 3 : x + w - 1;
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -1027,6 +1023,14 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
 
   // Mid-torso horizontal fold shadow (fabric compression below chest)
   hLine(ctx, clothingColors.shadow, x + 2, y + 8, w - 4);
+
+  // Shoulder cap bottom corner AA — armpit angle where shoulder meets chest
+  // These pixels at the inner corner of the shoulder step make the cap look rounded
+  px(ctx, clothingColors.shadow, x - 1, y + 3);
+  px(ctx, clothingColors.shadow, x + w, y + 3);
+
+  // Right-side pec shadow strip (torso cylinder: surface curves away from light)
+  vLine(ctx, clothingColors.shadow, x + w - 3, y + 2, 5);
 }
 
 function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
