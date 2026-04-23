@@ -115,9 +115,12 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
 
   // Left cheekbone highlight (face volume, below eye zone)
   px(ctx, skinColors.highlight, 41, HY + 12);
-  // Right cheekbone shadow (complements left highlight — face rounds from light)
+  // Right cheekbone shadow (complements left highlight)
   px(ctx, skinColors.shadow, 53, HY + 12);
-  // Chin-area shadow (lower face rounds away from viewer)
+  // Lower jaw shadow band (strong chin definition, reads as jaw structure)
+  hLine(ctx, skinColors.shadow, 42, HY + 15, 6);
+  hLine(ctx, skinColors.shadow, 43, HY + 16, 5);
+  // Chin-area shadow
   hLine(ctx, skinColors.shadow, 44, HY + 17, 5);
 
   // ── Face outline (traces skin boundary) ──────────────────────────────────
@@ -196,6 +199,14 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
     }
     hLine(ctx, hairColors.highlight, HX + 2, HY + 4, HW - 4);
     hLine(ctx, hairColors.highlight, HX + 2, HY + 5, HW - 5);
+  } else {
+    // 'short' (default) — spike tips above crown for styled look
+    px(ctx, hairColors.shadow,    HX + 6,  HY - 1);
+    px(ctx, hairColors.base,      HX + 9,  HY - 1);
+    px(ctx, hairColors.highlight, HX + 11, HY - 1);
+    px(ctx, hairColors.base,      HX + 14, HY - 1);
+    px(ctx, hairColors.shadow,    HX + 15, HY - 1);
+    px(ctx, hairColors.highlight, HX + 11, HY - 2);  // tallest center spike
   }
 }
 
@@ -1461,60 +1472,57 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=0, rArmOut=0, torsoY=28) {
-  // Arms with shoulder pivot. 4px wide for cylindrical form reads.
+  // Arms with shoulder pivot. 5px wide for chunky cylindrical form.
   const lx = 34;                // left arm outer-edge (tight to shoulder)
   const shoulderRX = 59;        // right arm left-edge (tight to shoulder)
   const baseY = torsoY;
-  const baseAW = 4, sleeveH = 13, handH = 4;
+  const baseAW = 5, sleeveH = 13, handH = 4;
   const maxRow = sleeveH - 1;
 
-  // Subtle arm profile: shoulder → forearm (minimal bulge at 3px width)
-  const bulge   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  const shadowW = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-
-  // Left arm: Y-pivot only (lArmOut=0 in current frames, no lateral swing)
+  // Left arm: Y-pivot only
   const lRowY = (row) => baseY + Math.round(lArmDY * row / maxRow) + row;
   const lArmY = baseY + Math.round(lArmDY);  // wrist-level Y for hand
 
-  // Right arm: full 2D pivot — shoulder at (shoulderRX, baseY), wrist at (shoulderRX+rArmOut, baseY+rArmDY+10)
+  // Right arm: full 2D pivot
   const rRowX = (row) => shoulderRX + Math.round(rArmOut * row / maxRow);
   const rRowY = (row) => baseY      + Math.round(rArmDY  * row / maxRow) + row;
   const rArmX = shoulderRX + Math.round(rArmOut);  // wrist X for hand
   const rArmY = baseY      + Math.round(rArmDY);   // wrist Y for hand
 
-  // ── Left arm (lit side — 4-zone cylindrical shading) ─────────────────────
+  // ── Left arm (lit side — 5-zone cylindrical shading) ─────────────────────
   for (let row = 0; row < sleeveH; row++) {
-    const rowW = baseAW;
     const ry = lRowY(row);
-    hLine(ctx, clothingColors.base,    lx,            ry, rowW);
-    px(ctx, clothingColors.shadow,     lx,            ry);  // outer selout edge
-    px(ctx, clothingColors.highlight,  lx + 1,        ry);  // highlight peak (front face)
-    px(ctx, clothingColors.shadow,     lx + rowW - 1, ry);  // inner shadow (toward torso)
+    hLine(ctx, clothingColors.base,   lx,     ry, baseAW);
+    px(ctx, clothingColors.shadow,    lx,     ry);  // outer selout
+    px(ctx, clothingColors.highlight, lx + 1, ry);  // highlight peak
+    // lx+2 and lx+3 = base (mid cylinder)
+    px(ctx, clothingColors.shadow,    lx + 4, ry);  // inner shadow (toward torso)
   }
   hLine(ctx, clothingColors.shadow, lx, lRowY(maxRow), baseAW);
 
-  // Left hand / fist (3px wide with knuckle highlight)
-  const lhw = 3;
+  // Left hand / fist (4px wide with knuckle highlights)
+  const lhw = 4;
   const lhx = lx;
   fillRect(ctx, skinColors.base,    lhx,     lArmY + sleeveH, lhw, handH);
   px(ctx,    skinColors.highlight,  lhx + 1, lArmY + sleeveH);
+  px(ctx,    skinColors.highlight,  lhx + 2, lArmY + sleeveH);
   hLine(ctx, skinColors.shadow,     lhx,     lArmY + sleeveH + handH - 1, lhw);
   outlineRect(ctx, skinColors.outline, lhx,  lArmY + sleeveH, lhw, handH);
 
-  // ── Right arm (shadow side — muted, 4-zone) ───────────────────────────────
+  // ── Right arm (shadow side — muted, 5-zone) ───────────────────────────────
   for (let row = 0; row < sleeveH; row++) {
-    const rowW = baseAW;
     const rx = rRowX(row);
     const ry = rRowY(row);
-    hLine(ctx, clothingColors.base,  rx,            ry, rowW);
-    px(ctx, clothingColors.shadow,   rx,            ry);  // outer shadow selout
-    px(ctx, clothingColors.shadow,   rx + 1,        ry);  // secondary shadow
-    px(ctx, clothingColors.shadow,   rx + rowW - 1, ry);  // inner shadow
+    hLine(ctx, clothingColors.base,  rx,     ry, baseAW);
+    px(ctx, clothingColors.shadow,   rx,     ry);  // inner shadow (toward torso)
+    px(ctx, clothingColors.shadow,   rx + 1, ry);  // secondary shadow
+    // rx+2 and rx+3 = base
+    px(ctx, clothingColors.shadow,   rx + 4, ry);  // outer selout
   }
   hLine(ctx, clothingColors.shadow, rRowX(maxRow), rRowY(maxRow), baseAW);
 
-  // Right hand / fist (3px wide)
-  const rhw = 3;
+  // Right hand / fist (4px wide)
+  const rhw = 4;
   const rhx = rArmX;
   fillRect(ctx, skinColors.base,    rhx, rArmY + sleeveH, rhw, handH);
   hLine(ctx, skinColors.shadow,     rhx, rArmY + sleeveH + handH - 1, rhw);
@@ -1530,7 +1538,7 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
 // ---------------------------------------------------------------------------
 
 function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, torsoY) {
-  const sleeveH = 13, handH = 4, aw = 4;
+  const sleeveH = 13, handH = 4, aw = 5;
   const backY      = torsoY + 1;
   const shoulderX  = torsoX + 11;
   const maxRow     = sleeveH - 1;
@@ -1540,18 +1548,19 @@ function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, tor
   for (let row = 0; row < sleeveH; row++) {
     const rx = rowX(row);
     hLine(ctx, clothingColors.shadow, rx, backY + row, aw);
-    px(ctx, clothingColors.base,    rx + 1,      backY + row);  // slight inner lighter strip
+    px(ctx, clothingColors.base,    rx + 1, backY + row);  // inner lighter strip
+    px(ctx, clothingColors.base,    rx + 2, backY + row);  // second lighter strip
     px(ctx, clothingColors.outline, rx,          backY + row);
     px(ctx, clothingColors.outline, rx + aw - 1, backY + row);
   }
   hLine(ctx, clothingColors.outline, rowX(0),      backY,          aw);
   hLine(ctx, clothingColors.outline, rowX(maxRow), backY + maxRow, aw);
-  fillRect(ctx, skinColors.shadow, wristX, backY + sleeveH, 3, handH);
-  outlineRect(ctx, skinColors.outline, wristX, backY + sleeveH, 3, handH);
+  fillRect(ctx, skinColors.shadow, wristX, backY + sleeveH, 4, handH);
+  outlineRect(ctx, skinColors.outline, wristX, backY + sleeveH, 4, handH);
 }
 
 function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, torsoY) {
-  const sleeveH = 13, handH = 4, aw = 4;
+  const sleeveH = 13, handH = 4, aw = 5;
   const frontY     = torsoY + 1;
   const shoulderX  = torsoX - 1;
   const maxRow     = sleeveH - 1;
@@ -1561,17 +1570,19 @@ function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, t
   for (let row = 0; row < sleeveH; row++) {
     const rx = rowX(row);
     hLine(ctx, clothingColors.base,    rx, frontY + row, aw);
-    px(ctx, clothingColors.highlight,  rx + 1,      frontY + row);  // highlight peak (off outer edge)
-    px(ctx, clothingColors.shadow,     rx + aw - 2, frontY + row);  // shadow start
-    px(ctx, clothingColors.shadow,     rx + aw - 1, frontY + row);  // shadow back edge
+    px(ctx, clothingColors.highlight,  rx + 1,      frontY + row);  // highlight peak
+    // rx+2 = base (mid cylinder)
+    px(ctx, clothingColors.shadow,     rx + aw - 2, frontY + row);  // shadow start (rx+3)
+    px(ctx, clothingColors.shadow,     rx + aw - 1, frontY + row);  // shadow back edge (rx+4)
   }
   hLine(ctx, clothingColors.outline, rowX(0),      frontY,          aw);
   hLine(ctx, clothingColors.outline, rowX(maxRow), frontY + maxRow, aw);
 
-  fillRect(ctx, skinColors.base,    wristX,     frontY + sleeveH, 3, handH);
+  fillRect(ctx, skinColors.base,    wristX,     frontY + sleeveH, 4, handH);
   px(ctx,    skinColors.highlight,  wristX + 1, frontY + sleeveH);
-  hLine(ctx, skinColors.shadow,     wristX,     frontY + sleeveH + handH - 1, 3);
-  outlineRect(ctx, skinColors.outline, wristX,  frontY + sleeveH, 3, handH);
+  px(ctx,    skinColors.highlight,  wristX + 2, frontY + sleeveH);
+  hLine(ctx, skinColors.shadow,     wristX,     frontY + sleeveH + handH - 1, 4);
+  outlineRect(ctx, skinColors.outline, wristX,  frontY + sleeveH, 4, handH);
 }
 
 // Legacy combined function kept for compatibility
