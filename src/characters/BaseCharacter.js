@@ -434,8 +434,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawNeckSouth(ctx, skinColors, baseY) {
-  // Proportional neck: 11px wide × 2px
-  const NX = 27, NW = 11, NH = 6;
+  // Slightly thinner neck: 9px wide × 6px tall; centre x=32.
+  const NX = 28, NW = 9, NH = 6;
   fillRect(ctx, skinColors.base, NX, baseY, NW, NH);
   vLine(ctx, skinColors.highlight, NX + 1, baseY, NH);
   vLine(ctx, skinColors.shadow,    NX + NW - 2, baseY, NH);
@@ -1062,14 +1062,15 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   px(ctx, clothingColors.shadow,     x + w, y + 2);
 
   // M-shaped neckline: dips only at shoulder-to-neck transitions, not across neck column
-  const neckL = 27, neckR = 37;                // NX=27, NX+NW-1=37
-  const leftDipW  = neckL - (x + 2);           // 27 - 23 = 4  → x=23..26
-  const rightDipX = neckR + 1;                 // 38
-  const rightDipW = (x + w) - rightDipX;       // 43 - 38 = 5  → x=38..42
-  if (leftDipW  > 0) hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, x + 2,      y,     leftDipW);
-  if (rightDipW > 0) hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, rightDipX,  y,     rightDipW);
-  if (leftDipW  > 1) hLine(ctx, clothingColors.shadow,                               x + 2,      y + 1, leftDipW - 1);
-  if (rightDipW > 1) hLine(ctx, clothingColors.shadow,                               rightDipX,  y + 1, rightDipW - 1);
+  const neckL = 28, neckR = 36;        // NX=28, NX+NW-1=36
+  const armInL = 23, armInR = 43;      // arm inner edges (fixed geometry)
+  const leftDipW  = neckL - armInL;    // 28 - 23 = 5  → x=23..27
+  const rightDipX = neckR + 1;         // 37
+  const rightDipW = armInR - rightDipX; // 43 - 37 = 6  → x=37..42
+  if (leftDipW  > 0) hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, armInL,      y,     leftDipW);
+  if (rightDipW > 0) hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, rightDipX,   y,     rightDipW);
+  if (leftDipW  > 1) hLine(ctx, clothingColors.shadow,                               armInL,      y + 1, leftDipW - 1);
+  if (rightDipW > 1) hLine(ctx, clothingColors.shadow,                               rightDipX,   y + 1, rightDipW - 1);
 
   // Shoulder cap: 2 highlight rows, lit from upper-left (now spanning wider shoulder)
   hLine(ctx, clothingColors.highlight, x + 1, y,     Math.floor(w * 0.45));
@@ -1250,8 +1251,8 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 // ---------------------------------------------------------------------------
 
 function drawBeltSouth(ctx, beltColors, x, y) {
-  // Belt / hip band: 20px wide, anchors torso-to-leg transition.
-  const w = 20, h = 3;
+  // Belt / hip band: 22px wide, anchors torso-to-leg transition.
+  const w = 22, h = 3;
   fillRect(ctx, beltColors.base, x, y, w, h);
   // Highlight on belt top row (belt leather catches light from above)
   hLine(ctx, beltColors.highlight, x + 1, y, w - 2);
@@ -1640,19 +1641,32 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   outlineRect(ctx, skinColors.outline, rhx, rArmY + sleeveH, rhw, handH);
 
   // Shoulder bridge: fill the gap between arm shoulder cap and neck at baseY.
-  // Neck spans x=27-37 (NX=27, NW=11); left arm inner edge at x=22, right arm inner at x=43.
-  const neckL = 27, neckR = 37;
+  // Neck spans x=28-36 (NX=28, NW=9); left arm inner edge at x=23, right arm inner at x=43.
+  const neckL = 28, neckR = 36;
   const lBridgeX = lRowX(0) + armW(0);         // = 23 (just inside left arm)
-  const lBridgeW = neckL - lBridgeX;           // = 4 (fills x=23-26)
-  const rBridgeX = neckR + 1;                   // = 38
-  const rBridgeW = rRowX(0) - rBridgeX;        // = 5 (fills x=38-42)
+  const lBridgeW = neckL - lBridgeX;           // = 5 (fills x=23-27)
+  const rBridgeX = neckR + 1;                   // = 37
+  const rBridgeW = rRowX(0) - rBridgeX;        // = 6 (fills x=37-42)
   if (lBridgeW > 0) hLine(ctx, clothingColors.base, lBridgeX, baseY, lBridgeW);
   if (rBridgeW > 0) hLine(ctx, clothingColors.base, rBridgeX, baseY, rBridgeW);
+
+  // Trapezius muscle humps: taper two rows above bridge for visible shoulder mass
+  if (lBridgeW > 1) {
+    hLine(ctx, clothingColors.base,      lBridgeX, baseY - 1, lBridgeW);     // left trap row 1 (5px)
+    px(ctx,    clothingColors.highlight, lBridgeX, baseY - 1);                // lit outer edge
+    hLine(ctx, clothingColors.base,      lBridgeX, baseY - 2, lBridgeW - 1); // left trap row 2 (4px, tapered)
+    px(ctx,    clothingColors.highlight, lBridgeX, baseY - 2);
+  }
+  if (rBridgeW > 1) {
+    hLine(ctx, clothingColors.shadow, rBridgeX, baseY - 1, rBridgeW - 1);    // right trap row 1 (5px, shadow)
+    hLine(ctx, clothingColors.shadow, rBridgeX, baseY - 2, rBridgeW - 2);    // right trap row 2 (4px, tapered)
+  }
+
   // Shadow at bridge edges for depth
-  px(ctx, clothingColors.shadow, lBridgeX,           baseY);  // bridge outer-left edge
-  px(ctx, clothingColors.shadow, neckL - 1, baseY);            // bridge→neck transition left
-  px(ctx, clothingColors.shadow, rBridgeX,           baseY);   // bridge→neck transition right
-  px(ctx, clothingColors.shadow, rBridgeX + rBridgeW - 1, baseY); // bridge outer-right edge
+  px(ctx, clothingColors.shadow, lBridgeX,                     baseY);  // bridge outer-left edge
+  px(ctx, clothingColors.shadow, neckL - 1,                    baseY);  // bridge→neck transition left
+  px(ctx, clothingColors.shadow, rBridgeX,                     baseY);  // bridge→neck transition right
+  px(ctx, clothingColors.shadow, rBridgeX + rBridgeW - 1,      baseY);  // bridge outer-right edge
 }
 
 // ---------------------------------------------------------------------------

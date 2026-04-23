@@ -95,8 +95,8 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
-  drawBeltSouth(ctx, colors.belt, 21, beltY);
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 21, torsoY, 22, torsoH);
+  drawBeltSouth(ctx, colors.belt, 20, beltY);
+  drawTorsoSouth(ctx, config.clothing, colors.clothing, 20, torsoY, 24, torsoH);
   // Arms
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck
@@ -151,11 +151,11 @@ function drawNorth(ctx, config, offsets) {
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
-  drawBeltSouth(ctx, colors.belt, 21, beltY);
+  drawBeltSouth(ctx, colors.belt, 20, beltY);
 
   // Back of torso — hourglass silhouette
   {
-    const bx = 21, bw = 20, by = torsoY, bN = Math.min(torsoH, 20);
+    const bx = 20, bw = 24, by = torsoY, bN = Math.min(torsoH, 20);
     const bSHOULDER = 3, bWS = 7, bWE = 13;
     const brl = (r) => {
       if (r < bSHOULDER)          return bx - 1;
@@ -261,9 +261,9 @@ function drawWest(ctx, config, offsets) {
   drawBeltWest(ctx, colors.belt, torsoX, beltY);
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
   drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
-  // Neck (side)
-  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 7, 6);
-  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 7, 6);
+  // Neck (side) — slightly thinner (6px) to match front view
+  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 6);
+  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 6);
   // Head
   ctx.save();
   ctx.translate(0, headBob);
