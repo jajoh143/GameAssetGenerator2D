@@ -234,7 +234,7 @@ function drawWest(ctx, config, offsets) {
   const legY   = shoeY - legH;
   const beltY  = legY - beltH;
   const torsoY = beltY - torsoH;
-  const neckY  = torsoY - 2;
+  const neckY  = torsoY - 4;  // 4px neck bridges head bottom (y=49) to torso (y=54)
 
   const torsoX = 32;
 
@@ -250,8 +250,8 @@ function drawWest(ctx, config, offsets) {
     frontLegLift   = rightLegLift; backLegLift = leftLegLift;
   }
 
-  const frontArmDX = -Math.round(leftArmFwd  * 0.7);
-  const backArmDX  = -Math.round(rightArmFwd * 0.7);
+  const frontArmDX = -Math.round(leftArmFwd  * 1.4);
+  const backArmDX  = -Math.round(rightArmFwd * 1.4);
 
   drawGroundShadow(ctx, 39, 94 + bodyY, 18, 4);
 
@@ -262,8 +262,8 @@ function drawWest(ctx, config, offsets) {
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
   drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
   // Neck (side)
-  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 7, 2);
-  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 7, 2);
+  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 7, 4);
+  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 7, 4);
   // Head
   ctx.save();
   ctx.translate(0, headBob);
