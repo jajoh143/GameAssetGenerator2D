@@ -30,32 +30,32 @@ function drawGroundShadow(ctx, cx, y, w=14, h=3) {
 
 function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   eyeColors = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  const HX = 33, HY = 26, HW = 26;
-  const cx = HX + Math.floor(HW / 2); // center x = 46
+  const HX = 33, HY = 30, HW = 30;
+  const cx = HX + Math.floor(HW / 2); // center x = 48
   const outline = '#111111';
 
-  // ── HEAD SHAPE — wider, chunkier skull with prominent jaw ─────────────────
+  // ── HEAD SHAPE — chibi: wider skull, prominent jaw ────────────────────────
   const HEAD = [
-    [5, 16],  //  0: crown top
-    [3, 20],  //  1: upper dome
-    [2, 22],  //  2: dome
-    [1, 24],  //  3: max width
-    [1, 24],  //  4: max width
-    [1, 24],  //  5: max width
-    [1, 24],  //  6: temple
-    [1, 24],  //  7: hairline — faceStartRow
-    [2, 22],  //  8: forehead
-    [2, 22],  //  9: brow level
-    [2, 22],  // 10: eye zone
-    [2, 22],  // 11: eye zone
-    [2, 22],  // 12: nose zone
-    [2, 22],  // 13: mouth zone
-    [2, 22],  // 14: jaw — stays wide
-    [2, 22],  // 15: jaw — stays wide
-    [3, 20],  // 16: lower jaw — gentle taper starts
-    [4, 18],  // 17: chin
-    [5, 16],  // 18: chin bottom
-    [7, 12],  // 19: chin base
+    [5, 20],  //  0: crown top
+    [3, 24],  //  1: upper dome
+    [2, 26],  //  2: dome
+    [1, 28],  //  3: max width
+    [1, 28],  //  4: max width
+    [1, 28],  //  5: max width
+    [1, 28],  //  6: temple
+    [1, 28],  //  7: hairline — faceStartRow
+    [2, 26],  //  8: forehead
+    [2, 26],  //  9: brow level
+    [2, 26],  // 10: eye zone
+    [2, 26],  // 11: eye zone
+    [2, 26],  // 12: nose zone
+    [2, 26],  // 13: mouth zone
+    [2, 26],  // 14: jaw wide
+    [2, 26],  // 15: jaw wide
+    [3, 24],  // 16: lower jaw taper
+    [4, 22],  // 17: chin
+    [5, 20],  // 18: chin bottom
+    [7, 16],  // 19: chin base
   ];
 
   // Fill entire head shape with hair base color
@@ -65,9 +65,9 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   }
 
   // ── Hair dome highlights and texture (rows 0-6) ─────────────────────────
-  hLine(ctx, hairColors.highlight, HX + 5, HY, 8);
-  hLine(ctx, hairColors.highlight, HX + 3, HY + 1, 12);
-  hLine(ctx, hairColors.highlight, HX + 2, HY + 2, 14);
+  hLine(ctx, hairColors.highlight, HX + 5, HY, 10);
+  hLine(ctx, hairColors.highlight, HX + 3, HY + 1, 16);
+  hLine(ctx, hairColors.highlight, HX + 2, HY + 2, 20);
   // Strand texture
   for (let r = 3; r <= 6; r++) {
     const [off, w] = HEAD[r];
@@ -76,24 +76,24 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
     }
   }
   // Hairline shadow transition (row 7)
-  hLine(ctx, hairColors.shadow, HX + 1, HY + 7, 24);
+  hLine(ctx, hairColors.shadow, HX + 1, HY + 7, 28);
 
   // ── FACE WINDOW — skin cutout within the head shape ──────────────────────
-  // Face centered at x=46. Sideburns: 2px each side within 22px face zone.
+  // Face centered at cx=48. Sideburns: ~2px each side.
   const FACE = [
-    [39, 16],  //  7: hairline (sideburns narrow it)
-    [37, 18],  //  8: forehead
-    [37, 18],  //  9: brow level
-    [37, 18],  // 10: eye zone
-    [37, 18],  // 11: eye zone
-    [37, 18],  // 12: nose zone
-    [37, 18],  // 13: mouth zone
-    [37, 18],  // 14: jaw — stays full width
-    [37, 18],  // 15: jaw — stays full width
-    [38, 16],  // 16: lower jaw — taper
-    [39, 14],  // 17: chin
-    [40, 12],  // 18: chin bottom
-    [41, 10],  // 19: chin base
+    [39, 20],  //  7: hairline (sideburns narrow it)
+    [37, 22],  //  8: forehead
+    [37, 22],  //  9: brow level
+    [37, 22],  // 10: eye zone
+    [37, 22],  // 11: eye zone
+    [37, 22],  // 12: nose zone
+    [37, 22],  // 13: mouth zone
+    [37, 22],  // 14: jaw wide
+    [37, 22],  // 15: jaw wide
+    [38, 20],  // 16: lower jaw taper
+    [39, 18],  // 17: chin
+    [40, 16],  // 18: chin bottom
+    [41, 14],  // 19: chin base
   ];
   const faceStartRow = 7;
   for (let i = 0; i < FACE.length; i++) {
@@ -114,19 +114,19 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // Left cheekbone highlight
   px(ctx, skinColors.highlight, 38, HY + 12);
   // Right cheekbone shadow
-  px(ctx, skinColors.shadow, 53, HY + 12);
+  px(ctx, skinColors.shadow, 57, HY + 12);
   // Under-eye orbital depth shadows
   px(ctx, skinColors.shadow, 41, HY + 11);
-  px(ctx, skinColors.shadow, 51, HY + 11);
+  px(ctx, skinColors.shadow, 55, HY + 11);
   // Nose bridge highlight (between brows)
-  px(ctx, skinColors.highlight, 46, HY + 9);
+  px(ctx, skinColors.highlight, 48, HY + 9);
   // Lower jaw shadow band (strong chin/jaw definition)
-  hLine(ctx, skinColors.shadow, 40, HY + 15, 8);
-  hLine(ctx, skinColors.shadow, 41, HY + 16, 7);
+  hLine(ctx, skinColors.shadow, 40, HY + 15, 10);
+  hLine(ctx, skinColors.shadow, 41, HY + 16, 9);
   // Chin-area shadow
-  hLine(ctx, skinColors.shadow, 42, HY + 17, 7);
+  hLine(ctx, skinColors.shadow, 42, HY + 17, 9);
   // Chin center highlight (volume)
-  px(ctx, skinColors.highlight, 46, HY + 17);
+  px(ctx, skinColors.highlight, 48, HY + 17);
 
   // ── Face outline (traces skin boundary) ──────────────────────────────────
   for (let i = 0; i < FACE.length; i++) {
@@ -137,28 +137,29 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 40, HY + 9, 4);   // left brow
-  hLine(ctx, hairColors.shadow, 49, HY + 9, 4);   // right brow
+  hLine(ctx, hairColors.shadow, 40, HY + 9, 5);   // left brow
+  hLine(ctx, hairColors.shadow, 53, HY + 9, 5);   // right brow (cx+5=53, mirror of 40)
 
   // ── Eyes — sclera + colored iris + pupil + lash lines ───────────────────
+  // Left center=41, right center=55 (symmetric around cx=48)
   const eyeY = HY + 10;
-  // Left eye: upper lash, sclera, iris, pupil, lower lash
+  // Left eye
   px(ctx, eyeColors.lash,  41, eyeY - 1);   // upper lash
   px(ctx, '#FFFFFF',        40, eyeY);        // sclera / catch-light
   px(ctx, eyeColors.iris,   41, eyeY);        // iris
   px(ctx, eyeColors.pupil,  42, eyeY);        // pupil (darkest)
   px(ctx, eyeColors.lash,   41, eyeY + 1);   // lower lid shadow
   // Right eye (mirrored — sclera on outer side)
-  px(ctx, eyeColors.lash,  51, eyeY - 1);   // upper lash
-  px(ctx, eyeColors.pupil,  50, eyeY);        // pupil
-  px(ctx, eyeColors.iris,   51, eyeY);        // iris
-  px(ctx, '#FFFFFF',        52, eyeY);        // sclera / catch-light
-  px(ctx, eyeColors.lash,   51, eyeY + 1);   // lower lid shadow
+  px(ctx, eyeColors.lash,  55, eyeY - 1);   // upper lash
+  px(ctx, eyeColors.pupil,  54, eyeY);        // pupil
+  px(ctx, eyeColors.iris,   55, eyeY);        // iris
+  px(ctx, '#FFFFFF',        56, eyeY);        // sclera / catch-light
+  px(ctx, eyeColors.lash,   55, eyeY + 1);   // lower lid shadow
 
-  // ── Nose — nostril shaping (centered at x=46) ────────────────────────────
-  px(ctx, skinColors.shadow, 45, HY + 13);   // left nostril shadow
-  px(ctx, skinColors.shadow, 46, HY + 13);   // nose tip
-  px(ctx, skinColors.shadow, 47, HY + 13);   // right nostril shadow
+  // ── Nose — nostril shaping (centered at cx=48) ────────────────────────────
+  px(ctx, skinColors.shadow, 47, HY + 13);   // left nostril shadow
+  px(ctx, skinColors.shadow, 48, HY + 13);   // nose tip
+  px(ctx, skinColors.shadow, 49, HY + 13);   // right nostril shadow
 
   // Mouth removed — face form is expressed through shadow shaping alone
 
@@ -168,8 +169,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
     px(ctx, hairColors.shadow, HX + off, HY + r);
     px(ctx, hairColors.shadow, HX + off + w - 1, HY + r);
   }
-  // Crown outline
-  hLine(ctx, outline, HX + 5, HY, 16);
+  // Crown outline (matches HEAD[0] = [5,20])
+  hLine(ctx, outline, HX + 5, HY, 20);
   // Chin bottom outline
   const last = HEAD[HEAD.length - 1];
   hLine(ctx, outline, HX + last[0], HY + HEAD.length, last[1]);
@@ -210,10 +211,10 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors) {
     // 'short' (default) — spike tips above crown for styled look
     px(ctx, hairColors.shadow,    HX + 6,  HY - 1);
     px(ctx, hairColors.base,      HX + 9,  HY - 1);
-    px(ctx, hairColors.highlight, HX + 11, HY - 1);
-    px(ctx, hairColors.base,      HX + 14, HY - 1);
-    px(ctx, hairColors.shadow,    HX + 15, HY - 1);
-    px(ctx, hairColors.highlight, HX + 11, HY - 2);  // tallest center spike
+    px(ctx, hairColors.highlight, HX + 13, HY - 1);
+    px(ctx, hairColors.base,      HX + 17, HY - 1);
+    px(ctx, hairColors.shadow,    HX + 19, HY - 1);
+    px(ctx, hairColors.highlight, HX + 13, HY - 2);  // tallest center spike
   }
 }
 
@@ -1027,6 +1028,12 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   px(ctx, clothingColors.shadow,     x - 1, y + 2);
   px(ctx, clothingColors.shadow,     x + w, y + 2);
 
+  // Neckline valley — shadow strip at center of rows 0-1 creates M-shaped silhouette:
+  //   shoulder hump | neckline valley | shoulder hump
+  const valL = x + 6, valW = w - 12;   // for x=37,w=22: x=43..52 (10px valley)
+  hLine(ctx, clothingColors.deep_shadow || clothingColors.shadow, valL,     y,     valW);
+  hLine(ctx, clothingColors.shadow,                               valL + 1, y + 1, valW - 2);
+
   // Shoulder cap: 2 highlight rows, lit from upper-left (now spanning wider shoulder)
   hLine(ctx, clothingColors.highlight, x + 1, y,     Math.floor(w * 0.45));
   hLine(ctx, clothingColors.highlight, x + 1, y + 1, Math.floor(w * 0.30));
@@ -1494,7 +1501,7 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   // Inner edge stays fixed to preserve arm-to-waist gap; outer edge varies for the curve.
   const lx = 34;                // left arm body outer-edge
   const shoulderRX = 59;        // right arm inner (torso-side) edge
-  const baseY = torsoY;
+  const baseY = torsoY - 1;     // deltoid cap protrudes 1px above torso top
   const sleeveH = 13, handH = 4;
   const maxRow = sleeveH - 1;
   const deepShadow = clothingColors.deep_shadow || clothingColors.shadow;
