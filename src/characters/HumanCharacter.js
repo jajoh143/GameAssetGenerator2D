@@ -22,7 +22,7 @@ const {
   drawFrontArmWest,
 } = require('./BaseCharacter');
 
-const FRAME_W = 96;
+const FRAME_W = 64;
 const FRAME_H = 96;
 
 // ---------------------------------------------------------------------------
@@ -66,14 +66,14 @@ function drawSouth(ctx, config, offsets) {
   const base = 96 + bodyY; // bottom anchor (96px frame)
 
   // --- Ground shadow ---
-  drawGroundShadow(ctx, 48, 94 + bodyY, 18, 4);
+  drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
 
   // Proportional body stack — chibi proportions: shorter legs make head relatively larger.
   const shoeH  = 5;
-  const legH   = 18;
+  const legH   = 14;
   const beltH  = 3;
   const torsoH = 18;
-  const neckH  = 2;
+  const neckH  = 6;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -95,8 +95,8 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
-  drawBeltSouth(ctx, colors.belt, 37, beltY);
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 37, torsoY, 22, torsoH);
+  drawBeltSouth(ctx, colors.belt, 21, beltY);
+  drawTorsoSouth(ctx, config.clothing, colors.clothing, 21, torsoY, 22, torsoH);
   // Arms
   drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck
@@ -128,10 +128,10 @@ function drawNorth(ctx, config, offsets) {
   const base = 96 + bodyY;
 
   const shoeH  = 5;
-  const legH   = 18;    // shorter legs for chibi proportions
+  const legH   = 14;
   const beltH  = 3;
   const torsoH = 18;
-  const neckH  = 2;
+  const neckH  = 6;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -146,16 +146,16 @@ function drawNorth(ctx, config, offsets) {
   const lArmDY = Math.round(leftArmFwd  * 0.9);
   const rArmDY = Math.round(rightArmFwd * 0.9);
 
-  drawGroundShadow(ctx, 48, 94 + bodyY, 18, 4);
+  drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
 
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
-  drawBeltSouth(ctx, colors.belt, 37, beltY);
+  drawBeltSouth(ctx, colors.belt, 21, beltY);
 
   // Back of torso — hourglass silhouette
   {
-    const bx = 37, bw = 20, by = torsoY, bN = Math.min(torsoH, 20);
+    const bx = 21, bw = 20, by = torsoY, bN = Math.min(torsoH, 20);
     const bSHOULDER = 3, bWS = 7, bWE = 13;
     const brl = (r) => {
       if (r < bSHOULDER)          return bx - 1;
@@ -226,20 +226,20 @@ function drawWest(ctx, config, offsets) {
   const base = 96 + bodyY;
 
   const shoeH  = 5;
-  const legH   = 18;    // chibi proportions
+  const legH   = 14;
   const beltH  = 3;
-  const torsoH = 16;
+  const torsoH = 18;  // match south for consistency
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
   const beltY  = legY - beltH;
   const torsoY = beltY - torsoH;
-  const neckY  = torsoY - 4;  // 4px neck bridges head bottom (y=49) to torso (y=54)
+  const neckY  = torsoY - 6;  // 6px neck bridges head bottom (y=49) to torso (y=56)
 
-  const torsoX = 32;
+  const torsoX = 16;  // shifted -16 for 64px frame
 
-  const leftLegX  = 39 - Math.round(leftLegFwd  * 1.1);
-  const rightLegX = 39 - Math.round(rightLegFwd * 1.1);
+  const leftLegX  = 23 - Math.round(leftLegFwd  * 1.1);
+  const rightLegX = 23 - Math.round(rightLegFwd * 1.1);
 
   let frontLegCenter, backLegCenter, frontLegLift, backLegLift;
   if (leftLegX <= rightLegX) {
@@ -253,7 +253,7 @@ function drawWest(ctx, config, offsets) {
   const frontArmDX = -Math.round(leftArmFwd  * 1.4);
   const backArmDX  = -Math.round(rightArmFwd * 1.4);
 
-  drawGroundShadow(ctx, 39, 94 + bodyY, 18, 4);
+  drawGroundShadow(ctx, 23, 94 + bodyY, 18, 4);
 
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
@@ -262,8 +262,8 @@ function drawWest(ctx, config, offsets) {
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
   drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
   // Neck (side)
-  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 7, 4);
-  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 7, 4);
+  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 7, 6);
+  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 7, 6);
   // Head
   ctx.save();
   ctx.translate(0, headBob);

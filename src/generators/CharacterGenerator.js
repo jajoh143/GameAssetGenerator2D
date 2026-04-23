@@ -17,7 +17,7 @@ const { buildMeta, saveMeta } = require('../core/MetaExport');
  * @param {number} [frameSize=64] - Output frame size in pixels (64 | 96 | 128)
  * @returns {string}           - Resolved output path
  */
-function generateSpritesheet(rawConfig, outputPath, frameSize = 96) {
+function generateSpritesheet(rawConfig, outputPath) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
     config.type === 'demon' ? generateDemonFrame :
@@ -29,10 +29,13 @@ function generateSpritesheet(rawConfig, outputPath, frameSize = 96) {
     return offsets.map((frameOffset) => generateFrame(config, animName, frameOffset));
   });
 
-  const sheet = buildSpritesheet(rowFrames, frameSize);
+  const sheet = buildSpritesheet(rowFrames);
   saveSpritesheet(sheet, outputPath);
 
-  const meta = buildMeta(frameSize, ANIMATION_ROWS, getFrames, getDirection);
+  // Detect frame size from first frame for meta export
+  const firstFrame = rowFrames.find(f => f.length > 0)?.[0];
+  const metaW = firstFrame ? firstFrame.width : 64;
+  const meta = buildMeta(metaW, ANIMATION_ROWS, getFrames, getDirection);
   saveMeta(meta, outputPath);
 
   return outputPath;
@@ -44,7 +47,7 @@ function generateSpritesheet(rawConfig, outputPath, frameSize = 96) {
  * @param {object} rawConfig
  * @param {number} [frameSize=64]
  */
-function generateSpritesheetCanvas(rawConfig, frameSize = 96) {
+function generateSpritesheetCanvas(rawConfig) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
     config.type === 'demon' ? generateDemonFrame :
@@ -56,7 +59,7 @@ function generateSpritesheetCanvas(rawConfig, frameSize = 96) {
     return offsets.map((frameOffset) => generateFrame(config, animName, frameOffset));
   });
 
-  return buildSpritesheet(rowFrames, frameSize);
+  return buildSpritesheet(rowFrames);
 }
 
 module.exports = { generateSpritesheet, generateSpritesheetCanvas };
