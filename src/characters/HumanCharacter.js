@@ -72,8 +72,8 @@ function drawSouth(ctx, config, offsets) {
   const shoeH  = 5;
   const legH   = 14;
   const beltH  = 3;
-  const torsoH = 18;
-  const neckH  = 6;
+  const torsoH = 20;  // +2 vs neck shrink: torsoY moves up so neckY stays at 50 (adjacent to chin)
+  const neckH  = 4;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -130,8 +130,8 @@ function drawNorth(ctx, config, offsets) {
   const shoeH  = 5;
   const legH   = 14;
   const beltH  = 3;
-  const torsoH = 18;
-  const neckH  = 6;
+  const torsoH = 20;
+  const neckH  = 4;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -228,13 +228,13 @@ function drawWest(ctx, config, offsets) {
   const shoeH  = 5;
   const legH   = 14;
   const beltH  = 3;
-  const torsoH = 18;  // match south for consistency
+  const torsoH = 20;  // match south for consistency
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
   const beltY  = legY - beltH;
   const torsoY = beltY - torsoH;
-  const neckY  = torsoY - 6;  // 6px neck bridges head bottom (y=49) to torso (y=56)
+  const neckY  = torsoY - 4;  // 4px neck bridges head bottom (y=49) to torso (y=54)
 
   const torsoX = 16;  // shifted -16 for 64px frame
 
@@ -261,9 +261,9 @@ function drawWest(ctx, config, offsets) {
   drawBeltWest(ctx, colors.belt, torsoX, beltY);
   drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
   drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
-  // Neck (side) — slightly thinner (6px) to match front view
-  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 6);
-  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 6);
+  // Neck (side) — 6px wide × 4px tall
+  fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 4);
+  outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);
   // Head
   ctx.save();
   ctx.translate(0, headBob);

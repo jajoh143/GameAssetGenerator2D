@@ -434,8 +434,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
 // ---------------------------------------------------------------------------
 
 function drawNeckSouth(ctx, skinColors, baseY) {
-  // Slightly thinner neck: 9px wide × 6px tall; centre x=32.
-  const NX = 28, NW = 9, NH = 6;
+  // Slightly thinner neck: 9px wide × 4px tall; centre x=32.
+  const NX = 28, NW = 9, NH = 4;
   fillRect(ctx, skinColors.base, NX, baseY, NW, NH);
   vLine(ctx, skinColors.highlight, NX + 1, baseY, NH);
   vLine(ctx, skinColors.shadow,    NX + NW - 2, baseY, NH);
