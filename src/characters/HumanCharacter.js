@@ -87,9 +87,9 @@ function drawSouth(ctx, config, offsets) {
   const lLegDY = Math.max(-4, Math.min(4, Math.round(leftLegFwd  * 0.6)));
   const rLegDY = Math.max(-4, Math.min(4, Math.round(rightLegFwd * 0.6)));
 
-  // Arm Y offsets
-  const lArmDY = Math.round(leftArmFwd  * 0.5);
-  const rArmDY = Math.round(rightArmFwd * 0.5);
+  // Arm Y offsets — increased multiplier for more fluid walking swing
+  const lArmDY = Math.round(leftArmFwd  * 0.9);
+  const rArmDY = Math.round(rightArmFwd * 0.9);
 
   // --- Draw order: back-to-front ---
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
@@ -143,8 +143,8 @@ function drawNorth(ctx, config, offsets) {
   const rLegDX =  Math.round(Math.abs(rightLegFwd) * 0.4);
   const lLegDY = Math.max(-4, Math.min(4, Math.round(leftLegFwd  * 0.6)));
   const rLegDY = Math.max(-4, Math.min(4, Math.round(rightLegFwd * 0.6)));
-  const lArmDY = Math.round(leftArmFwd  * 0.5);
-  const rArmDY = Math.round(rightArmFwd * 0.5);
+  const lArmDY = Math.round(leftArmFwd  * 0.9);
+  const rArmDY = Math.round(rightArmFwd * 0.9);
 
   drawGroundShadow(ctx, 48, 94 + bodyY, 18, 4);
 

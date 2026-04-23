@@ -414,21 +414,23 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   // Clean jacket: subtle 3-tone shading, small collar hint, no prominent shirt panel
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 20);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 7, WAIST_E = 13;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 7, NARROW_S = 10, WAIST_E = 13;
 
-  // V-shape: shoulder widest → gradual chest taper → waist → hip flare
+  // 5-step V taper: shoulder → chest → mid → upper-waist → narrow-waist → hip
   const rl = (row) => {
     if (row < SHOULDER)   return x - 1;
     if (row < MID_S)      return x;
     if (row < WAIST_S)    return x + 1;
-    if (row <= WAIST_E)   return x + 2;
+    if (row < NARROW_S)   return x + 2;
+    if (row <= WAIST_E)   return x + 3;
     return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)   return x + w;
     if (row < MID_S)      return x + w - 1;
     if (row < WAIST_S)    return x + w - 2;
-    if (row <= WAIST_E)   return x + w - 3;
+    if (row < NARROW_S)   return x + w - 3;
+    if (row <= WAIST_E)   return x + w - 4;
     return x + w - 2;
   };
 
@@ -484,21 +486,23 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   // Clean hoodie: subtle shading, small hood collar, center zip, small pocket
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 20);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 7, WAIST_E = 13;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 7, NARROW_S = 10, WAIST_E = 13;
 
-  // V-shape taper
+  // 5-step V taper
   const rl = (row) => {
     if (row < SHOULDER)   return x - 1;
     if (row < MID_S)      return x;
     if (row < WAIST_S)    return x + 1;
-    if (row <= WAIST_E)   return x + 2;
+    if (row < NARROW_S)   return x + 2;
+    if (row <= WAIST_E)   return x + 3;
     return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)   return x + w;
     if (row < MID_S)      return x + w - 1;
     if (row < WAIST_S)    return x + w - 2;
-    if (row <= WAIST_E)   return x + w - 3;
+    if (row < NARROW_S)   return x + w - 3;
+    if (row <= WAIST_E)   return x + w - 4;
     return x + w - 2;
   };
 
@@ -538,14 +542,6 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
 
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
-  px(ctx, colors.shadow, x, y + WAIST_S);
-  px(ctx, colors.shadow, x + w - 1, y + WAIST_S);
-  px(ctx, colors.shadow, x, y + WAIST_E + 1);
-  px(ctx, colors.shadow, x + w - 1, y + WAIST_E + 1);
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x,         y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
 
   px(ctx, colors.shadow,  x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
@@ -589,12 +585,12 @@ function drawApronSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawShirtSouth(ctx, colors, x, y, w, h) {
-  // Plain collared shirt — V-shape silhouette, shirt collar at top.
+  // Plain collared shirt — 5-step V silhouette, shirt collar at top.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row <= WAIST_E ? x + 2 : x + 1;
-  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row <= WAIST_E ? x + w - 3 : x + w - 2;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row < NARROW_S ? x + 2 : row <= WAIST_E ? x + 3 : x + 1;
+  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row < NARROW_S ? x + w - 3 : row <= WAIST_E ? x + w - 4 : x + w - 2;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -616,11 +612,7 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
       hLine(ctx, colors.collar, cx - Math.floor(cw / 2), y + row, cw);
     }
   }
-  // Waist bridge + outlines
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x, y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
+  // Outlines
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
@@ -639,9 +631,9 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
   // Leather vest over shirt: shirt visible at sides, vest in center.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row <= WAIST_E ? x + 2 : x + 1;
-  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row <= WAIST_E ? x + w - 3 : x + w - 2;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row < NARROW_S ? x + 2 : row <= WAIST_E ? x + 3 : x + 1;
+  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row < NARROW_S ? x + w - 3 : row <= WAIST_E ? x + w - 4 : x + w - 2;
 
   // Shirt base (full width, lighter)
   const shirtCol = colors.shirt || colors.highlight;
@@ -684,10 +676,6 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
   }
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x, y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
@@ -695,9 +683,9 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
   // RPG tunic: wider cut than jacket, rounded collar, minimal seam.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row <= WAIST_E ? x + 2 : x + 1;
-  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row <= WAIST_E ? x + w - 3 : x + w - 2;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row < NARROW_S ? x + 2 : row <= WAIST_E ? x + 3 : x + 1;
+  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row < NARROW_S ? x + w - 3 : row <= WAIST_E ? x + w - 4 : x + w - 2;
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -723,11 +711,7 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
   hLine(ctx, colors.highlight, cx - 5, y,     collarW - 2);
   hLine(ctx, colors.shadow,    cx - 5, y + 3, collarW - 2);
   outlineRect(ctx, colors.outline, cx - 6, y, collarW, 4);
-  // Waist + outlines
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x, y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
+  // Outlines
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
@@ -797,12 +781,12 @@ function drawRobeSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawTshirtSouth(ctx, colors, x, y, w, h) {
-  // Crew-neck T-shirt: V-shape silhouette, round neckline, no buttons/placket.
+  // Crew-neck T-shirt: 5-step V silhouette, round neckline, no buttons/placket.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row <= WAIST_E ? x + 2 : x + 1;
-  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row <= WAIST_E ? x + w - 3 : x + w - 2;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row < NARROW_S ? x + 2 : row <= WAIST_E ? x + 3 : x + 1;
+  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row < NARROW_S ? x + w - 3 : row <= WAIST_E ? x + w - 4 : x + w - 2;
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -838,10 +822,6 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
   px(ctx, colors.highlight, x - 1, y + 1);
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x,         y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
 }
 
 function drawBomberSouth(ctx, colors, x, y, w, h) {
@@ -850,9 +830,9 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
   const numRows = Math.min(h, 24);
   const SHOULDER = 3, MID_S = 7;
   // Boxy cut: shallow waist taper
-  const WAIST_S = 10, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row <= WAIST_E ? x + 2 : x + 1;
-  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row <= WAIST_E ? x + w - 3 : x + w - 2;
+  const WAIST_S = 10, NARROW_S = 12, WAIST_E = 15;
+  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row < NARROW_S ? x + 2 : row <= WAIST_E ? x + 3 : x + 1;
+  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row < NARROW_S ? x + w - 3 : row <= WAIST_E ? x + w - 4 : x + w - 2;
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -905,10 +885,6 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
   px(ctx, colors.highlight, x - 1, y + 1);
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x,         y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -926,16 +902,17 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
   //   Rows 12+  (hip/skirt):    x=23-40 (18px) → flares to x=21-42 at bottom
 
   const cx     = Math.floor(x + w / 2);  // = 48
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, WAIST_E = 15;
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
   const tailH  = 8;                      // coat extension — shows most of the legs
   const totalH = h + tailH;
 
-  // V-shape: shoulder widest, gradual taper to waist, lower coat flares
+  // 5-step V taper: shoulder widest, organic narrow at waist, lower coat flares
   const rl = (row) => {
     if (row < SHOULDER)   return x - 1;
     if (row < MID_S)      return x;
     if (row < WAIST_S)    return x + 1;
-    if (row <= WAIST_E)   return x + 2;
+    if (row < NARROW_S)   return x + 2;
+    if (row <= WAIST_E)   return x + 3;
     if (row < h)          return x + 1;
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
     return x - flare;
@@ -944,7 +921,8 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
     if (row < SHOULDER)   return x + w;
     if (row < MID_S)      return x + w - 1;
     if (row < WAIST_S)    return x + w - 2;
-    if (row <= WAIST_E)   return x + w - 3;
+    if (row < NARROW_S)   return x + w - 3;
+    if (row <= WAIST_E)   return x + w - 4;
     if (row < h)          return x + w - 2;
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
     return x + w - 1 + flare;
@@ -1001,14 +979,6 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
   // ── 7. Step AA and waist bridge ─────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y + SHOULDER);
   px(ctx, colors.shadow, x + w, y + SHOULDER);
-  px(ctx, colors.shadow, x,     y + WAIST_S);
-  px(ctx, colors.shadow, x + w - 1, y + WAIST_S);
-  px(ctx, colors.shadow, x,     y + WAIST_E + 1);
-  px(ctx, colors.shadow, x + w - 1, y + WAIST_E + 1);
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, x,         y + row);
-    px(ctx, colors.shadow, x + w - 1, y + row);
-  }
 
   // ── 8. Armpit crease ────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
@@ -1053,12 +1023,16 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   // Mid-torso horizontal fold shadow (fabric compression below chest)
   hLine(ctx, clothingColors.shadow, x + 2, y + 8, w - 4);
 
-  // Shoulder cap bottom corner AA (shoulder→chest step at row 3)
-  px(ctx, clothingColors.shadow, x - 1, y + 3);
+  // Step-corner AA at every silhouette transition — blends the stepped
+  // V-taper into an organic curved armhole/waist sweep
+  px(ctx, clothingColors.shadow, x - 1, y + 3);   // shoulder→chest
   px(ctx, clothingColors.shadow, x + w, y + 3);
-  // Mid-chest taper corner AA (chest→mid step at row 5, curving the armhole)
-  px(ctx, clothingColors.shadow, x, y + 5);
+  px(ctx, clothingColors.shadow, x,     y + 5);   // chest→mid
   px(ctx, clothingColors.shadow, x + w - 1, y + 5);
+  px(ctx, clothingColors.shadow, x + 1, y + 7);   // mid→upper-waist
+  px(ctx, clothingColors.shadow, x + w - 2, y + 7);
+  px(ctx, clothingColors.shadow, x + 2, y + 10);  // upper→narrow-waist
+  px(ctx, clothingColors.shadow, x + w - 3, y + 10);
 
   // Right-side pec shadow strip (torso cylinder: surface curves away from light)
   vLine(ctx, clothingColors.shadow, x + w - 3, y + 2, 5);
@@ -1333,18 +1307,25 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
   hLine(ctx, pantColors.outline, lx, lBotY, rows[legH - 1][1]);
   hLine(ctx, pantColors.outline, rx, rBotY, rows[legH - 1][1]);
 
-  // Inner thigh gap: transparent (shows background through).
-  // The inner shadow pixels already drawn on each leg's edge (selout) suggest depth.
-  // Only the top 2 rows get a crotch-shadow hint where legs meet at the belt.
+  // Organic crotch seam — legs meet in a soft V-apex, crease darkens
+  // downward through the zipper line, then opens into a transparent gap.
   const gapX = lx + rows[0][1];
   const gapW = rx - gapX;
   if (gapW > 0) {
-    ctx.clearRect(gapX, y, gapW, legH);   // ensure gap is transparent
-    // Crotch shadow: 4 rows graduating from darkest to lighter
-    hLine(ctx, pantColors.outline, gapX, y,     gapW);
-    hLine(ctx, pantColors.shadow,  gapX, y + 1, gapW);
+    ctx.clearRect(gapX, y, gapW, legH);
+    // Row 0: shadow fill — legs "touch" here (V apex closed)
+    hLine(ctx, pantColors.shadow,  gapX, y,     gapW);
+    // Row 1: deepest crease (darkest point, one row below apex)
+    hLine(ctx, pantColors.outline, gapX, y + 1, gapW);
+    // Row 2: shadow softens as crease opens
     hLine(ctx, pantColors.shadow,  gapX, y + 2, gapW);
-    hLine(ctx, pantColors.base,    gapX, y + 3, gapW);
+    // Row 3+: transparent (inner thigh gap)
+  }
+  // AA pixel at the very top of each leg's inner edge to round the
+  // junction where the thighs meet — reads as an organic curve
+  if (gapW > 0) {
+    px(ctx, pantColors.outline, gapX - 1, y);         // left leg inner top corner
+    px(ctx, pantColors.outline, gapX + gapW, y);      // right leg inner top corner
   }
 }
 
@@ -1492,54 +1473,61 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=0, rArmOut=0, torsoY=28) {
-  // Arms with shoulder pivot. 5px wide for chunky cylindrical form.
+  // Arms with shoulder pivot. 5px wide shoulder → 4px wrist taper.
   const lx = 34;                // left arm outer-edge (tight to shoulder)
   const shoulderRX = 59;        // right arm left-edge (tight to shoulder)
   const baseY = torsoY;
   const baseAW = 5, sleeveH = 13, handH = 4;
   const maxRow = sleeveH - 1;
+  // Elbow: arm tapers from 5px to 4px halfway down (row 8+ gets 4px wide)
+  const elbowRow = 8;
+  const wristAW = 4;
+  const armW = (row) => row < elbowRow ? baseAW : wristAW;
 
-  // Left arm: Y-pivot only
-  const lRowY = (row) => baseY + Math.round(lArmDY * row / maxRow) + row;
-  const lArmY = baseY + Math.round(lArmDY);  // wrist-level Y for hand
+  // Left arm: full 2D pivot (mirrors right arm)
+  const lRowX = (row) => lx        + Math.round(lArmOut * row / maxRow);
+  const lRowY = (row) => baseY     + Math.round(lArmDY  * row / maxRow) + row;
+  const lArmX = lx    + Math.round(lArmOut);
+  const lArmY = baseY + Math.round(lArmDY);
 
   // Right arm: full 2D pivot
   const rRowX = (row) => shoulderRX + Math.round(rArmOut * row / maxRow);
   const rRowY = (row) => baseY      + Math.round(rArmDY  * row / maxRow) + row;
-  const rArmX = shoulderRX + Math.round(rArmOut);  // wrist X for hand
-  const rArmY = baseY      + Math.round(rArmDY);   // wrist Y for hand
+  const rArmX = shoulderRX + Math.round(rArmOut);
+  const rArmY = baseY      + Math.round(rArmDY);
 
-  // ── Left arm (lit side — 5-zone cylindrical shading) ─────────────────────
+  // ── Left arm (lit side — cylindrical shading with taper) ─────────────────
   for (let row = 0; row < sleeveH; row++) {
+    const rX = lRowX(row);
     const ry = lRowY(row);
-    hLine(ctx, clothingColors.base,   lx,     ry, baseAW);
-    px(ctx, clothingColors.shadow,    lx,     ry);  // outer selout
-    px(ctx, clothingColors.highlight, lx + 1, ry);  // highlight peak
-    // lx+2 and lx+3 = base (mid cylinder)
-    px(ctx, clothingColors.shadow,    lx + 4, ry);  // inner shadow (toward torso)
+    const aw = armW(row);
+    hLine(ctx, clothingColors.base,   rX,     ry, aw);
+    px(ctx, clothingColors.shadow,    rX,     ry);        // outer selout
+    px(ctx, clothingColors.highlight, rX + 1, ry);        // highlight peak
+    px(ctx, clothingColors.shadow,    rX + aw - 1, ry);   // inner shadow (toward torso)
   }
-  hLine(ctx, clothingColors.shadow, lx, lRowY(maxRow), baseAW);
+  hLine(ctx, clothingColors.shadow, lRowX(maxRow), lRowY(maxRow), armW(maxRow));
 
   // Left hand / fist (4px wide with knuckle highlights)
   const lhw = 4;
-  const lhx = lx;
+  const lhx = lArmX;
   fillRect(ctx, skinColors.base,    lhx,     lArmY + sleeveH, lhw, handH);
   px(ctx,    skinColors.highlight,  lhx + 1, lArmY + sleeveH);
   px(ctx,    skinColors.highlight,  lhx + 2, lArmY + sleeveH);
   hLine(ctx, skinColors.shadow,     lhx,     lArmY + sleeveH + handH - 1, lhw);
   outlineRect(ctx, skinColors.outline, lhx,  lArmY + sleeveH, lhw, handH);
 
-  // ── Right arm (shadow side — muted, 5-zone) ───────────────────────────────
+  // ── Right arm (shadow side — muted, with taper) ───────────────────────────
   for (let row = 0; row < sleeveH; row++) {
     const rx = rRowX(row);
     const ry = rRowY(row);
-    hLine(ctx, clothingColors.base,  rx,     ry, baseAW);
-    px(ctx, clothingColors.shadow,   rx,     ry);  // inner shadow (toward torso)
-    px(ctx, clothingColors.shadow,   rx + 1, ry);  // secondary shadow
-    // rx+2 and rx+3 = base
-    px(ctx, clothingColors.shadow,   rx + 4, ry);  // outer selout
+    const aw = armW(row);
+    hLine(ctx, clothingColors.base,  rx,         ry, aw);
+    px(ctx, clothingColors.shadow,   rx,         ry);     // inner shadow (toward torso)
+    if (aw >= 5) px(ctx, clothingColors.shadow, rx + 1, ry);  // secondary shadow (wide sleeve only)
+    px(ctx, clothingColors.shadow,   rx + aw - 1, ry);    // outer selout
   }
-  hLine(ctx, clothingColors.shadow, rRowX(maxRow), rRowY(maxRow), baseAW);
+  hLine(ctx, clothingColors.shadow, rRowX(maxRow), rRowY(maxRow), armW(maxRow));
 
   // Right hand / fist (4px wide)
   const rhw = 4;
