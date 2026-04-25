@@ -354,7 +354,7 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 // drawHeadWest  –  side profile facing LEFT, nose extends past HX
 // ---------------------------------------------------------------------------
 
-function drawHeadWest(ctx, skinColors, hairColors, hairStyle) {
+function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // Profile head: HX=15, HY=24. 26 rows — chin at y=49 meets neck at y=50.
   const HX = 15, HY = 24;
   const outline = '#111111';
