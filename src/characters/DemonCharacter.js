@@ -275,22 +275,21 @@ function drawDemonHeadSouth(ctx, colors, config) {
   const outline = sk.outline || '#280000';
   const HX = 35, HY = 26, HW = 22;
 
-  // ── CIRCULAR HEAD (matches human — stays wide through jaw) ───────────────
+  // ── CIRCULAR HEAD — 24 rows (y=26-49) so chin meets neck at y=50 ─────────
   const HEAD = [
     [5, 12], [3, 16], [2, 18], [1, 20],
     [1, 20], [1, 20], [1, 20], [1, 20],
     [2, 18], [2, 18], [2, 18], [2, 18],
     [2, 18], [2, 18], [2, 18], [2, 18],
-    [3, 16], [4, 14], [5, 12], [7,  8],
+    [3, 16], [3, 16], [4, 14], [4, 14],
+    [5, 12], [5, 12], [6, 10], [7,  8],
   ];
 
-  // Fill entire head with hair
   for (let r = 0; r < HEAD.length; r++) {
     const [off, w] = HEAD[r];
     hLine(ctx, hair.base, HX + off, HY + r, w);
   }
 
-  // Hair highlights and texture
   hLine(ctx, hair.highlight, HX + 5, HY, 8);
   hLine(ctx, hair.highlight, HX + 3, HY + 1, 12);
   hLine(ctx, hair.highlight, HX + 2, HY + 2, 14);
@@ -314,40 +313,46 @@ function drawDemonHeadSouth(ctx, colors, config) {
     hLine(ctx, sk.base, FACE[i][0], HY + faceStart + i, FACE[i][1]);
   }
 
-  // Face shading
+  // Face shading — left cheekbone 2×2 highlight, right shadow
   fillRect(ctx, sk.highlight, 41, HY + 8, 2, 2);
+  fillRect(ctx, sk.highlight, 41, HY + 9, 2, 2);
+  fillRect(ctx, sk.shadow,    53, HY + 8, 2, 2);
   for (let i = 2; i < FACE.length - 4; i++) {
     pixel(ctx, sk.shadow, FACE[i][0] + FACE[i][1] - 2, HY + faceStart + i);
   }
 
-  // Face outline
   for (let i = 0; i < FACE.length; i++) {
     pixel(ctx, outline, FACE[i][0], HY + faceStart + i);
     pixel(ctx, outline, FACE[i][0] + FACE[i][1] - 1, HY + faceStart + i);
   }
 
-  // ── Glowing demon eyes ───────────────────────────────────────────────────
+  // ── Glowing demon eyes — 4px wide ────────────────────────────────────────
   const eyeY = HY + 10;
   const glowHalo = 'rgba(255,100,0,0.3)';
-  hLine(ctx, glowHalo, 41, eyeY - 1, 5);
-  fillRect(ctx, '#FF6600', 42, eyeY, 3, 2);
-  pixel(ctx, '#FFDD00', 43, eyeY);
-  pixel(ctx, '#FFFFFF', 42, eyeY);
-  hLine(ctx, glowHalo, 49, eyeY - 1, 5);
-  fillRect(ctx, '#FF6600', 50, eyeY, 3, 2);
-  pixel(ctx, '#FFDD00', 51, eyeY);
-  pixel(ctx, '#FFFFFF', 52, eyeY);
+  hLine(ctx, glowHalo, 41, eyeY - 1, 7);
+  fillRect(ctx, '#FF6600', 41, eyeY, 4, 2);
+  pixel(ctx, '#FFDD00', 42, eyeY);
+  pixel(ctx, '#FFFFFF', 41, eyeY);
+  pixel(ctx, '#280000', 44, eyeY);   // inner canthus dark
+  hLine(ctx, glowHalo, 49, eyeY - 1, 7);
+  fillRect(ctx, '#FF6600', 50, eyeY, 4, 2);
+  pixel(ctx, '#FFDD00', 52, eyeY);
+  pixel(ctx, '#FFFFFF', 53, eyeY);
+  pixel(ctx, '#280000', 50, eyeY);   // inner canthus dark
 
-  // Brow ridge
+  // Brow ridge (wider for 4px eyes)
   const deepShadow = sk.deep_shadow || sk.shadow;
-  hLine(ctx, deepShadow, 41, eyeY - 2, 5);
-  hLine(ctx, outline,    41, eyeY - 3, 5);
-  hLine(ctx, deepShadow, 49, eyeY - 2, 5);
-  hLine(ctx, outline,    49, eyeY - 3, 5);
+  hLine(ctx, deepShadow, 41, eyeY - 2, 6);
+  hLine(ctx, outline,    41, eyeY - 3, 6);
+  hLine(ctx, deepShadow, 49, eyeY - 2, 6);
+  hLine(ctx, outline,    49, eyeY - 3, 6);
 
-  // Nose + snarl mouth
-  pixel(ctx, sk.shadow, 47, HY + 13);
-  hLine(ctx, outline,   44, HY + 14, 6);
+  // Nose bridge + nostril + snarl mouth
+  pixel(ctx, sk.highlight, 47, HY + 11);   // bridge highlight
+  pixel(ctx, sk.highlight, 47, HY + 12);
+  pixel(ctx, sk.shadow,    47, HY + 13);   // nose tip
+  pixel(ctx, deepShadow,   48, HY + 13);
+  hLine(ctx, outline, 44, HY + 14, 6);
   pixel(ctx, '#FF4444', 45, HY + 15); pixel(ctx, '#FF4444', 49, HY + 15);
 
   // Head silhouette outline
@@ -362,6 +367,11 @@ function drawDemonHeadSouth(ctx, colors, config) {
 
   // ── Horns drawn on top of hair ────────────────────────────────────────────
   drawHornsSouth(ctx, colors, config.hornStyle || 'curved', HY);
+  // Skull-horn integration: shadow where horns emerge from crown
+  pixel(ctx, hair.shadow, HX + 1, HY);
+  pixel(ctx, hair.shadow, HX + 2, HY);
+  pixel(ctx, hair.shadow, HX + HW - 3, HY);
+  pixel(ctx, hair.shadow, HX + HW - 2, HY);
 }
 
 /**
