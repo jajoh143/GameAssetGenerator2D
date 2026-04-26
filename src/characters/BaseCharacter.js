@@ -651,6 +651,15 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   // Center zipper (below 4-row collar)
   vLine(ctx, colors.shadow, cx, y + 4, numRows - 4);
 
+  // Drawstrings — two cords hanging from hood collar with metal aglets
+  const dsTop = y + 4, dsLen = 5;
+  vLine(ctx, colors.shadow,    cx - 2, dsTop, dsLen);
+  vLine(ctx, colors.shadow,    cx + 2, dsTop, dsLen);
+  px(ctx, colors.highlight,    cx - 2, dsTop);
+  px(ctx, colors.highlight,    cx + 2, dsTop);
+  px(ctx, colors.deep_shadow || colors.shadow, cx - 2, dsTop + dsLen - 1);
+  px(ctx, colors.deep_shadow || colors.shadow, cx + 2, dsTop + dsLen - 1);
+
   // Horizontal fold shadow at chest level
   hLine(ctx, colors.shadow, rl(8) + 2, y + 8, rr(8) - rl(8) - 4);
 
@@ -995,6 +1004,12 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
   outlineRect(ctx, colors.outline, neckX, y, neckW, 4);
   // Under-chest fold shadow (suggests body volume)
   hLine(ctx, colors.shadow, rl(9) + 2, y + 9, rr(9) - rl(9) - 4);
+  // Chest logo — small 2x2 print on the upper chest
+  const logoX = cx - 5, logoY = y + 7;
+  px(ctx, colors.highlight, logoX,     logoY);
+  px(ctx, colors.highlight, logoX + 1, logoY);
+  px(ctx, colors.highlight, logoX,     logoY + 1);
+  px(ctx, colors.deep_shadow || colors.shadow, logoX + 1, logoY + 1);
   // Selout outline
   px(ctx, colors.shadow, x - 1, y - 1); px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
@@ -1071,6 +1086,13 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
       if (colors.deep_shadow) px(ctx, colors.deep_shadow, cx, y + fr);
     }
   }
+  // Chest pocket flap — 4x2 detail on the left chest
+  const pkBx = cx - 8, pkBy = y + 5;
+  fillRect(ctx, colors.shadow, pkBx, pkBy, 4, 2);
+  px(ctx, colors.highlight, pkBx,     pkBy);
+  px(ctx, colors.deep_shadow || colors.shadow, pkBx + 3, pkBy + 1);
+  // Pocket snap (1px metal stud)
+  px(ctx, colors.highlight, pkBx + 3, pkBy);
   // Ribbed hem (last 2 rows)
   for (let row = numRows - 2; row < numRows; row++) {
     const ribCol = (row % 2 === 0) ? colors.collar : colors.shadow;
