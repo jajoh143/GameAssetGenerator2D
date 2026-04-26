@@ -204,31 +204,37 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     px(ctx, outline, fx + fw - 1, y);
   }
 
-  // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 22, HY + 15, 7);   // left brow (7px)
-  hLine(ctx, hairColors.shadow, 35, HY + 15, 7);   // right brow (7px)
+  // ── Eyebrows — at y=38, one row above the sclera top ────────────────────
+  hLine(ctx, hairColors.shadow, 22, HY + 14, 7);   // left brow (7px)
+  hLine(ctx, hairColors.shadow, 35, HY + 14, 7);   // right brow (7px)
 
-  // ── Eyes — 5px wide: lash+specular row + sclera/iris/pupil/iris + orbital ──
+  // ── Eyes — 7×3px white-oval: large sclera, tiny iris dot ──────────────────
   const eyeY = HY + 16; // y=40
-  // Left eye (x=23..27)
-  hLine(ctx, eyeColors.lash,    23, eyeY - 1, 5);   // upper lash row (5px)
-  px(ctx, '#FFFFFF',             24, eyeY - 1);       // specular catch-light in lash
+  // Left eye (x=22..28) — top sclera row at y=39, main at y=40
+  px(ctx, eyeColors.lash,        22, eyeY - 1);       // left corner outline
+  hLine(ctx, '#FFFFFF',          23, eyeY - 1, 5);    // 5px white sclera top
+  px(ctx, eyeColors.lash,        28, eyeY - 1);       // right corner outline
+  px(ctx, eyeColors.lash,        22, eyeY);            // left outline
   px(ctx, '#FFFFFF',             23, eyeY);            // sclera
   px(ctx, eyeColors.iris,        24, eyeY);
   px(ctx, eyeColors.pupil,       25, eyeY);            // pupil center
   px(ctx, eyeColors.iris,        26, eyeY);
-  px(ctx, eyeColors.lash,        27, eyeY);            // inner canthus
-  hLine(ctx, skinColors.shadow,  24, eyeY + 1, 3);   // lower-lid orbital (3px)
+  px(ctx, '#FFFFFF',             27, eyeY);            // sclera
+  px(ctx, eyeColors.lash,        28, eyeY);            // right outline
+  hLine(ctx, skinColors.shadow,  23, eyeY + 1, 5);   // 5px lower-lid shadow
 
-  // Right eye (x=36..40, mirrored)
-  hLine(ctx, eyeColors.lash,    36, eyeY - 1, 5);   // upper lash row (5px)
-  px(ctx, '#FFFFFF',             39, eyeY - 1);       // specular catch-light in lash
-  px(ctx, eyeColors.lash,        36, eyeY);            // inner canthus
+  // Right eye (x=35..41) — mirrored
+  px(ctx, eyeColors.lash,        35, eyeY - 1);
+  hLine(ctx, '#FFFFFF',          36, eyeY - 1, 5);
+  px(ctx, eyeColors.lash,        41, eyeY - 1);
+  px(ctx, eyeColors.lash,        35, eyeY);
+  px(ctx, '#FFFFFF',             36, eyeY);
   px(ctx, eyeColors.iris,        37, eyeY);
   px(ctx, eyeColors.pupil,       38, eyeY);            // pupil center
   px(ctx, eyeColors.iris,        39, eyeY);
-  px(ctx, '#FFFFFF',             40, eyeY);            // sclera
-  hLine(ctx, skinColors.shadow,  37, eyeY + 1, 3);   // lower-lid orbital (3px)
+  px(ctx, '#FFFFFF',             40, eyeY);
+  px(ctx, eyeColors.lash,        41, eyeY);
+  hLine(ctx, skinColors.shadow,  36, eyeY + 1, 5);
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
@@ -455,11 +461,14 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // ── Brow ridge ───────────────────────────────────────────────────────────
   hLine(ctx, hairColors.shadow, HX, HY + 13, 3);
 
-  // ── Eye — 2px wide with catch-light ──────────────────────────────────────
-  px(ctx, '#FFFFFF',             HX,     HY + 14);  // sclera catch-light
-  px(ctx, eyeColors && eyeColors.iris || '#7B4820', HX + 1, HY + 14);
-  px(ctx, eyeColors && eyeColors.pupil || '#160800', HX + 2, HY + 14);
-  px(ctx, skinColors.shadow,     HX + 1, HY + 15);  // lower lid
+  // ── Eye — 4×3px white-sclera profile eye ─────────────────────────────────
+  const ec = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
+  hLine(ctx, '#FFFFFF', HX + 1, HY + 13, 2);      // 2px white top sclera (over brow)
+  px(ctx, ec.lash,    HX,     HY + 14);             // left outline
+  px(ctx, '#FFFFFF',  HX + 1, HY + 14);             // white sclera
+  px(ctx, ec.iris,    HX + 2, HY + 14);             // iris
+  px(ctx, ec.pupil,   HX + 3, HY + 14);             // pupil
+  hLine(ctx, skinColors.shadow, HX + 1, HY + 15, 2); // lower lid shadow
 
   // ── Cheekbone highlight ───────────────────────────────────────────────────
   px(ctx, skinColors.highlight, HX + 3, HY + 16);
@@ -587,6 +596,9 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   // Button dots on placket
   if (numRows > 10) px(ctx, colors.outline, cx, y + 11);
   if (numRows > 14) px(ctx, colors.outline, cx, y + 15);
+  // Breast pocket welt on left chest
+  hLine(ctx, colors.highlight, cx - 8, y + 3, 3);   // welt top catchlight
+  hLine(ctx, colors.shadow,    cx - 8, y + 4, 3);   // welt bottom shadow
 
   // ── 5. Selout outline ────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
@@ -1004,12 +1016,11 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
   outlineRect(ctx, colors.outline, neckX, y, neckW, 4);
   // Under-chest fold shadow (suggests body volume)
   hLine(ctx, colors.shadow, rl(9) + 2, y + 9, rr(9) - rl(9) - 4);
-  // Chest logo — small 2x2 print on the upper chest
-  const logoX = cx - 5, logoY = y + 7;
-  px(ctx, colors.highlight, logoX,     logoY);
-  px(ctx, colors.highlight, logoX + 1, logoY);
-  px(ctx, colors.highlight, logoX,     logoY + 1);
-  px(ctx, colors.deep_shadow || colors.shadow, logoX + 1, logoY + 1);
+  // Chest graphic — 4×3 sport stripe at left chest
+  const lx = cx - 7, ly = y + 6;
+  hLine(ctx, colors.highlight, lx, ly,     4);   // stripe top
+  hLine(ctx, colors.shadow,    lx, ly + 2, 4);   // stripe bottom
+  px(ctx, colors.shadow, lx + 3, ly + 1);        // right accent dot
   // Selout outline
   px(ctx, colors.shadow, x - 1, y - 1); px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
