@@ -388,6 +388,31 @@ function drawDemonHeadSouth(ctx, colors, config) {
   hLine(ctx, outline,    22, HY + 13, 6);   // y=37: left ridge top
   hLine(ctx, deepShadow, 34, HY + 14, 6);   // right ridge upper
   hLine(ctx, outline,    34, HY + 13, 6);   // right ridge top
+  // Brow ridge bumps — 1px highlight on top for volume
+  pixel(ctx, sk.highlight, 23, HY + 13);    // left ridge highlight
+  pixel(ctx, sk.highlight, 35, HY + 13);    // right ridge highlight
+
+  // ── Pointed demonic ears at temples (y=41) ────────────────────────────────
+  // Left ear — 3px triangular protrusion (tip at x=14)
+  pixel(ctx, sk.base,    16, HY + 17);
+  pixel(ctx, sk.base,    15, HY + 17);
+  pixel(ctx, sk.base,    14, HY + 17);
+  pixel(ctx, outline,    13, HY + 17);
+  pixel(ctx, outline,    15, HY + 16);
+  pixel(ctx, outline,    15, HY + 18);
+  // Right ear — mirror (tip at x=47)
+  pixel(ctx, sk.base,    45, HY + 17);
+  pixel(ctx, sk.base,    46, HY + 17);
+  pixel(ctx, sk.base,    47, HY + 17);
+  pixel(ctx, sk.shadow,  46, HY + 17);      // shadow side darker
+  pixel(ctx, outline,    48, HY + 17);
+  pixel(ctx, outline,    45, HY + 16);
+  pixel(ctx, outline,    45, HY + 18);
+
+  // ── Scar across right cheek (3-pixel diagonal slash) ──────────────────────
+  pixel(ctx, deepShadow, 40, HY + 19);
+  pixel(ctx, deepShadow, 39, HY + 20);
+  pixel(ctx, deepShadow, 38, HY + 21);
 
   // ── Glowing demon eyes — 4px wide, eyeY=HY+15=39 ──────────────────────────
   const eyeY = HY + 15;
