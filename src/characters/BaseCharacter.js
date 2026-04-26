@@ -208,25 +208,30 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   hLine(ctx, hairColors.shadow, 22, HY + 14, 7);   // left brow (7px)
   hLine(ctx, hairColors.shadow, 35, HY + 14, 7);   // right brow (7px)
 
-  // ── Eyes — 7×3px white-oval: large sclera, tiny iris dot ──────────────────
+  // ── Eyes — 7×3 OVAL: corners removed to read as round, not blocky ────────
   const eyeY = HY + 16; // y=40
-  // Left eye (x=22..28) — top sclera row at y=39, main at y=40
-  px(ctx, eyeColors.lash,        22, eyeY - 1);       // left corner outline
-  hLine(ctx, '#FFFFFF',          23, eyeY - 1, 5);    // 5px white sclera top
-  px(ctx, eyeColors.lash,        28, eyeY - 1);       // right corner outline
-  px(ctx, eyeColors.lash,        22, eyeY);            // left outline
-  px(ctx, '#FFFFFF',             23, eyeY);            // sclera
+  // Left eye — oval centered on x=25
+  // Top arc (y=39): 5px wide (no corners) — outline ends + 3 white
+  px(ctx, eyeColors.lash,        23, eyeY - 1);
+  hLine(ctx, '#FFFFFF',          24, eyeY - 1, 3);
+  px(ctx, eyeColors.lash,        27, eyeY - 1);
+  // Middle row (y=40): full 7px — outline + sclera + iris/pupil + sclera + outline
+  px(ctx, eyeColors.lash,        22, eyeY);
+  px(ctx, '#FFFFFF',             23, eyeY);
   px(ctx, eyeColors.iris,        24, eyeY);
   px(ctx, eyeColors.pupil,       25, eyeY);            // pupil center
   px(ctx, eyeColors.iris,        26, eyeY);
-  px(ctx, '#FFFFFF',             27, eyeY);            // sclera
-  px(ctx, eyeColors.lash,        28, eyeY);            // right outline
-  hLine(ctx, skinColors.shadow,  23, eyeY + 1, 5);   // 5px lower-lid shadow
+  px(ctx, '#FFFFFF',             27, eyeY);
+  px(ctx, eyeColors.lash,        28, eyeY);
+  // Bottom arc (y=41): 5px wide (no corners) — mirrors top
+  px(ctx, eyeColors.lash,        23, eyeY + 1);
+  hLine(ctx, '#FFFFFF',          24, eyeY + 1, 3);
+  px(ctx, eyeColors.lash,        27, eyeY + 1);
 
-  // Right eye (x=35..41) — mirrored
-  px(ctx, eyeColors.lash,        35, eyeY - 1);
-  hLine(ctx, '#FFFFFF',          36, eyeY - 1, 5);
-  px(ctx, eyeColors.lash,        41, eyeY - 1);
+  // Right eye — oval centered on x=38 (mirrored)
+  px(ctx, eyeColors.lash,        36, eyeY - 1);
+  hLine(ctx, '#FFFFFF',          37, eyeY - 1, 3);
+  px(ctx, eyeColors.lash,        40, eyeY - 1);
   px(ctx, eyeColors.lash,        35, eyeY);
   px(ctx, '#FFFFFF',             36, eyeY);
   px(ctx, eyeColors.iris,        37, eyeY);
@@ -234,7 +239,9 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, eyeColors.iris,        39, eyeY);
   px(ctx, '#FFFFFF',             40, eyeY);
   px(ctx, eyeColors.lash,        41, eyeY);
-  hLine(ctx, skinColors.shadow,  36, eyeY + 1, 5);
+  px(ctx, eyeColors.lash,        36, eyeY + 1);
+  hLine(ctx, '#FFFFFF',          37, eyeY + 1, 3);
+  px(ctx, eyeColors.lash,        40, eyeY + 1);
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
@@ -461,14 +468,17 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // ── Brow ridge ───────────────────────────────────────────────────────────
   hLine(ctx, hairColors.shadow, HX, HY + 13, 3);
 
-  // ── Eye — 4×3px white-sclera profile eye ─────────────────────────────────
+  // ── Eye — profile oval: top/bottom narrower than middle for round shape ───
   const ec = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  hLine(ctx, '#FFFFFF', HX + 1, HY + 13, 2);      // 2px white top sclera (over brow)
-  px(ctx, ec.lash,    HX,     HY + 14);             // left outline
-  px(ctx, '#FFFFFF',  HX + 1, HY + 14);             // white sclera
-  px(ctx, ec.iris,    HX + 2, HY + 14);             // iris
-  px(ctx, ec.pupil,   HX + 3, HY + 14);             // pupil
-  hLine(ctx, skinColors.shadow, HX + 1, HY + 15, 2); // lower lid shadow
+  // Top arc (y=37): 2px white centered (no corner pixels)
+  hLine(ctx, '#FFFFFF', HX + 1, HY + 13, 2);
+  // Middle row (y=38): outline left + sclera + iris + pupil
+  px(ctx, ec.lash,    HX,     HY + 14);
+  px(ctx, '#FFFFFF',  HX + 1, HY + 14);
+  px(ctx, ec.iris,    HX + 2, HY + 14);
+  px(ctx, ec.pupil,   HX + 3, HY + 14);
+  // Bottom arc (y=39): 2px white centered (rounded bottom, no shadow corners)
+  hLine(ctx, '#FFFFFF', HX + 1, HY + 15, 2);
 
   // ── Cheekbone highlight ───────────────────────────────────────────────────
   px(ctx, skinColors.highlight, HX + 3, HY + 16);
