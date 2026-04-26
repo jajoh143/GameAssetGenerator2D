@@ -1,5 +1,5 @@
 {
-  "frameWidth": 96,
+  "frameWidth": 64,
   "frameHeight": 96,
   "animations": [
     {
@@ -179,6 +179,7 @@
         "skin": "light",
         "hair": "dark_brown",
         "hairStyle": "undercut",
+        "beardStyle": "handlebar",
         "eyes": "brown",
         "clothing": "coat_tan",
         "pants": "pants_black",
@@ -221,6 +222,7 @@
         "skin": "light",
         "hair": "black",
         "hairStyle": "short",
+        "beardStyle": "full",
         "eyes": "blue",
         "clothing": "coat_navy",
         "pants": "pants_black",

@@ -13,24 +13,26 @@ function drawDarkAura(/* ctx, by */) {
 }
 
 // Draw claw tips at the end of each arm hand area
+// Hands are 5px wide: left at x=18..22, right at x=43..47
 function drawClaws(ctx, skinColors, armLY, armRY) {
   const claw = DEMON_PARTS.claw;
-  // Left hand claws — two small downward spikes under 3px arm (lx=34)
-  const lhx = 34, lhy = armLY;
-  pixel(ctx, claw.base,    lhx,     lhy + 4);
-  pixel(ctx, claw.shadow,  lhx,     lhy + 5);
-  pixel(ctx, claw.base,    lhx + 2, lhy + 4);
-  pixel(ctx, claw.shadow,  lhx + 2, lhy + 5);
+  // Left hand claws — 3 spikes under the 5px hand
+  const lhx = 18, lhy = armLY;
+  for (let i = 0; i < 3; i++) {
+    const cx = lhx + i * 2;
+    pixel(ctx, claw.base,   cx, lhy + 4);
+    pixel(ctx, claw.shadow, cx, lhy + 5);
+  }
   pixel(ctx, claw.highlight, lhx + 1, lhy + 4);
 
-  // Right hand claws — under 3px arm (shoulderRX=59)
-  const rhx = 59, rhy = armRY;
-  pixel(ctx, claw.base,    rhx,     rhy + 4);
-  pixel(ctx, claw.shadow,  rhx,     rhy + 5);
-  pixel(ctx, claw.base,    rhx + 2, rhy + 4);
-  pixel(ctx, claw.shadow,  rhx + 2, rhy + 5);
-  pixel(ctx, claw.shadow,  rhx + 6, rhy + 5);
-  pixel(ctx, claw.highlight, rhx + 4, rhy + 4);
+  // Right hand claws — 3 spikes under the 5px hand
+  const rhx = 43, rhy = armRY;
+  for (let i = 0; i < 3; i++) {
+    const cx = rhx + i * 2;
+    pixel(ctx, claw.base,   cx, rhy + 4);
+    pixel(ctx, claw.shadow, cx, rhy + 5);
+  }
+  pixel(ctx, claw.highlight, rhx + 1, rhy + 4);
 }
 
 const FRAME_W = 96;
@@ -268,57 +270,112 @@ function drawTailSouth(ctx, colors, tailStyle, beltY) {
   }
 }
 
-// Draw demon head south — 96px face matching scaled human proportions
+// Draw demon head south — placed over the human body (HX=16) on a 96px frame
 function drawDemonHeadSouth(ctx, colors, config) {
   const sk = colors.skin;
   const hair = colors.hair;
   const outline = sk.outline || '#280000';
-  const HX = 35, HY = 26, HW = 22;
+  const HX = 16, HY = 24, HW = 30;
+  const cx = HX + Math.floor(HW / 2); // = 31
 
-  // ── CIRCULAR HEAD (matches human — stays wide through jaw) ───────────────
+  // ── HEAD SHAPE — 26 rows (y=24-49); chin meets neck at y=50 ───────────────
   const HEAD = [
-    [5, 12], [3, 16], [2, 18], [1, 20],
-    [1, 20], [1, 20], [1, 20], [1, 20],
-    [2, 18], [2, 18], [2, 18], [2, 18],
-    [2, 18], [2, 18], [2, 18], [2, 18],
-    [3, 16], [4, 14], [5, 12], [7,  8],
+    [ 8, 14],  //  0: crown peak      (y=24)
+    [ 7, 16],  //  1: upper crown     (y=25)
+    [ 7, 16],  //  2: crown tip       (y=26)
+    [ 4, 20],  //  3: upper crown     (y=27)
+    [ 2, 24],  //  4: crown           (y=28)
+    [ 1, 26],  //  5: dome top        (y=29)
+    [ 4, 22],  //  6: crown body      (y=30)
+    [ 2, 26],  //  7: upper dome      (y=31)
+    [ 1, 28],  //  8: dome            (y=32)
+    [ 0, 30],  //  9: max width       (y=33)
+    [ 0, 30],  // 10: max width       (y=34)
+    [ 0, 30],  // 11: max width       (y=35)
+    [ 0, 30],  // 12: temple          (y=36)
+    [ 0, 30],  // 13: hairline        (y=37) ← faceStartRow
+    [ 1, 28],  // 14: forehead        (y=38)
+    [ 1, 28],  // 15: brow level      (y=39)
+    [ 1, 28],  // 16: eye zone        (y=40)
+    [ 1, 28],  // 17: eye zone        (y=41)
+    [ 1, 28],  // 18: cheek/nose      (y=42)
+    [ 1, 28],  // 19: nose zone       (y=43)
+    [ 1, 28],  // 20: mouth zone      (y=44)
+    [ 1, 28],  // 21: jaw wide        (y=45)
+    [ 2, 26],  // 22: jaw wide        (y=46)
+    [ 3, 24],  // 23: lower jaw       (y=47)
+    [ 4, 22],  // 24: chin            (y=48)
+    [ 6, 18],  // 25: chin base       (y=49)
   ];
 
-  // Fill entire head with hair
   for (let r = 0; r < HEAD.length; r++) {
     const [off, w] = HEAD[r];
     hLine(ctx, hair.base, HX + off, HY + r, w);
   }
 
-  // Hair highlights and texture
-  hLine(ctx, hair.highlight, HX + 5, HY, 8);
-  hLine(ctx, hair.highlight, HX + 3, HY + 1, 12);
-  hLine(ctx, hair.highlight, HX + 2, HY + 2, 14);
-  for (let r = 3; r <= 6; r++) {
+  // Hair dome highlights and texture
+  hLine(ctx, hair.highlight, HX + 8, HY,     5);
+  hLine(ctx, hair.highlight, HX + 7, HY + 1, 8);
+  hLine(ctx, hair.highlight, HX + 7, HY + 2, 5);
+  hLine(ctx, hair.highlight, HX + 5, HY + 3, 10);
+  hLine(ctx, hair.highlight, HX + 3, HY + 4, 14);
+  hLine(ctx, hair.highlight, HX + 2, HY + 5, 18);
+  hLine(ctx, hair.highlight, HX + 4, HY + 6, 10);
+  hLine(ctx, hair.highlight, HX + 2, HY + 7, 16);
+  hLine(ctx, hair.highlight, HX + 1, HY + 8, 20);
+  for (let r = 9; r <= 12; r++) {
     const [off, w] = HEAD[r];
     for (let dx = 3; dx < w - 3; dx += 5) {
       pixel(ctx, hair.shadow, HX + off + dx, HY + r);
     }
   }
-  hLine(ctx, hair.shadow, HX + 1, HY + 7, 20);
+  hLine(ctx, hair.shadow, HX, HY + 13, 30);  // hairline shadow
 
-  // ── FACE WINDOW (demon skin) ──────────────────────────────────────────────
+  // ── FACE WINDOW — demon skin ──────────────────────────────────────────────
   const FACE = [
-    [41, 14], [40, 16], [40, 16], [40, 16],
-    [40, 16], [40, 16], [40, 16], [40, 16],
-    [40, 16], [41, 14], [42, 12], [43, 10],
-    [44,  8],
+    [21, 22],  //  0: hairline   (y=37)
+    [20, 24],  //  1: forehead   (y=38)
+    [20, 24],  //  2: brow       (y=39)
+    [20, 24],  //  3: eye zone   (y=40)
+    [20, 24],  //  4: eye zone   (y=41)
+    [20, 24],  //  5: cheek      (y=42)
+    [20, 24],  //  6: nose       (y=43)
+    [20, 24],  //  7: mouth      (y=44)
+    [20, 24],  //  8: jaw wide   (y=45)
+    [21, 22],  //  9: lower jaw  (y=46)
+    [22, 20],  // 10: chin       (y=47)
+    [23, 18],  // 11: chin btm   (y=48)
+    [24, 16],  // 12: chin base  (y=49)
   ];
-  const faceStart = 7;
+  const faceStart = 13;
   for (let i = 0; i < FACE.length; i++) {
     hLine(ctx, sk.base, FACE[i][0], HY + faceStart + i, FACE[i][1]);
   }
 
-  // Face shading
-  fillRect(ctx, sk.highlight, 41, HY + 8, 2, 2);
+  // ── Cheek shading — 2×2 zones ─────────────────────────────────────────────
+  const deepShadow = sk.deep_shadow || sk.shadow;
+  fillRect(ctx, sk.highlight, 21, HY + 18, 2, 2);  // left cheek 2×2 hi
+  fillRect(ctx, sk.shadow,    41, HY + 18, 2, 2);  // right cheek 2×2 sh
+  // Right-side form shadow (one pixel per face row, deeper on lower half)
   for (let i = 2; i < FACE.length - 4; i++) {
     pixel(ctx, sk.shadow, FACE[i][0] + FACE[i][1] - 2, HY + faceStart + i);
   }
+  for (let i = 4; i < FACE.length - 4; i++) {
+    pixel(ctx, deepShadow, FACE[i][0] + FACE[i][1] - 1, HY + faceStart + i);
+  }
+
+  // ── Forehead highlight (between angry brow ridges) ────────────────────────
+  hLine(ctx, sk.highlight, 28, HY + 14, 4);   // y=38: center forehead band (4px)
+  pixel(ctx, sk.highlight, cx, HY + 13);       // y=37: forehead apex point
+
+  // ── Jaw shadow band ───────────────────────────────────────────────────────
+  hLine(ctx, sk.shadow, 22, HY + 22,  6);     // y=46 left jaw shadow
+  hLine(ctx, sk.shadow, 34, HY + 22,  9);     // y=46 right jaw (deeper shadow side)
+  hLine(ctx, sk.shadow, 23, HY + 23, 18);     // y=47 chin shadow band
+
+  // ── Chin center highlight ─────────────────────────────────────────────────
+  pixel(ctx, sk.highlight, cx,     HY + 23);   // y=47 chin tip lit
+  pixel(ctx, sk.highlight, cx - 1, HY + 23);
 
   // Face outline
   for (let i = 0; i < FACE.length; i++) {
@@ -326,29 +383,82 @@ function drawDemonHeadSouth(ctx, colors, config) {
     pixel(ctx, outline, FACE[i][0] + FACE[i][1] - 1, HY + faceStart + i);
   }
 
-  // ── Glowing demon eyes ───────────────────────────────────────────────────
-  const eyeY = HY + 10;
-  const glowHalo = 'rgba(255,100,0,0.3)';
-  hLine(ctx, glowHalo, 41, eyeY - 1, 5);
-  fillRect(ctx, '#FF6600', 42, eyeY, 3, 2);
-  pixel(ctx, '#FFDD00', 43, eyeY);
-  pixel(ctx, '#FFFFFF', 42, eyeY);
-  hLine(ctx, glowHalo, 49, eyeY - 1, 5);
-  fillRect(ctx, '#FF6600', 50, eyeY, 3, 2);
-  pixel(ctx, '#FFDD00', 51, eyeY);
-  pixel(ctx, '#FFFFFF', 52, eyeY);
+  // ── Brow ridges (angry demonic) ───────────────────────────────────────────
+  hLine(ctx, deepShadow, 22, HY + 14, 6);   // y=38: left ridge upper
+  hLine(ctx, outline,    22, HY + 13, 6);   // y=37: left ridge top
+  hLine(ctx, deepShadow, 34, HY + 14, 6);   // right ridge upper
+  hLine(ctx, outline,    34, HY + 13, 6);   // right ridge top
+  // Brow ridge bumps — 1px highlight on top for volume
+  pixel(ctx, sk.highlight, 23, HY + 13);    // left ridge highlight
+  pixel(ctx, sk.highlight, 35, HY + 13);    // right ridge highlight
 
-  // Brow ridge
-  const deepShadow = sk.deep_shadow || sk.shadow;
-  hLine(ctx, deepShadow, 41, eyeY - 2, 5);
-  hLine(ctx, outline,    41, eyeY - 3, 5);
-  hLine(ctx, deepShadow, 49, eyeY - 2, 5);
-  hLine(ctx, outline,    49, eyeY - 3, 5);
+  // ── Pointed demonic ears at temples (y=41) ────────────────────────────────
+  // Left ear — 3px triangular protrusion (tip at x=14)
+  pixel(ctx, sk.base,    16, HY + 17);
+  pixel(ctx, sk.base,    15, HY + 17);
+  pixel(ctx, sk.base,    14, HY + 17);
+  pixel(ctx, outline,    13, HY + 17);
+  pixel(ctx, outline,    15, HY + 16);
+  pixel(ctx, outline,    15, HY + 18);
+  // Right ear — mirror (tip at x=47)
+  pixel(ctx, sk.base,    45, HY + 17);
+  pixel(ctx, sk.base,    46, HY + 17);
+  pixel(ctx, sk.base,    47, HY + 17);
+  pixel(ctx, sk.shadow,  46, HY + 17);      // shadow side darker
+  pixel(ctx, outline,    48, HY + 17);
+  pixel(ctx, outline,    45, HY + 16);
+  pixel(ctx, outline,    45, HY + 18);
 
-  // Nose + snarl mouth
-  pixel(ctx, sk.shadow, 47, HY + 13);
-  hLine(ctx, outline,   44, HY + 14, 6);
-  pixel(ctx, '#FF4444', 45, HY + 15); pixel(ctx, '#FF4444', 49, HY + 15);
+  // ── Scar across right cheek (3-pixel diagonal slash) ──────────────────────
+  pixel(ctx, deepShadow, 40, HY + 19);
+  pixel(ctx, deepShadow, 39, HY + 20);
+  pixel(ctx, deepShadow, 38, HY + 21);
+
+  // ── Glowing demon eyes — 4px wide, eyeY=HY+15=39 ──────────────────────────
+  const eyeY = HY + 15;
+  const glowHalo  = 'rgba(255,100,0,0.35)';
+  const glowSpill = 'rgba(255,140,40,0.20)';
+  // Left eye (x=22..25)
+  hLine(ctx, glowHalo,    22, eyeY - 1, 7);    // halo above
+  fillRect(ctx, '#FF6600', 22, eyeY,     4, 2); // iris (2 rows)
+  pixel(ctx, '#FFDD00',   23, eyeY);            // bright iris
+  pixel(ctx, '#FFFF99',   23, eyeY);            // brighter inner spot (hot core)
+  pixel(ctx, '#FFFFFF',   22, eyeY);            // outer specular
+  pixel(ctx, '#280000',   25, eyeY);            // inner canthus
+  pixel(ctx, '#FFAA33',   23, eyeY + 1);        // lower iris glow
+  hLine(ctx, glowSpill,   22, eyeY + 2, 5);    // glow spill on cheek
+  // Right eye (x=37..40)
+  hLine(ctx, glowHalo,    34, eyeY - 1, 7);
+  fillRect(ctx, '#FF6600', 37, eyeY,     4, 2);
+  pixel(ctx, '#FFDD00',   39, eyeY);
+  pixel(ctx, '#FFFF99',   39, eyeY);            // hot core
+  pixel(ctx, '#FFFFFF',   40, eyeY);
+  pixel(ctx, '#280000',   37, eyeY);
+  pixel(ctx, '#FFAA33',   39, eyeY + 1);
+  hLine(ctx, glowSpill,   37, eyeY + 2, 5);
+
+  // ── Nose — bestial snout with nostrils ────────────────────────────────────
+  pixel(ctx, sk.highlight, cx,     HY + 15);   // bridge top (between brows)
+  pixel(ctx, sk.highlight, cx,     HY + 16);   // bridge mid
+  pixel(ctx, sk.highlight, cx,     HY + 17);   // bridge lower
+  pixel(ctx, sk.shadow,    cx + 1, HY + 16);   // right side bridge shadow
+  pixel(ctx, sk.shadow,    cx + 1, HY + 17);
+  pixel(ctx, deepShadow,   cx - 1, HY + 18);   // LEFT nostril (deep dark)
+  pixel(ctx, deepShadow,   cx + 1, HY + 18);   // RIGHT nostril
+  pixel(ctx, sk.highlight, cx,     HY + 18);   // septum tip lit
+  hLine(ctx, sk.shadow,    cx - 1, HY + 19, 3); // under-nose shadow band
+
+  // ── Mouth — snarling opening with hanging fangs ───────────────────────────
+  hLine(ctx, outline,    27, HY + 20, 8);    // y=44: upper lip dark line
+  hLine(ctx, '#1A0000',  28, HY + 21, 6);    // y=45: mouth interior (dark cavity)
+  // Fangs (off-white ivory, hanging from upper lip)
+  pixel(ctx, '#FFFFCC',  28, HY + 21);       // left fang upper
+  pixel(ctx, '#FFFFCC',  33, HY + 21);       // right fang upper
+  pixel(ctx, '#E6CC99',  28, HY + 22);       // left fang tip
+  pixel(ctx, '#E6CC99',  33, HY + 22);       // right fang tip
+  // Lower lip suggestion
+  pixel(ctx, sk.shadow,  30, HY + 22);
+  pixel(ctx, sk.shadow,  31, HY + 22);
 
   // Head silhouette outline
   for (let r = 0; r < HEAD.length; r++) {
@@ -356,12 +466,39 @@ function drawDemonHeadSouth(ctx, colors, config) {
     pixel(ctx, hair.shadow, HX + off, HY + r);
     pixel(ctx, hair.shadow, HX + off + w - 1, HY + r);
   }
-  hLine(ctx, '#111111', HX + 5, HY, 10);
+  hLine(ctx, '#111111', HX + 8, HY, 14);   // crown top outline
   const last = HEAD[HEAD.length - 1];
   hLine(ctx, '#111111', HX + last[0], HY + HEAD.length, last[1]);
 
   // ── Horns drawn on top of hair ────────────────────────────────────────────
   drawHornsSouth(ctx, colors, config.hornStyle || 'curved', HY);
+  // Skull-horn integration — temple shadows
+  pixel(ctx, hair.shadow, HX + 1, HY);
+  pixel(ctx, hair.shadow, HX + 2, HY);
+  pixel(ctx, hair.shadow, HX + HW - 3, HY);
+  pixel(ctx, hair.shadow, HX + HW - 2, HY);
+
+  // ── Horn AA polish (curved style) ─────────────────────────────────────────
+  if (!config.hornStyle || config.hornStyle === 'curved') {
+    const hSh = colors.horn.shadow;
+    const hHi = colors.horn.highlight;
+    const hy = HY - 4; // = 20, matches drawHornsSouth
+    // Left horn — deeper shadow at base + tip highlight + inner curve AA
+    pixel(ctx, hSh, 25, hy + 4);   // base shadow
+    pixel(ctx, hSh, 26, hy + 4);
+    pixel(ctx, hSh, 25, hy - 1);   // inner curve shadow
+    pixel(ctx, hHi, 23, hy - 3);   // tip upper highlight
+    pixel(ctx, hHi, 22, hy - 2);   // tip side highlight
+    // Right horn — mirror
+    pixel(ctx, hSh, 36, hy + 4);
+    pixel(ctx, hSh, 37, hy + 4);
+    pixel(ctx, hSh, 38, hy - 1);
+    pixel(ctx, hHi, 40, hy - 3);
+    pixel(ctx, hHi, 41, hy - 2);
+    // Skull-horn base seam (horn shadow tones at the crown row)
+    pixel(ctx, hSh, 25, HY); pixel(ctx, hSh, 26, HY);
+    pixel(ctx, hSh, 37, HY); pixel(ctx, hSh, 38, HY);
+  }
 }
 
 /**

@@ -5,7 +5,7 @@ const path = require('path');
 const { makeCanvas, blit } = require('./Canvas');
 
 // Spritesheet layout constants
-const FRAME_W = 96;
+const FRAME_W = 64;
 const FRAME_H = 96;
 
 // Row definitions: [name, frameCount]
@@ -32,14 +32,22 @@ const SHEET_H = SHEET_ROWS * FRAME_H; // 832
 
 /**
  * Build a spritesheet from an array of row frame arrays.
+ * Frame dimensions are auto-detected from the first frame canvas — no scaling.
  *
- * @param {Array<Canvas[]>} rowFrames - Array of 9 entries, each is an array of frame canvases.
- * @param {number} [frameSize=64]     - Output size per frame (square). Source frames are scaled.
+ * @param {Array<Canvas[]>} rowFrames
  * @returns {Canvas} The composited spritesheet canvas.
  */
-function buildSpritesheet(rowFrames, frameSize = FRAME_W) {
-  const sheetW = SHEET_COLS * frameSize;
-  const sheetH = ROWS.length * frameSize;
+function buildSpritesheet(rowFrames) {
+  // Detect actual frame dimensions from the first available canvas.
+  let frameW = FRAME_W, frameH = FRAME_H;
+  outer: for (const frames of rowFrames) {
+    for (const fc of frames) {
+      if (fc) { frameW = fc.width; frameH = fc.height; break outer; }
+    }
+  }
+
+  const sheetW = SHEET_COLS * frameW;
+  const sheetH = ROWS.length * frameH;
   const { canvas, ctx } = makeCanvas(sheetW, sheetH);
 
   ctx.clearRect(0, 0, sheetW, sheetH);
@@ -50,11 +58,7 @@ function buildSpritesheet(rowFrames, frameSize = FRAME_W) {
     for (let col = 0; col < frames.length; col++) {
       const frameCanvas = frames[col];
       if (frameCanvas) {
-        if (frameSize === FRAME_W) {
-          blit(ctx, frameCanvas, col * frameSize, row * frameSize);
-        } else {
-          ctx.drawImage(frameCanvas, col * frameSize, row * frameSize, frameSize, frameSize);
-        }
+        blit(ctx, frameCanvas, col * frameW, row * frameH);
       }
     }
   }
