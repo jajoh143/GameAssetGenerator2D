@@ -416,19 +416,26 @@ function drawDemonHeadSouth(ctx, colors, config) {
 
   // ── Glowing demon eyes — 4px wide, eyeY=HY+15=39 ──────────────────────────
   const eyeY = HY + 15;
-  const glowHalo = 'rgba(255,100,0,0.3)';
+  const glowHalo  = 'rgba(255,100,0,0.35)';
+  const glowSpill = 'rgba(255,140,40,0.20)';
   // Left eye (x=22..25)
-  hLine(ctx, glowHalo,   22, eyeY - 1, 7);   // halo above
-  fillRect(ctx, '#FF6600', 22, eyeY, 4, 2);
-  pixel(ctx, '#FFDD00',  23, eyeY);           // bright iris
-  pixel(ctx, '#FFFFFF',  22, eyeY);           // outer specular
-  pixel(ctx, '#280000',  25, eyeY);           // inner canthus
+  hLine(ctx, glowHalo,    22, eyeY - 1, 7);    // halo above
+  fillRect(ctx, '#FF6600', 22, eyeY,     4, 2); // iris (2 rows)
+  pixel(ctx, '#FFDD00',   23, eyeY);            // bright iris
+  pixel(ctx, '#FFFF99',   23, eyeY);            // brighter inner spot (hot core)
+  pixel(ctx, '#FFFFFF',   22, eyeY);            // outer specular
+  pixel(ctx, '#280000',   25, eyeY);            // inner canthus
+  pixel(ctx, '#FFAA33',   23, eyeY + 1);        // lower iris glow
+  hLine(ctx, glowSpill,   22, eyeY + 2, 5);    // glow spill on cheek
   // Right eye (x=37..40)
-  hLine(ctx, glowHalo,   34, eyeY - 1, 7);
-  fillRect(ctx, '#FF6600', 37, eyeY, 4, 2);
-  pixel(ctx, '#FFDD00',  39, eyeY);
-  pixel(ctx, '#FFFFFF',  40, eyeY);
-  pixel(ctx, '#280000',  37, eyeY);
+  hLine(ctx, glowHalo,    34, eyeY - 1, 7);
+  fillRect(ctx, '#FF6600', 37, eyeY,     4, 2);
+  pixel(ctx, '#FFDD00',   39, eyeY);
+  pixel(ctx, '#FFFF99',   39, eyeY);            // hot core
+  pixel(ctx, '#FFFFFF',   40, eyeY);
+  pixel(ctx, '#280000',   37, eyeY);
+  pixel(ctx, '#FFAA33',   39, eyeY + 1);
+  hLine(ctx, glowSpill,   37, eyeY + 2, 5);
 
   // ── Nose — bestial snout with nostrils ────────────────────────────────────
   pixel(ctx, sk.highlight, cx,     HY + 15);   // bridge top (between brows)
@@ -465,11 +472,33 @@ function drawDemonHeadSouth(ctx, colors, config) {
 
   // ── Horns drawn on top of hair ────────────────────────────────────────────
   drawHornsSouth(ctx, colors, config.hornStyle || 'curved', HY);
-  // Skull-horn integration
+  // Skull-horn integration — temple shadows
   pixel(ctx, hair.shadow, HX + 1, HY);
   pixel(ctx, hair.shadow, HX + 2, HY);
   pixel(ctx, hair.shadow, HX + HW - 3, HY);
   pixel(ctx, hair.shadow, HX + HW - 2, HY);
+
+  // ── Horn AA polish (curved style) ─────────────────────────────────────────
+  if (!config.hornStyle || config.hornStyle === 'curved') {
+    const hSh = colors.horn.shadow;
+    const hHi = colors.horn.highlight;
+    const hy = HY - 4; // = 20, matches drawHornsSouth
+    // Left horn — deeper shadow at base + tip highlight + inner curve AA
+    pixel(ctx, hSh, 25, hy + 4);   // base shadow
+    pixel(ctx, hSh, 26, hy + 4);
+    pixel(ctx, hSh, 25, hy - 1);   // inner curve shadow
+    pixel(ctx, hHi, 23, hy - 3);   // tip upper highlight
+    pixel(ctx, hHi, 22, hy - 2);   // tip side highlight
+    // Right horn — mirror
+    pixel(ctx, hSh, 36, hy + 4);
+    pixel(ctx, hSh, 37, hy + 4);
+    pixel(ctx, hSh, 38, hy - 1);
+    pixel(ctx, hHi, 40, hy - 3);
+    pixel(ctx, hHi, 41, hy - 2);
+    // Skull-horn base seam (horn shadow tones at the crown row)
+    pixel(ctx, hSh, 25, HY); pixel(ctx, hSh, 26, HY);
+    pixel(ctx, hSh, 37, HY); pixel(ctx, hSh, 38, HY);
+  }
 }
 
 /**
