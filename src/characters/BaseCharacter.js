@@ -530,22 +530,22 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)     return x - 1;
     if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 1;
-    if (row < NARROW_S)     return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
   };
 
   // ── 1. Fill jacket base ──────────────────────────────────────────────────
@@ -610,22 +610,22 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)     return x - 1;
     if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 1;
-    if (row < NARROW_S)     return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
   };
 
   for (let row = 0; row < numRows; row++) {
@@ -718,22 +718,22 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)     return x - 1;
     if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 1;
-    if (row < NARROW_S)     return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
   };
 
   for (let row = 0; row < numRows; row++) {
@@ -834,22 +834,22 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)     return x - 1;
     if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 1;
-    if (row < NARROW_S)     return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
   };
 
   for (let row = 0; row < numRows; row++) {
@@ -954,22 +954,22 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)     return x - 1;
     if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 1;
-    if (row < NARROW_S)     return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
   };
 
   // Fill base
@@ -1019,22 +1019,22 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)     return x - 1;
     if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 1;
-    if (row < NARROW_S)     return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
   };
 
   // Fill base
@@ -1114,24 +1114,24 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
   const rl = (row) => {
     if (row < SHOULDER)   return x - 1;
     if (row < MID_S)      return x;
-    if (row < WAIST_S)    return x + 1;
-    if (row < NARROW_S)   return x + 2;
-    if (row <= WAIST_E)     return x + 3;
-    if (row <= WAIST_E + 1) return x + 2;
-    if (row <= WAIST_E + 2) return x + 1;
-    if (row < h)            return x;
+    if (row < WAIST_S)    return x + 2;
+    if (row < NARROW_S)   return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    if (row < h)            return x + 1;
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
     return x - flare;
   };
   const rr = (row) => {
     if (row < SHOULDER)     return x + w;
     if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 2;
-    if (row < NARROW_S)     return x + w - 3;
-    if (row <= WAIST_E)     return x + w - 4;
-    if (row <= WAIST_E + 1) return x + w - 3;
-    if (row <= WAIST_E + 2) return x + w - 2;
-    if (row < h)            return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    if (row < h)            return x + w - 2;
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
     return x + w - 1 + flare;
   };
