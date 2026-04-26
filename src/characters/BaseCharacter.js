@@ -1732,7 +1732,7 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
 // ---------------------------------------------------------------------------
 
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=0, rArmOut=0, torsoY=28) {
-  // Organic arm shape: 7px deltoid cap → 6px bicep → 5px elbow pinch → 6px forearm → 4px wrist
+  // Organic arm shape: 7px deltoid cap → 7px bicep → 6px elbow pinch → 7px forearm → 5px wrist
   // Inner edge stays fixed to preserve arm-to-waist gap; outer edge varies for the curve.
   const lx = 18;                // left arm body outer-edge
   const shoulderRX = 43;        // right arm inner (torso-side) edge
@@ -1740,6 +1740,18 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   const sleeveH = 13, handH = 4;
   const maxRow = sleeveH - 1;
   const deepShadow = clothingColors.deep_shadow || clothingColors.shadow;
+
+  // ── Shoulder pads ─────────────────────────────────────────────────────────
+  // Static fill anchored to the torso, drawn BEFORE the arm. In default poses
+  // the deltoid cap covers the pad, but when the arm rotates away (swing
+  // apex, shoot extension) the pad stays in place and closes the gap.
+  fillRect(ctx, clothingColors.base, 16, baseY,     7, 3);   // left shoulder pad
+  fillRect(ctx, clothingColors.base, 43, baseY,     7, 3);   // right shoulder pad
+  // Pad shading (matches arm cap shading direction)
+  hLine(ctx, clothingColors.highlight, 17, baseY,     5);    // left lit upper edge
+  hLine(ctx, clothingColors.shadow,    44, baseY,     5);    // right shadow edge
+  px(ctx, clothingColors.shadow, 16, baseY + 2);             // outer corner shadow
+  px(ctx, clothingColors.shadow, 49, baseY + 2);
 
   // Row zones:  0-1 cap (7px), 2-4 bicep (7px), 5-6 elbow (6px), 7-9 forearm (7px), 10-12 wrist (5px)
   const armW = (row) => {
@@ -1886,6 +1898,8 @@ function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, tor
     if (row < 8) return 6;   // elbow (+1)
     return 5;                // forearm/wrist (+1)
   };
+  // Shoulder pad — anchored to torso, fills the gap when arm rotates away
+  fillRect(ctx, clothingColors.shadow, shoulderX, backY, 7, 3);
   const rowX = (row) => shoulderX + Math.round(backArmDX * row / maxRow);
   const wristX = rowX(maxRow);
 
@@ -1915,6 +1929,11 @@ function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, t
     if (row < 8) return 6;   // elbow (+1)
     return 5;                // forearm/wrist (+1)
   };
+  // Shoulder pad — anchored to torso, fills the gap during extreme arm motion
+  fillRect(ctx, clothingColors.base,      shoulderX, frontY, 7, 3);
+  hLine(ctx, clothingColors.highlight, shoulderX + 1, frontY, 5);
+  px(ctx, clothingColors.shadow,       shoulderX,     frontY + 2);
+  px(ctx, clothingColors.shadow,       shoulderX + 6, frontY + 2);
   const rowX = (row) => shoulderX + Math.round(frontArmDX * row / maxRow);
   const wristX = rowX(maxRow);
 
