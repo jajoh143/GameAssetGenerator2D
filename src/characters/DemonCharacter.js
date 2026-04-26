@@ -353,12 +353,29 @@ function drawDemonHeadSouth(ctx, colors, config) {
   }
 
   // ── Cheek shading — 2×2 zones ─────────────────────────────────────────────
+  const deepShadow = sk.deep_shadow || sk.shadow;
   fillRect(ctx, sk.highlight, 21, HY + 18, 2, 2);  // left cheek 2×2 hi
   fillRect(ctx, sk.shadow,    41, HY + 18, 2, 2);  // right cheek 2×2 sh
-  // Right-side form shadow (one pixel per face row)
+  // Right-side form shadow (one pixel per face row, deeper on lower half)
   for (let i = 2; i < FACE.length - 4; i++) {
     pixel(ctx, sk.shadow, FACE[i][0] + FACE[i][1] - 2, HY + faceStart + i);
   }
+  for (let i = 4; i < FACE.length - 4; i++) {
+    pixel(ctx, deepShadow, FACE[i][0] + FACE[i][1] - 1, HY + faceStart + i);
+  }
+
+  // ── Forehead highlight (between angry brow ridges) ────────────────────────
+  hLine(ctx, sk.highlight, 28, HY + 14, 4);   // y=38: center forehead band (4px)
+  pixel(ctx, sk.highlight, cx, HY + 13);       // y=37: forehead apex point
+
+  // ── Jaw shadow band ───────────────────────────────────────────────────────
+  hLine(ctx, sk.shadow, 22, HY + 22,  6);     // y=46 left jaw shadow
+  hLine(ctx, sk.shadow, 34, HY + 22,  9);     // y=46 right jaw (deeper shadow side)
+  hLine(ctx, sk.shadow, 23, HY + 23, 18);     // y=47 chin shadow band
+
+  // ── Chin center highlight ─────────────────────────────────────────────────
+  pixel(ctx, sk.highlight, cx,     HY + 23);   // y=47 chin tip lit
+  pixel(ctx, sk.highlight, cx - 1, HY + 23);
 
   // Face outline
   for (let i = 0; i < FACE.length; i++) {
@@ -367,7 +384,6 @@ function drawDemonHeadSouth(ctx, colors, config) {
   }
 
   // ── Brow ridges (angry demonic) ───────────────────────────────────────────
-  const deepShadow = sk.deep_shadow || sk.shadow;
   hLine(ctx, deepShadow, 22, HY + 14, 6);   // y=38: left ridge upper
   hLine(ctx, outline,    22, HY + 13, 6);   // y=37: left ridge top
   hLine(ctx, deepShadow, 34, HY + 14, 6);   // right ridge upper
