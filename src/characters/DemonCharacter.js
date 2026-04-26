@@ -389,15 +389,28 @@ function drawDemonHeadSouth(ctx, colors, config) {
   pixel(ctx, '#FFFFFF',  40, eyeY);
   pixel(ctx, '#280000',  37, eyeY);
 
-  // ── Nose bridge + tip ─────────────────────────────────────────────────────
-  pixel(ctx, sk.highlight, cx, HY + 16);   // bridge
-  pixel(ctx, sk.highlight, cx, HY + 17);
-  pixel(ctx, sk.shadow,    cx, HY + 18);   // nose tip
-  pixel(ctx, deepShadow, cx + 1, HY + 18);
+  // ── Nose — bestial snout with nostrils ────────────────────────────────────
+  pixel(ctx, sk.highlight, cx,     HY + 15);   // bridge top (between brows)
+  pixel(ctx, sk.highlight, cx,     HY + 16);   // bridge mid
+  pixel(ctx, sk.highlight, cx,     HY + 17);   // bridge lower
+  pixel(ctx, sk.shadow,    cx + 1, HY + 16);   // right side bridge shadow
+  pixel(ctx, sk.shadow,    cx + 1, HY + 17);
+  pixel(ctx, deepShadow,   cx - 1, HY + 18);   // LEFT nostril (deep dark)
+  pixel(ctx, deepShadow,   cx + 1, HY + 18);   // RIGHT nostril
+  pixel(ctx, sk.highlight, cx,     HY + 18);   // septum tip lit
+  hLine(ctx, sk.shadow,    cx - 1, HY + 19, 3); // under-nose shadow band
 
-  // ── Mouth + fangs ─────────────────────────────────────────────────────────
-  hLine(ctx, outline, 28, HY + 19, 6);     // mouth line at y=43
-  pixel(ctx, '#FF4444', 29, HY + 20); pixel(ctx, '#FF4444', 32, HY + 20);  // fangs
+  // ── Mouth — snarling opening with hanging fangs ───────────────────────────
+  hLine(ctx, outline,    27, HY + 20, 8);    // y=44: upper lip dark line
+  hLine(ctx, '#1A0000',  28, HY + 21, 6);    // y=45: mouth interior (dark cavity)
+  // Fangs (off-white ivory, hanging from upper lip)
+  pixel(ctx, '#FFFFCC',  28, HY + 21);       // left fang upper
+  pixel(ctx, '#FFFFCC',  33, HY + 21);       // right fang upper
+  pixel(ctx, '#E6CC99',  28, HY + 22);       // left fang tip
+  pixel(ctx, '#E6CC99',  33, HY + 22);       // right fang tip
+  // Lower lip suggestion
+  pixel(ctx, sk.shadow,  30, HY + 22);
+  pixel(ctx, sk.shadow,  31, HY + 22);
 
   // Head silhouette outline
   for (let r = 0; r < HEAD.length; r++) {
