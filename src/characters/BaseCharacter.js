@@ -31,20 +31,23 @@ function drawGroundShadow(ctx, cx, y, w=14, h=3) {
 function drawBeardSouth(ctx, hairColors, beardStyle) {
   if (!beardStyle || beardStyle === 'none') return;
   const base = hairColors.base, hi = hairColors.highlight, sh = hairColors.shadow;
-  // Reference: eyeY=40, cx=32, face spans x=20..43 at jaw rows
+  // Light from upper-left: top rows near mouth = hi, outer edges + bottom = sh
 
   if (beardStyle === 'stubble') {
-    for (let x = 22; x <= 41; x += 3) px(ctx, sh, x, 44);
-    for (let x = 21; x <= 42; x += 3) px(ctx, sh, x, 45);
-    for (let x = 22; x <= 40; x += 3) px(ctx, sh, x, 46);
-    for (let x = 24; x <= 38; x += 4) px(ctx, sh, x, 47);
+    // Top row: base color (lighter, near mouth / face reflection)
+    for (let x = 24; x <= 39; x += 4) px(ctx, base, x, 44);
+    // Lower rows: shadow color (further from face light)
+    for (let x = 22; x <= 41; x += 3) px(ctx, sh, x, 45);
+    for (let x = 23; x <= 40; x += 3) px(ctx, sh, x, 46);
+    for (let x = 25; x <= 37; x += 4) px(ctx, sh, x, 47);
   }
 
   if (beardStyle === 'mustache' || beardStyle === 'full') {
     hLine(ctx, base, 27, 43, 10);
-    hLine(ctx, sh,   28, 44,  8);
-    px(ctx, hi, 28, 43); px(ctx, hi, 29, 43);
-    px(ctx, sh, 27, 43); px(ctx, sh, 36, 43);
+    hLine(ctx, hi,   29, 43,  4);   // center lit from above
+    px(ctx, hi, 34, 43);
+    px(ctx, sh, 27, 43); px(ctx, sh, 36, 43);  // outer corners in shadow
+    hLine(ctx, sh, 28, 44,  8);     // underside shadow on upper lip
   }
 
   if (beardStyle === 'goatee') {
@@ -54,25 +57,36 @@ function drawBeardSouth(ctx, hairColors, beardStyle) {
     hLine(ctx, base, 30, 46, 4);
     hLine(ctx, base, 31, 47, 2);
     px(ctx,    base, 32, 48);
+    // Highlights: top center rows (near mouth, lit by face above)
+    hLine(ctx, hi, 30, 43, 3);
+    px(ctx, hi, 30, 44);
+    // Shadows: outer edges and lower rows
     px(ctx, sh, 29, 43); px(ctx, sh, 34, 43);
-    px(ctx, hi, 30, 43); px(ctx, hi, 31, 43);
-    px(ctx, sh, 34, 44); px(ctx, sh, 33, 45);
-    hLine(ctx, sh, 31, 48, 2);
+    px(ctx, sh, 29, 44); px(ctx, sh, 34, 44);
+    px(ctx, sh, 30, 46); px(ctx, sh, 33, 46);
+    hLine(ctx, sh, 31, 47, 2);
+    px(ctx, sh, 32, 48);
   }
 
   if (beardStyle === 'full') {
-    fillRect(ctx, base, 20, 44, 3, 4);
-    fillRect(ctx, base, 41, 44, 3, 4);
+    // Base fill
     hLine(ctx, base, 21, 44, 22);
     hLine(ctx, base, 20, 45, 24);
     hLine(ctx, base, 20, 46, 24);
     hLine(ctx, base, 21, 47, 22);
     hLine(ctx, base, 22, 48, 20);
     hLine(ctx, base, 24, 49, 16);
-    vLine(ctx, hi, 21, 44, 4);
-    vLine(ctx, sh, 42, 44, 3);
-    hLine(ctx, sh, 22, 49, 5);
-    hLine(ctx, sh, 37, 49, 4);
+    // Shadows: right half + outer edges + bottom rows
+    hLine(ctx, sh, 33, 44, 10);
+    hLine(ctx, sh, 33, 45, 11);
+    hLine(ctx, sh, 34, 46, 10);
+    hLine(ctx, sh, 34, 47,  9);
+    hLine(ctx, sh, 22, 48, 20);    // bottom row fully shadowed
+    hLine(ctx, sh, 24, 49, 16);    // chin row fully shadowed
+    // Highlights: top rows left-center (face reflection + upper-left light)
+    hLine(ctx, hi, 21, 44, 11);
+    hLine(ctx, hi, 22, 45,  6);
+    px(ctx, hi, 30, 46);
   }
 }
 
@@ -186,24 +200,30 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 23, HY + 15, 6);   // left brow
-  hLine(ctx, hairColors.shadow, 36, HY + 15, 6);   // right brow
+  hLine(ctx, hairColors.shadow, 22, HY + 15, 7);   // left brow (7px)
+  hLine(ctx, hairColors.shadow, 35, HY + 15, 7);   // right brow (7px)
 
-  // ── Eyes — SNES 4px wide: lash row + sclera/iris/pupil + orbital shadow ──
+  // ── Eyes — 5px wide: lash+specular row + sclera/iris/pupil/iris + orbital ──
   const eyeY = HY + 16; // y=40
-  hLine(ctx, eyeColors.lash,    24, eyeY - 1, 4);   // left upper lash row
-  px(ctx, '#FFFFFF',             24, eyeY);           // sclera catch-light
-  px(ctx, eyeColors.iris,        25, eyeY);
-  px(ctx, eyeColors.pupil,       26, eyeY);
-  px(ctx, eyeColors.lash,        27, eyeY);           // inner canthus shadow
-  hLine(ctx, skinColors.shadow,  25, eyeY + 1, 2);   // lower-lid orbital
+  // Left eye (x=23..27)
+  hLine(ctx, eyeColors.lash,    23, eyeY - 1, 5);   // upper lash row (5px)
+  px(ctx, '#FFFFFF',             24, eyeY - 1);       // specular catch-light in lash
+  px(ctx, '#FFFFFF',             23, eyeY);            // sclera
+  px(ctx, eyeColors.iris,        24, eyeY);
+  px(ctx, eyeColors.pupil,       25, eyeY);            // pupil center
+  px(ctx, eyeColors.iris,        26, eyeY);
+  px(ctx, eyeColors.lash,        27, eyeY);            // inner canthus
+  hLine(ctx, skinColors.shadow,  24, eyeY + 1, 3);   // lower-lid orbital (3px)
 
-  hLine(ctx, eyeColors.lash,    37, eyeY - 1, 4);   // right upper lash row
-  px(ctx, eyeColors.lash,        37, eyeY);           // inner canthus shadow
-  px(ctx, eyeColors.pupil,       38, eyeY);
+  // Right eye (x=36..40, mirrored)
+  hLine(ctx, eyeColors.lash,    36, eyeY - 1, 5);   // upper lash row (5px)
+  px(ctx, '#FFFFFF',             39, eyeY - 1);       // specular catch-light in lash
+  px(ctx, eyeColors.lash,        36, eyeY);            // inner canthus
+  px(ctx, eyeColors.iris,        37, eyeY);
+  px(ctx, eyeColors.pupil,       38, eyeY);            // pupil center
   px(ctx, eyeColors.iris,        39, eyeY);
-  px(ctx, '#FFFFFF',             40, eyeY);           // sclera catch-light
-  hLine(ctx, skinColors.shadow,  38, eyeY + 1, 2);   // lower-lid orbital
+  px(ctx, '#FFFFFF',             40, eyeY);            // sclera
+  hLine(ctx, skinColors.shadow,  37, eyeY + 1, 3);   // lower-lid orbital (3px)
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
