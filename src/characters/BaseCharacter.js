@@ -42,12 +42,17 @@ function drawBeardSouth(ctx, hairColors, beardStyle) {
     for (let x = 25; x <= 37; x += 4) px(ctx, sh, x, 47);
   }
 
-  if (beardStyle === 'mustache' || beardStyle === 'full') {
-    hLine(ctx, base, 27, 43, 10);
-    hLine(ctx, hi,   29, 43,  4);   // center lit from above
-    px(ctx, hi, 34, 43);
-    px(ctx, sh, 27, 43); px(ctx, sh, 36, 43);  // outer corners in shadow
-    hLine(ctx, sh, 28, 44,  8);     // underside shadow on upper lip
+  if (beardStyle === 'handlebar' || beardStyle === 'full') {
+    // Curled tips at y=42 (ends turn upward)
+    px(ctx, sh,   26, 42); px(ctx, base, 27, 42);   // left tip
+    px(ctx, base, 36, 42); px(ctx, sh,   37, 42);   // right tip
+    // Main bar y=43 (12px wide: x=26..37)
+    hLine(ctx, base, 26, 43, 12);
+    hLine(ctx, hi,   29, 43,  5);   // center lit from above
+    px(ctx, hi, 35, 43);
+    px(ctx, sh, 26, 43); px(ctx, sh, 37, 43);  // outer corners in shadow
+    // Underside shadow on upper lip
+    hLine(ctx, sh, 29, 44,  6);
   }
 
   if (beardStyle === 'goatee') {
@@ -233,6 +238,13 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, skinColors.highlight, cx,     eyeY + 3);   // nose tip lit
   px(ctx, skinColors.deep_shadow || skinColors.shadow, cx + 1, eyeY + 3);
   hLine(ctx, skinColors.shadow, cx - 1, eyeY + 4, 3); // under-nose shadow
+
+  // ── Mouth hint (clean-shaven only) ───────────────────────────────────────
+  if (!beardStyle || beardStyle === 'none') {
+    hLine(ctx, skinColors.shadow,    27, HY + 20, 8);   // mouth shadow line
+    px(ctx,    skinColors.highlight, cx - 1, HY + 20);  // lower lip center hi
+    px(ctx,    skinColors.highlight, cx,     HY + 20);
+  }
 
   // ── Beard ─────────────────────────────────────────────────────────────────
   drawBeardSouth(ctx, hairColors, beardStyle);
@@ -1526,6 +1538,25 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
     px(ctx, row <= 5 ? pantColors.outline : pantColors.shadow, rx, rRowY);
   }
 
+  // Fill knee junction gap: when lower leg shifts down (forward stride), rows between
+  // the last thigh row and first shifted knee row are left empty. Fill with tapered thigh pixels.
+  if (lLegDY > 0) {
+    for (let g = KNEE_ROW; g < KNEE_ROW + Math.round(lLegDY); g++) {
+      hLine(ctx, lBaseColor,        lx,     y + g, 6);
+      px(ctx,    lHiColor,          lx + 1, y + g);
+      px(ctx,    pantColors.shadow, lx + 5, y + g);
+      px(ctx,    pantColors.shadow, lx,     y + g);
+    }
+  }
+  if (rLegDY > 0) {
+    for (let g = KNEE_ROW; g < KNEE_ROW + Math.round(rLegDY); g++) {
+      hLine(ctx, rBaseColor,        rx,         y + g, 6);
+      px(ctx,    rHiColor,          rx + 4,     y + g);
+      px(ctx,    pantColors.shadow, rx + 1,     y + g);
+      px(ctx,    pantColors.shadow, rx + 5,     y + g);
+    }
+  }
+
   // Top outlines (fixed — thigh junction, belt covers this area)
   hLine(ctx, pantColors.outline, lx, y, rows[0][1]);
   hLine(ctx, pantColors.outline, rx, y, rows[0][1]);
@@ -1710,18 +1741,17 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   const maxRow = sleeveH - 1;
   const deepShadow = clothingColors.deep_shadow || clothingColors.shadow;
 
-  // Row zones:  0-1 cap (7px), 2-4 bicep (6px), 5-6 elbow (5px), 7-9 forearm (6px), 10-12 wrist (4px)
+  // Row zones:  0-1 cap (7px), 2-4 bicep (7px), 5-6 elbow (6px), 7-9 forearm (7px), 10-12 wrist (5px)
   const armW = (row) => {
     if (row < 2)  return 7;   // deltoid cap
-    if (row < 5)  return 6;   // bicep
-    if (row < 7)  return 5;   // elbow pinch
-    if (row < 10) return 6;   // forearm
-    return 4;                 // wrist
+    if (row < 5)  return 7;   // bicep (+1)
+    if (row < 7)  return 6;   // elbow pinch (+1)
+    if (row < 10) return 7;   // forearm (+1)
+    return 5;                 // wrist (+1)
   };
-  // Left arm outer-edge shift per row zone (negative values push OUT from body)
+  // Left arm outer-edge shift — bicep kept at -2 so outer edge stays flush with cap
   const lShift = (row) => {
-    if (row < 2)  return -2;  // cap extends 2px further left
-    if (row < 5)  return -1;  // bicep 1px further left
+    if (row < 5)  return -2;  // cap + bicep flush outer edge
     if (row < 7)  return  0;  // elbow back to base
     if (row < 10) return -1;  // forearm 1px further left
     return 0;                 // wrist back to base
@@ -1759,17 +1789,16 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   // Creates the "arm plugs into shoulder" depth crease.
   px(ctx, deepShadow, lRowX(0) + armW(0) - 1, baseY);       // top-inner corner
   px(ctx, deepShadow, lRowX(1) + armW(1) - 1, baseY + 1);   // 2nd row socket
-  // Left cap→bicep step AA (7→6 px)
-  px(ctx, clothingColors.shadow, lRowX(0), baseY + 2);
-  // Bicep→elbow step AA (6→5 px)
+  // Cap=bicep (7→7): no outer step
+  // Bicep→elbow step AA (7→6 px)
   px(ctx, clothingColors.shadow, lRowX(2), baseY + 5);
-  // Elbow→forearm step AA (5→6 px, outer flare)
+  // Elbow→forearm step AA (6→7 px, outer flare)
   px(ctx, clothingColors.shadow, lRowX(7), baseY + 6);
-  // Forearm→wrist step AA (6→4 px)
+  // Forearm→wrist step AA (7→5 px)
   px(ctx, clothingColors.shadow, lRowX(9), baseY + 10);
 
-  // Left hand / fist (4px wide with knuckle highlights)
-  const lhw = 4;
+  // Left hand / fist (5px wide with knuckle highlights)
+  const lhw = 5;
   const lhx = lArmX;
   fillRect(ctx, skinColors.base,    lhx,     lArmY + sleeveH, lhw, handH);
   px(ctx,    skinColors.highlight,  lhx + 1, lArmY + sleeveH);
@@ -1794,14 +1823,16 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   // Armhole socket shadow (right)
   px(ctx, deepShadow, rRowX(0), baseY);        // top-inner corner
   px(ctx, deepShadow, rRowX(1), baseY + 1);    // 2nd row socket
-  // Step AA on right (outer edge shifts)
-  px(ctx, clothingColors.shadow, rRowX(0) + 6, baseY + 2);  // cap→bicep step
-  px(ctx, clothingColors.shadow, rRowX(2) + 5, baseY + 5);  // bicep→elbow step
-  px(ctx, clothingColors.shadow, rRowX(7) + 4, baseY + 6);  // elbow→forearm step
-  px(ctx, clothingColors.shadow, rRowX(9) + 5, baseY + 10); // forearm→wrist step
+  // Step AA on right (cap=bicep no step; outer edge = rRowX + armW-1)
+  // Bicep→elbow step (7→6 px, outer shifts in by 1)
+  px(ctx, clothingColors.shadow, rRowX(2) + 6, baseY + 5);
+  // Elbow→forearm step (6→7 px, outer flare)
+  px(ctx, clothingColors.shadow, rRowX(7) + 5, baseY + 6);
+  // Forearm→wrist step (7→5 px)
+  px(ctx, clothingColors.shadow, rRowX(9) + 6, baseY + 10);
 
-  // Right hand / fist (4px wide)
-  const rhw = 4;
+  // Right hand / fist (5px wide)
+  const rhw = 5;
   const rhx = rArmX;
   fillRect(ctx, skinColors.base,    rhx, rArmY + sleeveH, rhw, handH);
   hLine(ctx, skinColors.shadow,     rhx, rArmY + sleeveH + handH - 1, rhw);
@@ -1851,9 +1882,9 @@ function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, tor
   const maxRow    = sleeveH - 1;
   const armW = (row) => {
     if (row < 2) return 7;   // deltoid cap
-    if (row < 5) return 6;   // bicep
-    if (row < 8) return 5;   // elbow
-    return 4;                // forearm/wrist
+    if (row < 5) return 7;   // bicep (+1)
+    if (row < 8) return 6;   // elbow (+1)
+    return 5;                // forearm/wrist (+1)
   };
   const rowX = (row) => shoulderX + Math.round(backArmDX * row / maxRow);
   const wristX = rowX(maxRow);
@@ -1869,8 +1900,8 @@ function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, tor
   }
   hLine(ctx, clothingColors.outline, rowX(0),      backY,          armW(0));
   hLine(ctx, clothingColors.outline, rowX(maxRow), backY + maxRow, armW(maxRow));
-  fillRect(ctx, skinColors.shadow, wristX, backY + sleeveH, 3, handH);
-  outlineRect(ctx, skinColors.outline, wristX, backY + sleeveH, 3, handH);
+  fillRect(ctx, skinColors.shadow, wristX, backY + sleeveH, 4, handH);
+  outlineRect(ctx, skinColors.outline, wristX, backY + sleeveH, 4, handH);
 }
 
 function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, torsoY) {
@@ -1880,9 +1911,9 @@ function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, t
   const maxRow    = sleeveH - 1;
   const armW = (row) => {
     if (row < 2) return 7;   // deltoid cap
-    if (row < 5) return 6;   // bicep
-    if (row < 8) return 5;   // elbow
-    return 4;                // forearm/wrist
+    if (row < 5) return 7;   // bicep (+1)
+    if (row < 8) return 6;   // elbow (+1)
+    return 5;                // forearm/wrist (+1)
   };
   const rowX = (row) => shoulderX + Math.round(frontArmDX * row / maxRow);
   const wristX = rowX(maxRow);
@@ -1898,11 +1929,11 @@ function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, t
   hLine(ctx, clothingColors.outline, rowX(0),      frontY,          armW(0));
   hLine(ctx, clothingColors.outline, rowX(maxRow), frontY + maxRow, armW(maxRow));
 
-  fillRect(ctx, skinColors.base,    wristX,     frontY + sleeveH, 4, handH);
+  fillRect(ctx, skinColors.base,    wristX,     frontY + sleeveH, 5, handH);
   px(ctx,    skinColors.highlight,  wristX + 1, frontY + sleeveH);
   px(ctx,    skinColors.highlight,  wristX + 2, frontY + sleeveH);
-  hLine(ctx, skinColors.shadow,     wristX,     frontY + sleeveH + handH - 1, 4);
-  outlineRect(ctx, skinColors.outline, wristX,  frontY + sleeveH, 4, handH);
+  hLine(ctx, skinColors.shadow,     wristX,     frontY + sleeveH + handH - 1, 5);
+  outlineRect(ctx, skinColors.outline, wristX,  frontY + sleeveH, 5, handH);
 }
 
 // Legacy combined function kept for compatibility

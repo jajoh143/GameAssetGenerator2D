@@ -9,7 +9,7 @@ const DEFAULT_CONFIG = {
   skin:       'medium',     // skin tone key from Colors.SKIN_TONES
   hair:       'black',      // hair color key from Colors.HAIR_COLORS
   hairStyle:  'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut'
-  beardStyle: 'none',       // 'none' | 'stubble' | 'mustache' | 'goatee' | 'full'
+  beardStyle: 'none',       // 'none' | 'stubble' | 'handlebar' | 'goatee' | 'full'
   eyes:       'brown',      // eye color key from Colors.EYE_COLORS
   clothing:   'jacket_grey',
   pants:      'jeans_blue',
@@ -118,7 +118,7 @@ const PRESETS = {
     skin:       'light',
     hair:       'dark_brown',
     hairStyle:  'undercut',
-    beardStyle: 'goatee',
+    beardStyle: 'handlebar',
     eyes:       'brown',
     clothing:   'coat_tan',
     pants:      'pants_black',
