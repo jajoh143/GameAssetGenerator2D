@@ -641,9 +641,14 @@ function generateFrame(rawConfig, animationName, frameOffset) {
       ctx.translate(0, by + headBobScaled);
       drawHornsWest(ctx, colors, config.hornStyle || 'curved', 13, 24);
       ctx.restore();
-      // Side tail (beltY_west ≈ 66+by)
-      vLine(ctx, colors.tail.base, 52, 67 + by, 8);
-      fillRect(ctx, colors.tail.base, 53, 75 + by, 5, 5);
+      // Side profile tail — root at back hip (right edge of torso x=31, beltY=74)
+      const stx = 31, sty = 74 + by;
+      hLine(ctx, colors.tail.base, stx,     sty,     2);
+      hLine(ctx, colors.tail.base, stx,     sty + 1, 3);
+      hLine(ctx, colors.tail.base, stx + 1, sty + 2, 3);
+      hLine(ctx, colors.tail.base, stx,     sty + 3, 5);
+      hLine(ctx, colors.tail.base, stx + 1, sty + 4, 3);
+      pixel(ctx, colors.tail.base, stx + 2, sty + 5);
       break;
     }
     case 'east': {
@@ -671,8 +676,13 @@ function generateFrameDirect(ctx, config, colors, off, direction) {
   ctx.translate(0, by + headBobScaled);
   drawHornsWest(ctx, colors, config.hornStyle || 'curved', 13, 24);
   ctx.restore();
-  vLine(ctx, colors.tail.base, 56, 62 + by, 9);
-  fillRect(ctx, colors.tail.base, 57, 71 + by, 6, 6);
+  const dtx = 31, dty = 74 + by;
+  hLine(ctx, colors.tail.base, dtx,     dty,     2);
+  hLine(ctx, colors.tail.base, dtx,     dty + 1, 3);
+  hLine(ctx, colors.tail.base, dtx + 1, dty + 2, 3);
+  hLine(ctx, colors.tail.base, dtx,     dty + 3, 5);
+  hLine(ctx, colors.tail.base, dtx + 1, dty + 4, 3);
+  pixel(ctx, colors.tail.base, dtx + 2, dty + 5);
 }
 
 function getDirectionFromAnim(animName) {
