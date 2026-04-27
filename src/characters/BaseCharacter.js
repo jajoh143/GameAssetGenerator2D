@@ -2062,6 +2062,21 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
 function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=0, rArmOut=0, torsoY=28) {
   // Organic arm shape: 7px deltoid cap → 7px bicep → 6px elbow pinch → 7px forearm → 5px wrist
   // Inner edge stays fixed to preserve arm-to-waist gap; outer edge varies for the curve.
+  //
+  // Shoulder smoothing techniques (per pixel-art convention from Saint11 / MortMort
+  // / PixelJoint anatomy guides — see commit message for citations):
+  //   • Chipped outer-top corner: row 0 cap is 6px (the outer-most pixel is dropped
+  //     and replaced with an anti-aliased midtone), so the deltoid reads as rounded
+  //     instead of a hard right-angle block.
+  //   • Diagonal trapezius ramp: trap rows above the deltoid taper inward toward
+  //     the neck rather than running flat — creates a slope from neck-base down to
+  //     the inner deltoid.
+  //   • Armpit interjection: at row 3 (under the deltoid cap) the arm's inner edge
+  //     pushes 1px into the torso silhouette so the arm visually plugs into the
+  //     body instead of sitting beside it.
+  //   • Selout top-shoulder: the rim pixel at the very top of the cap uses base
+  //     instead of shadow — light hits the top of the shoulder so a black outline
+  //     there breaks the form.
   const lx = 18;                // left arm body outer-edge
   const shoulderRX = 43;        // right arm inner (torso-side) edge
   const baseY = torsoY - 1;     // deltoid cap protrudes 1px above torso top
@@ -2115,20 +2130,40 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
     const rX = lRowX(row);
     const ry = lRowY(row);
     const aw = armW(row);
-    hLine(ctx, clothingColors.base,   rX,     ry, aw);
-    px(ctx, clothingColors.shadow,    rX,     ry);        // outer selout
-    px(ctx, clothingColors.highlight, rX + 1, ry);        // highlight column
-    if (row < 8) px(ctx, clothingColors.highlight, rX + 2, ry);  // 2px lit on cap+bicep
-    if (row === 0) hLine(ctx, clothingColors.highlight, rX + 1, ry, aw - 2);  // deltoid crown highlight
-    if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rX + aw - 2, ry);  // secondary cylinder shadow
-    px(ctx, clothingColors.shadow,    rX + aw - 1, ry);   // inner shadow (toward torso)
+    if (row === 0) {
+      // Chipped outer-top corner: skip the outermost pixel, fill the rest.
+      // The chipped pixel will be replaced with an AA midtone below.
+      hLine(ctx, clothingColors.base, rX + 1, ry, aw - 1);
+      // Soft top rim: highlight on second-from-outer column (rounded deltoid crown)
+      px(ctx, clothingColors.highlight, rX + 1, ry);
+      hLine(ctx, clothingColors.highlight, rX + 2, ry, aw - 3);
+      // Inner-top corner stays in shadow (it's tucked under the trap ramp)
+      px(ctx, clothingColors.shadow, rX + aw - 1, ry);
+    } else {
+      hLine(ctx, clothingColors.base, rX, ry, aw);
+      px(ctx, clothingColors.shadow,    rX,     ry);        // outer selout
+      px(ctx, clothingColors.highlight, rX + 1, ry);        // highlight column
+      if (row < 8) px(ctx, clothingColors.highlight, rX + 2, ry);  // 2px lit on cap+bicep
+      if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rX + aw - 2, ry);  // secondary cylinder shadow
+      px(ctx, clothingColors.shadow, rX + aw - 1, ry);      // inner shadow (toward torso)
+    }
   }
   hLine(ctx, clothingColors.shadow, lRowX(maxRow), lRowY(maxRow), armW(maxRow));
+
+  // Anti-aliased corner pixel: replaces the chipped outer-top with a softer tone
+  // so the rounded deltoid doesn't read as a stair-step.
+  px(ctx, clothingColors.shadow, lRowX(0), lRowY(0));         // chipped corner = darker rim
+  // Subtle highlight 1px diagonally inward from the chip (catches the light)
+  px(ctx, clothingColors.highlight, lRowX(0) + 1, lRowY(1));
 
   // Armhole socket shadow — darker pixels at the top of the arm where it meets the torso.
   // Creates the "arm plugs into shoulder" depth crease.
   px(ctx, deepShadow, lRowX(0) + armW(0) - 1, baseY);       // top-inner corner
   px(ctx, deepShadow, lRowX(1) + armW(1) - 1, baseY + 1);   // 2nd row socket
+  // Armpit interjection — push 1px of arm-shadow INTO the torso silhouette at
+  // row 3. Breaks the vertical seam so the arm visually plugs into the body
+  // rather than sitting beside it.
+  px(ctx, deepShadow, lRowX(3) + armW(3), lRowY(3));
   // Cap=bicep (7→7): no outer step
   // Bicep→elbow step AA (7→6 px)
   px(ctx, clothingColors.shadow, lRowX(2), baseY + 5);
@@ -2151,18 +2186,32 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
     const rx = rRowX(row);
     const ry = rRowY(row);
     const aw = armW(row);
-    hLine(ctx, clothingColors.base,  rx,         ry, aw);
-    px(ctx, clothingColors.shadow,   rx,         ry);     // inner shadow (toward torso)
-    px(ctx, clothingColors.shadow,   rx + 1,     ry);     // secondary inner shadow
-    if (row === 0) hLine(ctx, clothingColors.shadow, rx + 1, ry, aw - 2);  // dark deltoid crown
-    if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rx + aw - 2, ry);  // cylinder shadow
-    px(ctx, clothingColors.shadow,   rx + aw - 1, ry);    // outer selout
+    if (row === 0) {
+      // Chipped outer-top corner on the right side: the outermost (rightmost)
+      // pixel is skipped so the deltoid silhouette rounds inward.
+      hLine(ctx, clothingColors.base, rx, ry, aw - 1);
+      px(ctx, clothingColors.shadow, rx,     ry);             // inner-toward-torso shadow
+      px(ctx, clothingColors.shadow, rx + 1, ry);             // dark deltoid inner crown
+      // Right arm is the shadow side — keep deltoid darker overall
+      hLine(ctx, clothingColors.shadow, rx + 1, ry, aw - 3);
+    } else {
+      hLine(ctx, clothingColors.base, rx, ry, aw);
+      px(ctx, clothingColors.shadow,   rx,         ry);       // inner shadow (toward torso)
+      px(ctx, clothingColors.shadow,   rx + 1,     ry);       // secondary inner shadow
+      if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rx + aw - 2, ry);  // cylinder shadow
+      px(ctx, clothingColors.shadow,   rx + aw - 1, ry);      // outer selout
+    }
   }
   hLine(ctx, clothingColors.shadow, rRowX(maxRow), rRowY(maxRow), armW(maxRow));
+
+  // Anti-aliased outer-top corner pixel (chip)
+  px(ctx, clothingColors.shadow, rRowX(0) + armW(0) - 1, rRowY(0));   // dark rim at chipped pos
 
   // Armhole socket shadow (right)
   px(ctx, deepShadow, rRowX(0), baseY);        // top-inner corner
   px(ctx, deepShadow, rRowX(1), baseY + 1);    // 2nd row socket
+  // Armpit interjection (right) — push 1px into torso at row 3
+  px(ctx, deepShadow, rRowX(3) - 1, rRowY(3));
   // Step AA on right (cap=bicep no step; outer edge = rRowX + armW-1)
   // Bicep→elbow step (7→6 px, outer shifts in by 1)
   px(ctx, clothingColors.shadow, rRowX(2) + 6, baseY + 5);
@@ -2188,16 +2237,26 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   if (lBridgeW > 0) hLine(ctx, clothingColors.base, lBridgeX, baseY, lBridgeW);
   if (rBridgeW > 0) hLine(ctx, clothingColors.base, rBridgeX, baseY, rBridgeW);
 
-  // Trapezius muscle humps: taper two rows above bridge for visible shoulder mass
+  // Trapezius diagonal ramp — tapered slope from neck-base down to inner deltoid.
+  // Instead of flat rectangles, the ramp narrows as it rises so the shoulder
+  // line reads as a curve rather than a horizontal plank.
+  // For each pixel above baseY we shrink the ramp width by 1 from the OUTER side
+  // (away from the neck), keeping the inner edge anchored at the neck.
   if (lBridgeW > 1) {
-    hLine(ctx, clothingColors.base,      lBridgeX, baseY - 1, lBridgeW);     // left trap row 1 (5px)
-    px(ctx,    clothingColors.highlight, lBridgeX, baseY - 1);                // lit outer edge
-    hLine(ctx, clothingColors.base,      lBridgeX, baseY - 2, lBridgeW - 1); // left trap row 2 (4px, tapered)
-    px(ctx,    clothingColors.highlight, lBridgeX, baseY - 2);
+    // Row -1 (one above bridge): drop the outermost pixel — trap curves inward
+    hLine(ctx, clothingColors.base,      lBridgeX + 1, baseY - 1, lBridgeW - 1);
+    px(ctx,    clothingColors.highlight, lBridgeX + 2, baseY - 1);
+    px(ctx,    clothingColors.shadow,    lBridgeX + 1, baseY - 1);  // inner-edge shadow toward neck
+    // Row -2 (two above bridge): only inner half — narrow trap peak
+    hLine(ctx, clothingColors.base,      lBridgeX + 2, baseY - 2, Math.max(1, lBridgeW - 3));
+    px(ctx,    clothingColors.shadow,    lBridgeX + 2, baseY - 2);
   }
   if (rBridgeW > 1) {
-    hLine(ctx, clothingColors.shadow, rBridgeX, baseY - 1, rBridgeW - 1);    // right trap row 1 (5px, shadow)
-    hLine(ctx, clothingColors.shadow, rBridgeX, baseY - 2, rBridgeW - 2);    // right trap row 2 (4px, tapered)
+    // Mirror: outer side is the right (away from neck = larger X)
+    hLine(ctx, clothingColors.shadow, rBridgeX, baseY - 1, rBridgeW - 1);
+    hLine(ctx, clothingColors.shadow, rBridgeX, baseY - 2, Math.max(1, rBridgeW - 3));
+    // Subtle highlight at the outer edge of the trap (rim light catches the curve)
+    px(ctx, clothingColors.base, rBridgeX + rBridgeW - 2, baseY - 1);
   }
 
   // Shadow at bridge edges for depth
@@ -2226,21 +2285,33 @@ function drawBackArmWest(ctx, clothingColors, skinColors, backArmDX, torsoX, tor
     if (row < 8) return 6;   // elbow (+1)
     return 5;                // forearm/wrist (+1)
   };
-  // Shoulder pad — anchored to torso, fills the gap when arm rotates away
-  fillRect(ctx, clothingColors.shadow, shoulderX, backY, 7, 3);
+  // Shoulder pad — anchored to torso, fills the gap when arm rotates away.
+  // Chipped outer-top corner so the pad reads as a rounded shoulder.
+  fillRect(ctx, clothingColors.shadow, shoulderX, backY + 1, 7, 2);
+  hLine(ctx, clothingColors.shadow, shoulderX, backY, 6);  // chip outer corner
   const rowX = (row) => shoulderX + Math.round(backArmDX * row / maxRow);
   const wristX = rowX(maxRow);
 
   for (let row = 0; row < sleeveH; row++) {
     const rx = rowX(row);
     const aw = armW(row);
-    hLine(ctx, clothingColors.shadow, rx, backY + row, aw);  // muted (behind body)
-    px(ctx, clothingColors.base, rx + 1, backY + row);        // centre lit strip
-    if (aw > 4) px(ctx, clothingColors.base, rx + 2, backY + row);
-    px(ctx, clothingColors.outline, rx,          backY + row);
-    px(ctx, clothingColors.outline, rx + aw - 1, backY + row);
+    if (row === 0) {
+      // Chipped outer (back-facing) corner — drop the rightmost pixel
+      hLine(ctx, clothingColors.shadow, rx, backY + row, aw - 1);
+      px(ctx, clothingColors.base, rx + 1, backY + row);
+      if (aw > 4) px(ctx, clothingColors.base, rx + 2, backY + row);
+      px(ctx, clothingColors.outline, rx, backY + row);
+    } else {
+      hLine(ctx, clothingColors.shadow, rx, backY + row, aw);  // muted (behind body)
+      px(ctx, clothingColors.base, rx + 1, backY + row);        // centre lit strip
+      if (aw > 4) px(ctx, clothingColors.base, rx + 2, backY + row);
+      px(ctx, clothingColors.outline, rx,          backY + row);
+      px(ctx, clothingColors.outline, rx + aw - 1, backY + row);
+    }
   }
-  hLine(ctx, clothingColors.outline, rowX(0),      backY,          armW(0));
+  // Top outline: skip the chipped corner pixel — broken outline (selout) so
+  // the lit top of the shoulder doesn't read as a hard horizontal line.
+  hLine(ctx, clothingColors.outline, rowX(0), backY, armW(0) - 1);
   hLine(ctx, clothingColors.outline, rowX(maxRow), backY + maxRow, armW(maxRow));
   fillRect(ctx, skinColors.shadow, wristX, backY + sleeveH, 4, handH);
   outlineRect(ctx, skinColors.outline, wristX, backY + sleeveH, 4, handH);
@@ -2257,23 +2328,35 @@ function drawFrontArmWest(ctx, clothingColors, skinColors, frontArmDX, torsoX, t
     if (row < 8) return 6;   // elbow (+1)
     return 5;                // forearm/wrist (+1)
   };
-  // Shoulder pad — anchored to torso, fills the gap during extreme arm motion
-  fillRect(ctx, clothingColors.base,      shoulderX, frontY, 7, 3);
-  hLine(ctx, clothingColors.highlight, shoulderX + 1, frontY, 5);
-  px(ctx, clothingColors.shadow,       shoulderX,     frontY + 2);
-  px(ctx, clothingColors.shadow,       shoulderX + 6, frontY + 2);
+  // Shoulder pad — anchored to torso, fills the gap during extreme arm motion.
+  // Chipped outer-top corner (forward-facing side) so the deltoid silhouette
+  // rounds inward instead of presenting a 90° block.
+  fillRect(ctx, clothingColors.base,      shoulderX, frontY + 1, 7, 2);
+  hLine(ctx, clothingColors.base,         shoulderX + 1, frontY, 6);   // chip outer corner
+  hLine(ctx, clothingColors.highlight,    shoulderX + 1, frontY + 1, 5);
+  px(ctx, clothingColors.shadow,          shoulderX,     frontY + 2);
+  px(ctx, clothingColors.shadow,          shoulderX + 6, frontY + 2);
   const rowX = (row) => shoulderX + Math.round(frontArmDX * row / maxRow);
   const wristX = rowX(maxRow);
 
   for (let row = 0; row < sleeveH; row++) {
     const rx = rowX(row);
     const aw = armW(row);
-    hLine(ctx, clothingColors.base,   rx, frontY + row, aw);
-    px(ctx, clothingColors.highlight, rx + 1,      frontY + row);
-    px(ctx, clothingColors.shadow,    rx + aw - 2, frontY + row);
-    px(ctx, clothingColors.shadow,    rx + aw - 1, frontY + row);
+    if (row === 0) {
+      // Chipped outer-top corner (forward-facing): drop the leftmost pixel.
+      hLine(ctx, clothingColors.base, rx + 1, frontY + row, aw - 1);
+      px(ctx, clothingColors.highlight, rx + 1,      frontY + row);
+      px(ctx, clothingColors.shadow,    rx + aw - 2, frontY + row);
+      px(ctx, clothingColors.shadow,    rx + aw - 1, frontY + row);
+    } else {
+      hLine(ctx, clothingColors.base,   rx, frontY + row, aw);
+      px(ctx, clothingColors.highlight, rx + 1,      frontY + row);
+      px(ctx, clothingColors.shadow,    rx + aw - 2, frontY + row);
+      px(ctx, clothingColors.shadow,    rx + aw - 1, frontY + row);
+    }
   }
-  hLine(ctx, clothingColors.outline, rowX(0),      frontY,          armW(0));
+  // Soft (selout) top outline — skip the chipped corner pixel.
+  hLine(ctx, clothingColors.outline, rowX(0) + 1,  frontY,          armW(0) - 1);
   hLine(ctx, clothingColors.outline, rowX(maxRow), frontY + maxRow, armW(maxRow));
 
   fillRect(ctx, skinColors.base,    wristX,     frontY + sleeveH, 5, handH);
