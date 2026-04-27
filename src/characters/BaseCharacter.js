@@ -210,8 +210,10 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
 
   hLine(ctx, skinColors.highlight, 21, HY + 21, 2);  // left cheekbone 2×2 hi
   hLine(ctx, skinColors.highlight, 21, HY + 22, 2);
+  px(ctx,    skinColors.highlight, 23, HY + 22);     // left cheek apple warmth
   hLine(ctx, skinColors.shadow,    41, HY + 21, 2);  // right cheekbone 2×2 sh
   hLine(ctx, skinColors.shadow,    41, HY + 22, 2);
+  px(ctx,    skinColors.highlight, 40, HY + 22);     // right cheek apple warmth
 
   px(ctx, skinColors.highlight, cx, HY + 18);        // nose bridge / glabella
 
@@ -229,50 +231,47 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 22, HY + 17, 7);   // left brow (7px)
-  hLine(ctx, hairColors.shadow, 35, HY + 17, 7);   // right brow (7px)
+  hLine(ctx, hairColors.shadow, 23, HY + 17, 5);   // left brow (5px, matches eye width)
+  hLine(ctx, hairColors.shadow, 36, HY + 17, 5);   // right brow (5px)
 
-  // ── Eyes — 7×4 OVAL: 4 rows, iris fills center (no separate black pupil) ──
-  const eyeY = HY + 19; // y=40
-  // Left eye — oval centered on x=25
-  // Top arc (y=39): 5px — no corners, white sclera
-  px(ctx, eyeColors.lash,         23, eyeY - 1);
-  hLine(ctx, '#FFFFFF',           24, eyeY - 1, 3);
-  px(ctx, eyeColors.lash,         27, eyeY - 1);
-  // Upper middle (y=40): full 7px — sclera flanks + 3px iris
-  px(ctx, eyeColors.lash,         22, eyeY);
-  px(ctx, '#FFFFFF',              23, eyeY);
-  hLine(ctx, eyeColors.iris,      24, eyeY,     3);  // iris fills center, no pupil
-  px(ctx, '#FFFFFF',              27, eyeY);
-  px(ctx, eyeColors.lash,         28, eyeY);
-  // Lower middle (y=41): same as upper middle — extra iris row
-  px(ctx, eyeColors.lash,         22, eyeY + 1);
-  px(ctx, '#FFFFFF',              23, eyeY + 1);
+  // ── Eyes — 5×4 OVAL: narrow vertical oval, iris+pupil dominant ──────────
+  // Narrower than before (5px vs 7px) → appears proportionally taller
+  const eyeY = HY + 19; // y=40 (center of 4-row eye at y=39..42)
+  // Left eye — oval centered on x=25, bounding box x=23..27
+  // Top arc (y=39): 3px only — oval corners removed (skin shows at x=23 and x=27)
+  px(ctx, eyeColors.lash,         24, eyeY - 1);
+  px(ctx, '#FFFFFF',              25, eyeY - 1);   // 1px sclera catch-light
+  px(ctx, eyeColors.lash,         26, eyeY - 1);
+  // Upper iris row (y=40): 5px — lash border + iris + tiny pupil center
+  px(ctx, eyeColors.lash,         23, eyeY);
+  px(ctx, eyeColors.iris,         24, eyeY);
+  px(ctx, eyeColors.pupil,        25, eyeY);       // pupil at center
+  px(ctx, eyeColors.iris,         26, eyeY);
+  px(ctx, eyeColors.lash,         27, eyeY);
+  // Lower iris row (y=41): 5px — full iris, no pupil
+  px(ctx, eyeColors.lash,         23, eyeY + 1);
   hLine(ctx, eyeColors.iris,      24, eyeY + 1, 3);
-  px(ctx, '#FFFFFF',              27, eyeY + 1);
-  px(ctx, eyeColors.lash,         28, eyeY + 1);
-  // Bottom arc (y=42): 5px — mirrors top arc
-  px(ctx, eyeColors.lash,         23, eyeY + 2);
-  hLine(ctx, '#FFFFFF',           24, eyeY + 2, 3);
-  px(ctx, eyeColors.lash,         27, eyeY + 2);
+  px(ctx, eyeColors.lash,         27, eyeY + 1);
+  // Bottom arc (y=42): 3px — mirrors top arc
+  px(ctx, eyeColors.lash,         24, eyeY + 2);
+  px(ctx, '#FFFFFF',              25, eyeY + 2);   // 1px sclera bottom
+  px(ctx, eyeColors.lash,         26, eyeY + 2);
 
-  // Right eye — mirrored
-  px(ctx, eyeColors.lash,         36, eyeY - 1);
-  hLine(ctx, '#FFFFFF',           37, eyeY - 1, 3);
-  px(ctx, eyeColors.lash,         40, eyeY - 1);
-  px(ctx, eyeColors.lash,         35, eyeY);
-  px(ctx, '#FFFFFF',              36, eyeY);
-  hLine(ctx, eyeColors.iris,      37, eyeY,     3);
-  px(ctx, '#FFFFFF',              40, eyeY);
-  px(ctx, eyeColors.lash,         41, eyeY);
-  px(ctx, eyeColors.lash,         35, eyeY + 1);
-  px(ctx, '#FFFFFF',              36, eyeY + 1);
+  // Right eye — mirrored, centered on x=38, bounding box x=36..40
+  px(ctx, eyeColors.lash,         37, eyeY - 1);
+  px(ctx, '#FFFFFF',              38, eyeY - 1);
+  px(ctx, eyeColors.lash,         39, eyeY - 1);
+  px(ctx, eyeColors.lash,         36, eyeY);
+  px(ctx, eyeColors.iris,         37, eyeY);
+  px(ctx, eyeColors.pupil,        38, eyeY);
+  px(ctx, eyeColors.iris,         39, eyeY);
+  px(ctx, eyeColors.lash,         40, eyeY);
+  px(ctx, eyeColors.lash,         36, eyeY + 1);
   hLine(ctx, eyeColors.iris,      37, eyeY + 1, 3);
-  px(ctx, '#FFFFFF',              40, eyeY + 1);
-  px(ctx, eyeColors.lash,         41, eyeY + 1);
-  px(ctx, eyeColors.lash,         36, eyeY + 2);
-  hLine(ctx, '#FFFFFF',           37, eyeY + 2, 3);
-  px(ctx, eyeColors.lash,         40, eyeY + 2);
+  px(ctx, eyeColors.lash,         40, eyeY + 1);
+  px(ctx, eyeColors.lash,         37, eyeY + 2);
+  px(ctx, '#FFFFFF',              38, eyeY + 2);
+  px(ctx, eyeColors.lash,         39, eyeY + 2);
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
