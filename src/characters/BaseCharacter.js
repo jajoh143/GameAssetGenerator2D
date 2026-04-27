@@ -34,12 +34,14 @@ function drawBeardSouth(ctx, hairColors, beardStyle) {
   // Light from upper-left: top rows near mouth = hi, outer edges + bottom = sh
 
   if (beardStyle === 'stubble') {
-    // Top row: base color (lighter, near mouth / face reflection)
-    for (let x = 24; x <= 39; x += 4) px(ctx, base, x, 44);
-    // Lower rows: shadow color (further from face light)
-    for (let x = 22; x <= 41; x += 3) px(ctx, sh, x, 45);
-    for (let x = 23; x <= 40; x += 3) px(ctx, sh, x, 46);
-    for (let x = 25; x <= 37; x += 4) px(ctx, sh, x, 47);
+    // Scattered dots from upper jaw all the way down to chin tip
+    for (let x = 24; x <= 39; x += 4) px(ctx, base, x, 44); // y=44: sparse, base color
+    for (let x = 22; x <= 41; x += 3) px(ctx, sh, x, 45);   // y=45
+    for (let x = 23; x <= 40; x += 3) px(ctx, sh, x, 46);   // y=46
+    for (let x = 25; x <= 38; x += 3) px(ctx, sh, x, 47);   // y=47
+    for (let x = 25; x <= 38; x += 3) px(ctx, sh, x, 48);   // y=48 chin (new)
+    for (let x = 26; x <= 37; x += 3) px(ctx, sh, x, 49);   // y=49 lower chin (new)
+    for (let x = 27; x <= 36; x += 4) px(ctx, sh, x, 50);   // y=50 chin tip (new)
   }
 
   if (beardStyle === 'handlebar' || beardStyle === 'full') {
@@ -498,11 +500,13 @@ function drawBeardWest(ctx, hairColors, beardStyle) {
   const base = hairColors.base, sh = hairColors.shadow;
 
   if (beardStyle === 'stubble') {
-    // Scattered dots on jaw/chin; start at abs 15+ (face skin area at those rows)
-    px(ctx, sh, HX + 2, HY + 20);  // y=44 abs 15
-    px(ctx, sh, HX + 3, HY + 21);  // y=45 abs 16
-    px(ctx, sh, HX + 4, HY + 22);  // y=46 abs 17
-    px(ctx, sh, HX + 5, HY + 23);  // y=47 abs 18
+    // Two dots per row, staying within narrowing skin area, down to chin tip
+    px(ctx, sh, HX + 2, HY + 20); px(ctx, sh, HX + 5, HY + 20); // y=44 skin x=15-25
+    px(ctx, sh, HX + 3, HY + 21); px(ctx, sh, HX + 6, HY + 21); // y=45 skin x=16-24
+    px(ctx, sh, HX + 4, HY + 22); px(ctx, sh, HX + 6, HY + 22); // y=46 skin x=17-23
+    px(ctx, sh, HX + 5, HY + 23); px(ctx, sh, HX + 7, HY + 23); // y=47 skin x=18-22
+    px(ctx, sh, HX + 6, HY + 24); px(ctx, sh, HX + 7, HY + 24); // y=48 skin x=19-21
+    px(ctx, sh, HX + 7, HY + 25);                                 // y=49 skin x=20 only
   }
 
   if (beardStyle === 'handlebar' || beardStyle === 'full') {
