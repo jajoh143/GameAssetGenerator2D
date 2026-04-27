@@ -234,35 +234,35 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   hLine(ctx, hairColors.shadow, 23, HY + 17, 5);   // left brow (5px, matches eye width)
   hLine(ctx, hairColors.shadow, 36, HY + 17, 5);   // right brow (5px)
 
-  // ── Eyes — sclera-dominant, iris on inner canthus (toward nose), no pupil ──
+  // ── Eyes — 2px iris centered-to-inside, 1px sclera outer, no pupil ─────────
   const eyeY = HY + 19;
-  // Left eye — bounding box x=23..27; iris at x=26 (inside = right, toward nose)
+  // Left eye — bounding box x=23..27; iris at x=25–26 (center + 1px inside)
   px(ctx, eyeColors.lash,  24, eyeY - 1);
   px(ctx, '#FFFFFF',       25, eyeY - 1);
   px(ctx, eyeColors.lash,  26, eyeY - 1);
   px(ctx, eyeColors.lash,  23, eyeY);
-  hLine(ctx, '#FFFFFF',    24, eyeY,     2);    // 2px sclera
-  px(ctx, eyeColors.iris,  26, eyeY);           // iris on inside
+  px(ctx, '#FFFFFF',       24, eyeY);           // 1px outer sclera
+  hLine(ctx, eyeColors.iris, 25, eyeY, 2);      // 2px iris: center + inside
   px(ctx, eyeColors.lash,  27, eyeY);
   px(ctx, eyeColors.lash,  23, eyeY + 1);
-  hLine(ctx, '#FFFFFF',    24, eyeY + 1, 2);    // 2px sclera
-  px(ctx, eyeColors.iris,  26, eyeY + 1);       // iris on inside
+  px(ctx, '#FFFFFF',       24, eyeY + 1);       // 1px outer sclera
+  hLine(ctx, eyeColors.iris, 25, eyeY + 1, 2);  // 2px iris: center + inside
   px(ctx, eyeColors.lash,  27, eyeY + 1);
   px(ctx, eyeColors.lash,  24, eyeY + 2);
   px(ctx, '#FFFFFF',       25, eyeY + 2);
   px(ctx, eyeColors.lash,  26, eyeY + 2);
 
-  // Right eye — bounding box x=36..40; iris at x=37 (inside = left, toward nose)
+  // Right eye — bounding box x=36..40; iris at x=37–38 (inside + center)
   px(ctx, eyeColors.lash,  37, eyeY - 1);
   px(ctx, '#FFFFFF',       38, eyeY - 1);
   px(ctx, eyeColors.lash,  39, eyeY - 1);
   px(ctx, eyeColors.lash,  36, eyeY);
-  px(ctx, eyeColors.iris,  37, eyeY);           // iris on inside
-  hLine(ctx, '#FFFFFF',    38, eyeY,     2);    // 2px sclera
+  hLine(ctx, eyeColors.iris, 37, eyeY, 2);      // 2px iris: inside + center
+  px(ctx, '#FFFFFF',       39, eyeY);           // 1px outer sclera
   px(ctx, eyeColors.lash,  40, eyeY);
   px(ctx, eyeColors.lash,  36, eyeY + 1);
-  px(ctx, eyeColors.iris,  37, eyeY + 1);       // iris on inside
-  hLine(ctx, '#FFFFFF',    38, eyeY + 1, 2);    // 2px sclera
+  hLine(ctx, eyeColors.iris, 37, eyeY + 1, 2);  // 2px iris: inside + center
+  px(ctx, '#FFFFFF',       39, eyeY + 1);       // 1px outer sclera
   px(ctx, eyeColors.lash,  40, eyeY + 1);
   px(ctx, eyeColors.lash,  37, eyeY + 2);
   px(ctx, '#FFFFFF',       38, eyeY + 2);
@@ -493,12 +493,13 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // ── Brow ridge ───────────────────────────────────────────────────────────
   hLine(ctx, hairColors.shadow, HX, HY + 13, 3);
 
-  // ── Eye — profile, iris on inner canthus (toward nose = left), no pupil ───
+  // ── Eye — profile, iris centered (HX+2), sclera on both sides, no pupil ───
   const ec = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
   hLine(ctx, '#FFFFFF', HX + 1, HY + 13, 2);
   px(ctx, ec.lash,    HX,     HY + 14);
-  px(ctx, ec.iris,    HX + 1, HY + 14);           // iris on inside (nose side)
-  hLine(ctx, '#FFFFFF', HX + 2, HY + 14, 2);      // 2px sclera on outside
+  px(ctx, '#FFFFFF',  HX + 1, HY + 14);           // sclera (inside)
+  px(ctx, ec.iris,    HX + 2, HY + 14);           // iris centered
+  px(ctx, '#FFFFFF',  HX + 3, HY + 14);           // sclera (outside)
   hLine(ctx, '#FFFFFF', HX + 1, HY + 15, 2);
 
   // ── Cheekbone highlight ───────────────────────────────────────────────────
