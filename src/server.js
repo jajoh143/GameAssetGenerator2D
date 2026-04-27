@@ -9,7 +9,8 @@ const { generateAllWeapons }   = require('./generators/WeaponGenerator');
 const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
-  SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHING, PANTS, SHOES, DEMON_SKIN,
+  SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHING, CLOTHING_COLORS, CLOTHING_STYLES,
+  PANTS, SHOES, DEMON_SKIN,
   FAIRY_SKIN, FAIRY_WING, FAIRY_DRESS, FAIRY_GLOW,
 } = require('./core/Colors');
 
@@ -65,14 +66,18 @@ function paletteMap(obj) {
 
 function handleOptions(res) {
   json(res, 200, {
-    skinTones:   paletteMap(SKIN_TONES),
-    hairColors:  paletteMap(HAIR_COLORS),
-    hairStyles:  ['short', 'medium', 'long', 'curly', 'undercut'],
-    eyeColors:   Object.fromEntries(Object.entries(EYE_COLORS).map(([k, v]) => [k, v.iris])),
-    beardStyles: ['none', 'stubble', 'handlebar', 'goatee', 'full'],
-    clothing:    Object.keys(CLOTHING),
-    pants:       Object.keys(PANTS),
-    shoes:       Object.keys(SHOES),
+    skinTones:       paletteMap(SKIN_TONES),
+    hairColors:      paletteMap(HAIR_COLORS),
+    hairStyles:      ['short', 'medium', 'long', 'curly', 'undercut'],
+    eyeColors:       Object.fromEntries(Object.entries(EYE_COLORS).map(([k, v]) => [k, v.iris])),
+    beardStyles:     ['none', 'stubble', 'handlebar', 'goatee', 'full'],
+    // Clothing is split into independent style and colour pickers.
+    clothingStyles:  CLOTHING_STYLES,
+    clothingColors:  paletteMap(CLOTHING_COLORS),
+    // Legacy combined list kept for any older client code that still needs it.
+    clothing:        Object.keys(CLOTHING),
+    pants:           Object.keys(PANTS),
+    shoes:           Object.keys(SHOES),
     demonSkins:  paletteMap(DEMON_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],

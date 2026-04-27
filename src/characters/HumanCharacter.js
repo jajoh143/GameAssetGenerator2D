@@ -34,14 +34,38 @@ function resolveColors(config) {
     ? Colors.DEMON_SKIN[config.demonSkin] || Colors.DEMON_SKIN.crimson
     : Colors.SKIN_TONES[config.skin] || Colors.SKIN_TONES.medium;
 
+  const clothingStyle = config.clothingStyle || 'jacket';
+  const clothingColor = config.clothingColor || 'grey';
+  const clothing      = Colors.resolveClothing(clothingStyle, clothingColor);
+
+  // For sleeveless styles, the arm draw functions take a skin-derived
+  // palette so deltoid, bicep and forearm render as bare skin.
+  const isSleeveless = clothingStyle === 'tank';
+  const armClothing  = isSleeveless ? skinAsClothing(skinColors) : clothing;
+
   return {
-    skin:     skinColors,
-    hair:     Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
-    eyes:     Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown,
-    clothing: Colors.CLOTHING[config.clothing] || Colors.CLOTHING[config.clothing.replace('_vneck', '')] || Colors.CLOTHING.jacket_grey,
-    pants:    Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
-    shoes:    Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
-    belt:     Colors.BELT.standard,
+    skin:          skinColors,
+    hair:          Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
+    eyes:          Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown,
+    clothing:      clothing,
+    armClothing:   armClothing,
+    clothingStyle: clothingStyle,
+    pants:         Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
+    shoes:         Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
+    belt:          Colors.BELT.standard,
+  };
+}
+
+// Adapt a skin-tone palette into the keys the arm draw functions expect
+// (highlight / base / shadow / deep_shadow / outline / collar).
+function skinAsClothing(skin) {
+  return {
+    highlight:   skin.highlight,
+    base:        skin.base,
+    shadow:      skin.shadow,
+    deep_shadow: skin.outline,
+    outline:     skin.outline,
+    collar:      skin.shadow,
   };
 }
 
@@ -96,9 +120,9 @@ function drawSouth(ctx, config, offsets) {
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
   drawBeltSouth(ctx, colors.belt, 20, beltY);
-  drawTorsoSouth(ctx, config.clothing, colors.clothing, 20, torsoY, 24, torsoH);
-  // Arms
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
+  drawTorsoSouth(ctx, colors.clothingStyle, colors.clothing, 20, torsoY, 24, torsoH, colors.skin);
+  // Arms — sleeveless styles draw bare skin via an adapted palette.
+  drawArmsSouth(ctx, colors.armClothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   // Neck
   drawNeckSouth(ctx, colors.skin, neckY);
   // Head
@@ -197,7 +221,7 @@ function drawNorth(ctx, config, offsets) {
     hLine(ctx, colors.clothing.outline, bBotL, by + bN - 1, bBotR - bBotL + 1);
   }
 
-  drawArmsSouth(ctx, colors.clothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
+  drawArmsSouth(ctx, colors.armClothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   drawNeckSouth(ctx, colors.skin, neckY);
 
   ctx.save();
@@ -257,10 +281,10 @@ function drawWest(ctx, config, offsets) {
 
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
-  drawBackArmWest(ctx, colors.clothing, colors.skin, backArmDX, torsoX, torsoY);
+  drawBackArmWest(ctx, colors.armClothing, colors.skin, backArmDX, torsoX, torsoY);
   drawBeltWest(ctx, colors.belt, torsoX, beltY);
-  drawTorsoWest(ctx, config.clothing, colors.clothing, torsoX, torsoY);
-  drawFrontArmWest(ctx, colors.clothing, colors.skin, frontArmDX, torsoX, torsoY);
+  drawTorsoWest(ctx, colors.clothingStyle, colors.clothing, torsoX, torsoY, colors.skin);
+  drawFrontArmWest(ctx, colors.armClothing, colors.skin, frontArmDX, torsoX, torsoY);
   // Neck (side) — 6px wide × 4px tall
   fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 4);
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);

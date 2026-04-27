@@ -475,9 +475,14 @@
       </div>
     </div>
 
-    <div>
-      <div class="section-label">Clothing</div>
-      <select id="clothing-select"></select>
+    <div id="clothing-style-section">
+      <div class="section-label">Clothing Style</div>
+      <select id="clothing-style-select"></select>
+    </div>
+
+    <div id="clothing-color-section">
+      <div class="section-label">Clothing Color</div>
+      <div class="swatches" id="clothing-color-swatches"></div>
     </div>
 
     <div>
@@ -571,11 +576,27 @@
 const state = {
   type: 'human', skin: null, hair: null, hairStyle: 'short',
   eyes: 'brown', beardStyle: 'none',
-  clothing: null, pants: null, shoes: null,
+  clothingStyle: 'jacket', clothingColor: 'grey',
+  pants: null, shoes: null,
   demonSkin: null, hornStyle: 'curved', tailStyle: 'long',
   fairySkin: null, wingStyle: 'butterfly', wingColor: null, fairyDress: null, glowColor: null,
   frameSize: 64, name: '',
 };
+
+// ── Legacy "<style>_<color>" key splitter — used when applying old presets
+// that still carry a combined `clothing` field.
+const STYLE_PREFIXES = [
+  'tshirt_vneck','tshirt','jacket','hoodie','apron','shirt','vest',
+  'tunic','robe','bomber','coat','tank',
+];
+function splitLegacyClothing(key) {
+  if (!key || typeof key !== 'string') return { style: null, color: null };
+  for (const p of STYLE_PREFIXES) {
+    if (key === p) return { style: p, color: null };
+    if (key.startsWith(p + '_')) return { style: p, color: key.slice(p.length + 1) };
+  }
+  return { style: null, color: null };
+}
 
 let options = null;
 const liveAnimations = {};
@@ -863,7 +884,9 @@ function populateSidebar() {
   buildSwatches('hair-color-swatches', options.hairColors, 'hair');
   if (options.eyeColors) buildSwatches('eye-color-swatches', options.eyeColors, 'eyes');
   buildSwatches('demon-skin-swatches', options.demonSkins, 'demonSkin');
-  buildSelect('clothing-select', options.clothing, 'clothing');
+  // Clothing: independent style + colour pickers.
+  if (options.clothingStyles) buildSelect('clothing-style-select', options.clothingStyles, 'clothingStyle');
+  if (options.clothingColors) buildSwatches('clothing-color-swatches', options.clothingColors, 'clothingColor');
   buildSelect('pants-select',    options.pants,    'pants');
   buildSelect('shoes-select',    options.shoes,    'shoes');
   // Fairy controls
@@ -878,7 +901,13 @@ function populateSidebar() {
   activateSwatch('hair-color-swatches', d.hair,      'hair');
   if (d.eyes)      activateSwatch('eye-color-swatches', d.eyes, 'eyes');
   activateSwatch('demon-skin-swatches', d.demonSkin, 'demonSkin');
-  setSelectVal('clothing-select', d.clothing); state.clothing = d.clothing;
+  if (d.clothingStyle) {
+    setSelectVal('clothing-style-select', d.clothingStyle);
+    state.clothingStyle = d.clothingStyle;
+  }
+  if (d.clothingColor) {
+    activateSwatch('clothing-color-swatches', d.clothingColor, 'clothingColor');
+  }
   setSelectVal('pants-select',    d.pants);    state.pants    = d.pants;
   setSelectVal('shoes-select',    d.shoes);    state.shoes    = d.shoes;
   // Fairy defaults
@@ -947,7 +976,15 @@ function applyConfig(cfg) {
   if (cfg.hairStyle)  activateToggle('hair-style-row',  cfg.hairStyle,  'hairStyle');
   if (cfg.eyes)       activateSwatch('eye-color-swatches',  cfg.eyes,       'eyes');
   if (cfg.beardStyle) activateToggle('beard-style-row', cfg.beardStyle, 'beardStyle');
-  if (cfg.clothing)  { state.clothing = cfg.clothing; setSelectVal('clothing-select', cfg.clothing); }
+  // Resolve clothing — support both new (style+color) and legacy combined `clothing` keys.
+  let cs = cfg.clothingStyle, cc = cfg.clothingColor;
+  if ((!cs || !cc) && cfg.clothing) {
+    const split = splitLegacyClothing(cfg.clothing);
+    cs = cs || split.style;
+    cc = cc || split.color;
+  }
+  if (cs) { state.clothingStyle = cs; setSelectVal('clothing-style-select', cs); }
+  if (cc) { activateSwatch('clothing-color-swatches', cc, 'clothingColor'); }
   if (cfg.pants)     { state.pants    = cfg.pants;    setSelectVal('pants-select',    cfg.pants); }
   if (cfg.shoes)     { state.shoes    = cfg.shoes;    setSelectVal('shoes-select',    cfg.shoes); }
   if (cfg.demonSkin) activateSwatch('demon-skin-swatches', cfg.demonSkin, 'demonSkin');
@@ -985,9 +1022,13 @@ function setType(val) {
   document.getElementById('fairy-section').style.display      = val === 'fairy' ? '' : 'none';
   // Hair + human clothing controls hidden for fairy (fairy uses dress instead)
   const hideHumanGear = val === 'fairy';
-  ['clothing-select', 'pants-select', 'shoes-select'].forEach(id => {
+  ['pants-select', 'shoes-select'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.closest('div').style.display = hideHumanGear ? 'none' : '';
+  });
+  ['clothing-style-section', 'clothing-color-section'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hideHumanGear ? 'none' : '';
   });
   document.getElementById('hair-style-row').closest('div').style.display = hideHumanGear ? 'none' : '';
   document.getElementById('eye-color-section').style.display = hideHumanGear ? 'none' : '';
@@ -1052,23 +1093,25 @@ async function generate() {
 function buildConfig() {
   const cfg = { type: state.type, hair: state.hair };
   if (state.type === 'human') {
-    cfg.skin       = state.skin;
-    cfg.hairStyle  = state.hairStyle;
-    cfg.eyes       = state.eyes;
-    cfg.beardStyle = state.beardStyle;
-    cfg.clothing   = state.clothing;
-    cfg.pants      = state.pants;
-    cfg.shoes      = state.shoes;
+    cfg.skin          = state.skin;
+    cfg.hairStyle     = state.hairStyle;
+    cfg.eyes          = state.eyes;
+    cfg.beardStyle    = state.beardStyle;
+    cfg.clothingStyle = state.clothingStyle;
+    cfg.clothingColor = state.clothingColor;
+    cfg.pants         = state.pants;
+    cfg.shoes         = state.shoes;
   } else if (state.type === 'demon') {
-    cfg.hairStyle  = state.hairStyle;
-    cfg.eyes       = state.eyes;
-    cfg.beardStyle = state.beardStyle;
-    cfg.clothing   = state.clothing;
-    cfg.pants      = state.pants;
-    cfg.shoes      = state.shoes;
-    cfg.demonSkin  = state.demonSkin;
-    cfg.hornStyle  = state.hornStyle;
-    cfg.tailStyle  = state.tailStyle;
+    cfg.hairStyle     = state.hairStyle;
+    cfg.eyes          = state.eyes;
+    cfg.beardStyle    = state.beardStyle;
+    cfg.clothingStyle = state.clothingStyle;
+    cfg.clothingColor = state.clothingColor;
+    cfg.pants         = state.pants;
+    cfg.shoes         = state.shoes;
+    cfg.demonSkin     = state.demonSkin;
+    cfg.hornStyle     = state.hornStyle;
+    cfg.tailStyle     = state.tailStyle;
   } else if (state.type === 'fairy') {
     cfg.eyes      = state.eyes;
     cfg.fairySkin = state.fairySkin;

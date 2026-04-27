@@ -1189,6 +1189,93 @@ function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
+function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
+  // Sleeveless tank top — body is fabric, the upper chest / collarbone area
+  // is bare skin with two narrow strap columns going over each shoulder.
+  // Same V-taper silhouette as the t-shirt so the body fits seamlessly.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 28);
+  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
+  const STRAP_INSET = 4;          // strap column distance from outer torso edge
+  const NECK_OPEN_ROWS = 4;       // how far down the chest is bare
+
+  const rl = (row) => {
+    if (row < SHOULDER)     return x - 1;
+    if (row < MID_S)        return x;
+    if (row < WAIST_S)      return x + 2;
+    if (row < NARROW_S)     return x + 3;
+    if (row <= WAIST_E)     return x + 4;
+    if (row <= WAIST_E + 1) return x + 3;
+    if (row <= WAIST_E + 2) return x + 2;
+    return x + 1;
+  };
+  const rr = (row) => {
+    if (row < SHOULDER)     return x + w;
+    if (row < MID_S)        return x + w - 1;
+    if (row < WAIST_S)      return x + w - 3;
+    if (row < NARROW_S)     return x + w - 4;
+    if (row <= WAIST_E)     return x + w - 5;
+    if (row <= WAIST_E + 1) return x + w - 4;
+    if (row <= WAIST_E + 2) return x + w - 3;
+    return x + w - 2;
+  };
+
+  // Skin colours fall back to neutral if not provided (shouldn't happen).
+  const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820', outline: '#3A1800' };
+
+  // 1. Top NECK_OPEN_ROWS: bare chest in skin colour with strap columns.
+  for (let row = 0; row < NECK_OPEN_ROWS; row++) {
+    const l = rl(row), r = rr(row);
+    hLine(ctx, skin.base, l, y + row, r - l + 1);
+    // Subtle skin shading: lit upper-left collarbone, shadow lower-right.
+    if (row === NECK_OPEN_ROWS - 1) {
+      hLine(ctx, skin.shadow, l + 2, y + row, r - l - 3);
+    } else {
+      px(ctx, skin.highlight, cx - 2, y + row);
+      px(ctx, skin.highlight, cx - 1, y + row);
+      px(ctx, skin.shadow,    cx + 2, y + row);
+    }
+    // Strap columns sit on top of the bare chest.
+    px(ctx, colors.base,      l + STRAP_INSET, y + row);
+    px(ctx, colors.highlight, l + STRAP_INSET, y + row);  // lit edge
+    px(ctx, colors.base,      r - STRAP_INSET, y + row);
+    px(ctx, colors.shadow,    r - STRAP_INSET, y + row);
+  }
+
+  // 2. Body fill from row NECK_OPEN_ROWS down — straight tank fabric.
+  for (let row = NECK_OPEN_ROWS; row < numRows; row++) {
+    hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
+  }
+
+  // 3. Directional shading (same as tshirt) — only on the fabric area.
+  for (let row = NECK_OPEN_ROWS; row < numRows; row++) {
+    const l = rl(row), r = rr(row), rw = r - l + 1;
+    px(ctx, colors.highlight, l + 1, y + row);
+    if (rw >= 8) px(ctx, colors.highlight, l + 2, y + row);
+    px(ctx, colors.shadow, r - 1, y + row);
+    if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
+    if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
+  }
+
+  // 4. Soft chest crease across the upper fabric edge — sells the neckline.
+  hLine(ctx, colors.shadow, rl(NECK_OPEN_ROWS) + 2, y + NECK_OPEN_ROWS, rr(NECK_OPEN_ROWS) - rl(NECK_OPEN_ROWS) - 3);
+  // Skin-shadow line just above the fabric (where the tank meets bare skin)
+  hLine(ctx, skin.shadow, rl(NECK_OPEN_ROWS) + 2, y + NECK_OPEN_ROWS - 1, rr(NECK_OPEN_ROWS) - rl(NECK_OPEN_ROWS) - 3);
+
+  // 5. Outlines: only outline the fabric portion; skin chest is outlined by torsoAccents/neck draws.
+  for (let row = NECK_OPEN_ROWS; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
+  }
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  // Strap selout — darken the outer edge of each strap so it reads as fabric.
+  for (let row = 0; row < NECK_OPEN_ROWS; row++) {
+    px(ctx, colors.outline, rl(row) + STRAP_INSET - 1, y + row); // outer side of left strap (toward arm)
+    px(ctx, colors.outline, rr(row) - STRAP_INSET + 1, y + row); // outer side of right strap
+  }
+}
+
 function drawBomberSouth(ctx, colors, x, y, w, h) {
   // Bomber jacket: boxy V-shape silhouette, ribbed collar+hem, center zipper.
   const cx = Math.floor(x + w / 2);
@@ -1461,46 +1548,59 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   vLine(ctx, clothingColors.shadow,                               x + w - 3, y + 2, 7);
 }
 
-function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
-  if (clothingKey.startsWith('coat')) {
-    drawCoatSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('jacket')) {
-    drawJacketSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('hoodie')) {
-    drawHoodieSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('apron')) {
-    drawApronSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('shirt')) {
-    drawShirtSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('vest')) {
-    drawVestSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('tunic')) {
-    drawTunicSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('robe')) {
-    drawRobeSouth(ctx, clothingColors, x, y, w, h);
-  } else if (clothingKey.startsWith('tshirt')) {
-    drawTshirtSouth(ctx, clothingColors, x, y, w, h, clothingKey.includes('vneck'));
-  } else if (clothingKey.startsWith('bomber')) {
-    drawBomberSouth(ctx, clothingColors, x, y, w, h);
-  } else {
-    fillRect(ctx, clothingColors.base, x, y, w, h);
-    outlineRect(ctx, clothingColors.outline, x, y, w, h);
+function drawTorsoSouth(ctx, clothingStyle, clothingColors, x, y, w, h, skinColors) {
+  // Back-compat: if a legacy "<style>_<color>" key is passed, take the prefix.
+  const style = normalizeClothingStyle(clothingStyle);
+  switch (style) {
+    case 'coat':         drawCoatSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'jacket':       drawJacketSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'hoodie':       drawHoodieSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'apron':        drawApronSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'shirt':        drawShirtSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'vest':         drawVestSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'tunic':        drawTunicSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'robe':         drawRobeSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'tshirt':       drawTshirtSouth(ctx, clothingColors, x, y, w, h, false); break;
+    case 'tshirt_vneck': drawTshirtSouth(ctx, clothingColors, x, y, w, h, true);  break;
+    case 'bomber':       drawBomberSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'tank':         drawTankSouth(ctx, clothingColors, skinColors, x, y, w, h); break;
+    default:
+      fillRect(ctx, clothingColors.base, x, y, w, h);
+      outlineRect(ctx, clothingColors.outline, x, y, w, h);
   }
   // Common chest / shoulder accent highlights for all clothing types
-  drawTorsoAccentsSouth(ctx, clothingColors, x, y, w);
+  // (skipped for tank — chest is bare skin and accents would draw onto skin)
+  if (style !== 'tank') {
+    drawTorsoAccentsSouth(ctx, clothingColors, x, y, w);
+  }
+}
+
+// Accept either the new style key ('jacket') or a legacy compound key
+// ('jacket_grey', 'tshirt_vneck_grey'). Returns the canonical style.
+function normalizeClothingStyle(key) {
+  if (!key || typeof key !== 'string') return 'jacket';
+  const PREFIXES = ['tshirt_vneck', 'tshirt', 'jacket', 'hoodie', 'apron', 'shirt',
+                    'vest', 'tunic', 'robe', 'bomber', 'coat', 'tank'];
+  for (const p of PREFIXES) {
+    if (key === p) return p;
+    if (key.startsWith(p + '_')) return p;
+  }
+  return key;
 }
 
 // ---------------------------------------------------------------------------
 // drawTorsoWest  –  side view torso x=20-32, y=26-43
 // ---------------------------------------------------------------------------
 
-function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
+function drawTorsoWest(ctx, clothingStyle, clothingColors, x, y, skinColors) {
   // Side profile torso — 5-zone SNES shading for jacket.
   // Silhouette taper: shoulder full width, chest slight taper at back, waist narrower.
   // Front edge (x) stays constant — stable silhouette facing the viewer.
   // For jacket: front 2px opening shows shirt/collar suggestion.
   // For coats: h extended by 13 rows to cover upper legs in side view.
-  const isCoat = clothingKey && clothingKey.startsWith('coat');
+  const style = normalizeClothingStyle(clothingStyle);
+  const isCoat = style === 'coat';
+  const isTank = style === 'tank';
   const h = isCoat ? 26 : 20;
   const SHOULDER = 3, WAIST_S = 8, WAIST_E = 16;
 
@@ -1551,8 +1651,28 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
   // Bottom edge darker
   hLine(ctx, clothingColors.shadow, x + 1, y + h - 2, rowW(h - 1) - 3);
 
+  // ── Tank top: top rows are bare skin (no fabric). Two narrow strap columns. ──
+  if (isTank && skinColors) {
+    const STRAP_INSET = 4;
+    const NECK_OPEN_ROWS = 4;
+    for (let row = 0; row < NECK_OPEN_ROWS; row++) {
+      const rw = rowW(row);
+      // Repaint the upper torso in skin colour.
+      hLine(ctx, skinColors.base, x, y + row, rw);
+      px(ctx, skinColors.highlight, x + 1, y + row);
+      px(ctx, skinColors.highlight, x + 2, y + row);
+      px(ctx, skinColors.shadow,    x + rw - 2, y + row);
+      px(ctx, skinColors.shadow,    x + rw - 1, y + row);
+      // Strap (front + back column visible in side view as a single fabric stripe)
+      px(ctx, clothingColors.base,      x + STRAP_INSET, y + row);
+      px(ctx, clothingColors.highlight, x + STRAP_INSET, y + row);
+      px(ctx, clothingColors.outline,   x + STRAP_INSET - 1, y + row);
+    }
+    // Soft shadow line where fabric meets skin
+    hLine(ctx, clothingColors.shadow, x + 2, y + NECK_OPEN_ROWS, rowW(NECK_OPEN_ROWS) - 4);
+  }
   // ── Jacket front details (lapel/collar suggestion at top 4 rows) ──────────
-  if (clothingKey && clothingKey.startsWith('jacket')) {
+  else if (style === 'jacket') {
     // Front opening strip: 2px wide from top, shows shirt/collar
     const shirtCol = clothingColors.collar || clothingColors.highlight;
     for (let row = 0; row < 5; row++) {
@@ -1566,7 +1686,7 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
       px(ctx, clothingColors.highlight, x, y + row);
       px(ctx, clothingColors.highlight, x + 1, y + row);
     }
-  } else if (clothingKey && clothingKey.startsWith('bomber')) {
+  } else if (style === 'bomber') {
     // Ribbed collar at front top: 3 alternating rib stripes
     for (let row = 0; row < 3; row++) {
       const ribCol = (row % 2 === 0) ? clothingColors.collar : clothingColors.shadow;
@@ -1584,7 +1704,7 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
     for (let row = 3; row < h - 2; row++) {
       px(ctx, clothingColors.shadow, x, y + row);
     }
-  } else if (clothingKey && (clothingKey.startsWith('shirt') || clothingKey.startsWith('tshirt') || clothingKey.startsWith('tunic') || clothingKey.startsWith('vest') || clothingKey.startsWith('robe'))) {
+  } else if (style === 'shirt' || style === 'tshirt' || style === 'tshirt_vneck' || style === 'tunic' || style === 'vest' || style === 'robe') {
     // Collar visible at front top (2px wide strip)
     const shirtCol = clothingColors.collar || clothingColors.highlight;
     for (let row = 0; row < 4; row++) {
@@ -1595,9 +1715,14 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
 
   // ── Outline ────────────────────────────────────────────────────────────────
   hLine(ctx, clothingColors.outline, x, y, rowW(0));         // top
-  hLine(ctx, clothingColors.highlight, x + 2, y, rowW(0) - 5); // shoulder highlight
+  if (!isTank) hLine(ctx, clothingColors.highlight, x + 2, y, rowW(0) - 5); // shoulder highlight
   hLine(ctx, clothingColors.outline, x, y + h - 1, rowW(h - 1));  // bottom
-  vLine(ctx, clothingColors.outline, x, y, h);                // front edge
+  // Tank top: skip the front-edge fabric outline through the bare-skin rows.
+  if (isTank) {
+    vLine(ctx, clothingColors.outline, x, y + 4, h - 4);
+  } else {
+    vLine(ctx, clothingColors.outline, x, y, h);                // front edge
+  }
   for (let row = 0; row < h; row++) {
     px(ctx, clothingColors.shadow, x + rowW(row) - 1, y + row);  // back selout
   }
@@ -2190,8 +2315,8 @@ function drawBelt(ctx, beltColors, x, y, w, h) {
 }
 
 // drawTorso kept for legacy DemonCharacter usage
-function drawTorso(ctx, clothingKey, clothingColors, x, y, w, h) {
-  drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h);
+function drawTorso(ctx, clothingKey, clothingColors, x, y, w, h, skinColors) {
+  drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h, skinColors);
 }
 
 function drawArm(ctx, clothingColors, skinColors, x, y, w, h) {
@@ -2238,6 +2363,7 @@ module.exports = {
   drawTshirtSouth,
   drawBomberSouth,
   drawCoatSouth,
+  drawTankSouth,
   drawTorsoWest,
   drawBeltSouth,
   drawBeltWest,

@@ -78,7 +78,8 @@
         "hair": "black",
         "hairStyle": "short",
         "eyes": "brown",
-        "clothing": "jacket_grey",
+        "clothingStyle": "jacket",
+        "clothingColor": "charcoal",
         "pants": "jeans_blue",
         "shoes": "shoe_black"
       }
@@ -92,7 +93,8 @@
         "hair": "brown",
         "hairStyle": "medium",
         "eyes": "blue",
-        "clothing": "apron_white",
+        "clothingStyle": "apron",
+        "clothingColor": "white",
         "pants": "jeans_dark",
         "shoes": "shoe_brown"
       }
@@ -106,7 +108,8 @@
         "hair": "black",
         "hairStyle": "short",
         "eyes": "hazel",
-        "clothing": "hoodie_black",
+        "clothingStyle": "hoodie",
+        "clothingColor": "black",
         "pants": "pants_grey",
         "shoes": "shoe_white"
       }
@@ -122,7 +125,8 @@
         "eyes": "amber",
         "hornStyle": "curved",
         "tailStyle": "long",
-        "clothing": "jacket_grey",
+        "clothingStyle": "jacket",
+        "clothingColor": "charcoal",
         "pants": "jeans_dark",
         "shoes": "shoe_black"
       }
@@ -138,7 +142,8 @@
         "eyes": "green",
         "hornStyle": "straight",
         "tailStyle": "medium",
-        "clothing": "apron_white",
+        "clothingStyle": "apron",
+        "clothingColor": "white",
         "pants": "pants_black",
         "shoes": "shoe_black"
       }
@@ -152,9 +157,40 @@
         "hair": "brown",
         "hairStyle": "short",
         "eyes": "hazel",
-        "clothing": "tshirt_grey",
+        "clothingStyle": "tshirt",
+        "clothingColor": "grey",
         "pants": "jeans_blue",
         "shoes": "shoe_white"
+      }
+    },
+    {
+      "name": "human_vneck",
+      "file": "../output/human_vneck_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "medium",
+        "hair": "dark_brown",
+        "hairStyle": "short",
+        "eyes": "brown",
+        "clothingStyle": "tshirt_vneck",
+        "clothingColor": "grey",
+        "pants": "jeans_blue",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "human_survivor",
+      "file": "../output/human_survivor_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "light",
+        "hair": "blonde",
+        "hairStyle": "short",
+        "eyes": "blue",
+        "clothingStyle": "tank",
+        "clothingColor": "white",
+        "pants": "pants_black",
+        "shoes": "shoe_black"
       }
     },
     {
@@ -166,7 +202,8 @@
         "hair": "blonde",
         "hairStyle": "short",
         "eyes": "blue",
-        "clothing": "bomber_olive",
+        "clothingStyle": "bomber",
+        "clothingColor": "olive",
         "pants": "pants_black",
         "shoes": "shoe_black"
       }
@@ -181,7 +218,8 @@
         "hairStyle": "undercut",
         "beardStyle": "handlebar",
         "eyes": "brown",
-        "clothing": "coat_tan",
+        "clothingStyle": "coat",
+        "clothingColor": "tan",
         "pants": "pants_black",
         "shoes": "shoe_brown"
       }
@@ -195,7 +233,8 @@
         "hair": "black",
         "hairStyle": "short",
         "eyes": "grey",
-        "clothing": "coat_grey",
+        "clothingStyle": "coat",
+        "clothingColor": "charcoal",
         "pants": "jeans_dark",
         "shoes": "shoe_black"
       }
@@ -209,7 +248,8 @@
         "hair": "brown",
         "hairStyle": "medium",
         "eyes": "hazel",
-        "clothing": "coat_brown",
+        "clothingStyle": "coat",
+        "clothingColor": "brown",
         "pants": "jeans_dark",
         "shoes": "shoe_brown"
       }
@@ -224,7 +264,39 @@
         "hairStyle": "short",
         "beardStyle": "full",
         "eyes": "blue",
-        "clothing": "coat_navy",
+        "clothingStyle": "coat",
+        "clothingColor": "navy",
+        "pants": "pants_black",
+        "shoes": "shoe_black"
+      }
+    },
+    {
+      "name": "human_drifter",
+      "file": "../output/human_drifter_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "tan",
+        "hair": "dark_brown",
+        "hairStyle": "medium",
+        "beardStyle": "full",
+        "eyes": "hazel",
+        "clothingStyle": "jacket",
+        "clothingColor": "brown",
+        "pants": "jeans_dark",
+        "shoes": "shoe_brown"
+      }
+    },
+    {
+      "name": "human_punk",
+      "file": "../output/human_punk_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "pale",
+        "hair": "auburn",
+        "hairStyle": "undercut",
+        "eyes": "green",
+        "clothingStyle": "tshirt",
+        "clothingColor": "burgundy",
         "pants": "pants_black",
         "shoes": "shoe_black"
       }
