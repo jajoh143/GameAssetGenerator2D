@@ -231,46 +231,60 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 23, HY + 17, 5);   // left brow (5px, matches eye width)
-  hLine(ctx, hairColors.shadow, 36, HY + 17, 5);   // right brow (5px)
+  hLine(ctx, hairColors.shadow, 22, HY + 17, 6);   // left brow (6px, matches eye width)
+  hLine(ctx, hairColors.shadow, 36, HY + 17, 6);   // right brow (6px)
 
-  // ── Eyes — 1px iris centered, sclera on both sides (outer + inner) ──────────
+  // ── Eyes — 6px wide: lash|W|W|I|W|lash  (2px outer sclera, 1px inner) ───
   const eyeY = HY + 19;
-  // Left eye — bounding box x=23..27; W(24) I(25) W(26)
-  px(ctx, eyeColors.lash,  24, eyeY - 1);
+  // Left eye — bounding box x=22..27; outer=left, inner=right (toward nose)
+  // Top arc (oval corners skin at x=22 and x=27)
+  px(ctx, eyeColors.lash,  23, eyeY - 1);
+  px(ctx, '#FFFFFF',       24, eyeY - 1);
   px(ctx, '#FFFFFF',       25, eyeY - 1);
   px(ctx, eyeColors.lash,  26, eyeY - 1);
-  px(ctx, eyeColors.lash,  23, eyeY);
-  px(ctx, '#FFFFFF',       24, eyeY);           // outer sclera
-  px(ctx, eyeColors.iris,  25, eyeY);           // 1px iris at center
+  // Main rows
+  px(ctx, eyeColors.lash,  22, eyeY);
+  px(ctx, '#FFFFFF',       23, eyeY);           // outer sclera 1
+  px(ctx, '#FFFFFF',       24, eyeY);           // outer sclera 2
+  px(ctx, eyeColors.iris,  25, eyeY);           // iris
   px(ctx, '#FFFFFF',       26, eyeY);           // inner sclera (toward nose)
   px(ctx, eyeColors.lash,  27, eyeY);
-  px(ctx, eyeColors.lash,  23, eyeY + 1);
-  px(ctx, '#FFFFFF',       24, eyeY + 1);       // outer sclera
-  px(ctx, eyeColors.iris,  25, eyeY + 1);       // 1px iris at center
-  px(ctx, '#FFFFFF',       26, eyeY + 1);       // inner sclera (toward nose)
+  px(ctx, eyeColors.lash,  22, eyeY + 1);
+  px(ctx, '#FFFFFF',       23, eyeY + 1);
+  px(ctx, '#FFFFFF',       24, eyeY + 1);
+  px(ctx, eyeColors.iris,  25, eyeY + 1);
+  px(ctx, '#FFFFFF',       26, eyeY + 1);
   px(ctx, eyeColors.lash,  27, eyeY + 1);
-  px(ctx, eyeColors.lash,  24, eyeY + 2);
+  // Bottom arc
+  px(ctx, eyeColors.lash,  23, eyeY + 2);
+  px(ctx, '#FFFFFF',       24, eyeY + 2);
   px(ctx, '#FFFFFF',       25, eyeY + 2);
   px(ctx, eyeColors.lash,  26, eyeY + 2);
 
-  // Right eye — bounding box x=36..40; W(37) I(38) W(39)
+  // Right eye — bounding box x=36..41; inner=left (toward nose), outer=right
+  // Top arc (oval corners skin at x=36 and x=41)
   px(ctx, eyeColors.lash,  37, eyeY - 1);
   px(ctx, '#FFFFFF',       38, eyeY - 1);
-  px(ctx, eyeColors.lash,  39, eyeY - 1);
+  px(ctx, '#FFFFFF',       39, eyeY - 1);
+  px(ctx, eyeColors.lash,  40, eyeY - 1);
+  // Main rows
   px(ctx, eyeColors.lash,  36, eyeY);
   px(ctx, '#FFFFFF',       37, eyeY);           // inner sclera (toward nose)
-  px(ctx, eyeColors.iris,  38, eyeY);           // 1px iris at center
-  px(ctx, '#FFFFFF',       39, eyeY);           // outer sclera
-  px(ctx, eyeColors.lash,  40, eyeY);
+  px(ctx, eyeColors.iris,  38, eyeY);           // iris
+  px(ctx, '#FFFFFF',       39, eyeY);           // outer sclera 1
+  px(ctx, '#FFFFFF',       40, eyeY);           // outer sclera 2
+  px(ctx, eyeColors.lash,  41, eyeY);
   px(ctx, eyeColors.lash,  36, eyeY + 1);
-  px(ctx, '#FFFFFF',       37, eyeY + 1);       // inner sclera (toward nose)
-  px(ctx, eyeColors.iris,  38, eyeY + 1);       // 1px iris at center
-  px(ctx, '#FFFFFF',       39, eyeY + 1);       // outer sclera
-  px(ctx, eyeColors.lash,  40, eyeY + 1);
+  px(ctx, '#FFFFFF',       37, eyeY + 1);
+  px(ctx, eyeColors.iris,  38, eyeY + 1);
+  px(ctx, '#FFFFFF',       39, eyeY + 1);
+  px(ctx, '#FFFFFF',       40, eyeY + 1);
+  px(ctx, eyeColors.lash,  41, eyeY + 1);
+  // Bottom arc
   px(ctx, eyeColors.lash,  37, eyeY + 2);
   px(ctx, '#FFFFFF',       38, eyeY + 2);
-  px(ctx, eyeColors.lash,  39, eyeY + 2);
+  px(ctx, '#FFFFFF',       39, eyeY + 2);
+  px(ctx, eyeColors.lash,  40, eyeY + 2);
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
