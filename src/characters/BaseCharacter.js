@@ -231,60 +231,66 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 22, HY + 17, 6);   // left brow (6px, matches eye width)
-  hLine(ctx, hairColors.shadow, 36, HY + 17, 6);   // right brow (6px)
+  hLine(ctx, hairColors.shadow, 22, HY + 17, 7);   // left brow (7px, matches eye width)
+  hLine(ctx, hairColors.shadow, 35, HY + 17, 7);   // right brow (7px)
 
-  // ── Eyes — 6px wide: lash|W|W|I|W|lash  (2px outer sclera, 1px inner) ───
+  // ── Eyes — 7px wide, research-based: heavy lid, 2px iris, highlight, open bottom
+  // Layout: lash|W|W|shine|iris|W|lash  (2px outer sclera, 1px inner sclera)
+  // Upper iris row uses shine (bright) pixel; lower row uses full iris color.
+  // Heavy full-width top lid + open white bottom arc for natural almond shape.
   const eyeY = HY + 19;
-  // Left eye — bounding box x=22..27; outer=left, inner=right (toward nose)
-  // Top arc (oval corners skin at x=22 and x=27)
-  px(ctx, eyeColors.lash,  23, eyeY - 1);
-  px(ctx, '#FFFFFF',       24, eyeY - 1);
-  px(ctx, '#FFFFFF',       25, eyeY - 1);
-  px(ctx, eyeColors.lash,  26, eyeY - 1);
-  // Main rows
+
+  // Left eye — x=22..28; outer=left (away from nose), inner=right (toward nose)
+  // Heavy top eyelid (full 7px dark bar)
+  hLine(ctx, eyeColors.lash, 22, eyeY - 1, 7);
+  // Upper iris row: W W shine iris W  (shine = bright upper-outer corner of iris)
   px(ctx, eyeColors.lash,  22, eyeY);
-  px(ctx, '#FFFFFF',       23, eyeY);           // outer sclera 1
-  px(ctx, '#FFFFFF',       24, eyeY);           // outer sclera 2
-  px(ctx, eyeColors.iris,  25, eyeY);           // iris
-  px(ctx, '#FFFFFF',       26, eyeY);           // inner sclera (toward nose)
-  px(ctx, eyeColors.lash,  27, eyeY);
+  px(ctx, '#FFFFFF',       23, eyeY);            // outer sclera 1
+  px(ctx, '#FFFFFF',       24, eyeY);            // outer sclera 2
+  px(ctx, '#FFFFFF',       25, eyeY);            // shine: upper-outer iris highlight
+  px(ctx, eyeColors.iris,  26, eyeY);            // iris
+  px(ctx, '#FFFFFF',       27, eyeY);            // inner sclera
+  px(ctx, eyeColors.lash,  28, eyeY);
+  // Lower iris row: W W iris iris W  (full 2px iris visible)
   px(ctx, eyeColors.lash,  22, eyeY + 1);
   px(ctx, '#FFFFFF',       23, eyeY + 1);
   px(ctx, '#FFFFFF',       24, eyeY + 1);
   px(ctx, eyeColors.iris,  25, eyeY + 1);
-  px(ctx, '#FFFFFF',       26, eyeY + 1);
-  px(ctx, eyeColors.lash,  27, eyeY + 1);
-  // Bottom arc
-  px(ctx, eyeColors.lash,  23, eyeY + 2);
+  px(ctx, eyeColors.iris,  26, eyeY + 1);
+  px(ctx, '#FFFFFF',       27, eyeY + 1);
+  px(ctx, eyeColors.lash,  28, eyeY + 1);
+  // Open bottom arc (no lash at corners — lighter lower lid)
+  px(ctx, '#FFFFFF',       23, eyeY + 2);
   px(ctx, '#FFFFFF',       24, eyeY + 2);
   px(ctx, '#FFFFFF',       25, eyeY + 2);
-  px(ctx, eyeColors.lash,  26, eyeY + 2);
+  px(ctx, '#FFFFFF',       26, eyeY + 2);
+  px(ctx, '#FFFFFF',       27, eyeY + 2);
 
-  // Right eye — bounding box x=36..41; inner=left (toward nose), outer=right
-  // Top arc (oval corners skin at x=36 and x=41)
-  px(ctx, eyeColors.lash,  37, eyeY - 1);
-  px(ctx, '#FFFFFF',       38, eyeY - 1);
-  px(ctx, '#FFFFFF',       39, eyeY - 1);
-  px(ctx, eyeColors.lash,  40, eyeY - 1);
-  // Main rows
-  px(ctx, eyeColors.lash,  36, eyeY);
-  px(ctx, '#FFFFFF',       37, eyeY);           // inner sclera (toward nose)
-  px(ctx, eyeColors.iris,  38, eyeY);           // iris
-  px(ctx, '#FFFFFF',       39, eyeY);           // outer sclera 1
-  px(ctx, '#FFFFFF',       40, eyeY);           // outer sclera 2
+  // Right eye — x=35..41; inner=left (toward nose), outer=right
+  // Heavy top eyelid
+  hLine(ctx, eyeColors.lash, 35, eyeY - 1, 7);
+  // Upper iris row: W iris shine W W  (shine = upper-outer = right side for right eye)
+  px(ctx, eyeColors.lash,  35, eyeY);
+  px(ctx, '#FFFFFF',       36, eyeY);            // inner sclera
+  px(ctx, eyeColors.iris,  37, eyeY);            // iris
+  px(ctx, '#FFFFFF',       38, eyeY);            // shine: upper-outer iris highlight
+  px(ctx, '#FFFFFF',       39, eyeY);            // outer sclera 1
+  px(ctx, '#FFFFFF',       40, eyeY);            // outer sclera 2
   px(ctx, eyeColors.lash,  41, eyeY);
-  px(ctx, eyeColors.lash,  36, eyeY + 1);
-  px(ctx, '#FFFFFF',       37, eyeY + 1);
+  // Lower iris row: W iris iris W W  (full 2px iris)
+  px(ctx, eyeColors.lash,  35, eyeY + 1);
+  px(ctx, '#FFFFFF',       36, eyeY + 1);
+  px(ctx, eyeColors.iris,  37, eyeY + 1);
   px(ctx, eyeColors.iris,  38, eyeY + 1);
   px(ctx, '#FFFFFF',       39, eyeY + 1);
   px(ctx, '#FFFFFF',       40, eyeY + 1);
   px(ctx, eyeColors.lash,  41, eyeY + 1);
-  // Bottom arc
-  px(ctx, eyeColors.lash,  37, eyeY + 2);
+  // Open bottom arc
+  px(ctx, '#FFFFFF',       36, eyeY + 2);
+  px(ctx, '#FFFFFF',       37, eyeY + 2);
   px(ctx, '#FFFFFF',       38, eyeY + 2);
   px(ctx, '#FFFFFF',       39, eyeY + 2);
-  px(ctx, eyeColors.lash,  40, eyeY + 2);
+  px(ctx, '#FFFFFF',       40, eyeY + 2);
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
