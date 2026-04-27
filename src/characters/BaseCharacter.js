@@ -132,6 +132,7 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     [ 4, 24],  // 26: lower jaw       (y=47)
     [ 5, 22],  // 27: chin            (y=48)
     [ 7, 18],  // 28: chin base       (y=49)
+    [ 9, 14],  // 29: chin tip        (y=50)
   ];
 
   for (let r = 0; r < HEAD.length; r++) {
@@ -193,6 +194,7 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     [22, 20],  // 10: chin       (y=47)
     [23, 18],  // 11: chin btm   (y=48)
     [24, 16],  // 12: chin base  (y=49)
+    [25, 14],  // 13: chin tip   (y=50)
   ];
   const faceStartRow = 16;
   for (let i = 0; i < FACE.length; i++) {
@@ -231,19 +233,15 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 22, HY + 16, 7);   // left brow (7px, 1px skin gap above eye)
-  hLine(ctx, hairColors.shadow, 35, HY + 16, 7);   // right brow (7px)
+  hLine(ctx, hairColors.shadow, 22, HY + 17, 7);   // left brow (7px, 1px skin gap above eye)
+  hLine(ctx, hairColors.shadow, 35, HY + 17, 7);   // right brow (7px)
 
-  // ── Eyes — 7px wide, research-based: heavy lid, 2px iris, highlight, open bottom
-  // Layout: lash|W|W|shine|iris|W|lash  (2px outer sclera, 1px inner sclera)
-  // Upper iris row uses shine (bright) pixel; lower row uses full iris color.
-  // Heavy full-width top lid + open white bottom arc for natural almond shape.
+  // ── Eyes — 7px wide: lash|W|W|I|I|W|lash, 2px outer sclera, 1px inner sclera
+  // 2×2 iris block, open bottom arc. Eyebrow serves as upper visual anchor.
   const eyeY = HY + 19;
 
   // Left eye — x=22..28; outer=left (away from nose), inner=right (toward nose)
-  // Heavy top eyelid (full 7px dark bar)
-  hLine(ctx, eyeColors.lash, 22, eyeY - 1, 7);
-  // Upper iris row: W W shine iris W  (shine = bright upper-outer corner of iris)
+  // Upper iris row: W W iris iris W
   px(ctx, eyeColors.lash,  22, eyeY);
   px(ctx, '#FFFFFF',       23, eyeY);            // outer sclera 1
   px(ctx, '#FFFFFF',       24, eyeY);            // outer sclera 2
@@ -267,9 +265,7 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, '#FFFFFF',       27, eyeY + 2);
 
   // Right eye — x=35..41; inner=left (toward nose), outer=right
-  // Heavy top eyelid
-  hLine(ctx, eyeColors.lash, 35, eyeY - 1, 7);
-  // Upper iris row: W iris shine W W  (shine = upper-outer = right side for right eye)
+  // Upper iris row: W iris iris W W
   px(ctx, eyeColors.lash,  35, eyeY);
   px(ctx, '#FFFFFF',       36, eyeY);            // inner sclera
   px(ctx, eyeColors.iris,  37, eyeY);            // iris (top-left of 2×2 square)
