@@ -103,6 +103,16 @@ const PRESETS = {
     pants:      'jeans_blue',
     shoes:      'shoe_white',
   },
+  human_vneck: {
+    type:       'human',
+    skin:       'medium',
+    hair:       'dark_brown',
+    hairStyle:  'short',
+    eyes:       'brown',
+    clothing:   'tshirt_vneck_grey',
+    pants:      'jeans_blue',
+    shoes:      'shoe_black',
+  },
   human_bomber: {
     type:       'human',
     skin:       'light',

@@ -921,9 +921,8 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
     if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
-  // Button placket: center column
+  // Button placket: single shadow seam at center
   vLine(ctx, colors.shadow, cx, y + 3, numRows - 3);
-  vLine(ctx, colors.highlight, cx - 1, y + 3, numRows - 3);
   // Collar: V-neck at top center
   const collarH = 6;
   for (let row = 0; row < collarH; row++) {
@@ -1119,8 +1118,8 @@ function drawRobeSouth(ctx, colors, x, y, w, h) {
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
-function drawTshirtSouth(ctx, colors, x, y, w, h) {
-  // Crew-neck T-shirt: 5-step V silhouette, round neckline, no buttons/placket.
+function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
+  // T-shirt with crew neck (default) or V-neck variant when isVneck=true.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
   const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
@@ -1158,21 +1157,24 @@ function drawTshirtSouth(ctx, colors, x, y, w, h) {
     if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
-  // Crew neck: 12px wide × 4px tall, rounded corners
-  const neckW = 12, neckX = cx - 6;
-  fillRect(ctx, colors.collar, neckX, y, neckW, 4);
-  hLine(ctx, colors.highlight, neckX + 1, y,     neckW - 2);
-  hLine(ctx, colors.shadow,    neckX + 1, y + 3, neckW - 2);
-  px(ctx, colors.shadow, neckX,             y);  // round left corner
-  px(ctx, colors.shadow, neckX + neckW - 1, y);  // round right corner
-  outlineRect(ctx, colors.outline, neckX, y, neckW, 4);
-  // Under-chest fold shadow (suggests body volume)
-  hLine(ctx, colors.shadow, rl(9) + 2, y + 9, rr(9) - rl(9) - 4);
-  // Chest graphic — 4×3 sport stripe at left chest
-  const lx = cx - 7, ly = y + 6;
-  hLine(ctx, colors.highlight, lx, ly,     4);   // stripe top
-  hLine(ctx, colors.shadow,    lx, ly + 2, 4);   // stripe bottom
-  px(ctx, colors.shadow, lx + 3, ly + 1);        // right accent dot
+  if (isVneck) {
+    // V-neck: two diagonal shadow lines from shoulder-width down to center point
+    // Row 0: 8px collar band (full shirt width at neck)
+    hLine(ctx, colors.collar, cx - 4, y, 8);
+    hLine(ctx, colors.highlight, cx - 3, y, 6);
+    // Rows 1-4: V opens symmetrically, 1px each side per row
+    for (let row = 1; row <= 4; row++) {
+      px(ctx, colors.shadow, cx - row, y + row);  // left diagonal
+      px(ctx, colors.shadow, cx + row - 1, y + row);  // right diagonal
+    }
+  } else {
+    // Crew neck: 10px wide × 3px tall band
+    const neckW = 10, neckX = cx - 5;
+    fillRect(ctx, colors.collar, neckX, y, neckW, 3);
+    hLine(ctx, colors.highlight, neckX + 1, y,     neckW - 2);
+    hLine(ctx, colors.shadow,    neckX + 1, y + 2, neckW - 2);
+    outlineRect(ctx, colors.outline, neckX, y, neckW, 3);
+  }
   // Selout outline
   px(ctx, colors.shadow, x - 1, y - 1); px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
@@ -1431,21 +1433,17 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   if (leftDipW  > 1) hLine(ctx, clothingColors.shadow,                               armInL,      y + 1, leftDipW - 1);
   if (rightDipW > 1) hLine(ctx, clothingColors.shadow,                               rightDipX,   y + 1, rightDipW - 1);
 
-  // Shoulder cap: 2 highlight rows, lit from upper-left (now spanning wider shoulder)
+  // Shoulder cap: 2 highlight rows, lit from upper-left
   hLine(ctx, clothingColors.highlight, x + 1, y,     Math.floor(w * 0.45));
   hLine(ctx, clothingColors.highlight, x + 1, y + 1, Math.floor(w * 0.30));
 
-  // Left pectoral highlight band — wider, deeper tapered triangle
-  hLine(ctx, clothingColors.highlight, x + 1, y + 2, 10);
-  hLine(ctx, clothingColors.highlight, x + 1, y + 3,  8);
-  hLine(ctx, clothingColors.highlight, x + 1, y + 4,  6);
-  hLine(ctx, clothingColors.highlight, x + 1, y + 5,  5);
-  hLine(ctx, clothingColors.highlight, x + 1, y + 6,  3);
-  hLine(ctx, clothingColors.highlight, x + 1, y + 7,  2);
+  // Upper-chest highlight — 3-row taper suggests chest form without drawing muscles
+  hLine(ctx, clothingColors.highlight, x + 1, y + 2, 7);
+  hLine(ctx, clothingColors.highlight, x + 1, y + 3, 4);
+  hLine(ctx, clothingColors.highlight, x + 1, y + 4, 2);
 
-  // Mid-torso horizontal fold shadow — 2-row taper (fabric compression below chest)
-  hLine(ctx, clothingColors.shadow, x + 2, y + 8, w - 4);
-  hLine(ctx, clothingColors.shadow, x + 3, y + 9, w - 6);
+  // Single under-chest shadow line (implies volume below pec)
+  hLine(ctx, clothingColors.shadow, x + 3, y + 9, Math.floor(w * 0.55));
 
   // Step-corner AA at every silhouette transition — blends the stepped
   // V-taper into an organic curved armhole/waist sweep
@@ -1481,7 +1479,7 @@ function drawTorsoSouth(ctx, clothingKey, clothingColors, x, y, w, h) {
   } else if (clothingKey.startsWith('robe')) {
     drawRobeSouth(ctx, clothingColors, x, y, w, h);
   } else if (clothingKey.startsWith('tshirt')) {
-    drawTshirtSouth(ctx, clothingColors, x, y, w, h);
+    drawTshirtSouth(ctx, clothingColors, x, y, w, h, clothingKey.includes('vneck'));
   } else if (clothingKey.startsWith('bomber')) {
     drawBomberSouth(ctx, clothingColors, x, y, w, h);
   } else {
