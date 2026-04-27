@@ -456,7 +456,42 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 // drawHeadWest  –  side profile facing LEFT, nose extends past HX
 // ---------------------------------------------------------------------------
 
-function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
+function drawBeardWest(ctx, hairColors, beardStyle) {
+  if (!beardStyle || beardStyle === 'none') return;
+  const HX = 15, HY = 24;
+  const base = hairColors.base, sh = hairColors.shadow;
+
+  if (beardStyle === 'stubble') {
+    px(ctx, sh, HX + 1, HY + 20);  // y=44 jaw
+    px(ctx, sh, HX + 2, HY + 21);  // y=45 jaw
+    px(ctx, sh, HX + 3, HY + 22);  // y=46 lower jaw
+    px(ctx, sh, HX + 4, HY + 23);  // y=47 chin
+  }
+
+  if (beardStyle === 'handlebar' || beardStyle === 'full') {
+    // Mustache visible in profile: small strip at upper-lip front
+    px(ctx, base, HX,     HY + 18);
+    px(ctx, base, HX + 1, HY + 18);
+    px(ctx, sh,   HX,     HY + 19);
+  }
+
+  if (beardStyle === 'goatee') {
+    hLine(ctx, base, HX + 3, HY + 22, 2);
+    hLine(ctx, base, HX + 4, HY + 23, 2);
+    px(ctx,    sh,   HX + 5, HY + 24);
+  }
+
+  if (beardStyle === 'full') {
+    // Jaw-to-chin mass visible on the front face edge
+    hLine(ctx, base, HX + 1, HY + 20, 3);
+    hLine(ctx, sh,   HX + 2, HY + 21, 3);
+    hLine(ctx, sh,   HX + 3, HY + 22, 3);
+    hLine(ctx, sh,   HX + 4, HY + 23, 2);
+    px(ctx,    sh,   HX + 5, HY + 24);
+  }
+}
+
+function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardStyle) {
   // Profile head: HX=15, HY=24. 26 rows — chin at y=49 meets neck at y=50.
   const HX = 15, HY = 24;
   const outline = '#111111';
@@ -464,13 +499,13 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
   // Profile silhouette — max 15px wide, 26 rows tall
   const S = [
     [5,  3],  //  0: crown peak   (y=24)
-    [5,  5],  //  1: upper crown  (y=25)
-    [4,  7],  //  2: crown tip    (y=26)
-    [3,  9],  //  3: dome top     (y=27)
-    [2, 11],  //  4: crown        (y=28)
-    [3,  9],  //  5: crown body   (y=29)
-    [2, 11],  //  6: upper dome   (y=30)
-    [1, 13],  //  7: dome         (y=31)
+    [4,  5],  //  1: upper crown  (y=25)
+    [3,  7],  //  2: crown        (y=26)
+    [2,  9],  //  3: upper dome   (y=27)
+    [1, 11],  //  4: dome         (y=28)
+    [0, 13],  //  5: dome width   (y=29)
+    [0, 14],  //  6: temples      (y=30)
+    [0, 15],  //  7: max width    (y=31)
     [0, 15],  //  8: max width    (y=32)
     [0, 15],  //  9: max width    (y=33)
     [0, 15],  // 10: max width    (y=34)
@@ -563,6 +598,9 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors) {
     vLine(ctx, hairColors.base, bx - 1, HY + HH, 3);
     px(ctx, hairColors.shadow, bx, HY + HH + 4);
   }
+
+  // Beard (drawn before outline so silhouette border sits on top)
+  drawBeardWest(ctx, hairColors, beardStyle);
 
   // Outline
   for (let r = 0; r < HH; r++) {
@@ -1555,11 +1593,21 @@ function drawBeltSouth(ctx, beltColors, x, y) {
 
 function drawBeltWest(ctx, beltColors, x, y) {
   const w = 16, h = 3;
+  const hi = beltColors.highlight || beltColors.base;
+  const sh = beltColors.shadow    || beltColors.outline;
   fillRect(ctx, beltColors.base, x, y, w, h);
-  hLine(ctx, beltColors.highlight, x + 1, y, w - 2);
-  hLine(ctx, beltColors.shadow,    x + 1, y + 2, w - 2);
-  const bx = x + Math.floor(w / 2) - 2;
-  fillRect(ctx, beltColors.buckle, bx, y, 5, h);
+  hLine(ctx, hi, x + 1, y,     w - 2);
+  hLine(ctx, sh, x + 1, y + 2, w - 2);
+  // Buckle sits at the front (left = character belly when walking west).
+  // East is a mirror of west so the buckle automatically appears on the
+  // correct front side when walking right.
+  const bx = x + 1;
+  fillRect(ctx, beltColors.buckle, bx, y, 4, h);
+  // Buckle frame: hollow center (shows belt base), top shine
+  px(ctx, beltColors.buckle, bx + 1, y + 1);  // left prong bar
+  px(ctx, beltColors.base,   bx + 2, y + 1);  // hollow center
+  px(ctx, hi,                bx,     y);       // top-left corner shine
+  px(ctx, hi,                bx + 1, y);       // top shine
   outlineRect(ctx, beltColors.outline, x, y, w, h);
 }
 

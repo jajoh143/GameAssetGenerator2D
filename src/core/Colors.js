@@ -444,9 +444,11 @@ const DEMON_PARTS = {
 // Belt color
 const BELT = {
   standard: {
-    base:    '#3A2010',
-    buckle:  '#C8A820',
-    outline: '#1A0800',
+    highlight: '#6A4030',
+    base:      '#3A2010',
+    shadow:    '#1E0E08',
+    buckle:    '#C8A820',
+    outline:   '#1A0800',
   },
 };
 
