@@ -231,8 +231,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
 
   // ── Eyebrows ─────────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, 22, HY + 17, 7);   // left brow (7px, matches eye width)
-  hLine(ctx, hairColors.shadow, 35, HY + 17, 7);   // right brow (7px)
+  hLine(ctx, hairColors.shadow, 22, HY + 16, 7);   // left brow (7px, 1px skin gap above eye)
+  hLine(ctx, hairColors.shadow, 35, HY + 16, 7);   // right brow (7px)
 
   // ── Eyes — 7px wide, research-based: heavy lid, 2px iris, highlight, open bottom
   // Layout: lash|W|W|shine|iris|W|lash  (2px outer sclera, 1px inner sclera)
@@ -247,8 +247,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, eyeColors.lash,  22, eyeY);
   px(ctx, '#FFFFFF',       23, eyeY);            // outer sclera 1
   px(ctx, '#FFFFFF',       24, eyeY);            // outer sclera 2
-  px(ctx, '#FFFFFF',       25, eyeY);            // shine: upper-outer iris highlight
-  px(ctx, eyeColors.iris,  26, eyeY);            // iris
+  px(ctx, eyeColors.iris,  25, eyeY);            // iris (top-left of 2×2 square)
+  px(ctx, eyeColors.iris,  26, eyeY);            // iris (top-right of 2×2 square)
   px(ctx, '#FFFFFF',       27, eyeY);            // inner sclera
   px(ctx, eyeColors.lash,  28, eyeY);
   // Lower iris row: W W iris iris W  (full 2px iris visible)
@@ -272,8 +272,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   // Upper iris row: W iris shine W W  (shine = upper-outer = right side for right eye)
   px(ctx, eyeColors.lash,  35, eyeY);
   px(ctx, '#FFFFFF',       36, eyeY);            // inner sclera
-  px(ctx, eyeColors.iris,  37, eyeY);            // iris
-  px(ctx, '#FFFFFF',       38, eyeY);            // shine: upper-outer iris highlight
+  px(ctx, eyeColors.iris,  37, eyeY);            // iris (top-left of 2×2 square)
+  px(ctx, eyeColors.iris,  38, eyeY);            // iris (top-right of 2×2 square)
   px(ctx, '#FFFFFF',       39, eyeY);            // outer sclera 1
   px(ctx, '#FFFFFF',       40, eyeY);            // outer sclera 2
   px(ctx, eyeColors.lash,  41, eyeY);
