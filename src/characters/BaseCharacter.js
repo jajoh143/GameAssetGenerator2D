@@ -532,15 +532,15 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardSt
     hLine(ctx, hairColors.base, HX + xo, HY + r, w);
   }
 
-  // Skin fill for face area (rows 12-23)
+  // Skin fill for face area — 2px wider than before so face reads clearly
   for (let r = 12; r <= 23; r++) {
     const [xo, w] = S[r];
-    const faceW = Math.min(w - 3, 11);
+    const faceW = Math.min(w - 2, 13);
     hLine(ctx, skinColors.base, HX + xo, HY + r, faceW);
   }
 
-  // Face shading
-  for (let r = 12; r <= 17; r++) {
+  // Face shading — front-lit highlight strip on face-forward column
+  for (let r = 12; r <= 18; r++) {
     px(ctx, skinColors.highlight, HX + 1, HY + r);
   }
   for (let r = 21; r <= 23; r++) {
@@ -557,26 +557,32 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardSt
   px(ctx, skinColors.highlight, HX + 2, HY + 12);
   px(ctx, skinColors.highlight, HX + 3, HY + 13);
 
-  // ── Brow ridge ───────────────────────────────────────────────────────────
-  hLine(ctx, hairColors.shadow, HX, HY + 13, 3);
+  // ── Brow ridge — starts at HX+1 (not HX) so it's never at the outline column
+  hLine(ctx, hairColors.shadow, HX + 1, HY + 13, 3);
 
-  // ── Eye — profile, iris centered (HX+2), sclera on both sides, no pupil ───
+  // ── Eye — outline at HX acts as the eyelid; sclera+iris visible behind it ─
+  // The white row at HY+13 was removed: it was overwriting the brow above.
   const ec = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
-  hLine(ctx, '#FFFFFF', HX + 1, HY + 13, 2);
-  px(ctx, ec.lash,    HX,     HY + 14);
-  px(ctx, '#FFFFFF',  HX + 1, HY + 14);           // sclera (inside)
-  px(ctx, ec.iris,    HX + 2, HY + 14);           // iris centered
-  px(ctx, '#FFFFFF',  HX + 3, HY + 14);           // sclera (outside)
-  hLine(ctx, '#FFFFFF', HX + 1, HY + 15, 2);
+  px(ctx, ec.lash,    HX,     HY + 14);  // front lid (outline will redraw this black = eyelid)
+  px(ctx, '#FFFFFF',  HX + 1, HY + 14);  // sclera front
+  px(ctx, ec.iris,    HX + 2, HY + 14);  // iris
+  px(ctx, '#FFFFFF',  HX + 3, HY + 14);  // sclera back
+  px(ctx, '#FFFFFF',  HX + 1, HY + 15);  // lower sclera
 
   // ── Cheekbone highlight ───────────────────────────────────────────────────
   px(ctx, skinColors.highlight, HX + 3, HY + 16);
 
-  // ── Nose — bridge + tip ───────────────────────────────────────────────────
-  px(ctx, skinColors.highlight, HX,     HY + 14);   // bridge top (overlaps sclera on lit side)
-  px(ctx, skinColors.highlight, HX - 1, HY + 15);   // bridge protrusion
-  px(ctx, skinColors.shadow,    HX - 1, HY + 16);   // nose tip shadow
-  px(ctx, skinColors.shadow,    HX + 1, HY + 17);   // under-nose shadow
+  // ── Nose — protrudes 1px past face front edge ────────────────────────────
+  // Tip highlight and bridge are drawn at HX-1 (outside the outline column).
+  // The old outline pixel at HX-1,HY+15 has been removed — it was overwriting
+  // the bridge highlight making the nose invisible.
+  px(ctx, skinColors.highlight, HX - 1, HY + 14);   // tip highlight
+  px(ctx, skinColors.highlight, HX - 1, HY + 15);   // bridge (now visible)
+  px(ctx, skinColors.shadow,    HX - 1, HY + 16);   // under-nose
+  px(ctx, skinColors.shadow,    HX + 1, HY + 17);   // philtrum shadow
+
+  // ── Mouth hint ────────────────────────────────────────────────────────────
+  px(ctx, skinColors.shadow, HX + 1, HY + 18);
 
   // ── Ear ──────────────────────────────────────────────────────────────────
   px(ctx, skinColors.shadow,    HX + 9, HY + 15);
@@ -610,8 +616,8 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardSt
   }
   hLine(ctx, outline, HX + S[0][0], HY, S[0][1]);
   hLine(ctx, outline, HX + S[HH-1][0], HY + HH - 1, S[HH-1][1]);
-  px(ctx, outline, HX - 1, HY + 15);  // nose outline top
-  px(ctx, outline, HX - 1, HY + 17);  // nose outline bottom
+  // nose outline: only bottom edge — the top was overwriting the bridge highlight
+  px(ctx, outline, HX - 1, HY + 17);  // under-nose outline
 }
 
 // ---------------------------------------------------------------------------
@@ -1453,8 +1459,8 @@ function drawTorsoWest(ctx, clothingKey, clothingColors, x, y) {
   // For jacket: front 2px opening shows shirt/collar suggestion.
   // For coats: h extended by 13 rows to cover upper legs in side view.
   const isCoat = clothingKey && clothingKey.startsWith('coat');
-  const h = isCoat ? 22 : 16;
-  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 13;
+  const h = isCoat ? 26 : 20;
+  const SHOULDER = 3, WAIST_S = 8, WAIST_E = 16;
 
   const rowW = (row) => {
     if (row < SHOULDER)                       return 18;  // wide chibi shoulder
