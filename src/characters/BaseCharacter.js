@@ -458,72 +458,77 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
 
 function drawBeardWest(ctx, hairColors, beardStyle) {
   if (!beardStyle || beardStyle === 'none') return;
-  const HX = 15, HY = 24;
+  // Must match HX in drawHeadWest
+  const HX = 13, HY = 24;
   const base = hairColors.base, sh = hairColors.shadow;
 
   if (beardStyle === 'stubble') {
-    px(ctx, sh, HX + 1, HY + 20);  // y=44 jaw
-    px(ctx, sh, HX + 2, HY + 21);  // y=45 jaw
-    px(ctx, sh, HX + 3, HY + 22);  // y=46 lower jaw
-    px(ctx, sh, HX + 4, HY + 23);  // y=47 chin
+    // Scattered dots on jaw/chin; start at abs 15+ (face skin area at those rows)
+    px(ctx, sh, HX + 2, HY + 20);  // y=44 abs 15
+    px(ctx, sh, HX + 3, HY + 21);  // y=45 abs 16
+    px(ctx, sh, HX + 4, HY + 22);  // y=46 abs 17
+    px(ctx, sh, HX + 5, HY + 23);  // y=47 abs 18
   }
 
   if (beardStyle === 'handlebar' || beardStyle === 'full') {
-    // Mustache visible in profile: small strip at upper-lip front
-    px(ctx, base, HX,     HY + 18);
+    // Mustache at HX+1 (not HX) so outline doesn't overwrite it
     px(ctx, base, HX + 1, HY + 18);
-    px(ctx, sh,   HX,     HY + 19);
+    px(ctx, base, HX + 2, HY + 18);
+    px(ctx, sh,   HX + 1, HY + 19);
   }
 
   if (beardStyle === 'goatee') {
-    hLine(ctx, base, HX + 3, HY + 22, 2);
-    hLine(ctx, base, HX + 4, HY + 23, 2);
-    px(ctx,    sh,   HX + 5, HY + 24);
+    hLine(ctx, base, HX + 4, HY + 22, 2);
+    hLine(ctx, base, HX + 5, HY + 23, 2);
+    px(ctx,    sh,   HX + 6, HY + 24);
   }
 
   if (beardStyle === 'full') {
-    // Jaw-to-chin mass visible on the front face edge
-    hLine(ctx, base, HX + 1, HY + 20, 3);
-    hLine(ctx, sh,   HX + 2, HY + 21, 3);
-    hLine(ctx, sh,   HX + 3, HY + 22, 3);
-    hLine(ctx, sh,   HX + 4, HY + 23, 2);
-    px(ctx,    sh,   HX + 5, HY + 24);
+    // Jaw-to-chin coverage; positions follow the jaw narrowing in S rows 20-24
+    hLine(ctx, base, HX + 2, HY + 20, 3);
+    hLine(ctx, sh,   HX + 3, HY + 21, 3);
+    hLine(ctx, sh,   HX + 4, HY + 22, 3);
+    hLine(ctx, sh,   HX + 5, HY + 23, 2);
+    px(ctx,    sh,   HX + 6, HY + 24);
   }
 }
 
 function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardStyle) {
-  // Profile head: HX=15, HY=24. 26 rows — chin at y=49 meets neck at y=50.
-  const HX = 15, HY = 24;
+  // Profile head: HX=13, HY=24. 26 rows — chin at y=49 meets neck at y=50.
+  // HX=13 moves face 2px forward of torso (natural protrusion in side view).
+  // Max width 18px — larger skull gives the face room to show detail.
+  const HX = 13, HY = 24;
   const outline = '#111111';
 
-  // Profile silhouette — max 15px wide, 26 rows tall
+  // Profile silhouette — max 18px wide, 26 rows tall
+  // xo/w derived from absolute positions: left edge = HX+xo, right = HX+xo+w-1
   const S = [
-    [5,  3],  //  0: crown peak   (y=24)
-    [4,  5],  //  1: upper crown  (y=25)
-    [3,  7],  //  2: crown        (y=26)
-    [2,  9],  //  3: upper dome   (y=27)
-    [1, 11],  //  4: dome         (y=28)
-    [0, 13],  //  5: dome width   (y=29)
-    [0, 14],  //  6: temples      (y=30)
-    [0, 15],  //  7: max width    (y=31)
-    [0, 15],  //  8: max width    (y=32)
-    [0, 15],  //  9: max width    (y=33)
-    [0, 15],  // 10: max width    (y=34)
-    [0, 15],  // 11: hairline     (y=35)
-    [0, 15],  // 12: face start   (y=36)
-    [0, 15],  // 13: brow         (y=37)
-    [0, 15],  // 14: eye zone     (y=38)
-    [0, 15],  // 15: eye zone     (y=39)
-    [0, 15],  // 16: nose zone    (y=40)
-    [0, 14],  // 17: nose lower   (y=41)
-    [0, 14],  // 18: mouth        (y=42)
-    [0, 14],  // 19: mouth        (y=43)
-    [1, 12],  // 20: jaw          (y=44)
-    [2, 10],  // 21: jaw          (y=45)
-    [3,  9],  // 22: lower jaw    (y=46)
-    [4,  8],  // 23: chin         (y=47)
-    [5,  6],  // 24: chin         (y=48)
-    [6,  5],  // 25: chin tip     (y=49)
+    [7,  3],  //  0: crown peak   (abs 20-22, y=24)
+    [6,  5],  //  1: upper crown  (abs 19-23, y=25)
+    [5,  7],  //  2: crown        (abs 18-24, y=26)
+    [4,  9],  //  3: upper dome   (abs 17-25, y=27)
+    [3, 11],  //  4: dome         (abs 16-26, y=28)
+    [2, 13],  //  5: dome width   (abs 15-27, y=29)
+    [1, 16],  //  6: temples      (abs 14-28, y=30)
+    [0, 18],  //  7: max width    (abs 13-30, y=31)
+    [0, 18],  //  8: max width    (abs 13-30, y=32)
+    [0, 18],  //  9: max width    (abs 13-30, y=33)
+    [0, 18],  // 10: max width    (abs 13-30, y=34)
+    [0, 18],  // 11: hairline     (abs 13-30, y=35)
+    [0, 18],  // 12: face start   (abs 13-30, y=36)
+    [0, 18],  // 13: brow         (abs 13-30, y=37)
+    [0, 18],  // 14: eye zone     (abs 13-30, y=38)
+    [0, 18],  // 15: eye zone     (abs 13-30, y=39)
+    [0, 18],  // 16: nose zone    (abs 13-30, y=40)
+    [0, 17],  // 17: nose lower   (abs 13-29, y=41)
+    [0, 17],  // 18: mouth        (abs 13-29, y=42)
+    [0, 17],  // 19: mouth        (abs 13-29, y=43)
+    [2, 14],  // 20: jaw          (abs 15-28, y=44)
+    [3, 12],  // 21: jaw          (abs 16-27, y=45)
+    [4, 10],  // 22: lower jaw    (abs 17-26, y=46)
+    [5,  8],  // 23: chin         (abs 18-25, y=47)
+    [6,  6],  // 24: chin         (abs 19-24, y=48)
+    [7,  4],  // 25: chin tip     (abs 20-23, y=49)
   ];
   const HH = S.length; // 26
 
@@ -532,10 +537,10 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardSt
     hLine(ctx, hairColors.base, HX + xo, HY + r, w);
   }
 
-  // Skin fill for face area — 2px wider than before so face reads clearly
+  // Skin fill — width capped so 3px hair strip remains at back of head
   for (let r = 12; r <= 23; r++) {
     const [xo, w] = S[r];
-    const faceW = Math.min(w - 2, 13);
+    const faceW = Math.min(w - 3, 15);
     hLine(ctx, skinColors.base, HX + xo, HY + r, faceW);
   }
 

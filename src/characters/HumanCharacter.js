@@ -266,7 +266,7 @@ function drawWest(ctx, config, offsets) {
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);
   // Head
   ctx.save();
-  ctx.translate(0, headBob);
+  ctx.translate(0, bodyY + headBob);
   drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
   ctx.restore();
 }
