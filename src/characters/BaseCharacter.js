@@ -1811,17 +1811,27 @@ function drawShoesWest(ctx, shoeColors, frontX, backX, shoeY, frontLift=0, backL
   const frontY = shoeY - Math.round(frontLift);
   const backY  = shoeY - Math.round(backLift);
 
-  // Back shoe (dimmer, drawn first)
+  // Back shoe — muted side profile (drawn first so front is on top)
   fillRect(ctx, shoeColors.shadow, backX - 3, backY, 10, 5);
-  hLine(ctx, shoeColors.shadow, backX - 3, backY + 4, 10);
   outlineRect(ctx, shoeColors.outline, backX - 3, backY, 10, 5);
 
-  // Front shoe: pointing left (toe at lower-x = facing direction)
-  fillRect(ctx, shoeColors.base, frontX - 7, frontY, 15, 5);
-  hLine(ctx, shoeColors.highlight, frontX - 6, frontY, 12);
-  hLine(ctx, shoeColors.shadow,    frontX - 7, frontY + 3, 15);
-  hLine(ctx, shoeColors.shadow,    frontX - 7, frontY + 4, 15);
-  outlineRect(ctx, shoeColors.outline, frontX - 7, frontY, 15, 5);
+  // Front shoe: 14px wide, toe at sx (pointing left), heel at sx+13
+  // Shape: toe box highlight, vamp shine strip, heel counter shadow, midsole shadow
+  const sx = frontX - 7;
+  fillRect(ctx, shoeColors.base, sx, frontY, 14, 4);
+  // Toe box highlight — front 4px, rows 0-1 (lit from front and above)
+  hLine(ctx, shoeColors.highlight, sx,     frontY,     4);
+  px(ctx,    shoeColors.highlight, sx,     frontY + 1);
+  px(ctx,    shoeColors.highlight, sx + 1, frontY + 1);
+  // Vamp highlight strip — mid-top row
+  hLine(ctx, shoeColors.highlight, sx + 5, frontY, 6);
+  // Heel counter shadow — rear 2px dimmer (facing away from light)
+  vLine(ctx, shoeColors.shadow, sx + 12, frontY,     3);
+  vLine(ctx, shoeColors.shadow, sx + 13, frontY,     3);
+  // Midsole shadow row + solid sole outline row
+  hLine(ctx, shoeColors.shadow,  sx, frontY + 3, 14);
+  hLine(ctx, shoeColors.outline, sx, frontY + 4, 14);
+  outlineRect(ctx, shoeColors.outline, sx, frontY, 14, 5);
 }
 
 // ---------------------------------------------------------------------------
