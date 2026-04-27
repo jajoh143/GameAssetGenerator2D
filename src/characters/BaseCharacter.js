@@ -241,23 +241,23 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   const eyeY = HY + 19;
 
   // Left eye — x=22..28; outer=left (away from nose), inner=right (toward nose)
-  // Upper iris row: W W iris iris W
+  // Upper iris row: W W iris iris iris
   px(ctx, eyeColors.lash,  22, eyeY);
   px(ctx, '#FFFFFF',       23, eyeY);            // outer sclera 1
   px(ctx, '#FFFFFF',       24, eyeY);            // outer sclera 2
-  px(ctx, eyeColors.iris,  25, eyeY);            // iris (top-left of 2×2 square)
-  px(ctx, eyeColors.iris,  26, eyeY);            // iris (top-right of 2×2 square)
-  px(ctx, '#FFFFFF',       27, eyeY);            // inner sclera
+  px(ctx, eyeColors.iris,  25, eyeY);            // iris
+  px(ctx, eyeColors.iris,  26, eyeY);            // iris
+  px(ctx, eyeColors.iris,  27, eyeY);            // iris (nose side, was inner sclera)
   px(ctx, eyeColors.lash,  28, eyeY);
-  // Lower iris row: W W iris iris W  (full 2px iris visible)
+  // Lower iris row: W W iris iris iris
   px(ctx, eyeColors.lash,  22, eyeY + 1);
   px(ctx, '#FFFFFF',       23, eyeY + 1);
   px(ctx, '#FFFFFF',       24, eyeY + 1);
   px(ctx, eyeColors.iris,  25, eyeY + 1);
   px(ctx, eyeColors.iris,  26, eyeY + 1);
-  px(ctx, '#FFFFFF',       27, eyeY + 1);
+  px(ctx, eyeColors.iris,  27, eyeY + 1);        // iris (nose side)
   px(ctx, eyeColors.lash,  28, eyeY + 1);
-  // Open bottom arc (no lash at corners — lighter lower lid)
+  // Bottom arc — white stays at nose-side (x=27) for lower-inner corner sclera
   px(ctx, '#FFFFFF',       23, eyeY + 2);
   px(ctx, '#FFFFFF',       24, eyeY + 2);
   px(ctx, '#FFFFFF',       25, eyeY + 2);
@@ -265,23 +265,23 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, '#FFFFFF',       27, eyeY + 2);
 
   // Right eye — x=35..41; inner=left (toward nose), outer=right
-  // Upper iris row: W iris iris W W
+  // Upper iris row: iris iris iris W W
   px(ctx, eyeColors.lash,  35, eyeY);
-  px(ctx, '#FFFFFF',       36, eyeY);            // inner sclera
-  px(ctx, eyeColors.iris,  37, eyeY);            // iris (top-left of 2×2 square)
-  px(ctx, eyeColors.iris,  38, eyeY);            // iris (top-right of 2×2 square)
+  px(ctx, eyeColors.iris,  36, eyeY);            // iris (nose side, was inner sclera)
+  px(ctx, eyeColors.iris,  37, eyeY);            // iris
+  px(ctx, eyeColors.iris,  38, eyeY);            // iris
   px(ctx, '#FFFFFF',       39, eyeY);            // outer sclera 1
   px(ctx, '#FFFFFF',       40, eyeY);            // outer sclera 2
   px(ctx, eyeColors.lash,  41, eyeY);
-  // Lower iris row: W iris iris W W  (full 2px iris)
+  // Lower iris row: iris iris iris W W
   px(ctx, eyeColors.lash,  35, eyeY + 1);
-  px(ctx, '#FFFFFF',       36, eyeY + 1);
+  px(ctx, eyeColors.iris,  36, eyeY + 1);        // iris (nose side)
   px(ctx, eyeColors.iris,  37, eyeY + 1);
   px(ctx, eyeColors.iris,  38, eyeY + 1);
   px(ctx, '#FFFFFF',       39, eyeY + 1);
   px(ctx, '#FFFFFF',       40, eyeY + 1);
   px(ctx, eyeColors.lash,  41, eyeY + 1);
-  // Open bottom arc
+  // Bottom arc — white stays at nose-side (x=36) for lower-inner corner sclera
   px(ctx, '#FFFFFF',       36, eyeY + 2);
   px(ctx, '#FFFFFF',       37, eyeY + 2);
   px(ctx, '#FFFFFF',       38, eyeY + 2);
