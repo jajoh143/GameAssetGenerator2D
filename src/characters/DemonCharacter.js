@@ -501,6 +501,95 @@ function drawDemonHeadSouth(ctx, colors, config) {
   }
 }
 
+// Draw a single profile horn for west-facing demon. Called inside ctx.translate so it moves with head.
+function drawHornsWest(ctx, colors, hornStyle, HX, HY) {
+  const { base: hb, highlight: hh, shadow: hs, outline: ho } = colors.horn;
+  // Crown peak center: HX+7=20, just above head top: HY-1=23
+  const rx = HX + 7;
+  const ry = HY - 1;
+
+  if (hornStyle === 'straight') {
+    fillRect(ctx, hb, rx, ry - 7, 2, 8);  // shaft+base: x=20-21, y=16-23
+    pixel(ctx, hb, rx + 2, ry);            // base extra: x=22, y=23
+    pixel(ctx, hb, rx, ry - 8);            // tip: x=20, y=15
+    pixel(ctx, hh, rx, ry - 8);
+    vLine(ctx, hh, rx, ry - 7, 5);
+    pixel(ctx, hs, rx + 1, ry - 3);
+    pixel(ctx, hs, rx + 1, ry - 4);
+    pixel(ctx, hs, rx + 1, ry - 5);
+    pixel(ctx, ho, rx, ry - 9);
+    pixel(ctx, ho, rx - 1, ry - 8);
+    pixel(ctx, ho, rx + 1, ry - 8);
+    vLine(ctx, ho, rx - 1, ry - 7, 8);
+    vLine(ctx, ho, rx + 2, ry - 7, 7);
+    pixel(ctx, ho, rx + 3, ry);
+
+  } else if (hornStyle === 'curved') {
+    // Curves up and forward (leftward for west-facing) — classic demon profile horn
+    hLine(ctx, hb, rx,     ry,     3);   // y=23: x=20-22 (base)
+    hLine(ctx, hb, rx,     ry - 1, 2);   // y=22: x=20-21
+    hLine(ctx, hb, rx - 1, ry - 2, 2);   // y=21: x=19-20
+    hLine(ctx, hb, rx - 1, ry - 3, 2);   // y=20: x=19-20
+    hLine(ctx, hb, rx - 2, ry - 4, 2);   // y=19: x=18-19
+    hLine(ctx, hb, rx - 2, ry - 5, 2);   // y=18: x=18-19
+    hLine(ctx, hb, rx - 3, ry - 6, 2);   // y=17: x=17-18
+    pixel(ctx,   hb, rx - 3, ry - 7);    // y=16: tip x=17
+    pixel(ctx, hh, rx - 3, ry - 7);
+    pixel(ctx, hh, rx - 3, ry - 6);
+    pixel(ctx, hs, rx,     ry - 1);
+    pixel(ctx, hs, rx - 1, ry - 3);
+    pixel(ctx, hs, rx - 2, ry - 5);
+    // Left/outer outline
+    pixel(ctx, ho, rx - 4, ry - 7);
+    pixel(ctx, ho, rx - 4, ry - 6);
+    pixel(ctx, ho, rx - 4, ry - 5);
+    pixel(ctx, ho, rx - 3, ry - 4);
+    pixel(ctx, ho, rx - 3, ry - 3);
+    pixel(ctx, ho, rx - 2, ry - 2);
+    pixel(ctx, ho, rx - 2, ry - 1);
+    pixel(ctx, ho, rx - 1, ry);
+    // Right/inner outline
+    pixel(ctx, ho, rx - 2, ry - 7);
+    pixel(ctx, ho, rx - 1, ry - 6);
+    pixel(ctx, ho, rx - 1, ry - 5);
+    pixel(ctx, ho, rx,     ry - 4);
+    pixel(ctx, ho, rx,     ry - 3);
+    pixel(ctx, ho, rx + 1, ry - 2);
+    pixel(ctx, ho, rx + 1, ry - 1);
+    pixel(ctx, ho, rx + 2, ry);
+
+  } else {
+    // Ram horn: arcs up and backward (rightward), then curls down
+    hLine(ctx, hb, rx,     ry,     3);   // base: y=23, x=20-22
+    hLine(ctx, hb, rx + 1, ry - 1, 3);  // y=22: x=21-23
+    hLine(ctx, hb, rx + 2, ry - 2, 3);  // y=21: x=22-24
+    hLine(ctx, hb, rx + 3, ry - 3, 3);  // y=20: x=23-25 (top of arc)
+    hLine(ctx, hb, rx + 4, ry - 2, 2);  // y=21: x=24-25 (curl begins)
+    hLine(ctx, hb, rx + 5, ry - 1, 2);  // y=22: x=25-26
+    hLine(ctx, hb, rx + 5, ry,     2);  // y=23: x=25-26 (curl end)
+    pixel(ctx, hh, rx + 3, ry - 3);
+    pixel(ctx, hh, rx + 4, ry - 3);
+    pixel(ctx, hs, rx + 5, ry - 1);
+    pixel(ctx, hs, rx + 5, ry);
+    // Outer outline (top of arc)
+    pixel(ctx, ho, rx - 1, ry);
+    pixel(ctx, ho, rx,     ry - 1);
+    pixel(ctx, ho, rx + 1, ry - 2);
+    pixel(ctx, ho, rx + 2, ry - 3);
+    pixel(ctx, ho, rx + 3, ry - 4);
+    pixel(ctx, ho, rx + 4, ry - 4);
+    pixel(ctx, ho, rx + 5, ry - 3);
+    pixel(ctx, ho, rx + 6, ry - 2);
+    pixel(ctx, ho, rx + 7, ry - 1);
+    pixel(ctx, ho, rx + 7, ry);
+    // Inner outline (concave side)
+    pixel(ctx, ho, rx + 2, ry);
+    pixel(ctx, ho, rx + 3, ry - 1);
+    pixel(ctx, ho, rx + 4, ry - 1);
+    pixel(ctx, ho, rx + 4, ry);
+  }
+}
+
 /**
  * Generate a single frame canvas for a demon character.
  */
@@ -548,18 +637,18 @@ function generateFrame(rawConfig, animationName, frameOffset) {
     case 'west': {
       drawDarkAura(ctx, by);
       humanWest(ctx, config, off);
-      // Side horn (one visible) — scaled ×1.5 for 96px frame
       ctx.save();
       ctx.translate(0, by + headBobScaled);
-      // Single horn in profile — above head at HY=26
-      const hornY = 22;
-      fillRect(ctx, colors.horn.base, 41, hornY, 4, 7);
-      fillRect(ctx, colors.horn.base, 39, hornY - 3, 3, 5);
-      outlineRect(ctx, colors.horn.outline, 39, hornY - 3, 6, 11);
+      drawHornsWest(ctx, colors, config.hornStyle || 'curved', 13, 24);
       ctx.restore();
-      // Side tail (beltY_west ≈ 66+by)
-      vLine(ctx, colors.tail.base, 52, 67 + by, 8);
-      fillRect(ctx, colors.tail.base, 53, 75 + by, 5, 5);
+      // Side profile tail — root at back hip (right edge of torso x=31, beltY=74)
+      const stx = 31, sty = 74 + by;
+      hLine(ctx, colors.tail.base, stx,     sty,     2);
+      hLine(ctx, colors.tail.base, stx,     sty + 1, 3);
+      hLine(ctx, colors.tail.base, stx + 1, sty + 2, 3);
+      hLine(ctx, colors.tail.base, stx,     sty + 3, 5);
+      hLine(ctx, colors.tail.base, stx + 1, sty + 4, 3);
+      pixel(ctx, colors.tail.base, stx + 2, sty + 5);
       break;
     }
     case 'east': {
@@ -585,13 +674,15 @@ function generateFrameDirect(ctx, config, colors, off, direction) {
   humanWest(ctx, config, off);
   ctx.save();
   ctx.translate(0, by + headBobScaled);
-  const hornY = 22;
-  fillRect(ctx, colors.horn.base, 41, hornY, 4, 7);
-  fillRect(ctx, colors.horn.base, 39, hornY - 3, 3, 5);
-  outlineRect(ctx, colors.horn.outline, 39, hornY - 3, 6, 11);
+  drawHornsWest(ctx, colors, config.hornStyle || 'curved', 13, 24);
   ctx.restore();
-  vLine(ctx, colors.tail.base, 56, 62 + by, 9);
-  fillRect(ctx, colors.tail.base, 57, 71 + by, 6, 6);
+  const dtx = 31, dty = 74 + by;
+  hLine(ctx, colors.tail.base, dtx,     dty,     2);
+  hLine(ctx, colors.tail.base, dtx,     dty + 1, 3);
+  hLine(ctx, colors.tail.base, dtx + 1, dty + 2, 3);
+  hLine(ctx, colors.tail.base, dtx,     dty + 3, 5);
+  hLine(ctx, colors.tail.base, dtx + 1, dty + 4, 3);
+  pixel(ctx, colors.tail.base, dtx + 2, dty + 5);
 }
 
 function getDirectionFromAnim(animName) {

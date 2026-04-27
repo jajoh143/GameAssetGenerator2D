@@ -38,7 +38,7 @@ function resolveColors(config) {
     skin:     skinColors,
     hair:     Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
     eyes:     Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown,
-    clothing: Colors.CLOTHING[config.clothing] || Colors.CLOTHING.jacket_grey,
+    clothing: Colors.CLOTHING[config.clothing] || Colors.CLOTHING[config.clothing.replace('_vneck', '')] || Colors.CLOTHING.jacket_grey,
     pants:    Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
     shoes:    Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
     belt:     Colors.BELT.standard,
@@ -266,8 +266,8 @@ function drawWest(ctx, config, offsets) {
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);
   // Head
   ctx.save();
-  ctx.translate(0, headBob);
-  drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes);
+  ctx.translate(0, bodyY + headBob);
+  drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
   ctx.restore();
 }
 
