@@ -72,56 +72,52 @@ const WALK_NORTH_FRAMES = WALK_SOUTH_FRAMES; // same offsets, different drawing
 const WALK_EAST_FRAMES = WALK_WEST_FRAMES; // same offsets, mirrored at render time
 
 // ATTACK SWING SOUTH: 8 frames - melee sword/weapon swing facing camera
-// 8 frames keeps sheet width at 768 (= 8×96, same as walk rows).
-// Reduced peak values so the fist stays below the chin and arc jumps
-// are ≤15 rFwd units per frame (was up to 30).
-//
-// rArmDY = round(rightArmFwd * 0.6); hand Y = torsoY + rArmDY + sleeveH
-// At apex (bodyY=-2→-3, torsoY≈32): rArmDY=round(-22×0.6)=-13 → hand y≈35 (chin-safe).
+// Structure: anticipation(squat) → wind-up(slow) → apex(hold) → smear → STRIKE(fastest Δ) → overshoot+squash → recovery
+// rArmDY = round(rightArmFwd * 0.9); at strike rFwd=12 → rArmDY≈11px down from torso.
 const ATTACK_SWING_SOUTH_FRAMES = [
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  -3, leftArmOut: 0, rightArmOut:  -1, tilt: 0, headBob:  0 }, // F0 anticipation
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd: -1, rightArmFwd: -10, leftArmOut: 0, rightArmOut:  -4, tilt: 0, headBob:  0 }, // F1 wind-up start
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd: -2, rightArmFwd: -17, leftArmOut: 0, rightArmOut:  -6, tilt: 0, headBob:  0 }, // F2 wind-up high
-  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -22, leftArmOut: 0, rightArmOut:  -8, tilt: 0, headBob: -1 }, // F3 apex — arm overhead
-  { bodyY: -1, leftLegFwd: -1, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd:  -8, leftArmOut: 0, rightArmOut:  -2, tilt: 0, headBob:  0 }, // F4 smear: fast mid-swing (Δ=14)
-  { bodyY:  0, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd:   5, leftArmOut: 0, rightArmOut:   5, tilt: 0, headBob:  0 }, // F5 pre-strike (Δ=13)
-  { bodyY:  0, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  12, leftArmOut: 0, rightArmOut:   8, tilt: 0, headBob:  0 }, // F6 STRIKE (Δ=7)
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd: -1, rightArmFwd:   6, leftArmOut: 0, rightArmOut:   3, tilt: 0, headBob:  0 }, // F7 recovery
+  { bodyY: +1, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  -4, leftArmOut: 0, rightArmOut:  -1, tilt: 0, headBob:  0 }, // F0 anticipation: squat, arm barely raised
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd: -1, rightArmFwd: -12, leftArmOut: 0, rightArmOut:  -4, tilt: 0, headBob:  0 }, // F1 wind-up: body rises, arm pulls back (Δ=8)
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -20, leftArmOut: 0, rightArmOut:  -7, tilt: 0, headBob:  0 }, // F2 wind-up high: arm overhead (Δ=8)
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -22, leftArmOut: 0, rightArmOut:  -8, tilt: 0, headBob: -1 }, // F3 apex: pause at top, headBob commits (Δ=2)
+  { bodyY: -1, leftLegFwd: -1, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd:  -6, leftArmOut: 0, rightArmOut:  -1, tilt: 0, headBob:  0 }, // F4 smear: arm whips through arc (Δ=16)
+  { bodyY:  0, leftLegFwd: -2, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  12, leftArmOut: 0, rightArmOut:   9, tilt: 0, headBob:  0 }, // F5 STRIKE: biggest Δ=18, arm at full extension
+  { bodyY: +1, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  14, leftArmOut: 0, rightArmOut:  10, tilt: 0, headBob:  0 }, // F6 overshoot+squash: arm 2 past, body drops (Δ=2)
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd: -1, rightArmFwd:   5, leftArmOut: 0, rightArmOut:   3, tilt: 0, headBob:  0 }, // F7 recovery (Δ=9)
 ];
 
 // ATTACK SWING WEST: 8 frames - melee swing in side profile (facing left)
-// frontArmDX = -round(leftArmFwd * 0.9). Max jump ≤13 units (was 18-20).
+// frontArmDX = -round(leftArmFwd * 1.4). Structure mirrors SWING_SOUTH: squat→wind-up→apex→smear→STRIKE→overshoot→recovery.
 const ATTACK_SWING_WEST_FRAMES = [
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  -2, rightArmFwd:  1, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F0 anticipation
-  { bodyY: -1, leftLegFwd: -1, rightLegFwd:  1, leftArmFwd:  -7, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F1 pulling back
-  { bodyY: -2, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd: -14, rightArmFwd:  4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F2 arm mostly back
-  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -20, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // F3 apex: arm fully back
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd:  -6, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F4 smear: fast swing (Δ=13)
-  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:   8, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F5 arm forward (Δ=13)
-  { bodyY:  0, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd:  20, rightArmFwd: -5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F6 STRIKE: arm extended (Δ=11)
-  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:  11, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F7 recovery
+  { bodyY: +1, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  -3, rightArmFwd:  1, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F0 anticipation: squat, arm barely raised
+  { bodyY: -1, leftLegFwd: -1, rightLegFwd:  1, leftArmFwd: -10, rightArmFwd:  2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F1 wind-up: body rises, arm pulls back (Δ=7)
+  { bodyY: -2, leftLegFwd: -2, rightLegFwd:  2, leftArmFwd: -18, rightArmFwd:  4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F2 wind-up high: arm mostly back (Δ=8)
+  { bodyY: -2, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -20, rightArmFwd:  5, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // F3 apex: pause at top (Δ=2)
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd:  -4, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F4 smear: arm whips through arc (Δ=16)
+  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:  14, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F5 STRIKE: biggest Δ=18, arm at full extension
+  { bodyY: +1, leftLegFwd:  2, rightLegFwd: -2, leftArmFwd:  17, rightArmFwd: -4, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F6 overshoot+squash: arm 3 past, body drops (Δ=3)
+  { bodyY:  0, leftLegFwd:  1, rightLegFwd: -1, leftArmFwd:   8, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F7 recovery (Δ=9)
 ];
 
 // ATTACK SHOOT SOUTH: 6 frames - gun/wand facing camera
-// F5 lowered to rFwd=-4/rOut=2 so the recovery snap is ≤7 units (was 15).
+// Arm starts in slight ready-stance (rFwd=-3) for cleaner raise arc. Recoil Δ=5 vs apex.
 const ATTACK_SHOOT_SOUTH_FRAMES = [
-  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:   0, leftArmOut: 0, rightArmOut:  0, tilt: 0, headBob:  0 }, // F0 ready
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -1, rightArmFwd:  -8, leftArmOut: 0, rightArmOut:  6, tilt: 0, headBob:  0 }, // F1 raise: larger initial lift
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -14, leftArmOut: 0, rightArmOut:  9, tilt: 0, headBob:  0 }, // F2 aim: wrist near eye level
-  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -14, leftArmOut: 0, rightArmOut:  9, tilt: 0, headBob: -1 }, // F3 FIRE: body + head commit
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -1, rightArmFwd: -10, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // F4 recoil: smaller kick (Δ=4 vs apex)
-  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  -4, leftArmOut: 0, rightArmOut:  2, tilt: 0, headBob:  0 }, // F5 lower: gradual return (Δ=6, not snap)
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  -3, leftArmOut: 0, rightArmOut:  2, tilt: 0, headBob:  0 }, // F0 ready stance: arm slightly raised
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -1, rightArmFwd: -12, leftArmOut: 0, rightArmOut:  8, tilt: 0, headBob:  0 }, // F1 raise: quick lift (Δ=9)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -16, leftArmOut: 0, rightArmOut: 10, tilt: 0, headBob:  0 }, // F2 aim: wrist at eye level (Δ=4)
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -2, rightArmFwd: -16, leftArmOut: 0, rightArmOut: 10, tilt: 0, headBob: -1 }, // F3 FIRE: body + head commit (hold arm)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: -1, rightArmFwd:  -9, leftArmOut: 0, rightArmOut:  5, tilt: 0, headBob:  0 }, // F4 recoil: kick back (Δ=7)
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  -3, leftArmOut: 0, rightArmOut:  1, tilt: 0, headBob:  0 }, // F5 lower: returns to ready (Δ=6)
 ];
 
 // ATTACK SHOOT WEST: 6 frames - gun/wand in side profile (facing left)
-// F5 set to lFwd=4 so recovery is gradual (Δ=7, not snap from 10→0).
+// Arm starts slightly extended (lFwd=2) for natural ready stance. Recoil Δ=6 feels snappy without jarring.
 const ATTACK_SHOOT_WEST_FRAMES = [
-  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  0, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F0 ready
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  7, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F1 raise and extend
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 14, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F2 aim: arm fully extended
-  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 14, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // F3 FIRE: body + head commit
-  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 11, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F4 recoil: small pullback (Δ=3)
-  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  4, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F5 lower: gradual return (Δ=7)
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  2, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F0 ready stance: arm slightly extended
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  9, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F1 raise and extend (Δ=7)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 16, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F2 aim: arm fully extended (Δ=7)
+  { bodyY: -2, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 16, rightArmFwd: -3, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob: -1 }, // F3 FIRE: body + head commit (hold arm)
+  { bodyY: -1, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd: 10, rightArmFwd: -2, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F4 recoil: snappy pullback (Δ=6)
+  { bodyY:  0, leftLegFwd: 0, rightLegFwd: 0, leftArmFwd:  3, rightArmFwd:  0, leftArmOut: 0, rightArmOut: 0, tilt: 0, headBob:  0 }, // F5 lower: gradual return (Δ=7)
 ];
 
 // North/East mirrors
