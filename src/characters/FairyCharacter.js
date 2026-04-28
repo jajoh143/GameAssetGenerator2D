@@ -16,7 +16,10 @@ const FRAME_W = 96;
 const FRAME_H = 96;
 
 // ─── Length / size tables ───────────────────────────────────────────────────
-const WING_SCALES  = { small: 0.7, medium: 1.0, large: 1.35 };
+// Wing scales bumped up across the board so even the smallest wings feel
+// substantial against a tiny pixie body — D&D fairies/pixies have wings
+// that visibly span well past their shoulders.
+const WING_SCALES  = { small: 1.0, medium: 1.4, large: 1.85 };
 const GLOW_RADII   = { subtle: 18, medium: 28, bright: 40 };
 
 // ─── Color resolver ────────────────────────────────────────────────────────
