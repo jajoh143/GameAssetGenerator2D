@@ -1524,16 +1524,24 @@ function drawRobeSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
-  // T-shirt with crew neck (default) or V-neck variant when isVneck=true.
+  // T-shirt with a properly-shaped neckline:
+  //   • CREW NECK: oval-curved ribbed band — wider at sides than middle,
+  //     so the front of the collar dips slightly. Ribbed (alternating
+  //     base/shadow) to read as fabric, not a flat sticker.
+  //   • V-NECK: triangular cut showing skin/dark interior, with a 1px
+  //     ribbed border running along each diagonal V-edge.
+  //   • SLEEVE SEAM hint at row 3 on each shoulder edge (1px shadow line).
+  //   • Subtle chest fold at row 7 + hem stitch at the bottom row.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
+  const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
 
-  // Fill base
+  // ── 1. Fill base ────────────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
-  // Directional shading: 2px lit left, 3px shadow right
+
+  // ── 2. Directional shading ──────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     const l = rl(row), r = rr(row), rw = r - l + 1;
     px(ctx, colors.highlight, l + 1, y + row);
@@ -1542,26 +1550,76 @@ function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
     if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
+
+  // ── 3. Neckline ─────────────────────────────────────────────────────────
+  const COL  = colors.collar || colors.shadow;
+  const DEEP = colors.deep_shadow || colors.shadow;
+
   if (isVneck) {
-    // V-neck: two diagonal shadow lines from shoulder-width down to center point
-    // Row 0: 8px collar band (full shirt width at neck)
-    hLine(ctx, colors.collar, cx - 4, y, 8);
-    hLine(ctx, colors.highlight, cx - 3, y, 6);
-    // Rows 1-4: V opens symmetrically, 1px each side per row
-    for (let row = 1; row <= 4; row++) {
-      px(ctx, colors.shadow, cx - row, y + row);  // left diagonal
-      px(ctx, colors.shadow, cx + row - 1, y + row);  // right diagonal
+    // V-cut: 5 rows deep, widest at row 0 (5px wide), tapering to 1px point.
+    // Inside the V we paint a darker tone (jacket-shadow) so the V reads as
+    // a "cut" through the fabric. The diagonal edges get 1px highlight on
+    // the lit side and 1px deep-shadow on the underside (selout).
+    const V_DEPTH = 5;
+    for (let row = 0; row < V_DEPTH; row++) {
+      // halfW shrinks as we descend: row 0 = 3, row 4 = 0
+      const halfW = Math.max(0, 3 - Math.floor(row * 3 / Math.max(V_DEPTH - 1, 1)));
+      if (halfW <= 0) continue;
+      const sl = cx - halfW, sr = cx + halfW;
+      // Inner V: dark (suggests the inside of the shirt visible below the cut)
+      hLine(ctx, COL, sl, y + row, sr - sl + 1);
+      // Highlight on the lit (left) edge, deep shadow on the right edge
+      px(ctx, colors.highlight, sl,     y + row);
+      px(ctx, DEEP,             sr,     y + row);
+      // Outline along the V edges (1px outside the V)
+      px(ctx, colors.outline,   sl - 1, y + row);
+      px(ctx, colors.outline,   sr + 1, y + row);
     }
   } else {
-    // Crew neck: 10px wide × 3px tall band
-    const neckW = 10, neckX = cx - 5;
-    fillRect(ctx, colors.collar, neckX, y, neckW, 3);
-    hLine(ctx, colors.highlight, neckX + 1, y,     neckW - 2);
-    hLine(ctx, colors.shadow,    neckX + 1, y + 2, neckW - 2);
-    outlineRect(ctx, colors.outline, neckX, y, neckW, 3);
+    // Crew neck: ovate ribbed band, dips 1px at the centre front.
+    //   Row 0: 8 wide  (cx-4..cx+3)
+    //   Row 1: 6 wide  (cx-3..cx+2) — front of collar dips here
+    //   Row 2: 4 wide  (cx-2..cx+1) — bottom of collar curve
+    const COLLAR_ROWS = [
+      { halfL: 4, halfR: 4 },
+      { halfL: 3, halfR: 3 },
+      { halfL: 2, halfR: 2 },
+    ];
+    for (let row = 0; row < COLLAR_ROWS.length; row++) {
+      const c = COLLAR_ROWS[row];
+      const sl = cx - c.halfL, sr = cx + c.halfR - 1;
+      // Alternating rib stripes (base ↔ collar tone) for ribbed knit feel
+      const ribCol = (row % 2 === 0) ? COL : colors.shadow;
+      hLine(ctx, ribCol, sl, y + row, sr - sl + 1);
+    }
+    // Top edge highlight (light hits the top of the crew band)
+    hLine(ctx, colors.highlight, cx - 3, y, 6);
+    // Bottom shadow under the collar (where it meets the chest fabric)
+    hLine(ctx, DEEP, cx - 1, y + 3, 2);
+    // Curved edges (selout — outline the visible curve of the collar)
+    px(ctx, colors.outline, cx - 4, y);
+    px(ctx, colors.outline, cx + 3, y);
+    px(ctx, colors.outline, cx - 4, y + 1);
+    px(ctx, colors.outline, cx + 3, y + 1);
+    px(ctx, colors.outline, cx - 3, y + 2);
+    px(ctx, colors.outline, cx + 2, y + 2);
+    hLine(ctx, colors.outline, cx - 2, y + 3, 4);
   }
-  // Selout outline
-  px(ctx, colors.shadow, x - 1, y - 1); px(ctx, colors.shadow, x + w, y - 1);
+
+  // ── 4. Sleeve seam suggestion at the shoulder edge ─────────────────────
+  px(ctx, DEEP, rl(3),     y + 3);
+  px(ctx, DEEP, rr(3),     y + 3);
+
+  // ── 5. Subtle chest fold at row 7 ──────────────────────────────────────
+  hLine(ctx, colors.shadow, rl(7) + 3, y + 7, rr(7) - rl(7) - 5);
+
+  // ── 6. Bottom hem stitch line (1 row above bottom) ─────────────────────
+  hLine(ctx, colors.shadow,
+    rl(numRows - 2) + 1, y + numRows - 2, rr(numRows - 2) - rl(numRows - 2) - 1);
+
+  // ── 7. Selout outline ──────────────────────────────────────────────────
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
   px(ctx, colors.shadow, x + w, y);
@@ -1575,51 +1633,35 @@ function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
 }
 
 function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
-  // Sleeveless tank top — body is fabric, the upper chest / collarbone area
-  // is bare skin. The shoulder straps that cross the deltoid are drawn
-  // AFTER the arms by drawTankStrapsOverlaySouth so they visibly sit on top
-  // of the shoulder instead of getting overwritten by the arm draw.
-  // This function only draws the body fabric and bare-chest skin.
+  // Sleeveless tank top with a CURVED SCOOP NECKLINE.
+  // Tank fabric covers the entire torso column (arms are drawn separately
+  // in skin tone via armClothing). A scoop-shaped opening at the top reveals
+  // the bare chest. The scoop is widest at the collarbone (9px) and tapers
+  // to a 3px notch about 6 rows down — classic athletic tank silhouette.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
-  const NECK_OPEN_ROWS = 4;       // how far down the chest is bare
+  const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
-
-  // Skin colours fall back to neutral if not provided (shouldn't happen).
   const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820', outline: '#3A1800' };
 
-  // 1. Top NECK_OPEN_ROWS: bare chest in skin colour. No strap pixels here —
-  //    straps are painted as a post-arm overlay so they cross the deltoid.
-  for (let row = 0; row < NECK_OPEN_ROWS; row++) {
-    const l = rl(row), r = rr(row);
-    hLine(ctx, skin.base, l, y + row, r - l + 1);
-    // Subtle skin shading: lit upper-left collarbone, shadow lower-right.
-    if (row === NECK_OPEN_ROWS - 1) {
-      hLine(ctx, skin.shadow, l + 2, y + row, r - l - 3);
-    } else {
-      px(ctx, skin.highlight, cx - 2, y + row);
-      px(ctx, skin.highlight, cx - 1, y + row);
-      px(ctx, skin.shadow,    cx + 2, y + row);
-    }
-  }
-  // ── Pec underline + abs hint (visible on bare chest, per pixel-art
-  //    musculature research). Single horizontal shadow band reads as the
-  //    underside of the pectorals catching shadow.
-  if (NECK_OPEN_ROWS >= 3) {
-    // Pec underline: 6px shadow at the bottom of the bare-chest area
-    hLine(ctx, skin.shadow, cx - 3, y + NECK_OPEN_ROWS - 1, 6);
-    // 1px highlight just above the pec line to suggest the pec's lit upper curve
-    px(ctx, skin.highlight, cx - 2, y + NECK_OPEN_ROWS - 2);
-    px(ctx, skin.highlight, cx - 1, y + NECK_OPEN_ROWS - 2);
-  }
+  // Scoop shape — half-width at each row. null when row is fully fabric.
+  const SCOOP_DEPTH = 6;
+  const scoopHalfW = (row) => {
+    if (row >= SCOOP_DEPTH) return null;
+    if (row === 0) return 4;   //  9px wide at collarbone
+    if (row === 1) return 4;
+    if (row === 2) return 3;
+    if (row === 3) return 3;
+    if (row === 4) return 2;
+    return 1;                  // narrow point at row 5
+  };
 
-  // 2. Body fill from row NECK_OPEN_ROWS down — straight tank fabric.
-  for (let row = NECK_OPEN_ROWS; row < numRows; row++) {
+  // 1. Fill all rows with TANK FABRIC.
+  for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
 
-  // 3. Directional shading (same as tshirt) — only on the fabric area.
-  for (let row = NECK_OPEN_ROWS; row < numRows; row++) {
+  // 2. Directional shading on entire fabric.
+  for (let row = 0; row < numRows; row++) {
     const l = rl(row), r = rr(row), rw = r - l + 1;
     px(ctx, colors.highlight, l + 1, y + row);
     if (rw >= 8) px(ctx, colors.highlight, l + 2, y + row);
@@ -1628,13 +1670,43 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
 
-  // 4. Soft chest crease across the upper fabric edge — sells the neckline.
-  hLine(ctx, colors.shadow, rl(NECK_OPEN_ROWS) + 2, y + NECK_OPEN_ROWS, rr(NECK_OPEN_ROWS) - rl(NECK_OPEN_ROWS) - 3);
-  // Skin-shadow line just above the fabric (where the tank meets bare skin)
-  hLine(ctx, skin.shadow, rl(NECK_OPEN_ROWS) + 2, y + NECK_OPEN_ROWS - 1, rr(NECK_OPEN_ROWS) - rl(NECK_OPEN_ROWS) - 3);
+  // 3. Carve the scoop neckline — paint bare chest skin inside the opening.
+  for (let row = 0; row < SCOOP_DEPTH; row++) {
+    const halfW = scoopHalfW(row);
+    if (halfW === null) continue;
+    const sl = cx - halfW, sr = cx + halfW;
+    hLine(ctx, skin.base, sl, y + row, sr - sl + 1);
+    px(ctx, skin.highlight, sl, y + row);
+    if (halfW >= 2) px(ctx, skin.highlight, sl + 1, y + row);
+    px(ctx, skin.shadow, sr, y + row);
+  }
 
-  // 5. Outlines: only outline the fabric portion; skin chest is outlined by torsoAccents/neck draws.
-  for (let row = NECK_OPEN_ROWS; row < numRows - 1; row++) {
+  // 4. Pec underline visible inside the scoop.
+  const PEC_ROW = SCOOP_DEPTH - 3;
+  if (PEC_ROW >= 0) {
+    const halfW = scoopHalfW(PEC_ROW);
+    if (halfW !== null && halfW >= 2) {
+      hLine(ctx, skin.shadow, cx - halfW + 1, y + PEC_ROW + 1, halfW * 2 - 1);
+    }
+  }
+
+  // 5. Scoop edge — 1px deep-shadow on the fabric side, sells the curve.
+  for (let row = 0; row < SCOOP_DEPTH; row++) {
+    const halfW = scoopHalfW(row);
+    if (halfW === null) continue;
+    const sl = cx - halfW, sr = cx + halfW;
+    px(ctx, colors.deep_shadow || colors.shadow, sl - 1, y + row);
+    px(ctx, colors.deep_shadow || colors.shadow, sr + 1, y + row);
+  }
+  // Bottom of scoop where fabric closes up.
+  hLine(ctx, colors.deep_shadow || colors.shadow, cx - 2, y + SCOOP_DEPTH, 4);
+
+  // 6. Bottom hem stitch line (1 row above the bottom).
+  hLine(ctx, colors.shadow,
+    rl(numRows - 2) + 1, y + numRows - 2, rr(numRows - 2) - rl(numRows - 2) - 1);
+
+  // 7. Selout outline (fabric portion only).
+  for (let row = 0; row < numRows - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
   }
@@ -1697,16 +1769,25 @@ function drawTankStrapsOverlaySouth(ctx, clothingColors, torsoX, torsoY, w) {
 }
 
 function drawBomberSouth(ctx, colors, x, y, w, h) {
-  // Bomber jacket: boxy silhouette, ribbed collar+hem, center zipper.
+  // Flight bomber jacket (MA-1 style):
+  //   • Small RIBBED COLLAR (~9px wide × 2 rows) only at the neck — NOT
+  //     the full shoulder-width collar of a jumper. Real bombers have a
+  //     stand collar that sits just at the throat.
+  //   • Prominent RIBBED HEM at the bottom (3 rows, alternating stripes).
+  //   • Center zipper with metal teeth dots.
+  //   • Chest patch / nameplate on the left.
+  //   • Sleeve cuff suggestion (handled via arms, but we leave 1px shadow
+  //     at row 4 to suggest the sleeve seam).
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 24);
+  const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
 
-  // Fill base
+  // ── 1. Fill base ────────────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
-  // Directional shading: 2px lit left, 3px shadow right
+
+  // ── 2. Directional shading ──────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     const l = rl(row), r = rr(row), rw = r - l + 1;
     px(ctx, colors.highlight, l + 1, y + row);
@@ -1715,42 +1796,69 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
     if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
-  // Ribbed collar (4 rows): alternating rib stripes
-  const COLLAR_H = 4, colW = 15, colX = cx - 7;
+
+  // ── 3. Small stand-collar at the neck (9 wide × 2 rows, ribbed) ─────────
+  const COLLAR_W = 9, COLLAR_X = cx - 4, COLLAR_H = 2;
   for (let row = 0; row < COLLAR_H; row++) {
-    const ribCol = (row % 2 === 0) ? colors.collar : colors.shadow;
-    hLine(ctx, ribCol, colX, y + row, colW);
-    px(ctx, colors.highlight, colX + 1, y + row);
-    px(ctx, colors.shadow,    colX + colW - 2, y + row);
+    const ribCol = (row % 2 === 0) ? (colors.collar || colors.shadow) : colors.shadow;
+    hLine(ctx, ribCol, COLLAR_X, y + row, COLLAR_W);
   }
-  outlineRect(ctx, colors.outline, colX, y, colW, COLLAR_H);
-  // Center zipper (below collar to hem)
-  for (let row = COLLAR_H; row < numRows; row++) {
-    px(ctx, colors.shadow,    cx,     y + row);
-    px(ctx, colors.highlight, cx - 1, y + row);
+  // Collar top edge highlight + bottom shadow
+  hLine(ctx, colors.highlight, COLLAR_X + 1, y, COLLAR_W - 2);
+  hLine(ctx, colors.deep_shadow || colors.shadow, COLLAR_X + 1, y + COLLAR_H - 1, COLLAR_W - 2);
+  // Outline only the visible front face of the collar
+  px(ctx, colors.outline, COLLAR_X,           y);
+  px(ctx, colors.outline, COLLAR_X + COLLAR_W - 1, y);
+  hLine(ctx, colors.outline, COLLAR_X, y + COLLAR_H, COLLAR_W);
+
+  // ── 4. Center zipper from below collar to start of hem ──────────────────
+  const HEM_H = 3;
+  const ZIP_TOP = COLLAR_H;
+  const ZIP_BOT = numRows - HEM_H;
+  // Zipper tape: dark line + lit edge
+  for (let row = ZIP_TOP; row < ZIP_BOT; row++) {
+    px(ctx, colors.deep_shadow || colors.shadow, cx,     y + row);
+    px(ctx, colors.highlight,                    cx - 1, y + row);
   }
-  // Horizontal fold lines
-  for (const fr of [7, 13]) {
-    if (fr < numRows) {
-      hLine(ctx, colors.shadow, rl(fr) + 2, y + fr, rr(fr) - rl(fr) - 4);
-      if (colors.deep_shadow) px(ctx, colors.deep_shadow, cx, y + fr);
+  // Zipper teeth — small metal dots every 2 rows
+  for (let row = ZIP_TOP + 1; row < ZIP_BOT; row += 2) {
+    px(ctx, '#A8A8A8', cx, y + row);
+  }
+  // Zipper pull at top (square detail)
+  fillRect(ctx, '#888888', cx - 1, y + ZIP_TOP, 2, 2);
+  px(ctx, '#D8D8D8', cx - 1, y + ZIP_TOP);
+
+  // ── 5. Chest patch / nameplate (left chest, off-white) ─────────────────
+  const PATCH_W = 5, PATCH_H = 3;
+  const PATCH_X = cx - 8, PATCH_Y = y + 4;
+  fillRect(ctx, '#D8D0C0', PATCH_X, PATCH_Y, PATCH_W, PATCH_H);
+  // Patch shading + stitching
+  hLine(ctx, '#A89878', PATCH_X, PATCH_Y + PATCH_H - 1, PATCH_W);
+  outlineRect(ctx, colors.outline, PATCH_X, PATCH_Y, PATCH_W, PATCH_H);
+
+  // ── 6. Soft chest fold across the upper torso ──────────────────────────
+  hLine(ctx, colors.shadow, rl(8) + 3, y + 8, rr(8) - rl(8) - 5);
+
+  // ── 7. Prominent ribbed hem (last 3 rows, full width with rib stripes) ──
+  for (let row = numRows - HEM_H; row < numRows; row++) {
+    const ribCol = (row - (numRows - HEM_H)) % 2 === 0
+      ? (colors.collar || colors.shadow)
+      : colors.shadow;
+    hLine(ctx, ribCol, rl(row), y + row, rr(row) - rl(row) + 1);
+    // Light edge on top of each rib stripe
+    if ((row - (numRows - HEM_H)) % 2 === 0) {
+      px(ctx, colors.highlight, rl(row) + 1, y + row);
+      px(ctx, colors.highlight, rl(row) + 2, y + row);
     }
   }
-  // Chest pocket flap — 4x2 detail on the left chest
-  const pkBx = cx - 8, pkBy = y + 5;
-  fillRect(ctx, colors.shadow, pkBx, pkBy, 4, 2);
-  px(ctx, colors.highlight, pkBx,     pkBy);
-  px(ctx, colors.deep_shadow || colors.shadow, pkBx + 3, pkBy + 1);
-  // Pocket snap (1px metal stud)
-  px(ctx, colors.highlight, pkBx + 3, pkBy);
-  // Ribbed hem (last 2 rows)
-  for (let row = numRows - 2; row < numRows; row++) {
-    const ribCol = (row % 2 === 0) ? colors.collar : colors.shadow;
-    hLine(ctx, ribCol, rl(row) + 1, y + row, rr(row) - rl(row) - 1);
-    px(ctx, colors.highlight, rl(row) + 2, y + row);
-  }
-  // Armpit crease + selout
-  px(ctx, colors.shadow, x - 1, y - 1); px(ctx, colors.shadow, x + w, y - 1);
+  // Top-of-hem seam line (1px shadow above the ribbed hem)
+  hLine(ctx, colors.deep_shadow || colors.shadow,
+    rl(numRows - HEM_H) + 1, y + numRows - HEM_H - 1,
+    rr(numRows - HEM_H) - rl(numRows - HEM_H) - 1);
+
+  // ── 8. Selout outline ───────────────────────────────────────────────────
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
   px(ctx, colors.shadow, x + w, y);
