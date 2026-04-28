@@ -29,6 +29,11 @@ const HELMET_PRESETS = [
   { variant: 'full_helm', material: 'dark'    },
   { variant: 'hood',      material: 'cloth'   },
   { variant: 'hood',      material: 'dark'    },
+  { variant: 'horned',    material: 'iron'    },
+  { variant: 'horned',    material: 'dark'    },
+  { variant: 'horned',    material: 'steel'   },
+  { variant: 'crowned',   material: 'gold'    },
+  { variant: 'crowned',   material: 'iron'    },
 ];
 
 const CHEST_PRESETS = [
@@ -39,6 +44,10 @@ const CHEST_PRESETS = [
   { variant: 'plate',     material: 'steel'   },
   { variant: 'plate',     material: 'gold'    },
   { variant: 'plate',     material: 'dark'    },
+  { variant: 'tabard',    material: 'cloth'   },
+  { variant: 'tabard',    material: 'gold'    },
+  { variant: 'robe',      material: 'cloth'   },
+  { variant: 'robe',      material: 'dark'    },
 ];
 
 const BOOTS_PRESETS = [
@@ -56,11 +65,15 @@ const GLOVES_PRESETS = [
 ];
 
 const SHIELD_PRESETS = [
-  { variant: 'round', material: 'iron'    },
-  { variant: 'round', material: 'steel'   },
-  { variant: 'round', material: 'leather' },
-  { variant: 'kite',  material: 'steel'   },
-  { variant: 'kite',  material: 'gold'    },
+  { variant: 'round',   material: 'iron'    },
+  { variant: 'round',   material: 'steel'   },
+  { variant: 'round',   material: 'leather' },
+  { variant: 'kite',    material: 'steel'   },
+  { variant: 'kite',    material: 'gold'    },
+  { variant: 'heater',  material: 'steel'   },
+  { variant: 'heater',  material: 'dark'    },
+  { variant: 'buckler', material: 'iron'    },
+  { variant: 'buckler', material: 'leather' },
 ];
 
 // Body-conforming armor pipelines, registered in z-order from bottom to top.

@@ -1,6 +1,6 @@
 'use strict';
 
-const { makeCanvas, fillRect, pixel, outlineRect, mirrorCanvasH } = require('../core/Canvas');
+const { makeCanvas, fillRect, pixel, hLine, outlineRect, mirrorCanvasH } = require('../core/Canvas');
 const { getYAnchors } = require('../characters/HumanCharacter');
 
 const FRAME_W = 64;
@@ -25,14 +25,21 @@ function drawGlovePatch(ctx, colors, x, y, variantInfo) {
   px(ctx, colors.primary.highlight, x, y);
   px(ctx, colors.primary.shadow,    x + 3, y + 2);
   outlineRect(ctx, colors.primary.outline, x, y, 4, 3);
+  // Deepen bottom outline
+  hLine(ctx, '#000000', x, y + 2, 4);
   if (variantInfo.knuckles) {
     px(ctx, colors.metal.base, x + 1, y);
     px(ctx, colors.metal.base, x + 2, y);
     px(ctx, colors.metal.outline, x + 1, y - 1);
     px(ctx, colors.metal.outline, x + 2, y - 1);
+    // Specular pop on knuckles (top-left)
+    px(ctx, '#ffffff', x + 1, y);
   }
   if (variantInfo.cuff) {
     fillRect(ctx, colors.accent.base, x, y - 1, 4, 1);
+    // 2 rivets on glove cuff (front + back)
+    px(ctx, colors.accent.outline, x,     y - 1);
+    px(ctx, colors.accent.outline, x + 3, y - 1);
   }
 }
 

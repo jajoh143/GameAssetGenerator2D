@@ -56,9 +56,20 @@ function drawCapSouth(ctx, colors) {
     px(ctx, colors.primary.outline, x1 + 1, y);
   });
   hLine(ctx, colors.primary.outline, cx - 5, top - 1, 10);
+  // Deepen bottom-half outline to pure black for volumetric weight
+  px(ctx, '#000000', cx - 10, top + 3);
+  px(ctx, '#000000', cx - 10, top + 4);
+  px(ctx, '#000000', cx + 9,  top + 3);
+  px(ctx, '#000000', cx + 9,  top + 4);
+
+  // Specular highlight (top-left corner) — single ultra-bright pixel
+  px(ctx, '#ffffff', cx - 5, top + 1);
 
   // Trim band at brow (3px tall metal band)
   shadeBand(ctx, { primary: colors.metal }, cx - 9, top + 5, 18);
+  // 2 rivets on the brow trim band
+  px(ctx, colors.metal.outline, cx - 7, top + 6);
+  px(ctx, colors.metal.outline, cx + 6, top + 6);
 }
 
 function drawFullHelmSouth(ctx, colors) {
@@ -110,6 +121,19 @@ function drawFullHelmSouth(ctx, colors) {
   vLine(ctx, colors.metal.base,    cx,     top - 1, 4);
   vLine(ctx, colors.metal.outline, cx - 1, top - 1, 4);
   vLine(ctx, colors.metal.outline, cx + 1, top - 1, 4);
+
+  // Deepen bottom-half outline (left + right sides) for volumetric weight
+  vLine(ctx, '#000000', cx - 11, top + 14, h - 14);
+  vLine(ctx, '#000000', cx + 10, top + 14, h - 14);
+
+  // Specular highlight on the top-left curve (single ultra-bright pixel)
+  px(ctx, '#ffffff', cx - 7, top);
+  // Specular dot on the helm crown
+  px(ctx, colors.metal.highlight, cx,     top - 1);
+
+  // 2 rivets on each helm rim (along bottom flare)
+  px(ctx, colors.metal.outline, cx - 8, bottom - 1);
+  px(ctx, colors.metal.outline, cx + 7, bottom - 1);
 }
 
 function drawHoodSouth(ctx, colors) {
@@ -151,6 +175,10 @@ function drawHoodSouth(ctx, colors) {
   // Inner shadow along hood opening
   vLine(ctx, colors.primary.shadow, cx - 7, top + 8, 4);
   vLine(ctx, colors.primary.shadow, cx + 6, top + 8, 4);
+  // Crescent shadow band INSIDE the hood opening (above eye line) — 2-px-deep
+  // crescent painted with darker shadow tone to depict face shading.
+  hLine(ctx, colors.primary.shadow, cx - 6, top + 8, 12);
+  hLine(ctx, colors.primary.outline, cx - 5, top + 9,  10);
   // Highlight along outer-left edge
   ROWS.filter(r => r.x0 === cx - 12 || r.x0 === cx - 14).forEach(({ y, x0 }) => {
     px(ctx, colors.primary.highlight, x0 + 1, y);
@@ -159,6 +187,124 @@ function drawHoodSouth(ctx, colors) {
   ROWS.filter(r => r.x1 === cx + 11 || r.x1 === cx + 13).forEach(({ y, x1 }) => {
     px(ctx, colors.primary.shadow, x1 - 1, y);
   });
+}
+
+function drawHornedSouth(ctx, colors) {
+  // Full helm base + two curved horns sweeping out and back from the temples.
+  drawFullHelmSouth(ctx, colors);
+
+  const cx = HX + HW / 2;
+  // Anchor: temples ~ HY+4, just outside the helm body (cx ± 11).
+  // Left horn: 4 rows tall, curves up-and-out.
+  const Lx = cx - 11;
+  const Ly = HY + 4;
+  // Curve outward then up (in source coords)
+  px(ctx, colors.metal.base, Lx,     Ly);
+  px(ctx, colors.metal.base, Lx - 1, Ly - 1);
+  px(ctx, colors.metal.base, Lx - 2, Ly - 2);
+  px(ctx, colors.metal.base, Lx - 2, Ly - 3);
+  px(ctx, colors.metal.base, Lx - 1, Ly - 4);
+  // Highlight + outline on left horn
+  px(ctx, colors.metal.highlight, Lx - 2, Ly - 2);
+  px(ctx, colors.metal.outline,   Lx - 3, Ly - 2);
+  px(ctx, colors.metal.outline,   Lx - 3, Ly - 3);
+  px(ctx, colors.metal.outline,   Lx - 2, Ly - 5);
+
+  // Right horn: mirror.
+  const Rx = cx + 10;
+  const Ry = HY + 4;
+  px(ctx, colors.metal.base, Rx,     Ry);
+  px(ctx, colors.metal.base, Rx + 1, Ry - 1);
+  px(ctx, colors.metal.base, Rx + 2, Ry - 2);
+  px(ctx, colors.metal.base, Rx + 2, Ry - 3);
+  px(ctx, colors.metal.base, Rx + 1, Ry - 4);
+  px(ctx, colors.metal.shadow,  Rx + 2, Ry - 2);
+  px(ctx, colors.metal.outline, Rx + 3, Ry - 2);
+  px(ctx, colors.metal.outline, Rx + 3, Ry - 3);
+  px(ctx, colors.metal.outline, Rx + 2, Ry - 5);
+}
+
+function drawHornedWest(ctx, colors) {
+  // Full helm side profile + a backward-sweeping horn from the temple.
+  drawFullHelmWest(ctx, colors);
+  // Anchor: behind the temple (right side of helm in west view ~ x=30, y=HY+4)
+  const Hx = 30;
+  const Hy = HY + 4;
+  px(ctx, colors.metal.base, Hx,     Hy);
+  px(ctx, colors.metal.base, Hx + 1, Hy - 1);
+  px(ctx, colors.metal.base, Hx + 2, Hy - 1);
+  px(ctx, colors.metal.base, Hx + 3, Hy - 2);
+  px(ctx, colors.metal.base, Hx + 4, Hy - 3);
+  px(ctx, colors.metal.highlight, Hx + 1, Hy - 1);
+  px(ctx, colors.metal.outline,   Hx + 4, Hy - 4);
+  px(ctx, colors.metal.outline,   Hx + 5, Hy - 3);
+  // A second smaller horn forward (other side of head, slightly behind/visible)
+  px(ctx, colors.metal.base,    18, Hy);
+  px(ctx, colors.metal.base,    17, Hy - 1);
+  px(ctx, colors.metal.base,    16, Hy - 2);
+  px(ctx, colors.metal.outline, 15, Hy - 2);
+  px(ctx, colors.metal.outline, 16, Hy - 3);
+}
+
+function drawCrownedSouth(ctx, colors) {
+  // Open-top circlet — 3-px-tall band wrapping the brow with 4 upward gem points.
+  const top = HY + 3;
+  const cx  = HX + HW / 2;
+  // Band rows
+  hLine(ctx, colors.primary.base,      cx - 7, top,     14);
+  hLine(ctx, colors.primary.highlight, cx - 6, top,     12);
+  hLine(ctx, colors.primary.base,      cx - 7, top + 1, 14);
+  hLine(ctx, colors.primary.shadow,    cx - 7, top + 2, 14);
+  // Outline (top + bottom + ends)
+  hLine(ctx, '#000000',               cx - 7, top + 3, 14);
+  px(ctx, colors.primary.outline, cx - 8, top);
+  px(ctx, colors.primary.outline, cx - 8, top + 1);
+  px(ctx, colors.primary.outline, cx - 8, top + 2);
+  px(ctx, colors.primary.outline, cx + 7, top);
+  px(ctx, colors.primary.outline, cx + 7, top + 1);
+  px(ctx, colors.primary.outline, cx + 7, top + 2);
+  // Specular pop at top-left of the band
+  px(ctx, '#ffffff', cx - 6, top);
+  // 4 upward gem points (alternating ruby + sapphire). Each is a 1-px tall point on top of the band.
+  const points = [
+    { x: cx - 6, color: '#ff3355' },
+    { x: cx - 2, color: '#33aaff' },
+    { x: cx + 2, color: '#ff3355' },
+    { x: cx + 6, color: '#33aaff' },
+  ];
+  // Center taller point (like a crown spire)
+  px(ctx, colors.primary.base, cx, top - 2);
+  px(ctx, colors.primary.outline, cx - 1, top - 2);
+  px(ctx, colors.primary.outline, cx + 1, top - 2);
+  px(ctx, '#33aaff', cx, top - 1);
+  points.forEach(({ x, color }) => {
+    px(ctx, colors.primary.base, x, top - 1);
+    px(ctx, color,               x, top);
+  });
+}
+
+function drawCrownedWest(ctx, colors) {
+  // Side profile: a 3-px tall band with 2-3 visible gem points.
+  const top  = HY + 3;
+  const left = 18, right = 32;
+  hLine(ctx, colors.primary.highlight, left, top,     right - left);
+  hLine(ctx, colors.primary.base,      left, top + 1, right - left);
+  hLine(ctx, colors.primary.shadow,    left, top + 2, right - left);
+  hLine(ctx, '#000000',                left, top + 3, right - left);
+  vLine(ctx, colors.primary.outline, left - 1, top, 3);
+  vLine(ctx, colors.primary.outline, right, top, 3);
+  // Specular at front of band
+  px(ctx, '#ffffff', left + 1, top);
+  // Two upward gem points (gem + spire)
+  px(ctx, colors.primary.base,    left + 4, top - 1);
+  px(ctx, '#ff3355',              left + 4, top);
+  px(ctx, colors.primary.base,    left + 9, top - 1);
+  px(ctx, '#33aaff',              left + 9, top);
+  // Front spire taller
+  px(ctx, colors.primary.base,    left + 2, top - 2);
+  px(ctx, colors.primary.outline, left + 1, top - 2);
+  px(ctx, colors.primary.outline, left + 3, top - 2);
+  px(ctx, '#33aaff',              left + 2, top - 1);
 }
 
 // ── West helmet draws (side profile) ───────────────────────────────────────
@@ -171,9 +317,14 @@ function drawCapWest(ctx, colors) {
   hLine(ctx, colors.primary.highlight, left + 1, top + 1, right - left - 2);
   hLine(ctx, colors.primary.shadow,    left + 1, top + 3, right - left - 2);
   outlineRect(ctx, colors.primary.outline, left, top, right - left, 5);
+  // Specular highlight (top-left)
+  px(ctx, '#ffffff', left + 2, top + 1);
   // Trim band
   hLine(ctx, colors.metal.base,    left, top + 5, right - left);
   hLine(ctx, colors.metal.outline, left, top + 6, right - left);
+  // Rivets on side
+  px(ctx, colors.metal.outline, left + 2, top + 5);
+  px(ctx, colors.metal.outline, right - 3, top + 5);
 }
 
 function drawFullHelmWest(ctx, colors) {
@@ -202,6 +353,14 @@ function drawFullHelmWest(ctx, colors) {
   vLine(ctx, colors.metal.base,    left + 8, top - 2, 3);
   vLine(ctx, colors.metal.outline, left + 7, top - 2, 3);
   vLine(ctx, colors.metal.outline, left + 9, top - 2, 3);
+  // Specular pop on the top-left of the helm
+  px(ctx, '#ffffff', left + 2, top + 1);
+  // Deepen bottom-half outlines for weight
+  vLine(ctx, '#000000', left, top + Math.floor(h / 2), Math.ceil(h / 2));
+  vLine(ctx, '#000000', right - 1, top + Math.floor(h / 2), Math.ceil(h / 2));
+  // 2 rivets on side (cheek + jaw)
+  px(ctx, colors.metal.outline, left + 2, HY + 6);
+  px(ctx, colors.metal.outline, left + 2, HY + 18);
 }
 
 function drawHoodWest(ctx, colors) {
@@ -229,6 +388,9 @@ function drawHoodWest(ctx, colors) {
   });
   ROWS.forEach(({ y, x0 }) => px(ctx, colors.primary.highlight, x0 + 1, y));
   ROWS.forEach(({ y, x1 }) => px(ctx, colors.primary.shadow, x1 - 1, y));
+  // Crescent shadow inside hood opening (above eye line) for depth.
+  hLine(ctx, colors.primary.shadow, 22, top + 7, 4);
+  hLine(ctx, colors.primary.outline, 22, top + 8, 3);
 }
 
 // ── Variant table ──────────────────────────────────────────────────────────
@@ -237,6 +399,8 @@ const HELMET_VARIANTS = {
   cap:       { drawSouth: drawCapSouth,      drawWest: drawCapWest,      label: 'Cap'      },
   full_helm: { drawSouth: drawFullHelmSouth, drawWest: drawFullHelmWest, label: 'Full Helm' },
   hood:      { drawSouth: drawHoodSouth,     drawWest: drawHoodWest,     label: 'Hood'     },
+  horned:    { drawSouth: drawHornedSouth,   drawWest: drawHornedWest,   label: 'Horned Helm' },
+  crowned:   { drawSouth: drawCrownedSouth,  drawWest: drawCrownedWest,  label: 'Circlet'  },
 };
 
 // ── Frame generator ────────────────────────────────────────────────────────

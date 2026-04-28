@@ -15,14 +15,14 @@ const ARMOR_MATERIALS = {
     metal:   { highlight: '#c0a878', base: '#907858', shadow: '#5a4838', outline: '#2c2418' },
   },
   iron: {
-    primary: { highlight: '#b8b8c0', base: '#888890', shadow: '#505058', outline: '#282830' },
-    accent:  { highlight: '#a0a0a8', base: '#707078', shadow: '#404048', outline: '#181820' },
-    metal:   { highlight: '#c8c8d0', base: '#909098', shadow: '#505058', outline: '#282830' },
+    primary: { highlight: '#d8d8e0', base: '#888890', shadow: '#404048', outline: '#101018' },
+    accent:  { highlight: '#b8b8c0', base: '#707078', shadow: '#303038', outline: '#080810' },
+    metal:   { highlight: '#e0e0e8', base: '#909098', shadow: '#404048', outline: '#101018' },
   },
   steel: {
-    primary: { highlight: '#e8eef8', base: '#b0bcd0', shadow: '#6878a0', outline: '#303850' },
-    accent:  { highlight: '#c0d0e0', base: '#8898b0', shadow: '#485878', outline: '#283050' },
-    metal:   { highlight: '#e8eef8', base: '#b0bcd0', shadow: '#6878a0', outline: '#303850' },
+    primary: { highlight: '#fafcff', base: '#b0bcd0', shadow: '#586890', outline: '#1c2438' },
+    accent:  { highlight: '#d8e4f0', base: '#8898b0', shadow: '#384868', outline: '#101830' },
+    metal:   { highlight: '#fafcff', base: '#b0bcd0', shadow: '#586890', outline: '#1c2438' },
   },
   gold: {
     primary: { highlight: '#fff080', base: '#d4a800', shadow: '#906400', outline: '#4c3200' },

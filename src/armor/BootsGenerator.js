@@ -20,10 +20,15 @@ function drawBootSouth(ctx, colors, x, top, h, variantInfo) {
   vLine(ctx, colors.primary.highlight, x, top + 1, h - 2);
   vLine(ctx, colors.primary.shadow,    x + 3, top + 1, h - 2);
   outlineRect(ctx, colors.primary.outline, x, top, 4, h);
+  // Deepen bottom-half outline for weight
+  hLine(ctx, '#000000', x, top + h - 1, 4);
   if (variantInfo.cuff) {
     // Cuff at the top
     hLine(ctx, colors.accent.base, x, top, 4);
     hLine(ctx, colors.accent.outline, x, top - 1, 4);
+    // 2 rivets on boot top
+    px(ctx, colors.accent.outline, x,     top);
+    px(ctx, colors.accent.outline, x + 3, top);
   }
   if (variantInfo.greave) {
     // Metal greave plate down the front
@@ -31,6 +36,11 @@ function drawBootSouth(ctx, colors, x, top, h, variantInfo) {
     vLine(ctx, colors.metal.highlight, x + 1, top + 2, 1);
     vLine(ctx, colors.metal.outline, x,     top + 2, h - 4);
     vLine(ctx, colors.metal.outline, x + 2, top + 2, h - 4);
+    // Specular pop on top of greave
+    px(ctx, '#ffffff', x + 1, top + 2);
+    // 2 rivets on top of greave
+    px(ctx, colors.metal.outline, x,     top + 1);
+    px(ctx, colors.metal.outline, x + 2, top + 1);
   }
 }
 
@@ -39,13 +49,23 @@ function drawBootWest(ctx, colors, x, top, h, variantInfo) {
   hLine(ctx, colors.primary.highlight, x + 1, top + 1, 3);
   hLine(ctx, colors.primary.shadow,    x + 1, top + h - 2, 3);
   outlineRect(ctx, colors.primary.outline, x, top, 5, h);
+  // Deepen bottom-half outline for weight
+  hLine(ctx, '#000000', x, top + h - 1, 5);
   if (variantInfo.cuff) {
     hLine(ctx, colors.accent.base, x, top, 5);
     hLine(ctx, colors.accent.outline, x, top - 1, 5);
+    // 2 rivets at the cuff (front + back)
+    px(ctx, colors.accent.outline, x + 1, top);
+    px(ctx, colors.accent.outline, x + 3, top);
   }
   if (variantInfo.greave) {
     fillRect(ctx, colors.metal.base, x + 1, top + 2, 2, h - 4);
     outlineRect(ctx, colors.metal.outline, x + 1, top + 2, 2, h - 4);
+    // Specular pop on top of greave
+    px(ctx, '#ffffff', x + 1, top + 2);
+    // Rivets near greave top + bottom
+    px(ctx, colors.metal.outline, x + 1, top + 3);
+    px(ctx, colors.metal.outline, x + 1, top + h - 4);
   }
 }
 
