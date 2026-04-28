@@ -491,6 +491,17 @@
       <select id="shoes-select"></select>
     </div>
 
+    <div id="belt-section">
+      <div class="section-label">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font:inherit">
+          <input type="checkbox" id="belt-toggle" checked /> Belt
+        </label>
+      </div>
+      <div id="belt-color-row">
+        <div class="swatches" id="belt-color-swatches"></div>
+      </div>
+    </div>
+
     <div id="demon-section">
       <div class="section-label">Demon Skin</div>
       <div class="swatches" id="demon-skin-swatches"></div>
@@ -574,6 +585,7 @@ const state = {
   eyes: 'brown', beardStyle: 'none',
   clothingStyle: 'jacket', clothingColor: 'grey',
   pants: null, shoes: null,
+  belt: true, beltColor: 'standard',
   demonSkin: null, hornStyle: 'curved', tailStyle: 'long',
   fairySkin: null, wingStyle: 'butterfly', wingColor: null, fairyDress: null, glowColor: null,
   frameSize: 64, name: '',
@@ -886,6 +898,7 @@ function populateSidebar() {
   if (options.clothingColors) buildSwatches('clothing-color-swatches', options.clothingColors, 'clothingColor');
   buildSelect('pants-select',    options.pants,    'pants');
   buildSelect('shoes-select',    options.shoes,    'shoes');
+  if (options.beltColors) buildSwatches('belt-color-swatches', options.beltColors, 'beltColor');
   // Fairy controls
   if (options.fairySkins)  buildSwatches('fairy-skin-swatches',  options.fairySkins,  'fairySkin');
   if (options.wingColors)  buildSwatches('wing-color-swatches',  options.wingColors,  'wingColor');
@@ -911,6 +924,24 @@ function populateSidebar() {
   }
   setSelectVal('pants-select',    d.pants);    state.pants    = d.pants;
   setSelectVal('shoes-select',    d.shoes);    state.shoes    = d.shoes;
+  // Belt: toggle + colour swatch
+  if (typeof d.belt === 'boolean') {
+    state.belt = d.belt;
+    const btog = document.getElementById('belt-toggle');
+    if (btog) btog.checked = d.belt;
+  }
+  if (d.beltColor) activateSwatch('belt-color-swatches', d.beltColor, 'beltColor');
+  // Hide colour row when toggle is unchecked
+  const beltTog = document.getElementById('belt-toggle');
+  const beltRow = document.getElementById('belt-color-row');
+  if (beltTog && beltRow) {
+    const sync = () => {
+      state.belt = beltTog.checked;
+      beltRow.style.display = beltTog.checked ? '' : 'none';
+    };
+    beltTog.addEventListener('change', sync);
+    sync();
+  }
   // Fairy defaults
   if (d.fairySkin)  { activateSwatch('fairy-skin-swatches', d.fairySkin, 'fairySkin'); }
   if (d.wingColor)  { activateSwatch('wing-color-swatches', d.wingColor, 'wingColor'); }
@@ -988,6 +1019,14 @@ function applyConfig(cfg) {
   if (cc) { activateSwatch('clothing-color-swatches', cc, 'clothingColor'); }
   if (cfg.pants)     { state.pants    = cfg.pants;    setSelectVal('pants-select',    cfg.pants); }
   if (cfg.shoes)     { state.shoes    = cfg.shoes;    setSelectVal('shoes-select',    cfg.shoes); }
+  if (typeof cfg.belt === 'boolean') {
+    state.belt = cfg.belt;
+    const t = document.getElementById('belt-toggle');
+    const r = document.getElementById('belt-color-row');
+    if (t) t.checked = cfg.belt;
+    if (r) r.style.display = cfg.belt ? '' : 'none';
+  }
+  if (cfg.beltColor) activateSwatch('belt-color-swatches', cfg.beltColor, 'beltColor');
   if (cfg.demonSkin) activateSwatch('demon-skin-swatches', cfg.demonSkin, 'demonSkin');
   if (cfg.hornStyle) activateToggle('horn-row',  cfg.hornStyle, 'hornStyle');
   if (cfg.tailStyle) activateToggle('tail-row',  cfg.tailStyle, 'tailStyle');
@@ -1027,7 +1066,7 @@ function setType(val) {
     const el = document.getElementById(id);
     if (el) el.closest('div').style.display = hideHumanGear ? 'none' : '';
   });
-  ['clothing-style-section', 'clothing-color-section'].forEach(id => {
+  ['clothing-style-section', 'clothing-color-section', 'belt-section'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = hideHumanGear ? 'none' : '';
   });
@@ -1103,6 +1142,8 @@ function buildConfig() {
     cfg.clothingColor = state.clothingColor;
     cfg.pants         = state.pants;
     cfg.shoes         = state.shoes;
+    cfg.belt          = state.belt !== false;
+    cfg.beltColor     = state.beltColor;
   } else if (state.type === 'demon') {
     cfg.hairStyle     = state.hairStyle;
     cfg.eyes          = state.eyes;
@@ -1111,6 +1152,8 @@ function buildConfig() {
     cfg.clothingColor = state.clothingColor;
     cfg.pants         = state.pants;
     cfg.shoes         = state.shoes;
+    cfg.belt          = state.belt !== false;
+    cfg.beltColor     = state.beltColor;
     cfg.demonSkin     = state.demonSkin;
     cfg.hornStyle     = state.hornStyle;
     cfg.tailStyle     = state.tailStyle;

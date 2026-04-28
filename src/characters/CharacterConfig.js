@@ -18,6 +18,10 @@ const DEFAULT_CONFIG = {
   pants:         'jeans_blue',
   shoes:         'shoe_black',
 
+  // Belt is optional + colorable.
+  belt:          true,         // false hides the belt entirely
+  beltColor:     'standard',   // any key from Colors.BELT
+
   // Demon-only
   demonSkin:     'crimson',
   hornStyle:     'curved',

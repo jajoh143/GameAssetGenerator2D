@@ -508,37 +508,66 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     hLine(ctx, hairColors.highlight, HX + 2, HY + 11, HW - 4);
     hLine(ctx, hairColors.highlight, HX + 2, HY + 12, HW - 5);
   } else if (hairStyle === 'spiky') {
-    // Asymmetric triangular spike tips above the crown silhouette.
-    // Heights alternate dramatically (4-3-6-3-5-3) for the "hedgehog"
-    // silhouette. Per pixel-art research, spike tops are lit from above
-    // and the outer-right edge sits in shadow.
-    const SPIKES = [
-      { x: HX +  5, h: 4 },  // far-left
-      { x: HX +  9, h: 3 },  // mid-left, short
-      { x: HX + 13, h: 6 },  // center, tallest
-      { x: HX + 17, h: 3 },  // mid-right, short
-      { x: HX + 21, h: 5 },  // right
-      { x: HX + 25, h: 3 },  // far-right
+    // Anime spiky hair: connected triangular tufts rising from the crown.
+    // Each tuft is a 3-4px-wide triangle that tapers to a 1px tip; their
+    // bases overlap at HY so the cluster reads as a single hair mass, not
+    // a row of antennae. Inspired by FF6/shonen-anime sprites where hair
+    // is drawn as clumps with strong directional light.
+    //
+    // Layout: 6 asymmetric tufts; bases overlap by 1px to connect.
+    const TUFTS = [
+      { cx: HX +  5, h: 3, bw: 4 },   // far-left, short
+      { cx: HX +  9, h: 5, bw: 4 },   // left-mid, medium-tall
+      { cx: HX + 13, h: 6, bw: 4 },   // center, tallest
+      { cx: HX + 17, h: 4, bw: 4 },   // mid-right, medium
+      { cx: HX + 21, h: 6, bw: 4 },   // right-mid, tall (asymmetric)
+      { cx: HX + 25, h: 3, bw: 4 },   // far-right, short
     ];
-    for (const s of SPIKES) {
-      // 2px-wide spike body
-      vLine(ctx, hairColors.base, s.x,     HY - s.h, s.h);
-      vLine(ctx, hairColors.base, s.x + 1, HY - s.h, s.h);
-      // Lit edge (left column highlights, top tip extra-lit)
-      vLine(ctx, hairColors.highlight, s.x, HY - s.h + 1, s.h - 1);
-      px(ctx, hairColors.highlight,    s.x, HY - s.h);
-      // Right column slight shadow for thickness
-      px(ctx, hairColors.shadow, s.x + 1, HY - 1);
+
+    // First pass: fill triangular tufts (base color)
+    const tipPts = [];
+    for (const t of TUFTS) {
+      for (let row = 0; row < t.h; row++) {
+        // Width tapers from 1px at top to bw at bottom, integer pixel-art steps
+        const w = Math.max(1, 1 + Math.floor(row * (t.bw - 1) / Math.max(t.h - 1, 1)));
+        const x0 = t.cx - Math.floor((w - 1) / 2);
+        const yy = HY - t.h + row;
+        hLine(ctx, hairColors.base, x0, yy, w);
+        // Lit left edge
+        px(ctx, hairColors.highlight, x0, yy);
+        // Shadow right edge (only when tuft has thickness)
+        if (w >= 3) px(ctx, hairColors.shadow, x0 + w - 1, yy);
+      }
+      tipPts.push({ x: t.cx, y: HY - t.h });
     }
-    // Outline each spike's silhouette edges so they read against the bg
-    for (const s of SPIKES) {
-      // Top tip outline (1 row above top)
-      px(ctx, outline, s.x,     HY - s.h - 1);
-      px(ctx, outline, s.x + 1, HY - s.h - 1);
-      // Side outlines for the tip
-      px(ctx, outline, s.x - 1, HY - s.h);
-      px(ctx, outline, s.x + 2, HY - s.h);
+
+    // Second pass: outline the silhouette (selout — use hair shadow, not pure black)
+    // Trace the upper edge by walking left-to-right across each tuft row by row.
+    // Only outline the OUTER hull (top of each tuft); skip interior gap pixels
+    // so the cluster reads as one mass.
+    for (const t of TUFTS) {
+      // Tip outline (1px above tip)
+      px(ctx, hairColors.shadow, t.cx, HY - t.h - 1);
+      // Side outlines along the diagonal of each tuft (selout, not pure black)
+      for (let row = 0; row < t.h; row++) {
+        const w = Math.max(1, 1 + Math.floor(row * (t.bw - 1) / Math.max(t.h - 1, 1)));
+        const x0 = t.cx - Math.floor((w - 1) / 2);
+        const yy = HY - t.h + row;
+        // Outline 1px to the left of left edge (only if it's not covered by previous tuft)
+        px(ctx, hairColors.shadow, x0 - 1, yy);
+        // Outline 1px to the right of right edge
+        px(ctx, hairColors.shadow, x0 + w, yy);
+      }
     }
+
+    // Repaint tuft bases over any stray outline pixels at HY-1 so adjacent
+    // tufts' bases visibly merge into one continuous hairline.
+    for (const t of TUFTS) {
+      const w = t.bw;
+      const x0 = t.cx - Math.floor((w - 1) / 2);
+      hLine(ctx, hairColors.base, x0, HY - 1, w);
+    }
+
     // Tight sideburn fade (same as 'short')
     px(ctx, hairColors.shadow, HX + 1, HY + 14);
     px(ctx, hairColors.shadow, HX + 1, HY + 15);

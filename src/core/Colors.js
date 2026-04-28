@@ -651,7 +651,7 @@ const DEMON_PARTS = {
   },
 };
 
-// Belt color
+// Belt color palettes — leather/cloth in common pixel-art tones.
 const BELT = {
   standard: {
     highlight: '#6A4030',
@@ -659,6 +659,41 @@ const BELT = {
     shadow:    '#1E0E08',
     buckle:    '#C8A820',
     outline:   '#1A0800',
+  },
+  brown: {
+    highlight: '#7A4D2E',
+    base:      '#4A2A14',
+    shadow:    '#28160A',
+    buckle:    '#C8A820',
+    outline:   '#1A0800',
+  },
+  dark_brown: {
+    highlight: '#3E2410',
+    base:      '#22120A',
+    shadow:    '#100804',
+    buckle:    '#A88820',
+    outline:   '#080402',
+  },
+  black: {
+    highlight: '#3A3838',
+    base:      '#16161A',
+    shadow:    '#06060A',
+    buckle:    '#A0A0A8',
+    outline:   '#000004',
+  },
+  tan: {
+    highlight: '#C8A878',
+    base:      '#9A7B50',
+    shadow:    '#5C4628',
+    buckle:    '#C8A820',
+    outline:   '#3A2818',
+  },
+  white: {
+    highlight: '#F8F4E8',
+    base:      '#D4CCB8',
+    shadow:    '#9A9078',
+    buckle:    '#A0A0A8',
+    outline:   '#5A4E38',
   },
 };
 

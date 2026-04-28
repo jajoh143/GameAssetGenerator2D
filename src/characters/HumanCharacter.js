@@ -53,7 +53,7 @@ function resolveColors(config) {
     clothingStyle: clothingStyle,
     pants:         Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
     shoes:         Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
-    belt:          Colors.BELT.standard,
+    belt:          Colors.BELT[config.beltColor] || Colors.BELT.standard,
   };
 }
 
@@ -120,7 +120,7 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
-  drawBeltSouth(ctx, colors.belt, 20, beltY);
+  if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
   drawTorsoSouth(ctx, colors.clothingStyle, colors.clothing, 20, torsoY, 24, torsoH, colors.skin);
   // Arms — sleeveless styles draw bare skin via an adapted palette.
   drawArmsSouth(ctx, colors.armClothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
@@ -181,7 +181,7 @@ function drawNorth(ctx, config, offsets) {
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
-  drawBeltSouth(ctx, colors.belt, 20, beltY);
+  if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
 
   // Back of torso — hourglass silhouette
   {
@@ -288,7 +288,7 @@ function drawWest(ctx, config, offsets) {
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
   drawBackArmWest(ctx, colors.armClothing, colors.skin, backArmDX, torsoX, torsoY);
-  drawBeltWest(ctx, colors.belt, torsoX, beltY);
+  if (config.belt !== false) drawBeltWest(ctx, colors.belt, torsoX, beltY);
   drawTorsoWest(ctx, colors.clothingStyle, colors.clothing, torsoX, torsoY, colors.skin);
   drawFrontArmWest(ctx, colors.armClothing, colors.skin, frontArmDX, torsoX, torsoY);
   // Neck (side) — 6px wide × 4px tall
