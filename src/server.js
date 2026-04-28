@@ -83,6 +83,8 @@ function handleOptions(res) {
     demonSkins:  paletteMap(DEMON_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
+    hornLengths: ['short', 'medium', 'long'],
+    tailLengths: ['short', 'medium', 'long'],
     // Fairy options
     fairySkins:  paletteMap(FAIRY_SKIN),
     wingStyles:  ['butterfly', 'dragonfly'],

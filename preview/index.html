@@ -513,11 +513,18 @@
         <button class="toggle-btn"        data-val="ram">Ram</button>
       </div>
 
-      <div class="section-label" style="margin-top:14px">Tail Style</div>
-      <div class="btn-row" id="tail-row">
-        <button class="toggle-btn active" data-val="long">Long</button>
-        <button class="toggle-btn"        data-val="medium">Medium</button>
+      <div class="section-label" style="margin-top:14px">Horn Length</div>
+      <div class="btn-row" id="horn-length-row">
         <button class="toggle-btn"        data-val="short">Short</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="long">Long</button>
+      </div>
+
+      <div class="section-label" style="margin-top:14px">Tail Length</div>
+      <div class="btn-row" id="tail-row">
+        <button class="toggle-btn"        data-val="short">Short</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="long">Long</button>
       </div>
     </div>
 
@@ -586,7 +593,7 @@ const state = {
   clothingStyle: 'jacket', clothingColor: 'grey',
   pants: null, shoes: null,
   belt: true, beltColor: 'standard',
-  demonSkin: null, hornStyle: 'curved', tailStyle: 'long',
+  demonSkin: null, hornStyle: 'curved', hornLength: 'medium', tailStyle: 'medium', tailLength: 'medium',
   fairySkin: null, wingStyle: 'butterfly', wingColor: null, fairyDress: null, glowColor: null,
   frameSize: 64, name: '',
 };
@@ -1028,8 +1035,14 @@ function applyConfig(cfg) {
   }
   if (cfg.beltColor) activateSwatch('belt-color-swatches', cfg.beltColor, 'beltColor');
   if (cfg.demonSkin) activateSwatch('demon-skin-swatches', cfg.demonSkin, 'demonSkin');
-  if (cfg.hornStyle) activateToggle('horn-row',  cfg.hornStyle, 'hornStyle');
-  if (cfg.tailStyle) activateToggle('tail-row',  cfg.tailStyle, 'tailStyle');
+  if (cfg.hornStyle)  activateToggle('horn-row',         cfg.hornStyle,  'hornStyle');
+  if (cfg.hornLength) activateToggle('horn-length-row',  cfg.hornLength, 'hornLength');
+  // Tail row carries length (short/medium/long) — accept either tailLength or tailStyle.
+  const tl = cfg.tailLength || cfg.tailStyle;
+  if (tl) {
+    activateToggle('tail-row', tl, 'tailLength');
+    state.tailStyle = tl;
+  }
   // Fairy fields
   if (cfg.fairySkin) activateSwatch('fairy-skin-swatches', cfg.fairySkin, 'fairySkin');
   if (cfg.wingStyle) activateToggle('wing-style-row', cfg.wingStyle, 'wingStyle');
@@ -1080,7 +1093,8 @@ wireToggleRow('type-row',        'type',       setType);
 // hair-style-select is wired by buildSelect(); no toggle row needed.
 wireToggleRow('beard-style-row', 'beardStyle', null);
 wireToggleRow('horn-row',        'hornStyle',  null);
-wireToggleRow('tail-row',        'tailStyle',  null);
+wireToggleRow('horn-length-row', 'hornLength', null);
+wireToggleRow('tail-row',        'tailLength', null);
 wireToggleRow('wing-style-row',  'wingStyle',  null);
 wireToggleRow('size-row',        'frameSize',  null);
 
@@ -1156,7 +1170,9 @@ function buildConfig() {
     cfg.beltColor     = state.beltColor;
     cfg.demonSkin     = state.demonSkin;
     cfg.hornStyle     = state.hornStyle;
-    cfg.tailStyle     = state.tailStyle;
+    cfg.hornLength    = state.hornLength;
+    cfg.tailLength    = state.tailLength;
+    cfg.tailStyle     = state.tailLength;   // legacy field — keep in sync
   } else if (state.type === 'fairy') {
     cfg.eyes      = state.eyes;
     cfg.fairySkin = state.fairySkin;

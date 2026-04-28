@@ -22,10 +22,12 @@ const DEFAULT_CONFIG = {
   belt:          true,         // false hides the belt entirely
   beltColor:     'standard',   // any key from Colors.BELT
 
-  // Demon-only
+  // Demon-only (tiefling-style — humanoid with horns and tail)
   demonSkin:     'crimson',
   hornStyle:     'curved',
+  hornLength:    'medium',
   tailStyle:     'long',
+  tailLength:    'medium',
 
   // Fairy-only
   fairySkin:     'peach',
