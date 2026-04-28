@@ -3,6 +3,7 @@
 const { makeCanvas, fillRect, pixel, hLine, vLine, fillEllipse, mirrorCanvasH, clear } = require('../core/Canvas');
 const Colors = require('../core/Colors');
 const { resolveConfig } = require('./CharacterConfig');
+const { drawGroundShadow } = require('./BaseCharacter');
 const {
   drawSouth: humanSouth,
   drawNorth: humanNorth,
@@ -300,6 +301,17 @@ function drawPointedEarWest(ctx, skinColors) {
   pixel(ctx, ol, 27, 34);
 }
 
+// Levitation: fairies hover slightly off the ground using their wings.
+// Raw offset is in 64px-frame units (the human renderer multiplies by 1.5
+// when targeting the 96px frame). -5 → roughly -8 px lift in the rendered
+// frame, just enough to lift the feet clear of where they'd normally rest.
+const FAIRY_LEVITATION_RAW = -5;
+
+// Body horizontal centre in the 96px frame (used for centering the halo
+// and any other body-relative effects). The torso draws at x=20..43, so
+// the visible body centre is x=32 — NOT the canvas centre (x=48).
+const BODY_CX = 32;
+
 // ─── Frame generator ───────────────────────────────────────────────────────
 function generateFrame(rawConfig, animationName, frameOffset) {
   const config = resolveConfig(rawConfig);
@@ -307,8 +319,16 @@ function generateFrame(rawConfig, animationName, frameOffset) {
   const { canvas, ctx } = makeCanvas(FRAME_W, FRAME_H);
   clear(ctx, FRAME_W, FRAME_H);
 
-  const off = frameOffset;
-  const by  = Math.round((off.bodyY || 0) * 1.5);
+  // Apply levitation by injecting it into the frame offset's bodyY before
+  // we hand it to the human renderer. All other render effects use `by`
+  // (the scaled, levitated y) so they move with the body. We also tell the
+  // human renderer to skip its ground shadow — we draw our own at the true
+  // ground line below the floating fairy.
+  const off = Object.assign({}, frameOffset, {
+    bodyY: (frameOffset.bodyY || 0) + FAIRY_LEVITATION_RAW,
+    skipGroundShadow: true,
+  });
+  const by  = Math.round(off.bodyY * 1.5);
   const headBob = Math.round((off.headBob || 0) * 1.5);
 
   // Wing flap phase from leg/arm motion (closes wings during long strides)
@@ -345,8 +365,16 @@ function generateFrame(rawConfig, animationName, frameOffset) {
 function renderDirection(ctx, config, colors, off, direction,
                          wingStyle, wingScale, glowRadius, flapPhase,
                          by, headBob, isAttack, frameIdx) {
-  // 1. Glow halo (background)
-  drawGlowHalo(ctx, colors.glow, 48, 60 + by, glowRadius);
+  // 1. Ground shadow at the TRUE ground line (y=94) — stays put as the
+  //    fairy floats above it. Smaller and softer than a walking shadow
+  //    to read as "cast on the ground from above".
+  const shadowCx = direction === 'west' ? 23 : 32;
+  drawGroundShadow(ctx, shadowCx, 94, 14, 3);
+
+  // 2. Glow halo — centered on the BODY (x=32), not the canvas centre.
+  //    Anchored around the upper torso (~y=58) so the halo wraps the chest
+  //    and head rather than sitting at the hip.
+  drawGlowHalo(ctx, colors.glow, BODY_CX, 58 + by, glowRadius);
 
   // 2. Wings (behind the body — drawn before the human renderer)
   if (direction === 'south') {

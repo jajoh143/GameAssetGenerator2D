@@ -124,7 +124,7 @@ function drawSouth(ctx, config, offsets) {
   const base = 96 + bodyY; // bottom anchor (96px frame)
 
   // --- Ground shadow ---
-  drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
 
   // Proportional body stack — chibi proportions: shorter legs make head relatively larger.
   const shoeH  = 5;
@@ -209,7 +209,7 @@ function drawNorth(ctx, config, offsets) {
   const lArmDY = Math.round(leftArmFwd  * 0.9);
   const rArmDY = Math.round(rightArmFwd * 0.9);
 
-  drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
 
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
@@ -316,7 +316,7 @@ function drawWest(ctx, config, offsets) {
   const frontArmDX = -Math.round(leftArmFwd  * 1.4);
   const backArmDX  = -Math.round(rightArmFwd * 1.4);
 
-  drawGroundShadow(ctx, 23, 94 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, 94 + bodyY, 18, 4);
 
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
