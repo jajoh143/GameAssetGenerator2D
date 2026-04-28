@@ -41,13 +41,22 @@ function heightDims(config) {
   return HEIGHT_DIMS[config && config.height] || HEIGHT_DIMS.medium;
 }
 
+// Compute a `base` (feet-bottom y) that vertically centers the character in
+// the 96 px frame regardless of height. Body fully spans (43 + legH + torsoH)
+// rows. We split the leftover frame space evenly above and below.
+function getCenteringBase(config) {
+  const dims = heightDims(config);
+  const bodyH = 43 + dims.legH + dims.torsoH;   // head 30 + neck 4 + torso + belt 3 + hip 2 + leg + shoe (=43+legH+torsoH overall)
+  return Math.round(48 + bodyH / 2);            // base such that body straddles frame midpoint (48)
+}
+
 // ---------------------------------------------------------------------------
 // Color resolver
 // ---------------------------------------------------------------------------
 
 function resolveColors(config) {
   // Skin: demon → DEMON_SKIN, fairy → FAIRY_SKIN, goblin → GOBLIN_SKIN,
-  // else regular skin tones.
+  // lizardfolk → LIZARD_SKIN, else regular skin tones.
   let skinColors;
   if (config.type === 'demon') {
     skinColors = Colors.DEMON_SKIN[config.demonSkin] || Colors.DEMON_SKIN.crimson;
@@ -57,6 +66,8 @@ function resolveColors(config) {
     skinColors = Object.assign({ deep_shadow: fs.outline }, fs);
   } else if (config.type === 'goblin') {
     skinColors = Colors.GOBLIN_SKIN[config.goblinSkin] || Colors.GOBLIN_SKIN.moss_green;
+  } else if (config.type === 'lizardfolk') {
+    skinColors = Colors.LIZARD_SKIN[config.lizardScale] || Colors.LIZARD_SKIN.emerald;
   } else {
     skinColors = Colors.SKIN_TONES[config.skin] || Colors.SKIN_TONES.medium;
   }
@@ -88,10 +99,11 @@ function resolveColors(config) {
   const isSleeveless = clothingStyle === 'tank';
   const armClothing  = isSleeveless ? skinAsClothing(skinColors) : clothing;
 
-  // Tieflings/demons get solid (no-sclera) eyes — the entire eye reads as
-  // the iris colour for the glowing demonic look.
+  // Tieflings (demons) and fairies/pixies both get solid (no-sclera) eyes
+  // — the entire eye reads as the iris colour for the glowing fey/demonic
+  // look. Humans and goblins keep the regular sclera + iris.
   const baseEyes = Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown;
-  const eyeColors = config.type === 'demon'
+  const eyeColors = (config.type === 'demon' || config.type === 'fairy')
     ? Object.assign({}, baseEyes, { solid: true })
     : baseEyes;
 
@@ -139,10 +151,10 @@ function drawSouth(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY   * 1.5);
   const headBob = Math.round(rawHeadBob * 1.5);
 
-  const base = 88 + bodyY; // bottom anchor (96px frame)
+  const base = getCenteringBase(config) + bodyY; // bottom anchor (96px frame)
 
   // --- Ground shadow ---
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 86 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, base - 2, 18, 4);
 
   // Activate the configured body build (slim/average/muscular/heavy) so
   // every clothing draw (which calls torsoSilhouette internally) picks it up.
@@ -198,11 +210,15 @@ function drawSouth(ctx, config, offsets) {
   // Head — translate so its chin (at y=50 in drawHeadSouth) meets the
   // current neckY. For non-medium heights neckY shifts, so the head must
   // shift with it (otherwise a gap or overlap appears between head and neck).
-  const headDeltaY = neckY - 50;
-  ctx.save();
-  ctx.translate(0, headBob + headDeltaY);
-  drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
-  ctx.restore();
+  // skipHead lets non-human types (e.g. lizardfolk) draw their own head
+  // after running humanSouth.
+  if (!offsets.skipHead) {
+    const headDeltaY = neckY - 50;
+    ctx.save();
+    ctx.translate(0, headBob + headDeltaY);
+    drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +238,7 @@ function drawNorth(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY2   * 1.5);
   const headBob = Math.round(rawHeadBob2 * 1.5);
 
-  const base = 88 + bodyY;
+  const base = getCenteringBase(config) + bodyY;
 
   setBuild(config.build);
   const dims = heightDims(config);
@@ -247,7 +263,7 @@ function drawNorth(ctx, config, offsets) {
   const lArmDY = Math.round(leftArmFwd  * 0.9);
   const rArmDY = Math.round(rightArmFwd * 0.9);
 
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 86 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, base - 2, 18, 4);
 
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN, legH);
@@ -303,11 +319,13 @@ function drawNorth(ctx, config, offsets) {
   drawNeckSouth(ctx, colors.skin, neckY);
 
   // Head — translate so back-of-head chin (~y=50) meets neckY for non-medium heights.
-  const headDeltaY = neckY - 50;
-  ctx.save();
-  ctx.translate(0, headBob + headDeltaY);
-  drawHeadNorth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
-  ctx.restore();
+  if (!offsets.skipHead) {
+    const headDeltaY = neckY - 50;
+    ctx.save();
+    ctx.translate(0, headBob + headDeltaY);
+    drawHeadNorth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -327,7 +345,7 @@ function drawWest(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY3   * 1.5);
   const headBob = Math.round(rawHeadBob3 * 1.5);
 
-  const base = 88 + bodyY;
+  const base = getCenteringBase(config) + bodyY;
 
   setBuild(config.build);
   const dims = heightDims(config);
@@ -361,7 +379,7 @@ function drawWest(ctx, config, offsets) {
   const frontArmDX = -Math.round(leftArmFwd  * 1.4);
   const backArmDX  = -Math.round(rightArmFwd * 1.4);
 
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, 86 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, base - 2, 18, 4);
 
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift, legH);
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
@@ -374,11 +392,13 @@ function drawWest(ctx, config, offsets) {
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);
   // Head — translate so chin (~y=49 in drawHeadWest) meets neckY for non-medium heights.
   // Medium baseline neckY is ~50, so headDeltaY = neckY - 50.
-  const headDeltaY = neckY - 50;
-  ctx.save();
-  ctx.translate(0, bodyY + headBob + headDeltaY);
-  drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
-  ctx.restore();
+  if (!offsets.skipHead) {
+    const headDeltaY = neckY - 50;
+    ctx.save();
+    ctx.translate(0, bodyY + headBob + headDeltaY);
+    drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -426,7 +446,7 @@ function getDirectionFromAnim(animName) {
 // height. Returns { base, shoeY, legY, beltY, torsoY, neckY, headTopY }.
 function getYAnchors(config) {
   const dims = heightDims(config);
-  const base = 88;                       // matches drawSouth/drawNorth/drawWest
+  const base = getCenteringBase(config);  // height-aware vertical centering
   const shoeY  = base - 5;
   const legY   = shoeY - dims.legH;
   const hipY   = legY - 2;

@@ -137,9 +137,10 @@
     }
     input[type=text]:focus { outline: none; border-color: var(--accent); }
 
-    #demon-section  { display: none; }
-    #fairy-section  { display: none; }
-    #goblin-section { display: none; }
+    #demon-section      { display: none; }
+    #fairy-section      { display: none; }
+    #goblin-section     { display: none; }
+    #lizardfolk-section { display: none; }
 
     .generate-btn {
       width: 100%;
@@ -439,6 +440,7 @@
         <button class="toggle-btn"        data-val="demon">Demon</button>
         <button class="toggle-btn"        data-val="fairy">Fairy</button>
         <button class="toggle-btn"        data-val="goblin">Goblin</button>
+        <button class="toggle-btn"        data-val="lizardfolk">Lizardfolk</button>
       </div>
     </div>
 
@@ -550,9 +552,29 @@
       </div>
     </div>
 
+    <div id="lizardfolk-section">
+      <div class="section-label">Scale Color</div>
+      <div class="swatches" id="lizard-scale-swatches"></div>
+    </div>
+
     <div id="goblin-section">
       <div class="section-label">Goblin Skin</div>
       <div class="swatches" id="goblin-skin-swatches"></div>
+
+      <div class="section-label" style="margin-top:14px">Horns</div>
+      <div class="btn-row" id="goblin-horn-row">
+        <button class="toggle-btn active" data-val="none">None</button>
+        <button class="toggle-btn"        data-val="curved">Curved</button>
+        <button class="toggle-btn"        data-val="straight">Straight</button>
+        <button class="toggle-btn"        data-val="ram">Ram</button>
+      </div>
+
+      <div class="section-label" style="margin-top:14px">Horn Length</div>
+      <div class="btn-row" id="goblin-horn-length-row">
+        <button class="toggle-btn active" data-val="short">Short</button>
+        <button class="toggle-btn"        data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="long">Long</button>
+      </div>
     </div>
 
     <div id="fairy-section">
@@ -636,7 +658,8 @@ const state = {
   pants: null, shoes: null,
   belt: true, beltColor: 'standard',
   demonSkin: null, hornStyle: 'curved', hornLength: 'medium', tailStyle: 'medium', tailLength: 'medium',
-  goblinSkin: null,
+  goblinSkin: null, goblinHorns: 'none', goblinHornLength: 'short',
+  lizardScale: null,
   fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
   frameSize: 64, name: '',
 };
@@ -943,6 +966,7 @@ function populateSidebar() {
   if (options.eyeColors) buildSwatches('eye-color-swatches', options.eyeColors, 'eyes');
   buildSwatches('demon-skin-swatches', options.demonSkins, 'demonSkin');
   if (options.goblinSkins) buildSwatches('goblin-skin-swatches', options.goblinSkins, 'goblinSkin');
+  if (options.lizardScales) buildSwatches('lizard-scale-swatches', options.lizardScales, 'lizardScale');
   if (options.hairStyles) buildSelect('hair-style-select', options.hairStyles, 'hairStyle');
   // Clothing: independent style + colour pickers.
   if (options.clothingStyles) buildSelect('clothing-style-select', options.clothingStyles, 'clothingStyle');
@@ -963,6 +987,7 @@ function populateSidebar() {
   if (d.eyes)      activateSwatch('eye-color-swatches', d.eyes, 'eyes');
   activateSwatch('demon-skin-swatches', d.demonSkin, 'demonSkin');
   if (d.goblinSkin) activateSwatch('goblin-skin-swatches', d.goblinSkin, 'goblinSkin');
+  if (d.lizardScale) activateSwatch('lizard-scale-swatches', d.lizardScale, 'lizardScale');
   if (d.hairStyle) {
     setSelectVal('hair-style-select', d.hairStyle);
     state.hairStyle = d.hairStyle;
@@ -1119,10 +1144,11 @@ function activateToggle(rowId, val, stateKey) {
 
 function setType(val) {
   activateToggle('type-row', val, 'type');
-  document.getElementById('demon-section').style.display      = val === 'demon'  ? '' : 'none';
-  document.getElementById('human-skin-section').style.display = val === 'human'  ? '' : 'none';
-  document.getElementById('fairy-section').style.display      = val === 'fairy'  ? '' : 'none';
-  document.getElementById('goblin-section').style.display     = val === 'goblin' ? '' : 'none';
+  document.getElementById('demon-section').style.display      = val === 'demon'      ? '' : 'none';
+  document.getElementById('human-skin-section').style.display = val === 'human'      ? '' : 'none';
+  document.getElementById('fairy-section').style.display      = val === 'fairy'      ? '' : 'none';
+  document.getElementById('goblin-section').style.display     = val === 'goblin'     ? '' : 'none';
+  document.getElementById('lizardfolk-section').style.display = val === 'lizardfolk' ? '' : 'none';
   // Hair + human clothing controls hidden for fairy (fairy uses dress instead)
   const hideHumanGear = val === 'fairy';
   ['pants-select', 'shoes-select'].forEach(id => {
@@ -1146,6 +1172,8 @@ wireToggleRow('height-row',      'height',     null);
 wireToggleRow('build-row',       'build',      null);
 wireToggleRow('horn-row',        'hornStyle',  null);
 wireToggleRow('horn-length-row', 'hornLength', null);
+wireToggleRow('goblin-horn-row',        'goblinHorns',      null);
+wireToggleRow('goblin-horn-length-row', 'goblinHornLength', null);
 wireToggleRow('tail-row',        'tailLength', null);
 wireToggleRow('wing-style-row',     'wingStyle',     null);
 wireToggleRow('wing-size-row',      'wingSize',      null);
@@ -1243,9 +1271,22 @@ function buildConfig() {
     cfg.glowColor     = state.glowColor;
     cfg.glowIntensity = state.glowIntensity;
   } else if (state.type === 'goblin') {
-    cfg.hairStyle     = state.hairStyle;
+    cfg.hairStyle        = state.hairStyle;
+    cfg.eyes             = state.eyes;
+    cfg.beardStyle       = state.beardStyle;
+    cfg.height           = state.height;
+    cfg.build            = state.build;
+    cfg.clothingStyle    = state.clothingStyle;
+    cfg.clothingColor    = state.clothingColor;
+    cfg.pants            = state.pants;
+    cfg.shoes            = state.shoes;
+    cfg.belt             = state.belt !== false;
+    cfg.beltColor        = state.beltColor;
+    cfg.goblinSkin       = state.goblinSkin;
+    cfg.goblinHorns      = state.goblinHorns;
+    cfg.goblinHornLength = state.goblinHornLength;
+  } else if (state.type === 'lizardfolk') {
     cfg.eyes          = state.eyes;
-    cfg.beardStyle    = state.beardStyle;
     cfg.height        = state.height;
     cfg.build         = state.build;
     cfg.clothingStyle = state.clothingStyle;
@@ -1254,7 +1295,7 @@ function buildConfig() {
     cfg.shoes         = state.shoes;
     cfg.belt          = state.belt !== false;
     cfg.beltColor     = state.beltColor;
-    cfg.goblinSkin    = state.goblinSkin;
+    cfg.lizardScale   = state.lizardScale;
   }
   return cfg;
 }

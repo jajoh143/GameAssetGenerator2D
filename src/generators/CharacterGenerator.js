@@ -7,6 +7,7 @@ const { generateFrame: generateHumanFrame } = require('../characters/HumanCharac
 const { generateFrame: generateDemonFrame } = require('../characters/DemonCharacter');
 const { generateFrame: generateFairyFrame } = require('../characters/FairyCharacter');
 const { generateFrame: generateGoblinFrame } = require('../characters/GoblinCharacter');
+const { generateFrame: generateLizardfolkFrame } = require('../characters/LizardfolkCharacter');
 const { resolveConfig } = require('../characters/CharacterConfig');
 const { buildMeta, saveMeta } = require('../core/MetaExport');
 
@@ -21,9 +22,10 @@ const { buildMeta, saveMeta } = require('../core/MetaExport');
 function generateSpritesheet(rawConfig, outputPath) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
-    config.type === 'demon'  ? generateDemonFrame  :
-    config.type === 'fairy'  ? generateFairyFrame  :
-    config.type === 'goblin' ? generateGoblinFrame :
+    config.type === 'demon'      ? generateDemonFrame      :
+    config.type === 'fairy'      ? generateFairyFrame      :
+    config.type === 'goblin'     ? generateGoblinFrame     :
+    config.type === 'lizardfolk' ? generateLizardfolkFrame :
     generateHumanFrame;
 
   const rowFrames = ANIMATION_ROWS.map((animName) => {
@@ -52,9 +54,10 @@ function generateSpritesheet(rawConfig, outputPath) {
 function generateSpritesheetCanvas(rawConfig) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
-    config.type === 'demon'  ? generateDemonFrame  :
-    config.type === 'fairy'  ? generateFairyFrame  :
-    config.type === 'goblin' ? generateGoblinFrame :
+    config.type === 'demon'      ? generateDemonFrame      :
+    config.type === 'fairy'      ? generateFairyFrame      :
+    config.type === 'goblin'     ? generateGoblinFrame     :
+    config.type === 'lizardfolk' ? generateLizardfolkFrame :
     generateHumanFrame;
 
   const rowFrames = ANIMATION_ROWS.map((animName) => {
