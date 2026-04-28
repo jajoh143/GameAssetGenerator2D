@@ -10,7 +10,7 @@ const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
   SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHING, CLOTHING_COLORS, CLOTHING_STYLES,
-  PANTS, SHOES, BELT, DEMON_SKIN,
+  PANTS, SHOES, BELT, DEMON_SKIN, GOBLIN_SKIN,
   FAIRY_SKIN, FAIRY_WING, FAIRY_DRESS, FAIRY_GLOW,
 } = require('./core/Colors');
 
@@ -83,6 +83,7 @@ function handleOptions(res) {
     shoes:           Object.keys(SHOES),
     beltColors:      paletteMap(BELT),
     demonSkins:  paletteMap(DEMON_SKIN),
+    goblinSkins: paletteMap(GOBLIN_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
     hornLengths: ['short', 'medium', 'long'],

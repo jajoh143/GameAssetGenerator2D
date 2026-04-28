@@ -679,6 +679,53 @@ const DEMON_SKIN = {
   },
 };
 
+// Goblin skin palettes — D&D goblins typically come in mossy greens with
+// some tribes in orange/yellow/red. Tones are muted and earthy.
+const GOBLIN_SKIN = {
+  moss_green: {
+    highlight:   '#7AA84A',
+    base:        '#4E7A2A',
+    shadow:      '#284A14',
+    deep_shadow: '#142808',
+    outline:     '#0A1804',
+  },
+  swamp_green: {
+    highlight:   '#5A7838',
+    base:        '#3A5020',
+    shadow:      '#1E2C10',
+    deep_shadow: '#0E1808',
+    outline:     '#080E04',
+  },
+  bog_grey: {
+    highlight:   '#7A8A6E',
+    base:        '#4E5C46',
+    shadow:      '#28342A',
+    deep_shadow: '#141A14',
+    outline:     '#0A0D0A',
+  },
+  cave_yellow: {
+    highlight:   '#C8B048',
+    base:        '#967428',
+    shadow:      '#5C4410',
+    deep_shadow: '#2E2008',
+    outline:     '#181004',
+  },
+  ember_orange: {
+    highlight:   '#D87838',
+    base:        '#A04818',
+    shadow:      '#5C2408',
+    deep_shadow: '#2C1004',
+    outline:     '#180800',
+  },
+  rust_red: {
+    highlight:   '#A8482E',
+    base:        '#742818',
+    shadow:      '#40140A',
+    deep_shadow: '#200A04',
+    outline:     '#100400',
+  },
+};
+
 const DEMON_PARTS = {
   horn: {
     highlight: '#D0C080',
@@ -924,6 +971,7 @@ module.exports = {
   PANTS,
   SHOES,
   DEMON_SKIN,
+  GOBLIN_SKIN,
   DEMON_PARTS,
   BELT,
   GROUND_SHADOW,

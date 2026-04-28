@@ -46,7 +46,8 @@ function heightDims(config) {
 // ---------------------------------------------------------------------------
 
 function resolveColors(config) {
-  // Skin: demon → DEMON_SKIN, fairy → FAIRY_SKIN, else regular skin tones.
+  // Skin: demon → DEMON_SKIN, fairy → FAIRY_SKIN, goblin → GOBLIN_SKIN,
+  // else regular skin tones.
   let skinColors;
   if (config.type === 'demon') {
     skinColors = Colors.DEMON_SKIN[config.demonSkin] || Colors.DEMON_SKIN.crimson;
@@ -54,6 +55,8 @@ function resolveColors(config) {
     const fs = Colors.FAIRY_SKIN[config.fairySkin] || Colors.FAIRY_SKIN.peach;
     // FAIRY_SKIN is missing deep_shadow — synthesize one from outline.
     skinColors = Object.assign({ deep_shadow: fs.outline }, fs);
+  } else if (config.type === 'goblin') {
+    skinColors = Colors.GOBLIN_SKIN[config.goblinSkin] || Colors.GOBLIN_SKIN.moss_green;
   } else {
     skinColors = Colors.SKIN_TONES[config.skin] || Colors.SKIN_TONES.medium;
   }
@@ -177,8 +180,10 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg, legH);
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  // Hip bridge — sits just above the legs, just below the belt.
-  drawHipsSouth(ctx, colors.pants, hipY, hipH);
+  // Hip bridge — sits just above the legs, just below the belt. We pass
+  // the leg lateral offsets so the hip-bottom stretches with the legs
+  // during a walk instead of leaving them sliding out of a fixed pelvis.
+  drawHipsSouth(ctx, colors.pants, hipY, hipH, lLegDX, rLegDX);
   if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
   drawTorsoSouth(ctx, colors.clothingStyle, colors.clothing, 20, torsoY, 24, torsoH, colors.skin);
   // Arms — sleeveless styles draw bare skin via an adapted palette.
@@ -247,7 +252,7 @@ function drawNorth(ctx, config, offsets) {
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN, legH);
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  drawHipsSouth(ctx, colors.pants, hipY, hipH);
+  drawHipsSouth(ctx, colors.pants, hipY, hipH, lLegDX, rLegDX);
   if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
 
   // Back of torso — hourglass silhouette

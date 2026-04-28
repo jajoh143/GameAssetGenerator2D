@@ -2490,32 +2490,56 @@ function drawBeltWest(ctx, beltColors, x, y) {
 // (Slynyrd, Kandi Runner): the hip silhouette is widest at the iliac
 // crest, narrows toward the inseam, and the crotch is suggested with a
 // 1-2 px outline notch at the centre-bottom.
-function drawHipsSouth(ctx, pantColors, hipY, hipH = 2) {
+function drawHipsSouth(ctx, pantColors, hipY, hipH = 2, lLegDX = 0, rLegDX = 0) {
   // Row widths from belt-bottom (wider) to leg-tops (narrower).
-  // Belt is 22 px wide centred on x=32; legs combined span 16 px (x=24..39).
-  const widths = [20, 18];      // 20 → 18 across 2 rows (default)
-  const cx = 32;                // body centre
-  for (let r = 0; r < hipH; r++) {
-    const w = widths[Math.min(r, widths.length - 1)];
-    const x = cx - Math.floor(w / 2);
-    hLine(ctx, pantColors.base, x, hipY + r, w);
-    // Directional shading: lit upper-left, shadow lower-right
-    px(ctx, pantColors.highlight, x + 1, hipY + r);
-    if (w >= 12) px(ctx, pantColors.highlight, x + 2, hipY + r);
-    px(ctx, pantColors.shadow,    x + w - 2, hipY + r);
-    if (w >= 12) px(ctx, pantColors.shadow, x + w - 3, hipY + r);
-    // Selout edges
-    px(ctx, pantColors.outline,   x,         hipY + r);
-    px(ctx, pantColors.outline,   x + w - 1, hipY + r);
+  // The bottom row STRETCHES with the legs as they swing laterally during
+  // a walk — without this the hip stays static while the legs slide out
+  // from under it. We anchor the hip-bottom to the actual leg outer edges
+  // so the pelvis "moves with" the legs instead of "above" them.
+  const cx = 32;                        // body centre
+  const topW = 20;                      // top row matches belt taper
+  // Default leg geometry (matches drawLegsSouth): lx=24 + lLegDX, rx=33 + rLegDX,
+  // each leg 7 px wide. Outer-left = lx; outer-right = rx + 6.
+  const legOuterL = 24 + Math.round(lLegDX);
+  const legOuterR = 33 + Math.round(rLegDX) + 6;
+  // The hip-bottom should at minimum cover the legs from edge to edge.
+  const botL = Math.min(cx - 9, legOuterL - 1);   // 1 px outside leg-outer
+  const botR = Math.max(cx + 8, legOuterR + 1);
+
+  // Top row (just below belt) — fixed width
+  const topL = cx - Math.floor(topW / 2);
+  hLine(ctx, pantColors.base, topL, hipY, topW);
+  px(ctx, pantColors.highlight, topL + 1, hipY);
+  px(ctx, pantColors.highlight, topL + 2, hipY);
+  px(ctx, pantColors.shadow,    topL + topW - 2, hipY);
+  px(ctx, pantColors.shadow,    topL + topW - 3, hipY);
+  px(ctx, pantColors.outline,   topL,             hipY);
+  px(ctx, pantColors.outline,   topL + topW - 1,  hipY);
+
+  // Subsequent (bottom) rows — width follows leg lateral spread
+  for (let r = 1; r < hipH; r++) {
+    const yy = hipY + r;
+    const w = botR - botL + 1;
+    hLine(ctx, pantColors.base, botL, yy, w);
+    px(ctx, pantColors.highlight, botL + 1, yy);
+    if (w >= 12) px(ctx, pantColors.highlight, botL + 2, yy);
+    px(ctx, pantColors.shadow,    botR - 1, yy);
+    if (w >= 12) px(ctx, pantColors.shadow, botR - 2, yy);
+    px(ctx, pantColors.outline,   botL, yy);
+    px(ctx, pantColors.outline,   botR, yy);
   }
-  // Inseam V-notch: 2 px outline pixels at bottom-centre suggesting the crotch
-  px(ctx, pantColors.outline, cx - 1, hipY + hipH - 1);
-  px(ctx, pantColors.outline, cx,     hipY + hipH - 1);
+
+  // Inseam V-notch: 2 px outline pixels at bottom-centre suggesting the crotch.
+  // Shifts halfway with the average leg spread so it stays between the legs
+  // rather than being a fixed point that the legs slide away from.
+  const inseamCx = cx + Math.round((lLegDX + rLegDX) / 2);
+  px(ctx, pantColors.outline, inseamCx - 1, hipY + hipH - 1);
+  px(ctx, pantColors.outline, inseamCx,     hipY + hipH - 1);
   // Subtle inner-thigh shadow rising into the leg gap (1 px shadow above
   // the outline notch) so the inseam reads as a vertical seam, not a flat dot.
   if (hipH >= 2) {
-    px(ctx, pantColors.shadow, cx - 1, hipY + hipH - 2);
-    px(ctx, pantColors.shadow, cx,     hipY + hipH - 2);
+    px(ctx, pantColors.shadow, inseamCx - 1, hipY + hipH - 2);
+    px(ctx, pantColors.shadow, inseamCx,     hipY + hipH - 2);
   }
 }
 

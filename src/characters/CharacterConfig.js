@@ -5,7 +5,7 @@
  * All fields are optional - missing ones will use these defaults.
  */
 const DEFAULT_CONFIG = {
-  type:          'human',      // 'human' | 'demon' | 'fairy'
+  type:          'human',      // 'human' | 'demon' | 'fairy' | 'goblin'
   skin:          'medium',     // skin tone key from Colors.SKIN_TONES
   hair:          'black',      // hair color key from Colors.HAIR_COLORS
   hairStyle:     'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut' | 'spiky' | 'mohawk' | 'topknot' | 'buzzed' | 'bald'
@@ -30,6 +30,9 @@ const DEFAULT_CONFIG = {
   hornLength:    'medium',
   tailStyle:     'long',
   tailLength:    'medium',
+
+  // Goblin-only (small green humanoid with long ears + sharp fangs)
+  goblinSkin:    'moss_green',  // any key from Colors.GOBLIN_SKIN
 
   // Fairy-only (pixie/elven humanoid with wings + glow)
   fairySkin:      'peach',
@@ -109,6 +112,11 @@ function resolveConfig(config) {
   // still override with config.height.
   if (merged.type === 'fairy' && (!config || !config.height)) {
     merged.height = 'tiny';
+  }
+  // Goblins default to SHORT — D&D goblins are 3-4 ft tall, smaller than
+  // humans but bigger than pixies.
+  if (merged.type === 'goblin' && (!config || !config.height)) {
+    merged.height = 'short';
   }
 
   return merged;

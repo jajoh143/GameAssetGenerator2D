@@ -139,6 +139,7 @@
 
     #demon-section  { display: none; }
     #fairy-section  { display: none; }
+    #goblin-section { display: none; }
 
     .generate-btn {
       width: 100%;
@@ -437,6 +438,7 @@
         <button class="toggle-btn active" data-val="human">Human</button>
         <button class="toggle-btn"        data-val="demon">Demon</button>
         <button class="toggle-btn"        data-val="fairy">Fairy</button>
+        <button class="toggle-btn"        data-val="goblin">Goblin</button>
       </div>
     </div>
 
@@ -548,6 +550,11 @@
       </div>
     </div>
 
+    <div id="goblin-section">
+      <div class="section-label">Goblin Skin</div>
+      <div class="swatches" id="goblin-skin-swatches"></div>
+    </div>
+
     <div id="fairy-section">
       <div class="section-label">Fairy Skin</div>
       <div class="swatches" id="fairy-skin-swatches"></div>
@@ -629,6 +636,7 @@ const state = {
   pants: null, shoes: null,
   belt: true, beltColor: 'standard',
   demonSkin: null, hornStyle: 'curved', hornLength: 'medium', tailStyle: 'medium', tailLength: 'medium',
+  goblinSkin: null,
   fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
   frameSize: 64, name: '',
 };
@@ -934,6 +942,7 @@ function populateSidebar() {
   buildSwatches('hair-color-swatches', options.hairColors, 'hair');
   if (options.eyeColors) buildSwatches('eye-color-swatches', options.eyeColors, 'eyes');
   buildSwatches('demon-skin-swatches', options.demonSkins, 'demonSkin');
+  if (options.goblinSkins) buildSwatches('goblin-skin-swatches', options.goblinSkins, 'goblinSkin');
   if (options.hairStyles) buildSelect('hair-style-select', options.hairStyles, 'hairStyle');
   // Clothing: independent style + colour pickers.
   if (options.clothingStyles) buildSelect('clothing-style-select', options.clothingStyles, 'clothingStyle');
@@ -953,6 +962,7 @@ function populateSidebar() {
   activateSwatch('hair-color-swatches', d.hair,      'hair');
   if (d.eyes)      activateSwatch('eye-color-swatches', d.eyes, 'eyes');
   activateSwatch('demon-skin-swatches', d.demonSkin, 'demonSkin');
+  if (d.goblinSkin) activateSwatch('goblin-skin-swatches', d.goblinSkin, 'goblinSkin');
   if (d.hairStyle) {
     setSelectVal('hair-style-select', d.hairStyle);
     state.hairStyle = d.hairStyle;
@@ -1109,9 +1119,10 @@ function activateToggle(rowId, val, stateKey) {
 
 function setType(val) {
   activateToggle('type-row', val, 'type');
-  document.getElementById('demon-section').style.display      = val === 'demon' ? '' : 'none';
-  document.getElementById('human-skin-section').style.display = val === 'human' ? '' : 'none';
-  document.getElementById('fairy-section').style.display      = val === 'fairy' ? '' : 'none';
+  document.getElementById('demon-section').style.display      = val === 'demon'  ? '' : 'none';
+  document.getElementById('human-skin-section').style.display = val === 'human'  ? '' : 'none';
+  document.getElementById('fairy-section').style.display      = val === 'fairy'  ? '' : 'none';
+  document.getElementById('goblin-section').style.display     = val === 'goblin' ? '' : 'none';
   // Hair + human clothing controls hidden for fairy (fairy uses dress instead)
   const hideHumanGear = val === 'fairy';
   ['pants-select', 'shoes-select'].forEach(id => {
@@ -1231,6 +1242,19 @@ function buildConfig() {
     cfg.fairyDress    = state.fairyDress;
     cfg.glowColor     = state.glowColor;
     cfg.glowIntensity = state.glowIntensity;
+  } else if (state.type === 'goblin') {
+    cfg.hairStyle     = state.hairStyle;
+    cfg.eyes          = state.eyes;
+    cfg.beardStyle    = state.beardStyle;
+    cfg.height        = state.height;
+    cfg.build         = state.build;
+    cfg.clothingStyle = state.clothingStyle;
+    cfg.clothingColor = state.clothingColor;
+    cfg.pants         = state.pants;
+    cfg.shoes         = state.shoes;
+    cfg.belt          = state.belt !== false;
+    cfg.beltColor     = state.beltColor;
+    cfg.goblinSkin    = state.goblinSkin;
   }
   return cfg;
 }
