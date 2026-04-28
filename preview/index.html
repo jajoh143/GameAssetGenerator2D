@@ -361,6 +361,74 @@
       white-space: nowrap;
     }
 
+    /* ── Armor Lab ── */
+    .armor-lab {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+    .armor-lab h2 {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 12px;
+    }
+    .armor-lab-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .armor-lab-controls label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .armor-lab-controls select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: var(--radius);
+      font-size: 0.78rem;
+    }
+    .armor-lab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .armor-lab-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .armor-lab-tile canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #0a0e1a;
+      border-radius: 4px;
+    }
+    .armor-lab-tile span {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 767px) {
       body { overflow-y: auto; height: auto; min-height: 100vh; }
@@ -637,6 +705,18 @@
 
   <!-- ── Main ── -->
   <main class="main" id="main">
+    <div class="armor-lab" id="armor-lab" style="display:none">
+      <h2>Armor Lab — Layer Preview</h2>
+      <div class="armor-lab-controls">
+        <label>Character <select id="al-character"></select></label>
+        <label>Helmet <select id="al-helmet"></select></label>
+        <label>Chest <select id="al-chest"></select></label>
+        <label>Boots <select id="al-boots"></select></label>
+        <label>Gloves <select id="al-gloves"></select></label>
+        <label>Shield <select id="al-shield"></select></label>
+      </div>
+      <div class="armor-lab-grid" id="al-grid"></div>
+    </div>
     <div class="empty-state" id="empty-state">
       <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
         <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -895,7 +975,188 @@ async function loadManifest() {
     if (manifest.weapons && manifest.weapons.length) {
       loadWeaponGallery(manifest.weapons);
     }
+    if (manifest.armor && manifest.armor.length && manifest.characters && manifest.characters.length) {
+      loadArmorLab(manifest);
+    }
   } catch (_) { /* manifest may not exist yet, ignore */ }
+}
+
+// ── Armor Lab ──────────────────────────────────────────────────────────────
+const armorLab = {
+  manifest:  null,
+  selected:  { character: null, helmet: null, chest: null, boots: null, gloves: null, shield: null },
+  imgCache:  {},          // url -> HTMLImageElement
+  charMeta:  null,        // current character's _meta.json (per-frame anchors)
+  rowState:  [],          // [{ frame, frameCount }] per animation row
+  timer:     null,
+  frameW:    64,
+  frameH:    96,
+  scale:     2,
+};
+
+function preloadImg(url) {
+  if (armorLab.imgCache[url]) return armorLab.imgCache[url];
+  const img = new Image();
+  img.src = url + '?t=' + Date.now();
+  armorLab.imgCache[url] = img;
+  return img;
+}
+
+async function loadArmorLab(manifest) {
+  armorLab.manifest = manifest;
+  armorLab.frameW   = manifest.frameWidth  || 64;
+  armorLab.frameH   = manifest.frameHeight || 96;
+
+  document.getElementById('armor-lab').style.display = '';
+
+  // Group armor by slot.
+  const bySlot = { helmet: [], chest: [], boots: [], gloves: [], shield: [] };
+  for (const a of manifest.armor) {
+    const slot = a.meta && a.meta.slot;
+    if (bySlot[slot]) bySlot[slot].push(a);
+  }
+
+  fillSelect('al-character', manifest.characters, false);
+  fillSelect('al-helmet',    bySlot.helmet,       true);
+  fillSelect('al-chest',     bySlot.chest,        true);
+  fillSelect('al-boots',     bySlot.boots,        true);
+  fillSelect('al-gloves',    bySlot.gloves,       true);
+  fillSelect('al-shield',    bySlot.shield,       true);
+
+  // Initial selection: first character, no armor.
+  armorLab.selected.character = manifest.characters[0];
+  await loadCharacterMeta(armorLab.selected.character);
+  preloadImg(toUrl(armorLab.selected.character.file));
+
+  buildArmorLabGrid();
+  ['character', 'helmet', 'chest', 'boots', 'gloves', 'shield'].forEach((slot) => {
+    document.getElementById('al-' + slot).addEventListener('change', (e) => onArmorLabChange(slot, e.target.value));
+  });
+  startArmorLabTimer();
+}
+
+function fillSelect(id, items, allowNone) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '';
+  if (allowNone) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = '— none —';
+    sel.appendChild(opt);
+  }
+  items.forEach((item) => {
+    const opt = document.createElement('option');
+    opt.value = item.name;
+    opt.textContent = item.name.replace(/_/g, ' ');
+    opt.dataset.payload = JSON.stringify(item);
+    sel.appendChild(opt);
+  });
+}
+
+function toUrl(file) {
+  // manifest paths look like "../output/foo.png"; convert to "/output/foo.png".
+  return file.replace(/^\.\.\/output\//, '/output/');
+}
+
+async function loadCharacterMeta(char) {
+  const url = toUrl(char.file).replace(/\.png$/i, '_meta.json');
+  try {
+    const r = await fetch(url + '?t=' + Date.now());
+    if (!r.ok) { armorLab.charMeta = null; return; }
+    armorLab.charMeta = await r.json();
+  } catch (_) { armorLab.charMeta = null; }
+}
+
+async function onArmorLabChange(slot, value) {
+  const sel = document.getElementById('al-' + slot);
+  const opt = sel.querySelector(`option[value="${CSS.escape(value)}"]`);
+  const payload = opt && opt.dataset.payload ? JSON.parse(opt.dataset.payload) : null;
+  armorLab.selected[slot] = payload;
+  if (slot === 'character' && payload) {
+    await loadCharacterMeta(payload);
+    preloadImg(toUrl(payload.file));
+  } else if (payload) {
+    preloadImg(toUrl(payload.file));
+  }
+}
+
+function buildArmorLabGrid() {
+  const grid = document.getElementById('al-grid');
+  grid.innerHTML = '';
+  armorLab.rowState = [];
+  const anims = (armorLab.manifest && armorLab.manifest.animations) || [];
+
+  anims.forEach((anim) => {
+    const tile = document.createElement('div');
+    tile.className = 'armor-lab-tile';
+    const cvs = document.createElement('canvas');
+    cvs.width  = armorLab.frameW * armorLab.scale;
+    cvs.height = armorLab.frameH * armorLab.scale;
+    cvs.dataset.rowIdx = anim.row;
+    const lbl = document.createElement('span');
+    lbl.textContent = anim.name.replace(/_/g, ' ');
+    tile.appendChild(cvs);
+    tile.appendChild(lbl);
+    grid.appendChild(tile);
+    armorLab.rowState.push({ name: anim.name, row: anim.row, frame: 0, frameCount: anim.frameCount, canvas: cvs });
+  });
+}
+
+function drawArmorLabRow(stateIdx) {
+  const st = armorLab.rowState[stateIdx];
+  if (!st) return;
+  const cvs = st.canvas;
+  const ctx = cvs.getContext('2d');
+  const { frameW, frameH, scale } = armorLab;
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+  ctx.fillStyle = '#0a0e1a';
+  ctx.fillRect(0, 0, cvs.width, cvs.height);
+  ctx.imageSmoothingEnabled = false;
+
+  const drawSheet = (item) => {
+    if (!item) return;
+    const img = armorLab.imgCache[toUrl(item.file)];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    ctx.drawImage(img, st.frame * frameW, st.row * frameH, frameW, frameH, 0, 0, cvs.width, cvs.height);
+  };
+
+  // 1. Body
+  drawSheet(armorLab.selected.character);
+
+  // 2. Body armor — boots, chest, gloves, helmet (low → high z).
+  drawSheet(armorLab.selected.boots);
+  drawSheet(armorLab.selected.chest);
+  drawSheet(armorLab.selected.gloves);
+  drawSheet(armorLab.selected.helmet);
+
+  // 3. Shield positioned at offHand anchor (uses current character meta).
+  const shield = armorLab.selected.shield;
+  if (shield && armorLab.charMeta) {
+    const anim  = armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
+    const fmeta = anim && anim.frames && anim.frames[st.frame];
+    const off   = fmeta && fmeta.offHand;
+    const img   = armorLab.imgCache[toUrl(shield.file)];
+    if (off && img && img.complete && img.naturalWidth > 0) {
+      const meta  = shield.meta || {};
+      const fSize = meta.frameSize || 32;
+      const gx    = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
+      const gy    = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
+      const dx    = (off.x - gx) * scale;
+      const dy    = (off.y - gy) * scale;
+      ctx.drawImage(img, 0, 0, fSize, fSize, dx, dy, fSize * scale, fSize * scale);
+    }
+  }
+}
+
+function startArmorLabTimer() {
+  if (armorLab.timer) clearInterval(armorLab.timer);
+  armorLab.rowState.forEach((_, i) => drawArmorLabRow(i));
+  armorLab.timer = setInterval(() => {
+    armorLab.rowState.forEach((st, i) => {
+      drawArmorLabRow(i);
+      st.frame = (st.frame + 1) % st.frameCount;
+    });
+  }, 1000 / 8);
 }
 
 // ── Weapon gallery ─────────────────────────────────────────────────────────
