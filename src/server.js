@@ -6,6 +6,7 @@ const path    = require('path');
 
 const { generateSpritesheet }  = require('./generators/CharacterGenerator');
 const { generateAllWeapons }   = require('./generators/WeaponGenerator');
+const { generateAllArmor }     = require('./generators/ArmorGenerator');
 const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
@@ -17,6 +18,7 @@ const {
 const PORT        = 3000;
 const OUTPUT_DIR  = path.join(__dirname, '..', 'output');
 const WEAPONS_DIR = path.join(OUTPUT_DIR, 'weapons');
+const ARMOR_DIR   = path.join(OUTPUT_DIR, 'armor');
 const PREVIEW_DIR = path.join(__dirname, '..', 'preview');
 
 const MIME = {
@@ -164,6 +166,7 @@ async function handleRequest(req, res) {
 function regenerateAll() {
   if (!fs.existsSync(OUTPUT_DIR))  fs.mkdirSync(OUTPUT_DIR,  { recursive: true });
   if (!fs.existsSync(WEAPONS_DIR)) fs.mkdirSync(WEAPONS_DIR, { recursive: true });
+  if (!fs.existsSync(ARMOR_DIR))   fs.mkdirSync(ARMOR_DIR,   { recursive: true });
 
   const { resolveConfig } = require('./characters/CharacterConfig');
 
@@ -173,6 +176,7 @@ function regenerateAll() {
     animations:  ROWS.map((r, i) => ({ name: r.name, row: i, frameCount: r.frameCount })),
     characters:  [],
     weapons:     [],
+    armor:       [],
   };
 
   // Characters
@@ -198,11 +202,20 @@ function regenerateAll() {
     console.error('  [weapons] generation failed:', e.message);
   }
 
+  // Armor
+  let armorEntries = [];
+  try {
+    armorEntries = generateAllArmor(ARMOR_DIR);
+    manifest.armor = armorEntries;
+  } catch (e) {
+    console.error('  [armor] generation failed:', e.message);
+  }
+
   // Write manifest so preview page has up-to-date data
   const manifestPath = path.join(PREVIEW_DIR, 'manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
-  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}`);
+  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}  Armor: ${armorEntries.length}`);
 }
 
 // ─── start ───────────────────────────────────────────────────────────────────

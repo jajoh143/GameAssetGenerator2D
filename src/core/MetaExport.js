@@ -2,6 +2,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { getYAnchors } = require('../characters/HumanCharacter');
 
 // ── Drawing constants (must match BaseCharacter.js) ────────────────────────
 // South / North view  — drawArmsSouth
@@ -23,6 +24,8 @@ const W_B_SCALE     = 0.6;  // backArmDX  = -round(rightArmFwd * 0.6)
 
 // East is a horizontal mirror of west (spriteSize - 1 - x)
 const FRAME_W = 64;
+const FRAME_CENTER_X = 32;
+const HEAD_HALF_H = 7;       // drawHeadSouth chin at y=50, head 14 tall → mid is 7 above chin
 
 // ── Anchor helpers ─────────────────────────────────────────────────────────
 
@@ -90,27 +93,80 @@ function mirrorAnchor(a) {
   };
 }
 
-function computeFrameAnchors(direction, f) {
+function bodyPoint(x, y) {
+  return { x, y };
+}
+
+// Compute head/torso/feet body-slot anchors for a single frame.
+// Returned coordinates are in 64×96 frame space; buildMeta() scales to
+// the actual output frameSize.
+function computeBodySlots(direction, f, yAnchors) {
+  const bodyY      = f.bodyY    || 0;
+  const headBob    = f.headBob  || 0;
+  const torsoYAdj  = yAnchors.torsoY + bodyY;
+  const torsoMid   = torsoYAdj + Math.round((yAnchors.beltY - yAnchors.torsoY) / 2);
+  const headMidY   = yAnchors.headTopY + bodyY + headBob + HEAD_HALF_H;
+  const shoeY      = yAnchors.shoeY + bodyY;
+
+  if (direction === 'south' || direction === 'north') {
+    const lLegFwd = f.leftLegFwd  || 0;
+    const rLegFwd = f.rightLegFwd || 0;
+    return {
+      head:      bodyPoint(FRAME_CENTER_X, headMidY),
+      torso:     bodyPoint(FRAME_CENTER_X, torsoMid),
+      leftFoot:  bodyPoint(28 + Math.round(lLegFwd * 0.3), shoeY + 2),
+      rightFoot: bodyPoint(35 + Math.round(rLegFwd * 0.3), shoeY + 2),
+    };
+  }
+  if (direction === 'west') {
+    const torsoCx = W_TORSO_X + 5;            // ~midpoint of west torso silhouette
+    const lLift   = f.leftLegLift  || 0;
+    const rLift   = f.rightLegLift || 0;
+    return {
+      head:      bodyPoint(torsoCx,     headMidY),
+      torso:     bodyPoint(torsoCx,     torsoMid),
+      leftFoot:  bodyPoint(torsoCx - 1, shoeY + 2 - lLift),
+      rightFoot: bodyPoint(torsoCx + 1, shoeY + 2 - rLift),
+    };
+  }
+  if (direction === 'east') {
+    const mxX = (x) => FRAME_W - 1 - x;
+    const torsoCx = mxX(W_TORSO_X + 5);
+    const lLift   = f.leftLegLift  || 0;
+    const rLift   = f.rightLegLift || 0;
+    return {
+      head:      bodyPoint(torsoCx,     headMidY),
+      torso:     bodyPoint(torsoCx,     torsoMid),
+      leftFoot:  bodyPoint(torsoCx + 1, shoeY + 2 - lLift),
+      rightFoot: bodyPoint(torsoCx - 1, shoeY + 2 - rLift),
+    };
+  }
+  return {};
+}
+
+function computeFrameAnchors(direction, f, yAnchors) {
+  const bodySlots = yAnchors ? computeBodySlots(direction, f, yAnchors) : {};
   switch (direction) {
     case 'south':
     case 'north':
       return {
         weaponHand: southRightHand(f),
         offHand:    southLeftHand(f),
+        ...bodySlots,
       };
     case 'west': {
       const front = westFrontHand(f);
       const back  = westBackHand(f);
-      return { weaponHand: front, offHand: back };
+      return { weaponHand: front, offHand: back, ...bodySlots };
     }
     case 'east': {
       // East = horizontal mirror of west
       const front = mirrorAnchor(westFrontHand(f));
       const back  = mirrorAnchor(westBackHand(f));
-      return { weaponHand: front, offHand: back };
+      return { weaponHand: front, offHand: back, ...bodySlots };
     }
     default:
-      return {};
+      return bodySlots;
   }
 }
 
@@ -123,10 +179,26 @@ function computeFrameAnchors(direction, f) {
  * @param {string[]} animationRows  - Ordered list of animation names
  * @param {Function} getFrames      - (animName) => frameOffset[]
  * @param {Function} getDirection   - (animName) => 'south'|'north'|'west'|'east'
+ * @param {object}   [config]       - Character config — used to derive height-aware
+ *                                    body-slot anchors (head, torso, feet) per frame.
  * @returns {object}
  */
-function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn) {
+function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn, config) {
   const scale = frameSize / FRAME_W;   // for non-64 output sizes
+  const yAnchors = config ? getYAnchors(config) : null;
+
+  const scaleHandAnchor = (a) => a ? {
+    x:         Math.round(a.x         * scale),
+    y:         Math.round(a.y         * scale),
+    shoulderX: Math.round(a.shoulderX * scale),
+    shoulderY: Math.round(a.shoulderY * scale),
+    angleDeg:  a.angleDeg,
+  } : undefined;
+
+  const scalePoint = (p) => p ? {
+    x: Math.round(p.x * scale),
+    y: Math.round(p.y * scale),
+  } : undefined;
 
   const animations = {};
   animationRows.forEach((animName, rowIdx) => {
@@ -134,19 +206,14 @@ function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn) {
     const offsets   = getFramesFn(animName);
 
     const frames = offsets.map((f) => {
-      const anchors = computeFrameAnchors(direction, f);
-      // Scale anchor pixel positions to match the actual output frameSize
-      const scaleAnchor = (a) => a ? {
-        x:         Math.round(a.x         * scale),
-        y:         Math.round(a.y         * scale),
-        shoulderX: Math.round(a.shoulderX * scale),
-        shoulderY: Math.round(a.shoulderY * scale),
-        angleDeg:  a.angleDeg,
-      } : undefined;
-
+      const anchors = computeFrameAnchors(direction, f, yAnchors);
       return {
-        weaponHand: scaleAnchor(anchors.weaponHand),
-        offHand:    scaleAnchor(anchors.offHand),
+        weaponHand: scaleHandAnchor(anchors.weaponHand),
+        offHand:    scaleHandAnchor(anchors.offHand),
+        head:       scalePoint(anchors.head),
+        torso:      scalePoint(anchors.torso),
+        leftFoot:   scalePoint(anchors.leftFoot),
+        rightFoot:  scalePoint(anchors.rightFoot),
       };
     });
 

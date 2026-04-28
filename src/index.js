@@ -4,11 +4,13 @@ const path = require('path');
 const fs   = require('fs');
 const { generateSpritesheet }  = require('./generators/CharacterGenerator');
 const { generateAllWeapons }   = require('./generators/WeaponGenerator');
+const { generateAllArmor }     = require('./generators/ArmorGenerator');
 const { PRESETS }              = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 
 const OUTPUT_DIR   = path.join(__dirname, '..', 'output');
 const WEAPONS_DIR  = path.join(OUTPUT_DIR, 'weapons');
+const ARMOR_DIR    = path.join(OUTPUT_DIR, 'armor');
 const PREVIEW_DIR  = path.join(__dirname, '..', 'preview');
 
 if (!fs.existsSync(OUTPUT_DIR))  fs.mkdirSync(OUTPUT_DIR,  { recursive: true });
@@ -20,6 +22,7 @@ const manifest = {
   animations: ROWS.map((r, i) => ({ name: r.name, row: i, frameCount: r.frameCount })),
   characters: [],
   weapons: [],
+  armor:    [],
 };
 
 console.log('Generating character spritesheets...\n');
@@ -44,6 +47,17 @@ try {
   weaponEntries.forEach(w => console.log(`  ✓ ${w.name}`));
 } catch (err) {
   console.error(`  ✗ weapon generation failed: ${err.message}`);
+  if (process.env.DEBUG) console.error(err.stack);
+}
+
+console.log('\nGenerating armor sprites...\n');
+
+try {
+  const armorEntries = generateAllArmor(ARMOR_DIR);
+  manifest.armor = armorEntries;
+  armorEntries.forEach(a => console.log(`  ✓ ${a.name}`));
+} catch (err) {
+  console.error(`  ✗ armor generation failed: ${err.message}`);
   if (process.env.DEBUG) console.error(err.stack);
 }
 

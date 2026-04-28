@@ -10,6 +10,7 @@ const { generateFrame: generateGoblinFrame } = require('../characters/GoblinChar
 const { generateFrame: generateLizardfolkFrame } = require('../characters/LizardfolkCharacter');
 const { resolveConfig } = require('../characters/CharacterConfig');
 const { buildMeta, saveMeta } = require('../core/MetaExport');
+const { buildPhaserSpritesheetConfig, savePhaserConfig } = require('../core/PhaserExport');
 
 /**
  * Generate a complete spritesheet for a character.
@@ -39,8 +40,19 @@ function generateSpritesheet(rawConfig, outputPath) {
   // Detect frame size from first frame for meta export
   const firstFrame = rowFrames.find(f => f.length > 0)?.[0];
   const metaW = firstFrame ? firstFrame.width : 64;
-  const meta = buildMeta(metaW, ANIMATION_ROWS, getFrames, getDirection);
+  const metaH = firstFrame ? firstFrame.height : 96;
+  const meta = buildMeta(metaW, ANIMATION_ROWS, getFrames, getDirection, config);
   saveMeta(meta, outputPath);
+
+  const phaserCfg = buildPhaserSpritesheetConfig({
+    image:       path.basename(outputPath),
+    frameWidth:  metaW,
+    frameHeight: metaH,
+    columns:     ROWS.reduce((m, r) => Math.max(m, r.frameCount), 0),
+    rows:        ROWS,
+    getDirection,
+  });
+  savePhaserConfig(phaserCfg, outputPath);
 
   return outputPath;
 }
