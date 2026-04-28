@@ -988,8 +988,14 @@ const armorLab = {
   charMeta:  null,        // current character's _meta.json (per-frame anchors)
   rowState:  [],          // [{ frame, frameCount }] per animation row
   timer:     null,
-  frameW:    64,
-  frameH:    96,
+  // Per-character frame dimensions (humans = 64×96, non-humans = 96×96).
+  // Loaded from each character's _spritesheet.json (Phaser config) on select.
+  charFrameW: 64,
+  charFrameH: 96,
+  // Body-armor sheets are always 64×96. We center them within the wider
+  // character canvas when the character has 96-wide frames.
+  armorFrameW: 64,
+  armorFrameH: 96,
   scale:     2,
 };
 
@@ -1002,9 +1008,10 @@ function preloadImg(url) {
 }
 
 async function loadArmorLab(manifest) {
-  armorLab.manifest = manifest;
-  armorLab.frameW   = manifest.frameWidth  || 64;
-  armorLab.frameH   = manifest.frameHeight || 96;
+  armorLab.manifest    = manifest;
+  // Body-armor sheets are generated at the human reference frame size.
+  armorLab.armorFrameW = manifest.frameWidth  || 64;
+  armorLab.armorFrameH = manifest.frameHeight || 96;
 
   document.getElementById('armor-lab').style.display = '';
 
@@ -1059,12 +1066,28 @@ function toUrl(file) {
 }
 
 async function loadCharacterMeta(char) {
-  const url = toUrl(char.file).replace(/\.png$/i, '_meta.json');
+  const base   = toUrl(char.file);
+  const metaUrl = base.replace(/\.png$/i, '_meta.json');
+  const cfgUrl  = base.replace(/\.png$/i, '.json');
   try {
-    const r = await fetch(url + '?t=' + Date.now());
-    if (!r.ok) { armorLab.charMeta = null; return; }
-    armorLab.charMeta = await r.json();
-  } catch (_) { armorLab.charMeta = null; }
+    const [mr, cr] = await Promise.all([
+      fetch(metaUrl + '?t=' + Date.now()),
+      fetch(cfgUrl  + '?t=' + Date.now()),
+    ]);
+    armorLab.charMeta = mr.ok ? await mr.json() : null;
+    if (cr.ok) {
+      const cfg = await cr.json();
+      armorLab.charFrameW = cfg.frameWidth  || 64;
+      armorLab.charFrameH = cfg.frameHeight || 96;
+    } else {
+      armorLab.charFrameW = 64;
+      armorLab.charFrameH = 96;
+    }
+  } catch (_) {
+    armorLab.charMeta = null;
+    armorLab.charFrameW = 64;
+    armorLab.charFrameH = 96;
+  }
 }
 
 async function onArmorLabChange(slot, value) {
@@ -1075,6 +1098,10 @@ async function onArmorLabChange(slot, value) {
   if (slot === 'character' && payload) {
     await loadCharacterMeta(payload);
     preloadImg(toUrl(payload.file));
+    // Character frame size may have changed (humans 64×96 vs non-humans 96×96);
+    // rebuild grid so canvases match the new dimensions.
+    buildArmorLabGrid();
+    startArmorLabTimer();
   } else if (payload) {
     preloadImg(toUrl(payload.file));
   }
@@ -1090,8 +1117,9 @@ function buildArmorLabGrid() {
     const tile = document.createElement('div');
     tile.className = 'armor-lab-tile';
     const cvs = document.createElement('canvas');
-    cvs.width  = armorLab.frameW * armorLab.scale;
-    cvs.height = armorLab.frameH * armorLab.scale;
+    // Canvas matches the character's actual frame size (humans 64×96, non-humans 96×96).
+    cvs.width  = armorLab.charFrameW * armorLab.scale;
+    cvs.height = armorLab.charFrameH * armorLab.scale;
     cvs.dataset.rowIdx = anim.row;
     const lbl = document.createElement('span');
     lbl.textContent = anim.name.replace(/_/g, ' ');
@@ -1107,32 +1135,49 @@ function drawArmorLabRow(stateIdx) {
   if (!st) return;
   const cvs = st.canvas;
   const ctx = cvs.getContext('2d');
-  const { frameW, frameH, scale } = armorLab;
+  const { charFrameW, charFrameH, armorFrameW, armorFrameH, scale } = armorLab;
   ctx.clearRect(0, 0, cvs.width, cvs.height);
   ctx.fillStyle = '#0a0e1a';
   ctx.fillRect(0, 0, cvs.width, cvs.height);
   ctx.imageSmoothingEnabled = false;
 
-  const drawSheet = (item) => {
+  // Body silhouette sits at the same source x in 64-wide and 96-wide character
+  // frames (the 96-wide frame just has extra empty space on the right for
+  // wings / tails / horns). Left-aligned armor lines the body region up.
+  const armorOffsetX = 0;
+  const armorOffsetY = 0;
+
+  // Draw the character at full canvas size using its native frame dims.
+  const drawCharSheet = (item) => {
     if (!item) return;
     const img = armorLab.imgCache[toUrl(item.file)];
     if (!img || !img.complete || img.naturalWidth === 0) return;
-    ctx.drawImage(img, st.frame * frameW, st.row * frameH, frameW, frameH, 0, 0, cvs.width, cvs.height);
+    ctx.drawImage(img, st.frame * charFrameW, st.row * charFrameH, charFrameW, charFrameH, 0, 0, cvs.width, cvs.height);
+  };
+  // Draw armor at its own native frame size (64×96), centered within the canvas.
+  const drawArmorSheet = (item) => {
+    if (!item) return;
+    const img = armorLab.imgCache[toUrl(item.file)];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    ctx.drawImage(img, st.frame * armorFrameW, st.row * armorFrameH, armorFrameW, armorFrameH,
+                  armorOffsetX, armorOffsetY, armorFrameW * scale, armorFrameH * scale);
   };
 
   // 1. Body
-  drawSheet(armorLab.selected.character);
+  drawCharSheet(armorLab.selected.character);
 
   // 2. Body armor — boots, chest, gloves (low → mid z; helmet drawn last).
-  drawSheet(armorLab.selected.boots);
-  drawSheet(armorLab.selected.chest);
-  drawSheet(armorLab.selected.gloves);
+  drawArmorSheet(armorLab.selected.boots);
+  drawArmorSheet(armorLab.selected.chest);
+  drawArmorSheet(armorLab.selected.gloves);
 
   const animEntry = armorLab.charMeta && armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
   const fmeta     = animEntry && animEntry.frames && animEntry.frames[st.frame];
 
   // 3. Weapon at weaponHand anchor, rotated to match arm direction.
-  // Pivots at the weapon's gripX/gripY so the grip stays glued to the hand.
+  // Anchor coords are in the armor frame (64×96); shift by armorOffset
+  // so the weapon lands in the centered armor area when the character
+  // canvas is wider (non-humans).
   const weapon = armorLab.selected.weapon;
   if (weapon && fmeta && fmeta.weaponHand) {
     const wh  = fmeta.weaponHand;
@@ -1144,9 +1189,7 @@ function drawArmorLabRow(stateIdx) {
       const gy      = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
       const neutral = meta.neutralAngleDeg || 0;
       ctx.save();
-      ctx.translate(wh.x * scale, wh.y * scale);
-      // Weapon sprite points right (neutralAngleDeg=0); rotate to align its
-      // long axis with the arm direction (angleDeg from shoulder→hand).
+      ctx.translate(armorOffsetX + wh.x * scale, armorOffsetY + wh.y * scale);
       ctx.rotate((wh.angleDeg - neutral) * Math.PI / 180);
       ctx.drawImage(img, 0, 0, fSize, fSize, -gx * scale, -gy * scale, fSize * scale, fSize * scale);
       ctx.restore();
@@ -1163,14 +1206,14 @@ function drawArmorLabRow(stateIdx) {
       const fSize = meta.frameSize || 32;
       const gx    = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
       const gy    = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
-      const dx    = (off.x - gx) * scale;
-      const dy    = (off.y - gy) * scale;
+      const dx    = armorOffsetX + (off.x - gx) * scale;
+      const dy    = armorOffsetY + (off.y - gy) * scale;
       ctx.drawImage(img, 0, 0, fSize, fSize, dx, dy, fSize * scale, fSize * scale);
     }
   }
 
   // 5. Helmet last — always on top.
-  drawSheet(armorLab.selected.helmet);
+  drawArmorSheet(armorLab.selected.helmet);
 }
 
 function startArmorLabTimer() {

@@ -74,66 +74,78 @@ function drawCapSouth(ctx, colors) {
 
 function drawFullHelmSouth(ctx, colors) {
   // Knight's helm — full coverage from above-the-crown down to the chin,
-  // with an eye slit at brow level. The character head spans HY=21 to chin
-  // at y=50 (29 px tall in source coords); a real full-helm covers the
-  // whole head plus a small neck guard at the bottom.
+  // sized to match the actual head silhouette. The peak head width is ≈30 px
+  // (x=17..46 in source coords), so the helm is a 30-wide capsule with a
+  // 3-row dome taper at top, plus a narrower neck guard so it doesn't crash
+  // into the shoulders.
   const top    = HY - 1;            // 20
   const cx     = HX + HW / 2;       // 32
-  const bottom = HY + 30;           // 51 — chin level + 1 row neck guard
+  const bottom = HY + 30;           // 51
   const h      = bottom - top;      // 31
 
-  // Main helm body — 20 px wide capsule.
-  fillRect(ctx, colors.primary.base, cx - 10, top, 20, h);
-  // Top dome (taper outer corners by 1 row).
-  hLine(ctx, colors.primary.base, cx - 8, top - 1, 16);
-  // Side highlights / shadows.
-  vLine(ctx, colors.primary.highlight, cx - 9, top + 1, h - 2);
-  hLine(ctx, colors.primary.highlight, cx - 7, top, 6);
-  vLine(ctx, colors.primary.shadow, cx + 8, top + 1, h - 2);
-  hLine(ctx, colors.primary.shadow, cx + 2, top, 6);
-  hLine(ctx, colors.primary.shadow, cx - 9, bottom - 1, 19);
-  // Outline (perimeter).
-  outlineRect(ctx, colors.primary.outline, cx - 10, top, 20, h);
-  hLine(ctx, colors.primary.outline, cx - 7, top - 2, 14);
-  px(ctx, colors.primary.outline, cx - 8, top - 1);
-  px(ctx, colors.primary.outline, cx + 7, top - 1);
+  // Top dome — 3-row taper widening from 20 → 26 → 28
+  hLine(ctx, colors.primary.base, cx - 10, top,     20);   // y=20
+  hLine(ctx, colors.primary.base, cx - 12, top + 1, 24);   // y=21
+  hLine(ctx, colors.primary.base, cx - 13, top + 2, 26);   // y=22
+  // Main capsule — 30 wide, from y=23 down to bottom-1 (y=50)
+  fillRect(ctx, colors.primary.base, cx - 14, top + 3, 28, h - 3);
 
-  // Eye slit at brow level (~1/3 down the head).
-  fillRect(ctx, colors.primary.outline, cx - 7, HY + 9, 14, 2);
-  px(ctx, colors.metal.highlight, cx - 5, HY + 9);
-  px(ctx, colors.metal.highlight, cx + 4, HY + 9);
+  // Side highlights (light from upper-left)
+  vLine(ctx, colors.primary.highlight, cx - 13, top + 4, h - 6);
+  hLine(ctx, colors.primary.highlight, cx - 9,  top,     6);
+  // Side shadows (right + bottom)
+  vLine(ctx, colors.primary.shadow, cx + 12, top + 4, h - 6);
+  hLine(ctx, colors.primary.shadow, cx + 4,  top,     6);
+  hLine(ctx, colors.primary.shadow, cx - 13, bottom - 2, 27);
 
-  // Vertical seam down the face — gives the helm a "two-half" look.
+  // Outline (perimeter — follows the 3-row dome taper into vertical sides)
+  px(ctx, colors.primary.outline, cx - 11, top);
+  px(ctx, colors.primary.outline, cx + 10, top);
+  px(ctx, colors.primary.outline, cx - 13, top + 1);
+  px(ctx, colors.primary.outline, cx + 12, top + 1);
+  px(ctx, colors.primary.outline, cx - 14, top + 2);
+  px(ctx, colors.primary.outline, cx + 13, top + 2);
+  vLine(ctx, colors.primary.outline, cx - 15, top + 3, h - 4);
+  vLine(ctx, colors.primary.outline, cx + 14, top + 3, h - 4);
+  hLine(ctx, colors.primary.outline, cx - 9,  top - 1, 18);
+
+  // Eye slit at brow level — wider to span the new helm width.
+  fillRect(ctx, colors.primary.outline, cx - 10, HY + 9, 20, 2);
+  px(ctx, colors.metal.highlight, cx - 8, HY + 9);
+  px(ctx, colors.metal.highlight, cx + 7, HY + 9);
+
+  // Vertical seam down the face.
   vLine(ctx, colors.primary.shadow,  cx,     HY + 12, 12);
   vLine(ctx, colors.primary.outline, cx - 1, HY + 14, 8);
 
   // Breathing slits across the lower jaw.
   for (let r = HY + 22; r <= HY + 26; r += 2) {
-    hLine(ctx, colors.primary.outline, cx - 4, r, 9);
+    hLine(ctx, colors.primary.outline, cx - 7, r, 15);
   }
 
-  // Neck guard flare — extends 2 px wider at the bottom.
-  hLine(ctx, colors.primary.base,    cx - 11, bottom - 1, 22);
-  hLine(ctx, colors.primary.shadow,  cx - 11, bottom - 1, 22);
-  hLine(ctx, colors.primary.outline, cx - 11, bottom,     22);
+  // Neck guard — narrower than helm body so it doesn't bleed into shoulders.
+  hLine(ctx, colors.primary.base,    cx - 12, bottom,     24);
+  px(ctx, colors.primary.outline, cx - 13, bottom);
+  px(ctx, colors.primary.outline, cx + 12, bottom);
+  hLine(ctx, colors.primary.outline, cx - 12, bottom + 1, 24);
 
-  // Crest / ridge along the top.
-  vLine(ctx, colors.metal.base,    cx,     top - 1, 4);
-  vLine(ctx, colors.metal.outline, cx - 1, top - 1, 4);
-  vLine(ctx, colors.metal.outline, cx + 1, top - 1, 4);
+  // Crest / ridge along the very top of the dome.
+  vLine(ctx, colors.metal.base,    cx,     top - 2, 4);
+  vLine(ctx, colors.metal.outline, cx - 1, top - 2, 4);
+  vLine(ctx, colors.metal.outline, cx + 1, top - 2, 4);
 
   // Deepen bottom-half outline (left + right sides) for volumetric weight
-  vLine(ctx, '#000000', cx - 11, top + 14, h - 14);
-  vLine(ctx, '#000000', cx + 10, top + 14, h - 14);
+  vLine(ctx, '#000000', cx - 15, top + 14, h - 14);
+  vLine(ctx, '#000000', cx + 14, top + 14, h - 14);
 
   // Specular highlight on the top-left curve (single ultra-bright pixel)
-  px(ctx, '#ffffff', cx - 7, top);
+  px(ctx, '#ffffff', cx - 9, top);
   // Specular dot on the helm crown
   px(ctx, colors.metal.highlight, cx,     top - 1);
 
-  // 2 rivets on each helm rim (along bottom flare)
-  px(ctx, colors.metal.outline, cx - 8, bottom - 1);
-  px(ctx, colors.metal.outline, cx + 7, bottom - 1);
+  // 2 rivets on each helm rim (along bottom).
+  px(ctx, colors.metal.outline, cx - 11, bottom - 1);
+  px(ctx, colors.metal.outline, cx + 10, bottom - 1);
 }
 
 function drawHoodSouth(ctx, colors) {
@@ -194,9 +206,10 @@ function drawHornedSouth(ctx, colors) {
   drawFullHelmSouth(ctx, colors);
 
   const cx = HX + HW / 2;
-  // Anchor: temples ~ HY+4, just outside the helm body (cx ± 11).
+  // Anchor: temples ~ HY+4, just outside the helm body (cx ± 16, since the
+  // helm body is now 30 wide).
   // Left horn: 4 rows tall, curves up-and-out.
-  const Lx = cx - 11;
+  const Lx = cx - 16;
   const Ly = HY + 4;
   // Curve outward then up (in source coords)
   px(ctx, colors.metal.base, Lx,     Ly);
@@ -211,7 +224,7 @@ function drawHornedSouth(ctx, colors) {
   px(ctx, colors.metal.outline,   Lx - 2, Ly - 5);
 
   // Right horn: mirror.
-  const Rx = cx + 10;
+  const Rx = cx + 15;
   const Ry = HY + 4;
   px(ctx, colors.metal.base, Rx,     Ry);
   px(ctx, colors.metal.base, Rx + 1, Ry - 1);
@@ -247,30 +260,31 @@ function drawHornedWest(ctx, colors) {
 }
 
 function drawCrownedSouth(ctx, colors) {
-  // Open-top circlet — 3-px-tall band wrapping the brow with 4 upward gem points.
+  // Open-top circlet — 3-px-tall band wrapping the brow with 5 upward gem
+  // points. Widened to 24 px so the band actually spans the brow.
   const top = HY + 3;
   const cx  = HX + HW / 2;
   // Band rows
-  hLine(ctx, colors.primary.base,      cx - 7, top,     14);
-  hLine(ctx, colors.primary.highlight, cx - 6, top,     12);
-  hLine(ctx, colors.primary.base,      cx - 7, top + 1, 14);
-  hLine(ctx, colors.primary.shadow,    cx - 7, top + 2, 14);
+  hLine(ctx, colors.primary.base,      cx - 12, top,     24);
+  hLine(ctx, colors.primary.highlight, cx - 11, top,     22);
+  hLine(ctx, colors.primary.base,      cx - 12, top + 1, 24);
+  hLine(ctx, colors.primary.shadow,    cx - 12, top + 2, 24);
   // Outline (top + bottom + ends)
-  hLine(ctx, '#000000',               cx - 7, top + 3, 14);
-  px(ctx, colors.primary.outline, cx - 8, top);
-  px(ctx, colors.primary.outline, cx - 8, top + 1);
-  px(ctx, colors.primary.outline, cx - 8, top + 2);
-  px(ctx, colors.primary.outline, cx + 7, top);
-  px(ctx, colors.primary.outline, cx + 7, top + 1);
-  px(ctx, colors.primary.outline, cx + 7, top + 2);
+  hLine(ctx, '#000000',               cx - 12, top + 3, 24);
+  px(ctx, colors.primary.outline, cx - 13, top);
+  px(ctx, colors.primary.outline, cx - 13, top + 1);
+  px(ctx, colors.primary.outline, cx - 13, top + 2);
+  px(ctx, colors.primary.outline, cx + 12, top);
+  px(ctx, colors.primary.outline, cx + 12, top + 1);
+  px(ctx, colors.primary.outline, cx + 12, top + 2);
   // Specular pop at top-left of the band
-  px(ctx, '#ffffff', cx - 6, top);
-  // 4 upward gem points (alternating ruby + sapphire). Each is a 1-px tall point on top of the band.
+  px(ctx, '#ffffff', cx - 11, top);
+  // 4 upward gem points (alternating ruby + sapphire) flanking the central spire.
   const points = [
-    { x: cx - 6, color: '#ff3355' },
-    { x: cx - 2, color: '#33aaff' },
-    { x: cx + 2, color: '#ff3355' },
-    { x: cx + 6, color: '#33aaff' },
+    { x: cx - 10, color: '#ff3355' },
+    { x: cx - 5,  color: '#33aaff' },
+    { x: cx + 4,  color: '#ff3355' },
+    { x: cx + 10, color: '#33aaff' },
   ];
   // Center taller point (like a crown spire)
   px(ctx, colors.primary.base, cx, top - 2);
