@@ -706,13 +706,14 @@
   <!-- ── Main ── -->
   <main class="main" id="main">
     <div class="armor-lab" id="armor-lab" style="display:none">
-      <h2>Armor Lab — Layer Preview</h2>
+      <h2>Armor Lab — Equip & Animate</h2>
       <div class="armor-lab-controls">
         <label>Character <select id="al-character"></select></label>
         <label>Helmet <select id="al-helmet"></select></label>
         <label>Chest <select id="al-chest"></select></label>
         <label>Boots <select id="al-boots"></select></label>
         <label>Gloves <select id="al-gloves"></select></label>
+        <label>Weapon <select id="al-weapon"></select></label>
         <label>Shield <select id="al-shield"></select></label>
       </div>
       <div class="armor-lab-grid" id="al-grid"></div>
@@ -972,11 +973,9 @@ async function loadManifest() {
         document.getElementById('main').scrollTop = 0;
       }, 600);
     }
-    if (manifest.weapons && manifest.weapons.length) {
-      loadWeaponGallery(manifest.weapons);
-    }
-    if (manifest.armor && manifest.armor.length && manifest.characters && manifest.characters.length) {
-      loadArmorLab(manifest);
+    // Weapons are now picked from the Armor Lab's Weapon dropdown — no separate gallery.
+    if ((manifest.armor && manifest.armor.length) || (manifest.weapons && manifest.weapons.length)) {
+      if (manifest.characters && manifest.characters.length) loadArmorLab(manifest);
     }
   } catch (_) { /* manifest may not exist yet, ignore */ }
 }
@@ -984,7 +983,7 @@ async function loadManifest() {
 // ── Armor Lab ──────────────────────────────────────────────────────────────
 const armorLab = {
   manifest:  null,
-  selected:  { character: null, helmet: null, chest: null, boots: null, gloves: null, shield: null },
+  selected:  { character: null, helmet: null, chest: null, boots: null, gloves: null, weapon: null, shield: null },
   imgCache:  {},          // url -> HTMLImageElement
   charMeta:  null,        // current character's _meta.json (per-frame anchors)
   rowState:  [],          // [{ frame, frameCount }] per animation row
@@ -1021,15 +1020,16 @@ async function loadArmorLab(manifest) {
   fillSelect('al-chest',     bySlot.chest,        true);
   fillSelect('al-boots',     bySlot.boots,        true);
   fillSelect('al-gloves',    bySlot.gloves,       true);
+  fillSelect('al-weapon',    manifest.weapons || [], true);
   fillSelect('al-shield',    bySlot.shield,       true);
 
-  // Initial selection: first character, no armor.
+  // Initial selection: first character, no gear.
   armorLab.selected.character = manifest.characters[0];
   await loadCharacterMeta(armorLab.selected.character);
   preloadImg(toUrl(armorLab.selected.character.file));
 
   buildArmorLabGrid();
-  ['character', 'helmet', 'chest', 'boots', 'gloves', 'shield'].forEach((slot) => {
+  ['character', 'helmet', 'chest', 'boots', 'gloves', 'weapon', 'shield'].forEach((slot) => {
     document.getElementById('al-' + slot).addEventListener('change', (e) => onArmorLabChange(slot, e.target.value));
   });
   startArmorLabTimer();
@@ -1123,20 +1123,42 @@ function drawArmorLabRow(stateIdx) {
   // 1. Body
   drawSheet(armorLab.selected.character);
 
-  // 2. Body armor — boots, chest, gloves, helmet (low → high z).
+  // 2. Body armor — boots, chest, gloves (low → mid z; helmet drawn last).
   drawSheet(armorLab.selected.boots);
   drawSheet(armorLab.selected.chest);
   drawSheet(armorLab.selected.gloves);
-  drawSheet(armorLab.selected.helmet);
 
-  // 3. Shield positioned at offHand anchor (uses current character meta).
+  const animEntry = armorLab.charMeta && armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
+  const fmeta     = animEntry && animEntry.frames && animEntry.frames[st.frame];
+
+  // 3. Weapon at weaponHand anchor, rotated to match arm direction.
+  // Pivots at the weapon's gripX/gripY so the grip stays glued to the hand.
+  const weapon = armorLab.selected.weapon;
+  if (weapon && fmeta && fmeta.weaponHand) {
+    const wh  = fmeta.weaponHand;
+    const img = armorLab.imgCache[toUrl(weapon.file)];
+    if (img && img.complete && img.naturalWidth > 0) {
+      const meta    = weapon.meta || {};
+      const fSize   = meta.frameSize || 32;
+      const gx      = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
+      const gy      = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
+      const neutral = meta.neutralAngleDeg || 0;
+      ctx.save();
+      ctx.translate(wh.x * scale, wh.y * scale);
+      // Weapon sprite points right (neutralAngleDeg=0); rotate to align its
+      // long axis with the arm direction (angleDeg from shoulder→hand).
+      ctx.rotate((wh.angleDeg - neutral) * Math.PI / 180);
+      ctx.drawImage(img, 0, 0, fSize, fSize, -gx * scale, -gy * scale, fSize * scale, fSize * scale);
+      ctx.restore();
+    }
+  }
+
+  // 4. Shield positioned at offHand anchor (no rotation — shields face out).
   const shield = armorLab.selected.shield;
-  if (shield && armorLab.charMeta) {
-    const anim  = armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
-    const fmeta = anim && anim.frames && anim.frames[st.frame];
-    const off   = fmeta && fmeta.offHand;
-    const img   = armorLab.imgCache[toUrl(shield.file)];
-    if (off && img && img.complete && img.naturalWidth > 0) {
+  if (shield && fmeta && fmeta.offHand) {
+    const off = fmeta.offHand;
+    const img = armorLab.imgCache[toUrl(shield.file)];
+    if (img && img.complete && img.naturalWidth > 0) {
       const meta  = shield.meta || {};
       const fSize = meta.frameSize || 32;
       const gx    = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
@@ -1146,6 +1168,9 @@ function drawArmorLabRow(stateIdx) {
       ctx.drawImage(img, 0, 0, fSize, fSize, dx, dy, fSize * scale, fSize * scale);
     }
   }
+
+  // 5. Helmet last — always on top.
+  drawSheet(armorLab.selected.helmet);
 }
 
 function startArmorLabTimer() {
