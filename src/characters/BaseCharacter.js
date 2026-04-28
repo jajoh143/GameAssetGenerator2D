@@ -1872,8 +1872,6 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
 // the bare skin, OVER the deltoid, and disappear over the trapezius — the
 // classic tank-top silhouette from front view.
 function drawTankStrapsOverlaySouth(ctx, clothingColors, torsoX, torsoY, w) {
-  const NECK_OPEN_ROWS = 4;
-  const baseY = torsoY - 1;          // top of deltoid
   // Strap x positions: pulled INWARD toward the neck so they sit on the
   // top-of-shoulder near the trapezius (where real tank straps rest)
   // rather than out at the deltoid edge. Neck spans x=28..36; arms span
@@ -1882,8 +1880,11 @@ function drawTankStrapsOverlaySouth(ctx, clothingColors, torsoX, torsoY, w) {
   const STRAP_LX = 23;               // inner-left shoulder, just outside neck
   const STRAP_RX = 39;               // inner-right shoulder, just outside neck
   const STRAP_W  = 2;
-  const topY     = baseY - 1;        // 1px above deltoid (on trap)
-  const botY     = torsoY + NECK_OPEN_ROWS;  // first row of body fabric
+  // Strap is short — covers the trap/deltoid area only, then disappears
+  // into the tank body. Just enough rows to read as a strap going over
+  // the shoulder; doesn't extend halfway down the chest.
+  const topY     = torsoY - 2;       // 1px above deltoid (on trap)
+  const botY     = torsoY + 1;       // 1px into the body fabric (anchor point)
 
   // Fill straps with base colour
   for (let row = topY; row <= botY; row++) {
