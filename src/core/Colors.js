@@ -756,6 +756,77 @@ const GOBLIN_HORN = {
   outline:   '#3A2810',
 };
 
+// Dragonborn / lizardfolk scale palettes — chromatic dragon hues plus a
+// few earth tones. Each entry includes a `belly` colour for the lighter
+// underside / underjaw scales (paler than the base).
+const LIZARD_SKIN = {
+  emerald: {
+    highlight: '#80C868',
+    base:      '#3F8848',
+    shadow:    '#1A4824',
+    deep_shadow:'#0C2410',
+    outline:   '#08180A',
+    belly:     '#C4D898',
+  },
+  ruby: {
+    highlight: '#D85040',
+    base:      '#982020',
+    shadow:    '#580C10',
+    deep_shadow:'#280408',
+    outline:   '#1A0408',
+    belly:     '#D8B098',
+  },
+  sapphire: {
+    highlight: '#5078C8',
+    base:      '#28448C',
+    shadow:    '#101F4C',
+    deep_shadow:'#080F28',
+    outline:   '#04081A',
+    belly:     '#A8B8E0',
+  },
+  topaz: {
+    highlight: '#E8C040',
+    base:      '#A88018',
+    shadow:    '#604408',
+    deep_shadow:'#302004',
+    outline:   '#180E00',
+    belly:     '#F0DC98',
+  },
+  bronze: {
+    highlight: '#C09058',
+    base:      '#8C5C28',
+    shadow:    '#4C2E10',
+    deep_shadow:'#241408',
+    outline:   '#180A04',
+    belly:     '#D8B888',
+  },
+  obsidian: {
+    highlight: '#5C5050',
+    base:      '#302828',
+    shadow:    '#181010',
+    deep_shadow:'#0A0606',
+    outline:   '#040202',
+    belly:     '#807878',
+  },
+  bone: {
+    highlight: '#F0E8D0',
+    base:      '#C0B898',
+    shadow:    '#807860',
+    deep_shadow:'#403828',
+    outline:   '#1A1408',
+    belly:     '#FFFFFF',
+  },
+};
+
+// Lizardfolk horn palette — same bone/ivory used for goblin horns; scales
+// share the colour family with the body but the horns are always pale.
+const LIZARD_HORN = {
+  highlight: '#E8DCB0',
+  base:      '#C0B080',
+  shadow:    '#807040',
+  outline:   '#3A2810',
+};
+
 // Belt color palettes — leather/cloth in common pixel-art tones.
 const BELT = {
   standard: {
@@ -982,6 +1053,8 @@ module.exports = {
   DEMON_SKIN,
   GOBLIN_SKIN,
   GOBLIN_HORN,
+  LIZARD_SKIN,
+  LIZARD_HORN,
   DEMON_PARTS,
   BELT,
   GROUND_SHADOW,

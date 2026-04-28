@@ -5,7 +5,7 @@
  * All fields are optional - missing ones will use these defaults.
  */
 const DEFAULT_CONFIG = {
-  type:          'human',      // 'human' | 'demon' | 'fairy' | 'goblin'
+  type:          'human',      // 'human' | 'demon' | 'fairy' | 'goblin' | 'lizardfolk'
   skin:          'medium',     // skin tone key from Colors.SKIN_TONES
   hair:          'black',      // hair color key from Colors.HAIR_COLORS
   hairStyle:     'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut' | 'spiky' | 'mohawk' | 'topknot' | 'buzzed' | 'bald'
@@ -35,6 +35,9 @@ const DEFAULT_CONFIG = {
   goblinSkin:    'moss_green',     // any key from Colors.GOBLIN_SKIN
   goblinHorns:   'none',           // 'none' | 'curved' | 'straight' | 'ram'
   goblinHornLength: 'short',       // 'short' | 'medium' | 'long'
+
+  // Lizardfolk / dragonborn-only (reptilian humanoid with snout + scales)
+  lizardScale:   'emerald',        // any key from Colors.LIZARD_SKIN
 
   // Fairy-only (pixie/elven humanoid with wings + glow)
   fairySkin:      'peach',

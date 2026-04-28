@@ -56,7 +56,7 @@ function getCenteringBase(config) {
 
 function resolveColors(config) {
   // Skin: demon → DEMON_SKIN, fairy → FAIRY_SKIN, goblin → GOBLIN_SKIN,
-  // else regular skin tones.
+  // lizardfolk → LIZARD_SKIN, else regular skin tones.
   let skinColors;
   if (config.type === 'demon') {
     skinColors = Colors.DEMON_SKIN[config.demonSkin] || Colors.DEMON_SKIN.crimson;
@@ -66,6 +66,8 @@ function resolveColors(config) {
     skinColors = Object.assign({ deep_shadow: fs.outline }, fs);
   } else if (config.type === 'goblin') {
     skinColors = Colors.GOBLIN_SKIN[config.goblinSkin] || Colors.GOBLIN_SKIN.moss_green;
+  } else if (config.type === 'lizardfolk') {
+    skinColors = Colors.LIZARD_SKIN[config.lizardScale] || Colors.LIZARD_SKIN.emerald;
   } else {
     skinColors = Colors.SKIN_TONES[config.skin] || Colors.SKIN_TONES.medium;
   }
@@ -208,11 +210,15 @@ function drawSouth(ctx, config, offsets) {
   // Head — translate so its chin (at y=50 in drawHeadSouth) meets the
   // current neckY. For non-medium heights neckY shifts, so the head must
   // shift with it (otherwise a gap or overlap appears between head and neck).
-  const headDeltaY = neckY - 50;
-  ctx.save();
-  ctx.translate(0, headBob + headDeltaY);
-  drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
-  ctx.restore();
+  // skipHead lets non-human types (e.g. lizardfolk) draw their own head
+  // after running humanSouth.
+  if (!offsets.skipHead) {
+    const headDeltaY = neckY - 50;
+    ctx.save();
+    ctx.translate(0, headBob + headDeltaY);
+    drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -313,11 +319,13 @@ function drawNorth(ctx, config, offsets) {
   drawNeckSouth(ctx, colors.skin, neckY);
 
   // Head — translate so back-of-head chin (~y=50) meets neckY for non-medium heights.
-  const headDeltaY = neckY - 50;
-  ctx.save();
-  ctx.translate(0, headBob + headDeltaY);
-  drawHeadNorth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
-  ctx.restore();
+  if (!offsets.skipHead) {
+    const headDeltaY = neckY - 50;
+    ctx.save();
+    ctx.translate(0, headBob + headDeltaY);
+    drawHeadNorth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -384,11 +392,13 @@ function drawWest(ctx, config, offsets) {
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);
   // Head — translate so chin (~y=49 in drawHeadWest) meets neckY for non-medium heights.
   // Medium baseline neckY is ~50, so headDeltaY = neckY - 50.
-  const headDeltaY = neckY - 50;
-  ctx.save();
-  ctx.translate(0, bodyY + headBob + headDeltaY);
-  drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
-  ctx.restore();
+  if (!offsets.skipHead) {
+    const headDeltaY = neckY - 50;
+    ctx.save();
+    ctx.translate(0, bodyY + headBob + headDeltaY);
+    drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
