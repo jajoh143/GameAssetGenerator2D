@@ -2,7 +2,7 @@
 
 const { makeCanvas, fillRect, pixel, hLine, vLine, outlineRect, mirrorCanvasH, clear } = require('../core/Canvas');
 const { DEMON_SKIN, DEMON_PARTS, HAIR_COLORS, CLOTHING, PANTS, SHOES, BELT } = require('../core/Colors');
-const { drawSouth: humanSouth, drawNorth: humanNorth, drawWest: humanWest, drawEast: humanEast, resolveColors: humanColors } = require('./HumanCharacter');
+const { drawSouth: humanSouth, drawNorth: humanNorth, drawWest: humanWest, drawEast: humanEast, resolveColors: humanColors, getYAnchors } = require('./HumanCharacter');
 const { resolveConfig } = require('./CharacterConfig');
 
 const FRAME_W = 96;
@@ -262,48 +262,51 @@ function generateFrame(rawConfig, animationName, frameOffset) {
   const hornLength = config.hornLength || 'medium';
   const tailLength = config.tailLength || config.tailStyle || 'long';
 
+  // Anchor points adjusted for the chosen body height — horns sit at the
+  // top of the (possibly translated) head; the tail emerges just above the
+  // belt regardless of leg/torso length.
+  const yA      = getYAnchors(config);
+  const hornY   = yA.headTopY;          // top of head crown
+  const tailY   = yA.beltY - 8;         // ~8 px above belt (lower torso/hip)
+  const hornYN  = yA.headTopY + 3;      // back-of-head crown sits 3 px lower
+
   switch (direction) {
     case 'south': {
-      // Human body + head (with demon skin tone applied via resolveColors)
       humanSouth(ctx, config, off);
-      // Horns above the human head — HY=21, head bob applied
       ctx.save();
       ctx.translate(0, by + headBobScaled);
-      drawHornsSouth(ctx, colors, hornStyle, hornLength, 21);
+      drawHornsSouth(ctx, colors, hornStyle, hornLength, hornY);
       ctx.restore();
-      // Tail at the right hip — beltY=66 baseline + bodyY offset
-      drawTailSouth(ctx, colors, tailLength, 66 + by);
+      drawTailSouth(ctx, colors, tailLength, tailY + by);
       break;
     }
     case 'north': {
       humanNorth(ctx, config, off);
-      // Horns visible from behind too
       ctx.save();
       ctx.translate(0, by + headBobScaled);
-      drawHornsSouth(ctx, colors, hornStyle, hornLength, 24);
+      drawHornsSouth(ctx, colors, hornStyle, hornLength, hornYN);
       ctx.restore();
-      drawTailSouth(ctx, colors, tailLength, 66 + by);
+      drawTailSouth(ctx, colors, tailLength, tailY + by);
       break;
     }
     case 'west': {
       humanWest(ctx, config, off);
       ctx.save();
       ctx.translate(0, by + headBobScaled);
-      drawHornsWest(ctx, colors, hornStyle, hornLength, 13, 24);
+      drawHornsWest(ctx, colors, hornStyle, hornLength, 13, hornY + 3);
       ctx.restore();
-      drawTailWest(ctx, colors, tailLength, 74 + by);
+      drawTailWest(ctx, colors, tailLength, yA.beltY + by);
       break;
     }
     case 'east': {
-      // Mirror of west
       const { canvas: tmpC, ctx: tmpCtx } = makeCanvas(FRAME_W, FRAME_H);
       clear(tmpCtx, FRAME_W, FRAME_H);
       humanWest(tmpCtx, config, off);
       tmpCtx.save();
       tmpCtx.translate(0, by + headBobScaled);
-      drawHornsWest(tmpCtx, colors, hornStyle, hornLength, 13, 24);
+      drawHornsWest(tmpCtx, colors, hornStyle, hornLength, 13, hornY + 3);
       tmpCtx.restore();
-      drawTailWest(tmpCtx, colors, tailLength, 74 + by);
+      drawTailWest(tmpCtx, colors, tailLength, yA.beltY + by);
       const mirrored = mirrorCanvasH(tmpC);
       ctx.drawImage(mirrored, 0, 0);
       break;

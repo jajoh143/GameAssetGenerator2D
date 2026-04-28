@@ -33,22 +33,41 @@ function erasePixel(ctx, x, y) {
 //
 // Returns { rl, rr } where rl(row), rr(row) are the inclusive left/right
 // edge x-positions of the torso at each row.
+// Build profiles — control left-edge insets at six row bands (shoulder,
+// chest, upper-waist, narrow-waist, hip-transition, hip). Positive values
+// pull the silhouette IN; negative values push it OUT past `x`.
+const BUILD_INSETS = {
+  slim:     [ 0,  1,  2,  3,  2,  1],   // narrower throughout
+  average:  [-1,  0,  1,  2,  1,  0],   // baseline (former hardcoded values)
+  muscular: [-2, -1,  0,  1,  0, -1],   // wider chest/shoulders, slim waist
+  heavy:    [-2, -1, -1,  0, -1, -2],   // wider all over, gentle waist
+};
+
+// Module-level build setter — read by torsoSilhouette. HumanCharacter
+// calls setBuild(config.build) at the start of each draw so all clothing
+// functions automatically pick up the build without needing a new param
+// on every style-specific draw.
+let _currentBuild = 'average';
+function setBuild(b) { _currentBuild = (b && BUILD_INSETS[b]) ? b : 'average'; }
+function getBuild()  { return _currentBuild; }
+
 function torsoSilhouette(x, w) {
+  const ins = BUILD_INSETS[_currentBuild] || BUILD_INSETS.average;
   const rl = (row) => {
-    if (row < 3)   return x - 1;
-    if (row < 5)   return x;
-    if (row < 9)   return x + 1;
-    if (row < 13)  return x + 2;
-    if (row < 15)  return x + 1;
-    return x;
+    if (row < 3)   return x + ins[0];
+    if (row < 5)   return x + ins[1];
+    if (row < 9)   return x + ins[2];
+    if (row < 13)  return x + ins[3];
+    if (row < 15)  return x + ins[4];
+    return x + ins[5];
   };
   const rr = (row) => {
-    if (row < 3)   return x + w;
-    if (row < 5)   return x + w - 1;
-    if (row < 9)   return x + w - 2;
-    if (row < 13)  return x + w - 3;
-    if (row < 15)  return x + w - 2;
-    return x + w - 1;
+    if (row < 3)   return x + w - 1 - ins[0];
+    if (row < 5)   return x + w - 1 - ins[1];
+    if (row < 9)   return x + w - 1 - ins[2];
+    if (row < 13)  return x + w - 1 - ins[3];
+    if (row < 15)  return x + w - 1 - ins[4];
+    return x + w - 1 - ins[5];
   };
   return { rl, rr };
 }
@@ -3123,6 +3142,8 @@ function drawHeadSide(ctx, skinColors, hairColors, hairStyle, facingRight) {
 }
 
 module.exports = {
+  setBuild,
+  getBuild,
   drawGroundShadow,
   drawHeadSouth,
   drawHeadNorth,

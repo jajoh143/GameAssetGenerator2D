@@ -3,6 +3,7 @@
 const { makeCanvas, fillRect, pixel, hLine, vLine, outlineRect, mirrorCanvasH, clear } = require('../core/Canvas');
 const Colors = require('../core/Colors');
 const {
+  setBuild,
   drawGroundShadow,
   drawHeadSouth,
   drawHeadNorth,
@@ -25,6 +26,18 @@ const {
 
 const FRAME_W = 64;
 const FRAME_H = 96;
+
+// Height presets: tweak leg + torso length. Head, neck, belt and shoe
+// dimensions stay constant so chibi proportions are preserved (head looks
+// relatively bigger on shorter characters, smaller on taller ones).
+const HEIGHT_DIMS = {
+  short:  { legH:  8, torsoH: 16 },   // ~10 px shorter than medium
+  medium: { legH: 14, torsoH: 20 },   // baseline
+  tall:   { legH: 18, torsoH: 22 },   // ~6 px taller than medium
+};
+function heightDims(config) {
+  return HEIGHT_DIMS[config && config.height] || HEIGHT_DIMS.medium;
+}
 
 // ---------------------------------------------------------------------------
 // Color resolver
@@ -126,11 +139,16 @@ function drawSouth(ctx, config, offsets) {
   // --- Ground shadow ---
   if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
 
+  // Activate the configured body build (slim/average/muscular/heavy) so
+  // every clothing draw (which calls torsoSilhouette internally) picks it up.
+  setBuild(config.build);
+
   // Proportional body stack — chibi proportions: shorter legs make head relatively larger.
+  const dims = heightDims(config);
   const shoeH  = 5;
-  const legH   = 14;
+  const legH   = dims.legH;
   const beltH  = 3;
-  const torsoH = 20;  // +2 vs neck shrink: torsoY moves up so neckY stays at 50 (adjacent to chin)
+  const torsoH = dims.torsoH;
   const neckH  = 4;
 
   const shoeY  = base - shoeH;
@@ -164,9 +182,12 @@ function drawSouth(ctx, config, offsets) {
   }
   // Neck
   drawNeckSouth(ctx, colors.skin, neckY);
-  // Head
+  // Head — translate so its chin (at y=50 in drawHeadSouth) meets the
+  // current neckY. For non-medium heights neckY shifts, so the head must
+  // shift with it (otherwise a gap or overlap appears between head and neck).
+  const headDeltaY = neckY - 50;
   ctx.save();
-  ctx.translate(0, headBob);
+  ctx.translate(0, headBob + headDeltaY);
   drawHeadSouth(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
   ctx.restore();
 }
@@ -190,10 +211,12 @@ function drawNorth(ctx, config, offsets) {
 
   const base = 96 + bodyY;
 
+  setBuild(config.build);
+  const dims = heightDims(config);
   const shoeH  = 5;
-  const legH   = 14;
+  const legH   = dims.legH;
   const beltH  = 3;
-  const torsoH = 20;
+  const torsoH = dims.torsoH;
   const neckH  = 4;
 
   const shoeY  = base - shoeH;
@@ -263,8 +286,10 @@ function drawNorth(ctx, config, offsets) {
   drawArmsSouth(ctx, colors.armClothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
   drawNeckSouth(ctx, colors.skin, neckY);
 
+  // Head — translate so back-of-head chin (~y=50) meets neckY for non-medium heights.
+  const headDeltaY = neckY - 50;
   ctx.save();
-  ctx.translate(0, headBob);
+  ctx.translate(0, headBob + headDeltaY);
   drawHeadNorth(ctx, colors.skin, colors.hair, config.hairStyle || 'short');
   ctx.restore();
 }
@@ -288,10 +313,12 @@ function drawWest(ctx, config, offsets) {
 
   const base = 96 + bodyY;
 
+  setBuild(config.build);
+  const dims = heightDims(config);
   const shoeH  = 5;
-  const legH   = 14;
+  const legH   = dims.legH;
   const beltH  = 3;
-  const torsoH = 20;  // match south for consistency
+  const torsoH = dims.torsoH;  // match south for consistency
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
@@ -327,9 +354,11 @@ function drawWest(ctx, config, offsets) {
   // Neck (side) — 6px wide × 4px tall
   fillRect(ctx, colors.skin.base, torsoX + 3, neckY, 6, 4);
   outlineRect(ctx, colors.skin.outline, torsoX + 3, neckY, 6, 4);
-  // Head
+  // Head — translate so chin (~y=49 in drawHeadWest) meets neckY for non-medium heights.
+  // Medium baseline neckY is ~50, so headDeltaY = neckY - 50.
+  const headDeltaY = neckY - 50;
   ctx.save();
-  ctx.translate(0, bodyY + headBob);
+  ctx.translate(0, bodyY + headBob + headDeltaY);
   drawHeadWest(ctx, colors.skin, colors.hair, config.hairStyle || 'short', colors.eyes, config.beardStyle || 'none');
   ctx.restore();
 }
@@ -374,6 +403,24 @@ function getDirectionFromAnim(animName) {
   return 'south';
 }
 
+// Compute the y anchor points for a given config — used by demon/fairy
+// renderers to position horns, tails, wings etc. relative to the chosen
+// height. Returns { base, shoeY, legY, beltY, torsoY, neckY, headTopY }.
+function getYAnchors(config) {
+  const dims = heightDims(config);
+  const base = 96;
+  const shoeY  = base - 5;
+  const legY   = shoeY - dims.legH;
+  const beltY  = legY - 3;
+  const torsoY = beltY - dims.torsoH;
+  const neckY  = torsoY - 4;
+  // The drawHeadSouth function plants chin at y=50 by default; we shift it
+  // by neckY - 50 to bridge to the new neck. The head's top is therefore
+  // at HY=21 + headDeltaY = 21 + (neckY - 50) = neckY - 29.
+  const headTopY = neckY - 29;
+  return { base, shoeY, legY, beltY, torsoY, neckY, headTopY };
+}
+
 module.exports = {
   generateFrame,
   drawSouth,
@@ -381,4 +428,6 @@ module.exports = {
   drawWest,
   drawEast,
   resolveColors,
+  heightDims,
+  getYAnchors,
 };

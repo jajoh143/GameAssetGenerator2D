@@ -11,6 +11,8 @@ const DEFAULT_CONFIG = {
   hairStyle:     'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut' | 'spiky' | 'mohawk' | 'topknot' | 'buzzed' | 'bald'
   beardStyle:    'none',       // 'none' | 'stubble' | 'handlebar' | 'goatee' | 'full'
   eyes:          'brown',      // eye color key from Colors.EYE_COLORS
+  height:        'medium',     // 'short' | 'medium' | 'tall' (fairies default to short via resolveConfig)
+  build:         'average',    // 'slim' | 'average' | 'muscular' | 'heavy'
 
   // Clothing is now picked as STYLE + COLOR (independent dropdowns)
   clothingStyle: 'jacket',     // any key from Colors.CLOTHING_STYLES
@@ -100,6 +102,12 @@ function resolveConfig(config) {
     const { style, color } = splitLegacyClothing(config.clothing);
     if (style && !config.clothingStyle) merged.clothingStyle = style;
     if (color && !config.clothingColor) merged.clothingColor = color;
+  }
+
+  // Fairies default to a SHORT humanoid frame so they read as smaller pixies
+  // than their human counterparts. Caller can still override with config.height.
+  if (merged.type === 'fairy' && (!config || !config.height)) {
+    merged.height = 'short';
   }
 
   return merged;

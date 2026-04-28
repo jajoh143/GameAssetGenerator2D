@@ -9,6 +9,7 @@ const {
   drawNorth: humanNorth,
   drawWest:  humanWest,
   resolveColors: humanColors,
+  getYAnchors,
 } = require('./HumanCharacter');
 
 const FRAME_W = 96;
@@ -365,46 +366,52 @@ function generateFrame(rawConfig, animationName, frameOffset) {
 function renderDirection(ctx, config, colors, off, direction,
                          wingStyle, wingScale, glowRadius, flapPhase,
                          by, headBob, isAttack, frameIdx) {
+  // Height-aware Y shift: the human renderer translates the head/torso/etc
+  // when config.height changes. All overlay layers (wings, halo, ears) live
+  // in the canvas frame — they need the same shift to stay aligned with
+  // the new body position. A SHORT fairy has neckY=60 instead of 50, so
+  // headDeltaY = 60 - 50 = 10, and wings/halo/ears shift down by 10 px.
+  const yA          = getYAnchors(config);
+  const headDeltaY  = yA.neckY - 50;
+  const ovBy        = by + headDeltaY;     // y offset for body-relative overlays
+
   // 1. Ground shadow at the TRUE ground line (y=94) — stays put as the
-  //    fairy floats above it. Smaller and softer than a walking shadow
-  //    to read as "cast on the ground from above".
+  //    fairy floats above it.
   const shadowCx = direction === 'west' ? 23 : 32;
   drawGroundShadow(ctx, shadowCx, 94, 14, 3);
 
-  // 2. Glow halo — centered on the BODY (x=32), not the canvas centre.
-  //    Anchored around the upper torso (~y=58) so the halo wraps the chest
-  //    and head rather than sitting at the hip.
-  drawGlowHalo(ctx, colors.glow, BODY_CX, 58 + by, glowRadius);
+  // 2. Glow halo — centered on the BODY (x=32, not canvas centre at x=48)
+  //    and anchored around the upper torso/head so it wraps the fairy.
+  drawGlowHalo(ctx, colors.glow, BODY_CX, 58 + ovBy, glowRadius);
 
-  // 2. Wings (behind the body — drawn before the human renderer)
+  // 3. Wings (behind the body — drawn before the human renderer)
   if (direction === 'south') {
     if (wingStyle === 'dragonfly') {
-      drawWingsDragonflyS(ctx, colors.wing, by, flapPhase, wingScale);
+      drawWingsDragonflyS(ctx, colors.wing, ovBy, flapPhase, wingScale);
     } else {
-      drawWingsButterflySouth(ctx, colors.wing, by, flapPhase, wingScale);
+      drawWingsButterflySouth(ctx, colors.wing, ovBy, flapPhase, wingScale);
     }
   } else if (direction === 'west') {
-    drawWingsWest(ctx, colors.wing, wingStyle, by, flapPhase, wingScale);
+    drawWingsWest(ctx, colors.wing, wingStyle, ovBy, flapPhase, wingScale);
   } else {
-    // North: hide wings behind body but show outer edges
     if (wingStyle === 'dragonfly') {
-      drawWingsDragonflyS(ctx, colors.wing, by, flapPhase, wingScale * 0.7);
+      drawWingsDragonflyS(ctx, colors.wing, ovBy, flapPhase, wingScale * 0.7);
     } else {
-      drawWingsButterflySouth(ctx, colors.wing, by, flapPhase, wingScale * 0.7);
+      drawWingsButterflySouth(ctx, colors.wing, ovBy, flapPhase, wingScale * 0.7);
     }
   }
 
-  // 3. Human body (with fairy skin + dress mapped via resolveColors)
+  // 4. Human body (with fairy skin + dress mapped via resolveColors)
   if (direction === 'south')      humanSouth(ctx, config, off);
   else if (direction === 'north') humanNorth(ctx, config, off);
   else                            humanWest(ctx, config, off);
 
-  // 4. Pointed ears overlay (on top of head, follows head bob)
+  // 5. Pointed ears overlay (on top of head, follows head bob + height shift)
   if (direction === 'south') {
-    drawPointedEarsSouth(ctx, colors.fairySkin, headBob + by);
+    drawPointedEarsSouth(ctx, colors.fairySkin, headBob + ovBy);
   } else if (direction === 'west') {
     ctx.save();
-    ctx.translate(0, by + headBob);
+    ctx.translate(0, ovBy + headBob);
     drawPointedEarWest(ctx, colors.fairySkin);
     ctx.restore();
   }

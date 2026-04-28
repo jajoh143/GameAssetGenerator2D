@@ -471,6 +471,25 @@
       </div>
     </div>
 
+    <div id="height-section">
+      <div class="section-label">Height</div>
+      <div class="btn-row" id="height-row">
+        <button class="toggle-btn"        data-val="short">Short</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="tall">Tall</button>
+      </div>
+    </div>
+
+    <div id="build-section">
+      <div class="section-label">Build</div>
+      <div class="btn-row" id="build-row">
+        <button class="toggle-btn"        data-val="slim">Slim</button>
+        <button class="toggle-btn active" data-val="average">Average</button>
+        <button class="toggle-btn"        data-val="muscular">Muscular</button>
+        <button class="toggle-btn"        data-val="heavy">Heavy</button>
+      </div>
+    </div>
+
     <div id="clothing-style-section">
       <div class="section-label">Clothing Style</div>
       <select id="clothing-style-select"></select>
@@ -604,6 +623,7 @@
 const state = {
   type: 'human', skin: null, hair: null, hairStyle: 'short',
   eyes: 'brown', beardStyle: 'none',
+  height: 'medium', build: 'average',
   clothingStyle: 'jacket', clothingColor: 'grey',
   pants: null, shoes: null,
   belt: true, beltColor: 'standard',
@@ -1029,6 +1049,8 @@ function applyConfig(cfg) {
   if (cfg.hairStyle)  { state.hairStyle = cfg.hairStyle; setSelectVal('hair-style-select', cfg.hairStyle); }
   if (cfg.eyes)       activateSwatch('eye-color-swatches',  cfg.eyes,       'eyes');
   if (cfg.beardStyle) activateToggle('beard-style-row', cfg.beardStyle, 'beardStyle');
+  if (cfg.height)     activateToggle('height-row',     cfg.height,     'height');
+  if (cfg.build)      activateToggle('build-row',      cfg.build,      'build');
   // Resolve clothing — support both new (style+color) and legacy combined `clothing` keys.
   let cs = cfg.clothingStyle, cc = cfg.clothingColor;
   if ((!cs || !cc) && cfg.clothing) {
@@ -1108,6 +1130,8 @@ function setType(val) {
 wireToggleRow('type-row',        'type',       setType);
 // hair-style-select is wired by buildSelect(); no toggle row needed.
 wireToggleRow('beard-style-row', 'beardStyle', null);
+wireToggleRow('height-row',      'height',     null);
+wireToggleRow('build-row',       'build',      null);
 wireToggleRow('horn-row',        'hornStyle',  null);
 wireToggleRow('horn-length-row', 'hornLength', null);
 wireToggleRow('tail-row',        'tailLength', null);
@@ -1170,6 +1194,8 @@ function buildConfig() {
     cfg.hairStyle     = state.hairStyle;
     cfg.eyes          = state.eyes;
     cfg.beardStyle    = state.beardStyle;
+    cfg.height        = state.height;
+    cfg.build         = state.build;
     cfg.clothingStyle = state.clothingStyle;
     cfg.clothingColor = state.clothingColor;
     cfg.pants         = state.pants;
@@ -1180,6 +1206,8 @@ function buildConfig() {
     cfg.hairStyle     = state.hairStyle;
     cfg.eyes          = state.eyes;
     cfg.beardStyle    = state.beardStyle;
+    cfg.height        = state.height;
+    cfg.build         = state.build;
     cfg.clothingStyle = state.clothingStyle;
     cfg.clothingColor = state.clothingColor;
     cfg.pants         = state.pants;
@@ -1193,6 +1221,8 @@ function buildConfig() {
     cfg.tailStyle     = state.tailLength;   // legacy field — keep in sync
   } else if (state.type === 'fairy') {
     cfg.eyes      = state.eyes;
+    cfg.height    = state.height;
+    cfg.build     = state.build;
     cfg.fairySkin = state.fairySkin;
     cfg.wingStyle     = state.wingStyle;
     cfg.wingSize      = state.wingSize;
