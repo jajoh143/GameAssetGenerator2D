@@ -72,7 +72,7 @@ function handleOptions(res) {
                       'spiky', 'mohawk', 'topknot', 'buzzed', 'bald'],
     eyeColors:       Object.fromEntries(Object.entries(EYE_COLORS).map(([k, v]) => [k, v.iris])),
     beardStyles:     ['none', 'stubble', 'handlebar', 'goatee', 'full'],
-    heights:         ['short', 'medium', 'tall'],
+    heights:         ['tiny', 'short', 'medium', 'tall'],
     builds:          ['slim', 'average', 'muscular', 'heavy'],
     // Clothing is split into independent style and colour pickers.
     clothingStyles:  CLOTHING_STYLES,

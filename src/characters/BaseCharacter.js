@@ -2483,7 +2483,7 @@ function drawBeltWest(ctx, beltColors, x, y) {
 // drawLegsSouth
 // ---------------------------------------------------------------------------
 
-function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=0, forwardLeg='none') {
+function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=0, forwardLeg='none', legH=22) {
   // Legs redesigned from research (Slynyrd, Tsugumo, Kandi Runner):
   //   Row widths taper naturally from thigh to ankle.
   //   Knee: no outward silhouette bump — shadow BELOW knee cap instead.
@@ -2491,23 +2491,31 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
   //   Forward leg brighter (base tone), back leg darker (shadow tone) —
   //   this is the SNES standard for south-facing walk depth differentiation.
   //
-  // Split DY: thigh rows (0-5) fixed at baseY, knee-to-ankle (6+) shift.
-  const legH = 22;
-  const KNEE_ROW = 6;
+  // legH controls leg pixel height. The 22-row reference pattern below is
+  // resampled to fit any leg length (so short fairy legs use a few rows
+  // sampled from the same thigh→ankle pattern).
+  const KNEE_ROW = Math.max(1, Math.floor(legH * 0.27));
   // Narrower legs: lx=40, rx=49, 7px thigh with 2px inner gap
   const lx = 24 + Math.round(lLegDX);
   const rx = 33 + Math.round(rLegDX);
   const y  = baseY;
 
-  // Organic leg shape: thigh → knee → calf swell → shin → ankle
-  const rows = [
-    [0, 7], [0, 7], [0, 7], [0, 7], [0, 7],  // 0-4: thigh 7px
-    [0, 6], [0, 6], [0, 6],                   // 5-7: knee taper 6px
-    [0, 5], [0, 5], [0, 5],                   // 8-10: knee 5px
-    [0, 6], [0, 6], [0, 6], [0, 6],           // 11-14: calf swell 6px
-    [0, 5], [0, 5], [0, 5], [0, 5],           // 15-18: lower shin 5px
-    [0, 4], [0, 4], [0, 4],                   // 19-21: ankle 4px
+  // Reference 22-row pattern (thigh → knee → calf swell → shin → ankle).
+  const REF = [
+    [0, 7], [0, 7], [0, 7], [0, 7], [0, 7],  // 0-4: thigh
+    [0, 6], [0, 6], [0, 6],                   // 5-7: knee taper
+    [0, 5], [0, 5], [0, 5],                   // 8-10: knee
+    [0, 6], [0, 6], [0, 6], [0, 6],           // 11-14: calf swell
+    [0, 5], [0, 5], [0, 5], [0, 5],           // 15-18: lower shin
+    [0, 4], [0, 4], [0, 4],                   // 19-21: ankle
   ];
+  // Resample REF down to legH rows so legs always fit between belt and shoes.
+  const rows = [];
+  for (let i = 0; i < legH; i++) {
+    const idx = Math.min(REF.length - 1,
+                Math.round(i * (REF.length - 1) / Math.max(legH - 1, 1)));
+    rows.push(REF[idx]);
+  }
 
   // Forward-leg color differentiation (SNES technique: brighter = forward, darker = behind)
   const lBaseColor = (forwardLeg === 'right') ? pantColors.shadow : pantColors.base;
@@ -2605,27 +2613,31 @@ function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=
 // drawLegsWest  –  side profile legs with stride
 // ---------------------------------------------------------------------------
 
-function drawLegsWest(ctx, pantColors, frontLegX, backLegX, legTopY, frontLift=0, backLift=0) {
+function drawLegsWest(ctx, pantColors, frontLegX, backLegX, legTopY, frontLift=0, backLift=0, legH=22) {
   // SNES-style profile legs: taper thigh→knee→shin→ankle.
-  // Knee bump: kneecap protrudes 1px toward front (lower X in west view).
-  // 26 rows scaled from 17-row 64px layout.
-  const legH = 22;
-
-  // Narrower profile legs: thigh 6px, knee bump 7px, shin 5px, ankle 4px
-  const frontRows = [
+  // legH controls overall leg height — the 22-row reference patterns are
+  // resampled down for shorter legs.
+  const REF_FRONT = [
     [-2, 6], [-2, 6], [-2, 6], [-2, 6], [-2, 6],  // 0-4: thigh
     [-3, 7], [-3, 7], [-3, 7], [-3, 7],            // 5-8: knee bump
     [-2, 6], [-2, 6], [-2, 6], [-2, 6],            // 9-12: calf
     [-2, 5], [-2, 5], [-2, 5], [-2, 5], [-2, 5],   // 13-17: shin
     [-1, 4], [-1, 4], [-1, 4], [-1, 4],            // 18-21: ankle
   ];
-  const backRows = [
+  const REF_BACK = [
     [-2, 6], [-2, 6], [-2, 6], [-2, 6], [-2, 6],
     [-2, 6], [-2, 6], [-2, 6], [-2, 6],
     [-2, 6], [-2, 6], [-2, 6], [-2, 6],
     [-2, 5], [-2, 5], [-2, 5], [-2, 5], [-2, 5],
     [-1, 4], [-1, 4], [-1, 4], [-1, 4],
   ];
+  const frontRows = [], backRows = [];
+  for (let i = 0; i < legH; i++) {
+    const idx = Math.min(REF_FRONT.length - 1,
+                Math.round(i * (REF_FRONT.length - 1) / Math.max(legH - 1, 1)));
+    frontRows.push(REF_FRONT[idx]);
+    backRows.push(REF_BACK[idx]);
+  }
 
   // ── Back leg (shadow tone, drawn first so front leg is on top) ────────────
   const backH = Math.max(2, legH - Math.round(backLift));

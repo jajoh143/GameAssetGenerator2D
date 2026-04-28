@@ -31,6 +31,7 @@ const FRAME_H = 96;
 // dimensions stay constant so chibi proportions are preserved (head looks
 // relatively bigger on shorter characters, smaller on taller ones).
 const HEIGHT_DIMS = {
+  tiny:   { legH:  3, torsoH: 11 },   // pixie-tiny: very short legs (~24 px shorter)
   short:  { legH:  8, torsoH: 16 },   // ~10 px shorter than medium
   medium: { legH: 14, torsoH: 20 },   // baseline
   tall:   { legH: 18, torsoH: 22 },   // ~6 px taller than medium
@@ -134,10 +135,10 @@ function drawSouth(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY   * 1.5);
   const headBob = Math.round(rawHeadBob * 1.5);
 
-  const base = 96 + bodyY; // bottom anchor (96px frame)
+  const base = 88 + bodyY; // bottom anchor (96px frame)
 
   // --- Ground shadow ---
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 86 + bodyY, 18, 4);
 
   // Activate the configured body build (slim/average/muscular/heavy) so
   // every clothing draw (which calls torsoSilhouette internally) picks it up.
@@ -168,9 +169,11 @@ function drawSouth(ctx, config, offsets) {
   const rArmDY = Math.round(rightArmFwd * 0.9);
 
   // --- Draw order: back-to-front ---
+  // Legs FIRST, shoes ON TOP — shoes are footwear and must overlay the
+  // ankles, otherwise the leg's narrow bottom rows draw through the shoe.
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
+  drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg, legH);
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg);
   if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
   drawTorsoSouth(ctx, colors.clothingStyle, colors.clothing, 20, torsoY, 24, torsoH, colors.skin);
   // Arms — sleeveless styles draw bare skin via an adapted palette.
@@ -209,7 +212,7 @@ function drawNorth(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY2   * 1.5);
   const headBob = Math.round(rawHeadBob2 * 1.5);
 
-  const base = 96 + bodyY;
+  const base = 88 + bodyY;
 
   setBuild(config.build);
   const dims = heightDims(config);
@@ -232,11 +235,11 @@ function drawNorth(ctx, config, offsets) {
   const lArmDY = Math.round(leftArmFwd  * 0.9);
   const rArmDY = Math.round(rightArmFwd * 0.9);
 
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 94 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 86 + bodyY, 18, 4);
 
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
+  drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN, legH);
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
-  drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN);
   if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
 
   // Back of torso — hourglass silhouette
@@ -311,7 +314,7 @@ function drawWest(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY3   * 1.5);
   const headBob = Math.round(rawHeadBob3 * 1.5);
 
-  const base = 96 + bodyY;
+  const base = 88 + bodyY;
 
   setBuild(config.build);
   const dims = heightDims(config);
@@ -343,10 +346,10 @@ function drawWest(ctx, config, offsets) {
   const frontArmDX = -Math.round(leftArmFwd  * 1.4);
   const backArmDX  = -Math.round(rightArmFwd * 1.4);
 
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, 94 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, 86 + bodyY, 18, 4);
 
+  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift, legH);
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
-  drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift);
   drawBackArmWest(ctx, colors.armClothing, colors.skin, backArmDX, torsoX, torsoY);
   if (config.belt !== false) drawBeltWest(ctx, colors.belt, torsoX, beltY);
   drawTorsoWest(ctx, colors.clothingStyle, colors.clothing, torsoX, torsoY, colors.skin);

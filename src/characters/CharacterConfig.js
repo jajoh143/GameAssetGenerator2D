@@ -104,10 +104,11 @@ function resolveConfig(config) {
     if (color && !config.clothingColor) merged.clothingColor = color;
   }
 
-  // Fairies default to a SHORT humanoid frame so they read as smaller pixies
-  // than their human counterparts. Caller can still override with config.height.
+  // Fairies default to a TINY humanoid frame so they read as proper D&D
+  // pixies — about 8-16 inches tall, much smaller than humans. Caller can
+  // still override with config.height.
   if (merged.type === 'fairy' && (!config || !config.height)) {
-    merged.height = 'short';
+    merged.height = 'tiny';
   }
 
   return merged;
