@@ -1262,16 +1262,29 @@ function drawApronSouth(ctx, colors, x, y, w, h) {
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 }
 
-function drawShirtSouth(ctx, colors, x, y, w, h) {
-  // Plain collared shirt — organic torso silhouette, shirt collar at top.
+function drawShirtSouth(ctx, colors, x, y, w, h, skinColors) {
+  // Button-up collared shirt:
+  //   • Two TRIANGULAR COLLAR FLAPS at the top — each a 4-row triangle
+  //     pointing down-and-inward, meeting at the centre. Reads instantly
+  //     as "shirt collar" the way real button-up collars look from front.
+  //   • Small skin notch at the top of the collar (open neck button).
+  //   • Center BUTTON PLACKET runs from the collar down with 4 visible
+  //     buttons (light dots on a slightly-darker placket).
+  //   • Faint pocket on the left chest.
+  //   • Cuff seam hint at row 3 on each shoulder.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
+  const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
+  const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820' };
+  const DEEP = colors.deep_shadow || colors.shadow;
+  const COL  = colors.collar || colors.shadow;
 
+  // ── 1. Fill base ────────────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
-  // Directional shading: 2px lit left, 3px shadow right
+
+  // ── 2. Directional shading ──────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
     const l = rl(row), r = rr(row), rw = r - l + 1;
     px(ctx, colors.highlight, l + 1, y + row);
@@ -1280,17 +1293,77 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
     if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
-  // Button placket: single shadow seam at center
-  vLine(ctx, colors.shadow, cx, y + 3, numRows - 3);
-  // Collar: V-neck at top center
-  const collarH = 6;
-  for (let row = 0; row < collarH; row++) {
-    const cw = Math.round(9 * (collarH - row) / collarH);
-    if (cw > 0) {
-      hLine(ctx, colors.collar, cx - Math.floor(cw / 2), y + row, cw);
+
+  // ── 3. Open-collar notch — 1px of skin at the very top centre ───────────
+  px(ctx, skin.base, cx,     y);
+  px(ctx, skin.base, cx - 1, y);
+  px(ctx, skin.shadow, cx,   y + 1);
+
+  // ── 4. Triangular collar flaps ──────────────────────────────────────────
+  // Left flap: triangle anchored at (cx-2, y), points to (cx-5, y+3)
+  // Right flap: mirror.
+  const FLAP_H = 4;
+  for (let row = 0; row < FLAP_H; row++) {
+    // Each row, the inner edge moves 1 toward the center, outer edge stays
+    const innerL = cx - 2;
+    const outerL = cx - 5 + Math.floor(row / 2);
+    if (outerL <= innerL) {
+      hLine(ctx, COL, outerL, y + row, innerL - outerL);
+    }
+    const innerR = cx + 1;
+    const outerR = cx + 5 - Math.floor(row / 2);
+    if (outerR >= innerR) {
+      hLine(ctx, COL, innerR, y + row, outerR - innerR + 1);
     }
   }
-  // Outlines
+  // Flap top-edge highlights (light from upper-left)
+  px(ctx, colors.highlight, cx - 4, y);
+  px(ctx, colors.highlight, cx - 3, y);
+  px(ctx, colors.highlight, cx + 3, y);
+  px(ctx, colors.highlight, cx + 4, y);
+  // Flap diagonal selout — outline along the V-edges of each flap
+  for (let row = 0; row < FLAP_H; row++) {
+    px(ctx, colors.outline, cx - 5 + Math.floor(row / 2), y + row);   // outer L
+    px(ctx, colors.outline, cx + 5 - Math.floor(row / 2), y + row);   // outer R
+    // Inner diagonal (where flap meets shirt body)
+    px(ctx, DEEP, cx - 2, y + row);
+    px(ctx, DEEP, cx + 1, y + row);
+  }
+
+  // ── 5. Center placket + 4 buttons ───────────────────────────────────────
+  // Placket: 1px slightly-darker stripe down center
+  for (let row = FLAP_H; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, cx, y + row);
+    px(ctx, colors.highlight, cx - 1, y + row);   // lit edge of placket
+  }
+  // Buttons: bright dots
+  for (const btnRow of [FLAP_H + 1, FLAP_H + 5, FLAP_H + 9, FLAP_H + 13]) {
+    if (btnRow < numRows - 1) {
+      px(ctx, colors.highlight, cx, y + btnRow);
+      px(ctx, colors.outline,   cx, y + btnRow + 1);  // button shadow under
+    }
+  }
+
+  // ── 6. Left chest pocket (small square) ────────────────────────────────
+  const PKT_X = cx - 8, PKT_Y = y + 5, PKT_W = 4, PKT_H = 3;
+  // Pocket outline only (no fill — pocket is same fabric)
+  hLine(ctx, colors.shadow, PKT_X, PKT_Y, PKT_W);          // top
+  hLine(ctx, colors.shadow, PKT_X, PKT_Y + PKT_H, PKT_W);  // bottom
+  px(ctx, colors.shadow, PKT_X,            PKT_Y + 1);
+  px(ctx, colors.shadow, PKT_X + PKT_W - 1, PKT_Y + 1);
+  px(ctx, colors.shadow, PKT_X,            PKT_Y + 2);
+  px(ctx, colors.shadow, PKT_X + PKT_W - 1, PKT_Y + 2);
+
+  // ── 7. Sleeve seam shadow at shoulder + chest fold ─────────────────────
+  px(ctx, DEEP, rl(3),     y + 3);
+  px(ctx, DEEP, rr(3),     y + 3);
+  hLine(ctx, colors.shadow, rl(8) + 3, y + 8, rr(8) - rl(8) - 5);
+
+  // ── 8. Bottom hem stitch ────────────────────────────────────────────────
+  hLine(ctx, colors.shadow,
+    rl(numRows - 2) + 1, y + numRows - 2, rr(numRows - 2) - rl(numRows - 2) - 1);
+
+  // ── 9. Selout outline ───────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
@@ -1390,17 +1463,35 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
-function drawTunicSouth(ctx, colors, x, y, w, h) {
-  // RPG tunic: rounded collar, minimal seam.
+function drawTunicSouth(ctx, colors, x, y, w, h, skinColors) {
+  // Medieval/RPG tunic: peasant-style top with a U-cut neckline,
+  // visible LACING running down a centre slit, leather TRIM at collar
+  // and hem, and a SKIRT that flares down past the belt to mid-thigh.
+  // The lacing is the strongest visual cue this is a tunic.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
-  const { rl, rr } = torsoSilhouette(x, w);
+  const tailH = 8;                    // tunic skirt below belt
+  const totalH = h + tailH;
+  const torso = torsoSilhouette(x, w);
+  const rl = (row) => {
+    if (row < h) return torso.rl(row);
+    const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
+    return x - flare;
+  };
+  const rr = (row) => {
+    if (row < h) return torso.rr(row);
+    const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
+    return x + w - 1 + flare;
+  };
+  const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820' };
+  const TRIM = colors.collar || colors.shadow;
 
-  for (let row = 0; row < numRows; row++) {
+  // ── 1. Fill base ────────────────────────────────────────────────────────
+  for (let row = 0; row < totalH; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
-  // Directional shading: 2px lit left, 3px shadow right
-  for (let row = 0; row < numRows; row++) {
+
+  // ── 2. Directional shading ──────────────────────────────────────────────
+  for (let row = 0; row < totalH; row++) {
     const l = rl(row), r = rr(row), rw = r - l + 1;
     px(ctx, colors.highlight, l + 1, y + row);
     if (rw >= 8) px(ctx, colors.highlight, l + 2, y + row);
@@ -1408,31 +1499,79 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
     if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
-  // Center seam / lacing: tunic has a lace-up opening at top center
-  const laceH = Math.min(10, numRows);
-  for (let row = 2; row < laceH; row += 2) {
-    px(ctx, colors.shadow,    cx - 1, y + row);
-    px(ctx, colors.shadow,    cx + 1, y + row);
-    px(ctx, colors.highlight, cx,     y + row);
+
+  // ── 3. U-cut neckline showing skin at the top ──────────────────────────
+  // 3 rows of skin: rounded U (4 wide at top, 2 wide at bottom)
+  const NECK_ROWS = [
+    { halfW: 2 },   // row 0: 5 wide (cx-2..cx+2)
+    { halfW: 2 },   // row 1
+    { halfW: 1 },   // row 2: 3 wide
+  ];
+  for (let row = 0; row < NECK_ROWS.length; row++) {
+    const halfW = NECK_ROWS[row].halfW;
+    const sl = cx - halfW, sr = cx + halfW;
+    hLine(ctx, skin.base, sl, y + row, sr - sl + 1);
+    px(ctx, skin.highlight, sl, y + row);
+    if (halfW >= 2) px(ctx, skin.highlight, sl + 1, y + row);
+    px(ctx, skin.shadow,    sr, y + row);
   }
-  // Round collar (wider than jacket)
-  const collarW = 12;
-  fillRect(ctx, colors.collar, cx - 6, y, collarW, 4);
-  hLine(ctx, colors.highlight, cx - 5, y,     collarW - 2);
-  hLine(ctx, colors.shadow,    cx - 5, y + 3, collarW - 2);
-  outlineRect(ctx, colors.outline, cx - 6, y, collarW, 4);
-  // Outlines
+
+  // ── 4. Leather collar trim around the neckline ─────────────────────────
+  // 1px trim band hugging the U-cut on its outer edge
+  for (let row = 0; row < NECK_ROWS.length; row++) {
+    const halfW = NECK_ROWS[row].halfW;
+    px(ctx, TRIM, cx - halfW - 1, y + row);
+    px(ctx, TRIM, cx + halfW + 1, y + row);
+  }
+  // Bottom of U trim — completes the curve
+  hLine(ctx, TRIM, cx - 2, y + NECK_ROWS.length, 4);
+
+  // ── 5. Center lacing: cross-stitched ties below the neckline ───────────
+  // Vertical slit (deep shadow line) with X-shaped lace pixels alongside
+  const LACE_TOP = NECK_ROWS.length + 1;
+  const LACE_BOT = h - 4;            // ends above the belt
+  // The slit itself
+  vLine(ctx, colors.deep_shadow || colors.shadow, cx, y + LACE_TOP, LACE_BOT - LACE_TOP);
+  // Cross-lacing — pairs of light pixels in X formation every 2 rows
+  for (let row = LACE_TOP; row < LACE_BOT; row += 2) {
+    // Lit thread crossing left-to-right
+    px(ctx, colors.highlight, cx - 1, y + row);
+    px(ctx, colors.highlight, cx + 1, y + row);
+    // Eyelet holes (tiny dark dots flanking the slit)
+    if ((row - LACE_TOP) % 4 === 0) {
+      px(ctx, colors.outline, cx - 2, y + row);
+      px(ctx, colors.outline, cx + 2, y + row);
+    }
+  }
+
+  // ── 6. Skirt fold lines + hem trim ─────────────────────────────────────
+  for (let row = h; row < totalH - 1; row++) {
+    // 3 vertical fold lines down the skirt
+    px(ctx, colors.shadow, rl(row) + 4, y + row);
+    px(ctx, colors.shadow, rr(row) - 4, y + row);
+    px(ctx, colors.shadow, cx,          y + row);
+  }
+  // Hem trim band — 1 row of darker collar tone at the very bottom
+  hLine(ctx, TRIM, rl(totalH - 2) + 1, y + totalH - 2, rr(totalH - 2) - rl(totalH - 2) - 1);
+  hLine(ctx, colors.deep_shadow || colors.shadow, rl(totalH - 2) + 1, y + totalH - 1,
+    rr(totalH - 2) - rl(totalH - 2) - 1);
+
+  // ── 7. Sleeve seam at shoulder ─────────────────────────────────────────
+  px(ctx, colors.deep_shadow || colors.shadow, rl(3),     y + 3);
+  px(ctx, colors.deep_shadow || colors.shadow, rr(3),     y + 3);
+
+  // ── 8. Selout outline ──────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
   px(ctx, colors.shadow, x + w, y);
-  for (let row = 1; row < numRows - 1; row++) {
+  for (let row = 1; row < totalH - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
   }
-  const botL = rl(numRows - 1), botR = rr(numRows - 1);
-  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  const botL = rl(totalH - 1), botR = rr(totalH - 1);
+  hLine(ctx, colors.outline, botL, y + totalH - 1, botR - botL + 1);
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
@@ -1523,7 +1662,7 @@ function drawRobeSouth(ctx, colors, x, y, w, h) {
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
-function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
+function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck, skinColors) {
   // T-shirt with a properly-shaped neckline:
   //   • CREW NECK: oval-curved ribbed band — wider at sides than middle,
   //     so the front of the collar dips slightly. Ribbed (alternating
@@ -1557,23 +1696,28 @@ function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
 
   if (isVneck) {
     // V-cut: 5 rows deep, widest at row 0 (5px wide), tapering to 1px point.
-    // Inside the V we paint a darker tone (jacket-shadow) so the V reads as
-    // a "cut" through the fabric. The diagonal edges get 1px highlight on
-    // the lit side and 1px deep-shadow on the underside (selout).
+    // The inside of the V shows the wearer's CHEST/SKIN — not a dark fabric
+    // fill. The diagonal edges get 1px shirt-shadow on each side as selout.
+    const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820', outline: '#3A1800' };
     const V_DEPTH = 5;
     for (let row = 0; row < V_DEPTH; row++) {
       // halfW shrinks as we descend: row 0 = 3, row 4 = 0
       const halfW = Math.max(0, 3 - Math.floor(row * 3 / Math.max(V_DEPTH - 1, 1)));
       if (halfW <= 0) continue;
       const sl = cx - halfW, sr = cx + halfW;
-      // Inner V: dark (suggests the inside of the shirt visible below the cut)
-      hLine(ctx, COL, sl, y + row, sr - sl + 1);
-      // Highlight on the lit (left) edge, deep shadow on the right edge
-      px(ctx, colors.highlight, sl,     y + row);
-      px(ctx, DEEP,             sr,     y + row);
-      // Outline along the V edges (1px outside the V)
-      px(ctx, colors.outline,   sl - 1, y + row);
-      px(ctx, colors.outline,   sr + 1, y + row);
+      // Skin fill — chest visible through the V
+      hLine(ctx, skin.base, sl, y + row, sr - sl + 1);
+      // Skin shading: lit upper-left, shadow lower-right
+      px(ctx, skin.highlight, sl,     y + row);
+      if (halfW >= 2) px(ctx, skin.highlight, sl + 1, y + row);
+      px(ctx, skin.shadow,    sr,     y + row);
+      // Shirt selout along the V edges (1px shadow on the fabric side)
+      px(ctx, DEEP,           sl - 1, y + row);
+      px(ctx, DEEP,           sr + 1, y + row);
+    }
+    // Pec underline visible inside the V (musculature hint, like the tank)
+    if (V_DEPTH >= 3) {
+      hLine(ctx, skin.shadow, cx - 1, y + V_DEPTH - 2, 3);
     }
   } else {
     // Crew neck: ovate ribbed band, dips 1px at the centre front.
@@ -1730,12 +1874,13 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
 function drawTankStrapsOverlaySouth(ctx, clothingColors, torsoX, torsoY, w) {
   const NECK_OPEN_ROWS = 4;
   const baseY = torsoY - 1;          // top of deltoid
-  // Strap x positions chosen to centre on each deltoid (left arm spans
-  // x=16..22; right arm spans x=43..49). 2px wide strap reads cleanly at
-  // sprite scale. Slightly biased toward the inner side so the strap
-  // visually attaches to the body fabric.
-  const STRAP_LX = 19;               // covers left deltoid inner half
-  const STRAP_RX = 43;               // covers right deltoid inner half
+  // Strap x positions: pulled INWARD toward the neck so they sit on the
+  // top-of-shoulder near the trapezius (where real tank straps rest)
+  // rather than out at the deltoid edge. Neck spans x=28..36; arms span
+  // x=16..22 (left) and x=43..49 (right). Straps now sit on the inner
+  // shoulder, just outside the neck.
+  const STRAP_LX = 23;               // inner-left shoulder, just outside neck
+  const STRAP_RX = 39;               // inner-right shoulder, just outside neck
   const STRAP_W  = 2;
   const topY     = baseY - 1;        // 1px above deltoid (on trap)
   const botY     = torsoY + NECK_OPEN_ROWS;  // first row of body fabric
@@ -1876,38 +2021,43 @@ function drawBomberSouth(ctx, colors, x, y, w, h) {
 // ---------------------------------------------------------------------------
 
 function drawCoatSouth(ctx, colors, x, y, w, h) {
-  // A long coat (duster/trench) that extends 13 rows below normal torso bottom,
-  // visually overlaying the belt and upper legs (those are drawn first).
-  //
-  // Silhouette:
-  //   Rows 0-2  (shoulder cap): x=22-41 (20px)
-  //   Rows 3-6  (chest):        x=23-40 (18px)
-  //   Rows 7-11 (waist):        x=24-39 (16px)  ← coat belt tie at row 9
-  //   Rows 12+  (hip/skirt):    x=23-40 (18px) → flares to x=21-42 at bottom
-
-  const cx     = Math.floor(x + w / 2);  // = 48
-  const tailH  = 8;                       // coat extension — shows most of the legs
+  // Long trench/duster coat extending well past the belt:
+  //   • Tail extension (16 rows) — covers belt + legs down to mid-shin.
+  //   • Open-front V at the top revealing a CREAM SHIRT (same fixed
+  //     #F0E8D0 used on the jacket) so the coat reads as "open coat".
+  //   • Wide NOTCHED LAPELS that fan outward at the collar and converge
+  //     at the chest button line.
+  //   • Center button placket with 5 visible buttons running from the
+  //     chest down past the belt into the skirt.
+  //   • Coat belt / sash tie at the waist.
+  //   • Vertical FABRIC FOLDS down the skirt.
+  const cx     = Math.floor(x + w / 2);
+  const tailH  = 16;                      // longer than before — knee/shin length
   const totalH = h + tailH;
-
-  // Shared organic torso for rows 0..h-1; tail flare for rows h..totalH-1.
   const torso = torsoSilhouette(x, w);
   const rl = (row) => {
     if (row < h) return torso.rl(row);
-    const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
+    const flare = Math.min(Math.floor((row - h) / 4) + 1, 3);
     return x - flare;
   };
   const rr = (row) => {
     if (row < h) return torso.rr(row);
-    const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
+    const flare = Math.min(Math.floor((row - h) / 4) + 1, 3);
     return x + w - 1 + flare;
   };
 
-  // ── 1. Base fill ─────────────────────────────────────────────────────────
+  // Fixed cream shirt visible through the open V.
+  const SHIRT_BASE = '#F0E8D0';
+  const SHIRT_DARK = '#A8A090';
+  const PLACKET    = '#4A3E2E';
+  const DEEP       = colors.deep_shadow || colors.shadow;
+
+  // ── 1. Base fill ────────────────────────────────────────────────────────
   for (let row = 0; row < totalH; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
 
-  // ── 2. Directional shading: 2px lit left, 3px shadow right ───────────────
+  // ── 2. Directional shading ──────────────────────────────────────────────
   for (let row = 0; row < totalH; row++) {
     const l = rl(row), r = rr(row), rw = r - l + 1;
     px(ctx, colors.highlight, l + 1, y + row);
@@ -1917,50 +2067,76 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
 
-  // ── 3. Lapels at top ─────────────────────────────────────────────────────
-  const lapelH = Math.min(12, h);
-  const shirtLx = cx - 6;
-  const shirtW  = 12;
-  for (let row = 0; row < lapelH; row++) {
-    const lw = Math.round(4 * (lapelH - 1 - row) / (lapelH - 1));
-    if (lw > 0) {
-      hLine(ctx, colors.highlight, shirtLx, y + row, lw);
-      px(ctx, colors.shadow, shirtLx + lw - 1, y + row);
-      hLine(ctx, colors.base, shirtLx + shirtW - lw, y + row, lw);
-      px(ctx, colors.shadow, shirtLx + shirtW - lw, y + row);
+  // ── 3. Open V-shirt zone + notched lapels at the top ────────────────────
+  // Shirt zone widens at the top into a wide V that reaches button row 9.
+  const SHIRT_TOP    = 1;
+  const SHIRT_BOTTOM = 9;
+  const shirtL = (row) => {
+    if (row < SHIRT_TOP || row > SHIRT_BOTTOM) return null;
+    // Widest at top (5 each side at row 1), narrows to 1 at row 9
+    const halfW = Math.max(1, 5 - Math.floor((row - SHIRT_TOP) * 4 / (SHIRT_BOTTOM - SHIRT_TOP)));
+    return cx - halfW;
+  };
+  const shirtR = (row) => {
+    if (row < SHIRT_TOP || row > SHIRT_BOTTOM) return null;
+    const halfW = Math.max(1, 5 - Math.floor((row - SHIRT_TOP) * 4 / (SHIRT_BOTTOM - SHIRT_TOP)));
+    return cx + halfW;
+  };
+
+  for (let row = 0; row < totalH; row++) {
+    const sL = shirtL(row), sR = shirtR(row);
+    if (sL === null || sR === null) continue;
+    hLine(ctx, SHIRT_BASE, sL, y + row, sR - sL + 1);
+    // Right shirt edge slightly shadowed
+    px(ctx, SHIRT_DARK, sR, y + row);
+    // Lapel fold (2px deep): outer shadow + inner deep-shadow on each side
+    px(ctx, colors.shadow, sL - 1, y + row);
+    px(ctx, DEEP,          sL - 2, y + row);
+    px(ctx, colors.shadow, sR + 1, y + row);
+    if (row >= 2) px(ctx, DEEP, sR + 2, y + row);
+  }
+  // Notched lapel: little step at row 3 where the lapel collar meets the body
+  px(ctx, colors.outline, cx - 6, y + 3);
+  px(ctx, colors.outline, cx + 6, y + 3);
+
+  // ── 4. Placket + visible buttons (below the V) ─────────────────────────
+  for (let row = SHIRT_BOTTOM + 1; row < totalH - 1; row++) {
+    px(ctx, PLACKET,         cx,     y + row);
+  }
+  // Buttons spaced down the placket (cream dots on dark placket)
+  for (const btnRow of [SHIRT_BOTTOM + 2, SHIRT_BOTTOM + 7,
+                        SHIRT_BOTTOM + 12, SHIRT_BOTTOM + 17, SHIRT_BOTTOM + 22]) {
+    if (btnRow < totalH - 1) {
+      px(ctx, SHIRT_BASE, cx,     y + btnRow);
+      px(ctx, PLACKET,    cx - 1, y + btnRow);
     }
   }
 
-  // ── 4. Center button seam (below lapels) ─────────────────────────────────
-  vLine(ctx, colors.shadow,    cx,     y + 12, totalH - 12);
-  vLine(ctx, colors.highlight, cx - 1, y + 12, totalH - 12);
-  // Buttons: single pixel dots down the placket
-  for (const btnRow of [15, 21, 27, 33]) {
-    if (btnRow < totalH) px(ctx, colors.outline, cx, y + btnRow);
-  }
+  // ── 5. Coat belt / sash tie at waist ───────────────────────────────────
+  const SASH_Y = h + 1;
+  fillRect(ctx, colors.collar || colors.shadow, cx - 5, y + SASH_Y, 11, 2);
+  hLine(ctx, colors.highlight, cx - 4, y + SASH_Y, 9);
+  hLine(ctx, colors.deep_shadow || colors.shadow, cx - 4, y + SASH_Y + 1, 9);
+  // Belt buckle
+  fillRect(ctx, '#C8A820', cx - 1, y + SASH_Y, 2, 2);
 
-  // ── 5. Coat belt / sash tie at waist ────────────────────────────────────
-  fillRect(ctx, colors.collar || colors.shadow, cx - 4, y + 13, 9, 3);
-  hLine(ctx, colors.highlight, cx - 3, y + 13, 7);
-  px(ctx, colors.shadow, cx - 4, y + 15);
-  px(ctx, colors.shadow, cx + 4, y + 15);
-
-  // ── 6. Fold shadow lines across fabric ───────────────────────────────────
-  for (const fr of [Math.floor(h * 0.5), h + 2, h + 7, totalH - 3]) {
-    if (fr > 0 && fr < totalH) {
-      hLine(ctx, colors.shadow, rl(fr) + 2, y + fr, rr(fr) - rl(fr) - 4);
+  // ── 6. Vertical fabric folds down the skirt ────────────────────────────
+  for (const foldX of [rl(h + 4) + 4, rr(h + 4) - 4, rl(totalH - 2) + 2]) {
+    for (let row = h + 2; row < totalH - 1; row++) {
+      px(ctx, colors.shadow, foldX, y + row);
     }
   }
+  // Heavier hem shadow at the very bottom
+  hLine(ctx, colors.deep_shadow || colors.shadow,
+    rl(totalH - 2) + 1, y + totalH - 2, rr(totalH - 2) - rl(totalH - 2) - 1);
 
-  // ── 7. Step AA at shoulder transition (row 3 = chest start in shared silhouette) ───
-  px(ctx, colors.shadow, x - 1, y + 3);
-  px(ctx, colors.shadow, x + w, y + 3);
+  // ── 7. Sleeve seam at shoulder ─────────────────────────────────────────
+  px(ctx, DEEP, rl(3),     y + 3);
+  px(ctx, DEEP, rr(3),     y + 3);
 
-  // ── 8. Armpit crease ────────────────────────────────────────────────────
+  // ── 8. Selout outline ──────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
-
-  // ── 9. Selective outlining ───────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
   px(ctx, colors.shadow, x + w, y);
@@ -1970,13 +2146,7 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
   }
   const botL = rl(totalH - 1), botR = rr(totalH - 1);
   hLine(ctx, colors.outline, botL, y + totalH - 1, botR - botL + 1);
-
-  // ── 10. Shoulder cap rounding ────────────────────────────────────────────
   px(ctx, colors.highlight, x - 1, y + 1);
-  erasePixel(ctx, x - 1, y);
-  px(ctx, colors.shadow, x - 1, y);
-  erasePixel(ctx, x + w, y);
-  px(ctx, colors.shadow, x + w, y);
 }
 
 // ---------------------------------------------------------------------------
@@ -2059,12 +2229,12 @@ function drawTorsoSouth(ctx, clothingStyle, clothingColors, x, y, w, h, skinColo
     case 'jacket':       drawJacketSouth(ctx, clothingColors, x, y, w, h); break;
     case 'hoodie':       drawHoodieSouth(ctx, clothingColors, x, y, w, h); break;
     case 'apron':        drawApronSouth(ctx, clothingColors, x, y, w, h); break;
-    case 'shirt':        drawShirtSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'shirt':        drawShirtSouth(ctx, clothingColors, x, y, w, h, skinColors); break;
     case 'vest':         drawVestSouth(ctx, clothingColors, x, y, w, h); break;
-    case 'tunic':        drawTunicSouth(ctx, clothingColors, x, y, w, h); break;
+    case 'tunic':        drawTunicSouth(ctx, clothingColors, x, y, w, h, skinColors); break;
     case 'robe':         drawRobeSouth(ctx, clothingColors, x, y, w, h); break;
-    case 'tshirt':       drawTshirtSouth(ctx, clothingColors, x, y, w, h, false); break;
-    case 'tshirt_vneck': drawTshirtSouth(ctx, clothingColors, x, y, w, h, true);  break;
+    case 'tshirt':       drawTshirtSouth(ctx, clothingColors, x, y, w, h, false, skinColors); break;
+    case 'tshirt_vneck': drawTshirtSouth(ctx, clothingColors, x, y, w, h, true,  skinColors); break;
     case 'bomber':       drawBomberSouth(ctx, clothingColors, x, y, w, h); break;
     case 'tank':         drawTankSouth(ctx, clothingColors, skinColors, x, y, w, h); break;
     default:
