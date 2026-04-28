@@ -29,12 +29,14 @@ const DEFAULT_CONFIG = {
   tailStyle:     'long',
   tailLength:    'medium',
 
-  // Fairy-only
-  fairySkin:     'peach',
-  wingStyle:     'butterfly',
-  wingColor:     'crystal',
-  fairyDress:    'petal_pink',
-  glowColor:     'golden',
+  // Fairy-only (pixie/elven humanoid with wings + glow)
+  fairySkin:      'peach',
+  wingStyle:      'butterfly',
+  wingColor:      'crystal',
+  wingSize:       'medium',     // 'small' | 'medium' | 'large'
+  fairyDress:     'petal_pink',
+  glowColor:      'golden',
+  glowIntensity:  'medium',     // 'subtle' | 'medium' | 'bright'
 };
 
 // Known clothing style prefixes — longest first so "tshirt_vneck" wins over "tshirt".

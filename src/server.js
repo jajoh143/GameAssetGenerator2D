@@ -88,9 +88,11 @@ function handleOptions(res) {
     // Fairy options
     fairySkins:  paletteMap(FAIRY_SKIN),
     wingStyles:  ['butterfly', 'dragonfly'],
+    wingSizes:   ['small', 'medium', 'large'],
     wingColors:  Object.fromEntries(Object.entries(FAIRY_WING).map(([k, v]) => [k, v.outer])),
     fairyDresses: Object.fromEntries(Object.entries(FAIRY_DRESS).map(([k, v]) => [k, v.base])),
     glowColors:  Object.fromEntries(Object.entries(FAIRY_GLOW).map(([k, v]) => [k, v.bright])),
+    glowIntensities: ['subtle', 'medium', 'bright'],
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
     frameSizes:  [64, 96, 128],

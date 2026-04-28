@@ -31,13 +31,39 @@ const FRAME_H = 96;
 // ---------------------------------------------------------------------------
 
 function resolveColors(config) {
-  const skinColors = config.type === 'demon'
-    ? Colors.DEMON_SKIN[config.demonSkin] || Colors.DEMON_SKIN.crimson
-    : Colors.SKIN_TONES[config.skin] || Colors.SKIN_TONES.medium;
+  // Skin: demon → DEMON_SKIN, fairy → FAIRY_SKIN, else regular skin tones.
+  let skinColors;
+  if (config.type === 'demon') {
+    skinColors = Colors.DEMON_SKIN[config.demonSkin] || Colors.DEMON_SKIN.crimson;
+  } else if (config.type === 'fairy') {
+    const fs = Colors.FAIRY_SKIN[config.fairySkin] || Colors.FAIRY_SKIN.peach;
+    // FAIRY_SKIN is missing deep_shadow — synthesize one from outline.
+    skinColors = Object.assign({ deep_shadow: fs.outline }, fs);
+  } else {
+    skinColors = Colors.SKIN_TONES[config.skin] || Colors.SKIN_TONES.medium;
+  }
 
-  const clothingStyle = config.clothingStyle || 'jacket';
-  const clothingColor = config.clothingColor || 'grey';
-  const clothing      = Colors.resolveClothing(clothingStyle, clothingColor);
+  // Fairies default to a long 'robe' style with the chosen fairyDress colour;
+  // demons + humans use the regular clothing style/colour pickers.
+  let clothing, clothingStyle;
+  if (config.type === 'fairy') {
+    clothingStyle = config.clothingStyle || 'robe';
+    const dressKey = config.fairyDress || 'petal_pink';
+    const dressPal = Colors.FAIRY_DRESS[dressKey] || Colors.FAIRY_DRESS.petal_pink;
+    // Map the fairy dress palette into the shape the human clothing draws expect.
+    clothing = {
+      highlight:   dressPal.highlight,
+      base:        dressPal.base,
+      shadow:      dressPal.shadow,
+      deep_shadow: dressPal.outline,
+      outline:     dressPal.outline,
+      collar:      dressPal.shadow,
+    };
+  } else {
+    clothingStyle = config.clothingStyle || 'jacket';
+    const clothingColor = config.clothingColor || 'grey';
+    clothing = Colors.resolveClothing(clothingStyle, clothingColor);
+  }
 
   // For sleeveless styles, the arm draw functions take a skin-derived
   // palette so deltoid, bicep and forearm render as bare skin.

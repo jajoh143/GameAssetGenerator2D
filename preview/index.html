@@ -538,6 +538,13 @@
         <button class="toggle-btn"        data-val="dragonfly">Dragonfly</button>
       </div>
 
+      <div class="section-label" style="margin-top:14px">Wing Size</div>
+      <div class="btn-row" id="wing-size-row">
+        <button class="toggle-btn"        data-val="small">Small</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="large">Large</button>
+      </div>
+
       <div class="section-label" style="margin-top:14px">Wing Color</div>
       <div class="swatches" id="wing-color-swatches"></div>
 
@@ -546,6 +553,13 @@
 
       <div class="section-label" style="margin-top:14px">Glow Color</div>
       <div class="swatches" id="glow-color-swatches"></div>
+
+      <div class="section-label" style="margin-top:14px">Glow Intensity</div>
+      <div class="btn-row" id="glow-intensity-row">
+        <button class="toggle-btn"        data-val="subtle">Subtle</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="bright">Bright</button>
+      </div>
     </div>
 
     <div>
@@ -594,7 +608,7 @@ const state = {
   pants: null, shoes: null,
   belt: true, beltColor: 'standard',
   demonSkin: null, hornStyle: 'curved', hornLength: 'medium', tailStyle: 'medium', tailLength: 'medium',
-  fairySkin: null, wingStyle: 'butterfly', wingColor: null, fairyDress: null, glowColor: null,
+  fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
   frameSize: 64, name: '',
 };
 
@@ -1045,10 +1059,12 @@ function applyConfig(cfg) {
   }
   // Fairy fields
   if (cfg.fairySkin) activateSwatch('fairy-skin-swatches', cfg.fairySkin, 'fairySkin');
-  if (cfg.wingStyle) activateToggle('wing-style-row', cfg.wingStyle, 'wingStyle');
-  if (cfg.wingColor) activateSwatch('wing-color-swatches', cfg.wingColor, 'wingColor');
-  if (cfg.fairyDress){ state.fairyDress = cfg.fairyDress; setSelectVal('fairy-dress-select', cfg.fairyDress); }
-  if (cfg.glowColor) activateSwatch('glow-color-swatches', cfg.glowColor, 'glowColor');
+  if (cfg.wingStyle)     activateToggle('wing-style-row',     cfg.wingStyle,     'wingStyle');
+  if (cfg.wingSize)      activateToggle('wing-size-row',      cfg.wingSize,      'wingSize');
+  if (cfg.wingColor)     activateSwatch('wing-color-swatches', cfg.wingColor,    'wingColor');
+  if (cfg.fairyDress)    { state.fairyDress = cfg.fairyDress; setSelectVal('fairy-dress-select', cfg.fairyDress); }
+  if (cfg.glowColor)     activateSwatch('glow-color-swatches', cfg.glowColor,    'glowColor');
+  if (cfg.glowIntensity) activateToggle('glow-intensity-row', cfg.glowIntensity, 'glowIntensity');
 }
 
 // ── Toggle rows ────────────────────────────────────────────────────────────
@@ -1095,7 +1111,9 @@ wireToggleRow('beard-style-row', 'beardStyle', null);
 wireToggleRow('horn-row',        'hornStyle',  null);
 wireToggleRow('horn-length-row', 'hornLength', null);
 wireToggleRow('tail-row',        'tailLength', null);
-wireToggleRow('wing-style-row',  'wingStyle',  null);
+wireToggleRow('wing-style-row',     'wingStyle',     null);
+wireToggleRow('wing-size-row',      'wingSize',      null);
+wireToggleRow('glow-intensity-row', 'glowIntensity', null);
 wireToggleRow('size-row',        'frameSize',  null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
@@ -1176,10 +1194,12 @@ function buildConfig() {
   } else if (state.type === 'fairy') {
     cfg.eyes      = state.eyes;
     cfg.fairySkin = state.fairySkin;
-    cfg.wingStyle = state.wingStyle;
-    cfg.wingColor = state.wingColor;
-    cfg.fairyDress = state.fairyDress;
-    cfg.glowColor = state.glowColor;
+    cfg.wingStyle     = state.wingStyle;
+    cfg.wingSize      = state.wingSize;
+    cfg.wingColor     = state.wingColor;
+    cfg.fairyDress    = state.fairyDress;
+    cfg.glowColor     = state.glowColor;
+    cfg.glowIntensity = state.glowIntensity;
   }
   return cfg;
 }
