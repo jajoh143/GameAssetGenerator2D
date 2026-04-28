@@ -307,9 +307,10 @@ function drawPointedEarWest(ctx, skinColors) {
 
 // Levitation: fairies hover slightly off the ground using their wings.
 // Raw offset is in 64px-frame units (the human renderer multiplies by 1.5
-// when targeting the 96px frame). -5 → roughly -8 px lift in the rendered
-// frame, just enough to lift the feet clear of where they'd normally rest.
-const FAIRY_LEVITATION_RAW = -5;
+// when targeting the 96px frame). -2 → ~-3 px lift in the rendered frame —
+// just enough to read as "floating" without pulling the body off-centre.
+// (Larger values left the tiny pixie body too high in the frame.)
+const FAIRY_LEVITATION_RAW = -2;
 
 // Body horizontal centre in the 96px frame (used for centering the halo
 // and any other body-relative effects). The torso draws at x=20..43, so

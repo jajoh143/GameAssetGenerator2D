@@ -88,10 +88,11 @@ function resolveColors(config) {
   const isSleeveless = clothingStyle === 'tank';
   const armClothing  = isSleeveless ? skinAsClothing(skinColors) : clothing;
 
-  // Tieflings/demons get solid (no-sclera) eyes — the entire eye reads as
-  // the iris colour for the glowing demonic look.
+  // Tieflings (demons) and fairies/pixies both get solid (no-sclera) eyes
+  // — the entire eye reads as the iris colour for the glowing fey/demonic
+  // look. Humans and goblins keep the regular sclera + iris.
   const baseEyes = Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown;
-  const eyeColors = config.type === 'demon'
+  const eyeColors = (config.type === 'demon' || config.type === 'fairy')
     ? Object.assign({}, baseEyes, { solid: true })
     : baseEyes;
 
