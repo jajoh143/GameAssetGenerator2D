@@ -17,6 +17,43 @@ function erasePixel(ctx, x, y) {
 }
 
 // ---------------------------------------------------------------------------
+// torsoSilhouette  –  shared chest/waist/hip outline used by every clothing
+// draw function. Per pixel-art research (Saint11/MortMort/AdamCYounis), a
+// chibi torso ~24px wide should taper at most 2px per side at the waist
+// (the "1-2-1 rule": chest:waist:hip = 24:20:24). Going deeper produces
+// the "wedge mistake" — characters look like traffic cones.
+//
+// Anchor rows (assuming a ~20-row torso):
+//   0-2   shoulder bump  (rl = x-1)        — chunky chibi shoulder
+//   3-4   chest           (rl = x)
+//   5-8   upper waist     (rl = x+1)       — gentle 1px inset
+//   9-12  narrow waist    (rl = x+2)       — apex at row ~11 = 55-60% down
+//   13-14 hip transition  (rl = x+1)       — single-step return
+//   15+   full hip        (rl = x)         — flares back to chest width
+//
+// Returns { rl, rr } where rl(row), rr(row) are the inclusive left/right
+// edge x-positions of the torso at each row.
+function torsoSilhouette(x, w) {
+  const rl = (row) => {
+    if (row < 3)   return x - 1;
+    if (row < 5)   return x;
+    if (row < 9)   return x + 1;
+    if (row < 13)  return x + 2;
+    if (row < 15)  return x + 1;
+    return x;
+  };
+  const rr = (row) => {
+    if (row < 3)   return x + w;
+    if (row < 5)   return x + w - 1;
+    if (row < 9)   return x + w - 2;
+    if (row < 13)  return x + w - 3;
+    if (row < 15)  return x + w - 2;
+    return x + w - 1;
+  };
+  return { rl, rr };
+}
+
+// ---------------------------------------------------------------------------
 // drawGroundShadow
 // ---------------------------------------------------------------------------
 
@@ -712,32 +749,40 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  // Clean jacket: subtle 3-tone shading, small collar hint, no prominent shirt panel
+  // Open-front jacket draped over a separate shirt:
+  //   • Body uses shared organic torso silhouette (max 2px waist inset).
+  //   • Vertical SHIRT ZONE runs the full chest height (not just a tiny V)
+  //     so the jacket clearly reads as "open" with shirt visible underneath.
+  //   • 1px LAPEL columns in jacket-shadow flank the shirt zone.
+  //   • Asymmetric front: shirt zone biased 1px LEFT of centre so the
+  //     viewer's right flap reads slightly wider than the left
+  //     (MortMort's "lopsided realism" rule).
+  //   • Hip-level SLIT POCKET dashes in jacket-shadow.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 20);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 7, NARROW_S = 10, WAIST_E = 13;
+  const { rl, rr } = torsoSilhouette(x, w);
 
-  // 5-step V taper with smooth hip flare
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
+  // Shirt zone: 5px wide for the chest, narrowing slightly at the top
+  // (collar closure) and bottom (jacket buttoned at hem).
+  const SHIRT_TOP    = 1;
+  const SHIRT_BOTTOM = numRows - 3;
+  const shirtL = (row) => {
+    if (row < SHIRT_TOP || row > SHIRT_BOTTOM) return null;
+    if (row === SHIRT_TOP)    return cx - 1;            // 3-wide at top
+    if (row >= SHIRT_BOTTOM)  return cx - 1;            // 3-wide at hem
+    return cx - 2;                                       // 5-wide chest
   };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
+  const shirtR = (row) => {
+    if (row < SHIRT_TOP || row > SHIRT_BOTTOM) return null;
+    if (row === SHIRT_TOP)    return cx + 1;
+    if (row >= SHIRT_BOTTOM)  return cx + 1;
+    return cx + 2;
   };
+  // Shirt fabric: a desaturated mid-tone clearly contrasting with the
+  // jacket. Picking the jacket's HIGHLIGHT puts the shirt 1 step lighter
+  // than the base — reads cleanly on dark and light jackets alike.
+  const shirtBase   = colors.highlight;
+  const shirtShadow = colors.collar || colors.shadow;
 
   // ── 1. Fill jacket base ──────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
@@ -754,35 +799,46 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
 
-  // ── 3. Gentle waist shadow (not full-width fold lines) ───────────────────
-  for (let row = WAIST_S; row <= WAIST_E; row++) {
-    px(ctx, colors.shadow, rl(row) + 1, y + row);  // left waist crease
-    px(ctx, colors.shadow, rr(row) - 1, y + row);  // right waist crease
+  // ── 3. Subtle waist crease (only at the narrowest rows) ──────────────────
+  for (let row = 9; row < 13; row++) {
+    px(ctx, colors.shadow, rl(row) + 1, y + row);
+    px(ctx, colors.shadow, rr(row) - 1, y + row);
   }
 
-  // ── 4. Lapels + V-neck opening showing undershirt ─────────────────────────
-  // V-neck widens row-by-row (2px → 6px over 7 rows) revealing shirt beneath lapels
-  const shirtCol = colors.collar || colors.highlight;
-  for (let r = 0; r < Math.min(7, numRows); r++) {
-    const vHalf = Math.min(3, 1 + Math.floor(r * 0.45));
-    const vX = cx - vHalf;
-    const vW = vHalf * 2;
-    hLine(ctx, shirtCol, vX, y + r, vW);           // shirt visible in V
-    if (vX > rl(r) + 1) px(ctx, colors.shadow, vX - 1,    y + r);  // left lapel fold
-    if (vX + vW <= rr(r)) px(ctx, colors.shadow, vX + vW, y + r);  // right lapel fold
+  // ── 4. Shirt zone + lapels ───────────────────────────────────────────────
+  // Paint the shirt fabric, frame it with 1px lapel columns, and add a
+  // single column of inner-shadow on the shirt-side so the lapel reads
+  // as folded fabric rather than a flat seam.
+  const deepCol = colors.deep_shadow || colors.shadow;
+  for (let row = 0; row < numRows; row++) {
+    const sL = shirtL(row), sR = shirtR(row);
+    if (sL === null || sR === null) continue;
+    // Shirt base fill
+    hLine(ctx, shirtBase, sL, y + row, sR - sL + 1);
+    // Right edge of the shirt is in shadow (the right lapel casts onto it)
+    px(ctx, shirtShadow, sR, y + row);
+    // Lapel columns (1px each side, in jacket-shadow)
+    px(ctx, colors.shadow, sL - 1, y + row);
+    px(ctx, colors.shadow, sR + 1, y + row);
+    // Deep-shadow inner lapel fold on the right side, away from the light
+    if (row >= 2 && row < SHIRT_BOTTOM) {
+      px(ctx, deepCol, sR + 2, y + row);
+    }
   }
-  // Center seam below lapels
-  vLine(ctx, colors.shadow, cx, y + 7, numRows - 7);
-  // Horizontal fold shadow (fabric compression under chest)
-  hLine(ctx, colors.shadow, rl(9) + 2, y + 9, rr(9) - rl(9) - 4);
-  // Button dots on placket
-  if (numRows > 10) px(ctx, colors.outline, cx, y + 11);
-  if (numRows > 14) px(ctx, colors.outline, cx, y + 15);
-  // Breast pocket welt on left chest
-  hLine(ctx, colors.highlight, cx - 8, y + 3, 3);   // welt top catchlight
-  hLine(ctx, colors.shadow,    cx - 8, y + 4, 3);   // welt bottom shadow
 
-  // ── 5. Selout outline ────────────────────────────────────────────────────
+  // ── 5. Single bottom-button at hem closure ───────────────────────────────
+  if (numRows > SHIRT_BOTTOM + 1) {
+    px(ctx, colors.outline, cx, y + SHIRT_BOTTOM + 1);
+  }
+
+  // ── 6. Hip-level slit pockets (2px dash each side, in jacket-shadow) ─────
+  const POCKET_Y = numRows - 6;
+  if (POCKET_Y > 10) {
+    hLine(ctx, colors.shadow, rl(POCKET_Y) + 2, y + POCKET_Y, 2);
+    hLine(ctx, colors.shadow, rr(POCKET_Y) - 3, y + POCKET_Y, 2);
+  }
+
+  // ── 7. Selout outline ────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   hLine(ctx, colors.outline, x - 1, y, w + 2);
@@ -798,29 +854,7 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
   // Clean hoodie: subtle shading, small hood collar, center zip, small pocket
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 20);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 7, NARROW_S = 10, WAIST_E = 13;
-
-  // 5-step V taper with smooth hip flare
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
-  };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
-  };
+  const { rl, rr } = torsoSilhouette(x, w);
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -914,30 +948,10 @@ function drawApronSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawShirtSouth(ctx, colors, x, y, w, h) {
-  // Plain collared shirt — 5-step V silhouette, shirt collar at top.
+  // Plain collared shirt — organic torso silhouette, shirt collar at top.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
-  };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
-  };
+  const { rl, rr } = torsoSilhouette(x, w);
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -980,9 +994,7 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
   // Leather vest over shirt: shirt visible at sides, vest in center.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
-  const rl = (row) => row < SHOULDER ? x - 1 : row < MID_S ? x : row < WAIST_S ? x + 1 : row < NARROW_S ? x + 2 : row <= WAIST_E ? x + 3 : x + 1;
-  const rr = (row) => row < SHOULDER ? x + w : row < MID_S ? x + w - 1 : row < WAIST_S ? x + w - 2 : row < NARROW_S ? x + w - 3 : row <= WAIST_E ? x + w - 4 : x + w - 2;
+  const { rl, rr } = torsoSilhouette(x, w);
 
   // Shirt base (full width, lighter)
   const shirtCol = colors.shirt || colors.highlight;
@@ -1029,30 +1041,10 @@ function drawVestSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawTunicSouth(ctx, colors, x, y, w, h) {
-  // RPG tunic: wider cut than jacket, rounded collar, minimal seam.
+  // RPG tunic: rounded collar, minimal seam.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
-  };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
-  };
+  const { rl, rr } = torsoSilhouette(x, w);
 
   for (let row = 0; row < numRows; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
@@ -1152,27 +1144,7 @@ function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
   // T-shirt with crew neck (default) or V-neck variant when isVneck=true.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
-  };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
-  };
+  const { rl, rr } = torsoSilhouette(x, w);
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -1227,29 +1199,8 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
   // This function only draws the body fabric and bare-chest skin.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
   const NECK_OPEN_ROWS = 4;       // how far down the chest is bare
-
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
-  };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
-  };
+  const { rl, rr } = torsoSilhouette(x, w);
 
   // Skin colours fall back to neutral if not provided (shouldn't happen).
   const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820', outline: '#3A1800' };
@@ -1353,32 +1304,10 @@ function drawTankStrapsOverlaySouth(ctx, clothingColors, torsoX, torsoY, w) {
 }
 
 function drawBomberSouth(ctx, colors, x, y, w, h) {
-  // Bomber jacket: boxy V-shape silhouette, ribbed collar+hem, center zipper.
+  // Bomber jacket: boxy silhouette, ribbed collar+hem, center zipper.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 24);
-  const SHOULDER = 3, MID_S = 7;
-  // Boxy cut: shallow waist taper
-  const WAIST_S = 10, NARROW_S = 12, WAIST_E = 15;
-  const rl = (row) => {
-    if (row < SHOULDER)     return x - 1;
-    if (row < MID_S)        return x;
-    if (row < WAIST_S)      return x + 2;
-    if (row < NARROW_S)     return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    return x + 1;
-  };
-  const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    return x + w - 2;
-  };
+  const { rl, rr } = torsoSilhouette(x, w);
 
   // Fill base
   for (let row = 0; row < numRows; row++) {
@@ -1456,32 +1385,18 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
   //   Rows 12+  (hip/skirt):    x=23-40 (18px) → flares to x=21-42 at bottom
 
   const cx     = Math.floor(x + w / 2);  // = 48
-  const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
-  const tailH  = 8;                      // coat extension — shows most of the legs
+  const tailH  = 8;                       // coat extension — shows most of the legs
   const totalH = h + tailH;
 
-  // 5-step V taper: shoulder widest, organic narrow at waist, lower coat flares
+  // Shared organic torso for rows 0..h-1; tail flare for rows h..totalH-1.
+  const torso = torsoSilhouette(x, w);
   const rl = (row) => {
-    if (row < SHOULDER)   return x - 1;
-    if (row < MID_S)      return x;
-    if (row < WAIST_S)    return x + 2;
-    if (row < NARROW_S)   return x + 3;
-    if (row <= WAIST_E)     return x + 4;
-    if (row <= WAIST_E + 1) return x + 3;
-    if (row <= WAIST_E + 2) return x + 2;
-    if (row < h)            return x + 1;
+    if (row < h) return torso.rl(row);
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
     return x - flare;
   };
   const rr = (row) => {
-    if (row < SHOULDER)     return x + w;
-    if (row < MID_S)        return x + w - 1;
-    if (row < WAIST_S)      return x + w - 3;
-    if (row < NARROW_S)     return x + w - 4;
-    if (row <= WAIST_E)     return x + w - 5;
-    if (row <= WAIST_E + 1) return x + w - 4;
-    if (row <= WAIST_E + 2) return x + w - 3;
-    if (row < h)            return x + w - 2;
+    if (row < h) return torso.rr(row);
     const flare = Math.min(Math.floor((row - h) / 4) + 1, 2);
     return x + w - 1 + flare;
   };
@@ -1536,9 +1451,9 @@ function drawCoatSouth(ctx, colors, x, y, w, h) {
     }
   }
 
-  // ── 7. Step AA and waist bridge ─────────────────────────────────────────
-  px(ctx, colors.shadow, x - 1, y + SHOULDER);
-  px(ctx, colors.shadow, x + w, y + SHOULDER);
+  // ── 7. Step AA at shoulder transition (row 3 = chest start in shared silhouette) ───
+  px(ctx, colors.shadow, x - 1, y + 3);
+  px(ctx, colors.shadow, x + w, y + 3);
 
   // ── 8. Armpit crease ────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
