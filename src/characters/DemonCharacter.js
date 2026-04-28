@@ -326,4 +326,10 @@ function getDirectionFromAnim(animName) {
   return 'south';
 }
 
-module.exports = { generateFrame };
+module.exports = {
+  generateFrame,
+  // Exported for reuse by other character types (e.g. goblin horns):
+  drawHornsSouth,
+  drawHornsWest,
+  HORN_HEIGHTS,
+};

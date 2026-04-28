@@ -84,6 +84,8 @@ function handleOptions(res) {
     beltColors:      paletteMap(BELT),
     demonSkins:  paletteMap(DEMON_SKIN),
     goblinSkins: paletteMap(GOBLIN_SKIN),
+    goblinHornStyles:  ['none', 'curved', 'straight', 'ram'],
+    goblinHornLengths: ['short', 'medium', 'long'],
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
     hornLengths: ['short', 'medium', 'long'],

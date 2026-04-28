@@ -747,6 +747,15 @@ const DEMON_PARTS = {
   },
 };
 
+// Goblin horn palette — bone/ivory tones fit a humanoid goblin better than
+// the demon's brass-gold horns.
+const GOBLIN_HORN = {
+  highlight: '#E8DCB0',
+  base:      '#C0B080',
+  shadow:    '#807040',
+  outline:   '#3A2810',
+};
+
 // Belt color palettes — leather/cloth in common pixel-art tones.
 const BELT = {
   standard: {
@@ -972,6 +981,7 @@ module.exports = {
   SHOES,
   DEMON_SKIN,
   GOBLIN_SKIN,
+  GOBLIN_HORN,
   DEMON_PARTS,
   BELT,
   GROUND_SHADOW,

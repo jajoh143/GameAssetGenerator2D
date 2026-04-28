@@ -41,6 +41,15 @@ function heightDims(config) {
   return HEIGHT_DIMS[config && config.height] || HEIGHT_DIMS.medium;
 }
 
+// Compute a `base` (feet-bottom y) that vertically centers the character in
+// the 96 px frame regardless of height. Body fully spans (43 + legH + torsoH)
+// rows. We split the leftover frame space evenly above and below.
+function getCenteringBase(config) {
+  const dims = heightDims(config);
+  const bodyH = 43 + dims.legH + dims.torsoH;   // head 30 + neck 4 + torso + belt 3 + hip 2 + leg + shoe (=43+legH+torsoH overall)
+  return Math.round(48 + bodyH / 2);            // base such that body straddles frame midpoint (48)
+}
+
 // ---------------------------------------------------------------------------
 // Color resolver
 // ---------------------------------------------------------------------------
@@ -140,10 +149,10 @@ function drawSouth(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY   * 1.5);
   const headBob = Math.round(rawHeadBob * 1.5);
 
-  const base = 88 + bodyY; // bottom anchor (96px frame)
+  const base = getCenteringBase(config) + bodyY; // bottom anchor (96px frame)
 
   // --- Ground shadow ---
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 86 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, base - 2, 18, 4);
 
   // Activate the configured body build (slim/average/muscular/heavy) so
   // every clothing draw (which calls torsoSilhouette internally) picks it up.
@@ -223,7 +232,7 @@ function drawNorth(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY2   * 1.5);
   const headBob = Math.round(rawHeadBob2 * 1.5);
 
-  const base = 88 + bodyY;
+  const base = getCenteringBase(config) + bodyY;
 
   setBuild(config.build);
   const dims = heightDims(config);
@@ -248,7 +257,7 @@ function drawNorth(ctx, config, offsets) {
   const lArmDY = Math.round(leftArmFwd  * 0.9);
   const rArmDY = Math.round(rightArmFwd * 0.9);
 
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, 86 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 32, base - 2, 18, 4);
 
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN, legH);
@@ -328,7 +337,7 @@ function drawWest(ctx, config, offsets) {
   const bodyY  = Math.round(rawBodyY3   * 1.5);
   const headBob = Math.round(rawHeadBob3 * 1.5);
 
-  const base = 88 + bodyY;
+  const base = getCenteringBase(config) + bodyY;
 
   setBuild(config.build);
   const dims = heightDims(config);
@@ -362,7 +371,7 @@ function drawWest(ctx, config, offsets) {
   const frontArmDX = -Math.round(leftArmFwd  * 1.4);
   const backArmDX  = -Math.round(rightArmFwd * 1.4);
 
-  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, 86 + bodyY, 18, 4);
+  if (!offsets.skipGroundShadow) drawGroundShadow(ctx, 23, base - 2, 18, 4);
 
   drawLegsWest(ctx, colors.pants, frontLegCenter, backLegCenter, legY, frontLegLift, backLegLift, legH);
   drawShoesWest(ctx, colors.shoes, frontLegCenter, backLegCenter, shoeY, frontLegLift, backLegLift);
@@ -427,7 +436,7 @@ function getDirectionFromAnim(animName) {
 // height. Returns { base, shoeY, legY, beltY, torsoY, neckY, headTopY }.
 function getYAnchors(config) {
   const dims = heightDims(config);
-  const base = 88;                       // matches drawSouth/drawNorth/drawWest
+  const base = getCenteringBase(config);  // height-aware vertical centering
   const shoeY  = base - 5;
   const legY   = shoeY - dims.legH;
   const hipY   = legY - 2;

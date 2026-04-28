@@ -32,7 +32,9 @@ const DEFAULT_CONFIG = {
   tailLength:    'medium',
 
   // Goblin-only (small green humanoid with long ears + sharp fangs)
-  goblinSkin:    'moss_green',  // any key from Colors.GOBLIN_SKIN
+  goblinSkin:    'moss_green',     // any key from Colors.GOBLIN_SKIN
+  goblinHorns:   'none',           // 'none' | 'curved' | 'straight' | 'ram'
+  goblinHornLength: 'short',       // 'short' | 'medium' | 'long'
 
   // Fairy-only (pixie/elven humanoid with wings + glow)
   fairySkin:      'peach',
@@ -114,9 +116,12 @@ function resolveConfig(config) {
     merged.height = 'tiny';
   }
   // Goblins default to SHORT — D&D goblins are 3-4 ft tall, smaller than
-  // humans but bigger than pixies.
-  if (merged.type === 'goblin' && (!config || !config.height)) {
-    merged.height = 'short';
+  // humans but bigger than pixies. They're hairless by default; users can
+  // pick a hair style if they want a hairy variant.
+  if (merged.type === 'goblin') {
+    if (!config || !config.height)    merged.height    = 'short';
+    if (!config || !config.hairStyle) merged.hairStyle = 'bald';
+    if (!config || !config.beardStyle) merged.beardStyle = 'none';
   }
 
   return merged;
