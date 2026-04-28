@@ -940,9 +940,11 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
 
-  // Fixed off-white shirt: warm neutral that contrasts dark AND light jackets.
-  const SHIRT_BASE  = '#D8D0C0';
-  const SHIRT_DARK  = '#A8A090';   // placket line + right-edge shadow
+  // Fixed bright cream shirt + very dark placket line: chosen to pop
+  // against ANY jacket palette (dark, medium grey, tan, light). Tested
+  // against grey/charcoal/tan/brown jackets.
+  const SHIRT_BASE  = '#F0E8D0';   // bright warm cream (visible vs medium greys)
+  const SHIRT_DARK  = '#4A3E2E';   // very dark placket (visible vs cream shirt)
 
   const SHIRT_TOP    = 1;
   const SHIRT_BOTTOM = numRows - 3;
@@ -985,13 +987,15 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
 
   // ── 4. Shirt zone + 2px lapel folds ──────────────────────────────────────
   const deepCol = colors.deep_shadow || colors.shadow;
+  // Soft shirt-shadow is mid-tone (between bright shirt and dark placket).
+  const SHIRT_SHADE = '#B8B098';
   for (let row = 0; row < numRows; row++) {
     const sL = shirtL(row), sR = shirtR(row);
     if (sL === null || sR === null) continue;
     // Shirt fabric fill
     hLine(ctx, SHIRT_BASE, sL, y + row, sR - sL + 1);
-    // Right shirt edge in shadow (right lapel casts onto it)
-    px(ctx, SHIRT_DARK, sR, y + row);
+    // Subtle right-side shirt shading (right lapel casts onto the shirt)
+    px(ctx, SHIRT_SHADE, sR, y + row);
     // Left lapel fold: 2px — outer shadow then deep-shadow (the lap fold)
     px(ctx, colors.shadow, sL - 1, y + row);
     px(ctx, deepCol,       sL - 2, y + row);
@@ -1003,13 +1007,14 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
   }
 
   // ── 5. Center placket + button ───────────────────────────────────────────
-  // A subtly-darker vertical line down the shirt suggests a button placket.
+  // Dark vertical placket line — main visual cue that there's a shirt with
+  // a button strip down the middle. High contrast against the cream shirt.
   for (let row = SHIRT_TOP + 2; row <= SHIRT_BOTTOM; row++) {
     px(ctx, SHIRT_DARK, cx, y + row);
   }
-  // Single button at row 9 (below the pec-line accent, above waist crease)
-  px(ctx, '#706858', cx,     y + 9);   // button
-  px(ctx, '#E8E0D0', cx - 1, y + 8);  // button sheen
+  // Single bright button on the dark placket at row 9 (between pec-line and waist)
+  px(ctx, SHIRT_BASE, cx,     y + 9);   // button (cream — pops against placket)
+  px(ctx, SHIRT_DARK, cx - 1, y + 9);  // button shadow on left (3D pop)
 
   // ── 6. Hip-level slit pockets ────────────────────────────────────────────
   const POCKET_Y = numRows - 6;
@@ -1865,9 +1870,9 @@ function drawTorsoWest(ctx, clothingStyle, clothingColors, x, y, skinColors) {
   }
   // ── Jacket front details (lapel/collar + shirt strip on front edge) ────────
   else if (style === 'jacket') {
-    // Fixed off-white shirt (same tone as south-view) runs as a 1-2px strip
+    // Fixed bright cream shirt (same tone as south-view) runs as a 1-2px strip
     // on the front (x) edge of the side-profile torso so it reads clearly.
-    const SHIRT_BASE = '#D8D0C0';
+    const SHIRT_BASE = '#F0E8D0';
     for (let row = 0; row < h; row++) {
       // Shirt 2px wide from top-collar to hem; 1px only at very top & bottom
       const openW = (row === 0 || row >= h - 2) ? 1 : 2;
