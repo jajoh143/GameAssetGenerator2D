@@ -545,64 +545,62 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     px(ctx, hairColors.shadow, HX + HW - 2, HY + 14);
     px(ctx, hairColors.shadow, HX + HW - 2, HY + 15);
   } else if (hairStyle === 'mohawk') {
-    // Mohawk: shaved sides + tall central spike strip.
-    // 1. Shave the sides — erase hair from x=HX..HX+9 and HX+22..HX+HW
-    //    for rows 1..15 (everything except the central strip).
+    // Mohawk: shaved sides + central spike strip proportional to the head.
+    // Strip is 7px wide centered on the head (HX+13..HX+19), spikes max 5px.
+    const stripL = HX + 13;   // left edge of strip (center = HX+16 = head center)
+    const STRIP_W = 7;
+    const SHAVE_L = HX + 13;  // shave everything left of strip
+    const SHAVE_R = HX + 20;  // shave everything right of strip
+
+    // 1. Shave the sides — fill with scalp skin colour
     for (let r = 0; r < 16; r++) {
-      const [off, w] = HEAD[r];
-      // Left shave: from silhouette edge to x=HX+10
-      for (let x = HX + off; x < HX + 11 && x < HX + off + w; x++) {
-        // Replace with skin: the face area below already shows skin; here we
-        // need scalp colour above the brow. Use skin highlight for "lit scalp".
-        px(ctx, skinColors.base, x, HY + r);
+      const [off, hw] = HEAD[r];
+      for (let sx = HX + off; sx < SHAVE_L && sx < HX + off + hw; sx++) {
+        px(ctx, skinColors.base, sx, HY + r);
       }
-      // Right shave
-      for (let x = HX + 22; x < HX + off + w; x++) {
-        px(ctx, skinColors.base, x, HY + r);
+      for (let sx = Math.max(SHAVE_R, HX + off); sx < HX + off + hw; sx++) {
+        px(ctx, skinColors.base, sx, HY + r);
       }
     }
-    // 2. Soft scalp shading on the shaved sides
-    for (let r = 4; r < 14; r++) {
-      px(ctx, skinColors.shadow,    HX + 10, HY + r);  // border shadow inner
-      px(ctx, skinColors.shadow,    HX + 22, HY + r);
-      px(ctx, skinColors.highlight, HX +  3, HY + r);  // highlight on left
-      px(ctx, skinColors.shadow,    HX + 28, HY + r);  // shadow on right
+
+    // 2. Soft scalp shading along the strip border and outer scalp
+    for (let r = 3; r < 15; r++) {
+      const [off, hw] = HEAD[r];
+      if (SHAVE_L - 1 >= HX + off)               px(ctx, skinColors.shadow,    SHAVE_L - 1, HY + r);
+      if (SHAVE_R < HX + off + hw)                px(ctx, skinColors.shadow,    SHAVE_R,     HY + r);
+      if (HX + off + 2 < SHAVE_L)                 px(ctx, skinColors.highlight, HX + off + 2, HY + r);
+      if (HX + off + hw - 3 >= SHAVE_R)           px(ctx, skinColors.shadow,    HX + off + hw - 3, HY + r);
     }
-    // 3. Central strip with tall spike tips above the crown
-    const stripL = HX + 11;
-    const STRIP_W = 11;    // 11px wide central strip (x=27..37)
+
+    // 3. Central strip — clipped to head silhouette
     for (let r = 0; r < 16; r++) {
-      hLine(ctx, hairColors.base, stripL, HY + r, STRIP_W);
+      const [off, hw] = HEAD[r];
+      const sx = Math.max(stripL, HX + off);
+      const ex = Math.min(stripL + STRIP_W - 1, HX + off + hw - 1);
+      if (sx <= ex) hLine(ctx, hairColors.base, sx, HY + r, ex - sx + 1);
     }
-    // Strip shading: 2px highlight on left, 2px shadow on right
+    // Strip shading: 1px highlight on left, 1px shadow on right
     vLine(ctx, hairColors.highlight, stripL + 1, HY, 16);
-    vLine(ctx, hairColors.highlight, stripL + 2, HY, 16);
     vLine(ctx, hairColors.shadow,    stripL + STRIP_W - 2, HY, 16);
-    vLine(ctx, hairColors.shadow,    stripL + STRIP_W - 1, HY, 16);
-    // Tall spike tips on top — these are the mohawk's signature look.
-    // 4 asymmetric tall spikes (heights 5-7-8-6) for a punkish, dramatic shape.
+
+    // 4. Three proportional spike tips (heights 3-5-4, asymmetric)
     const SPIKES = [
-      { x: stripL + 1, h: 5 },
-      { x: stripL + 4, h: 8 },  // center: tallest
-      { x: stripL + 6, h: 7 },
-      { x: stripL + 9, h: 6 },
+      { x: stripL + 1, h: 3 },
+      { x: stripL + 3, h: 5 },  // center-left: tallest
+      { x: stripL + 5, h: 4 },
     ];
     for (const s of SPIKES) {
-      // 2px-wide tall spike
       vLine(ctx, hairColors.base, s.x,     HY - s.h, s.h);
       vLine(ctx, hairColors.base, s.x + 1, HY - s.h, s.h);
-      // Lit left edge (column highlights)
       vLine(ctx, hairColors.highlight, s.x, HY - s.h + 1, s.h - 1);
-      px(ctx,    hairColors.highlight, s.x, HY - s.h);
-      // Subtle shadow on right column
-      px(ctx, hairColors.shadow, s.x + 1, HY - 1);
-      // Outline above the tip
+      px(ctx,  hairColors.highlight, s.x, HY - s.h);
+      px(ctx,  hairColors.shadow, s.x + 1, HY - 1);
       px(ctx, outline, s.x,     HY - s.h - 1);
       px(ctx, outline, s.x + 1, HY - s.h - 1);
     }
-    // Strip side outlines so it reads clearly against the shaved scalp
-    vLine(ctx, outline, stripL - 1,         HY, 16);
-    vLine(ctx, outline, stripL + STRIP_W,   HY, 16);
+    // Strip side outlines
+    vLine(ctx, outline, stripL - 1,       HY, 16);
+    vLine(ctx, outline, stripL + STRIP_W, HY, 16);
   } else if (hairStyle === 'topknot') {
     // Topknot: pulled-back hair leaves a smooth crown, with a small
     // round bun protruding above the head.
@@ -927,40 +925,42 @@ function drawNeckSouth(ctx, skinColors, baseY) {
 // ---------------------------------------------------------------------------
 
 function drawJacketSouth(ctx, colors, x, y, w, h) {
-  // Open-front jacket draped over a separate shirt:
-  //   • Body uses shared organic torso silhouette (max 2px waist inset).
-  //   • Vertical SHIRT ZONE runs the full chest height (not just a tiny V)
-  //     so the jacket clearly reads as "open" with shirt visible underneath.
-  //   • 1px LAPEL columns in jacket-shadow flank the shirt zone.
-  //   • Asymmetric front: shirt zone biased 1px LEFT of centre so the
-  //     viewer's right flap reads slightly wider than the left
-  //     (MortMort's "lopsided realism" rule).
-  //   • Hip-level SLIT POCKET dashes in jacket-shadow.
+  // Open-front jacket over a clearly-visible shirt:
+  //   • SHIRT ZONE is 7px wide with a FIXED warm off-white colour so it
+  //     contrasts against any jacket palette (using jacket highlight caused
+  //     the shirt to blend on light-coloured jackets).
+  //   • V-COLLAR: shirt zone widens upward (3px at row 1 → 5px at row 2 →
+  //     7px from row 3 onward) so the collar reads as an open V notch.
+  //   • 2px LAPEL FOLD each side: outer shadow + inner deep-shadow gives the
+  //     lapels readable thickness and makes the jacket flap read as fabric.
+  //   • CENTER PLACKET: slightly-darker vertical line down the shirt with a
+  //     single button dot, reinforcing the "shirt + open jacket" read.
+  //   • Hip-level SLIT POCKETS.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
 
-  // Shirt zone: 5px wide for the chest, narrowing slightly at the top
-  // (collar closure) and bottom (jacket buttoned at hem).
+  // Fixed off-white shirt: warm neutral that contrasts dark AND light jackets.
+  const SHIRT_BASE  = '#D8D0C0';
+  const SHIRT_DARK  = '#A8A090';   // placket line + right-edge shadow
+
   const SHIRT_TOP    = 1;
   const SHIRT_BOTTOM = numRows - 3;
+
+  // Shirt zone width: V-collar narrows to a 3px slit at the collar tip,
+  // then opens to full 7px by row 3 (simulates lapels folding back from neck).
   const shirtL = (row) => {
     if (row < SHIRT_TOP || row > SHIRT_BOTTOM) return null;
-    if (row === SHIRT_TOP)    return cx - 1;            // 3-wide at top
-    if (row >= SHIRT_BOTTOM)  return cx - 1;            // 3-wide at hem
-    return cx - 2;                                       // 5-wide chest
+    if (row === SHIRT_TOP)     return cx - 1;   // 3px collar slit
+    if (row === SHIRT_TOP + 1) return cx - 2;   // 5px transition
+    return cx - 3;                               // 7px full shirt zone
   };
   const shirtR = (row) => {
     if (row < SHIRT_TOP || row > SHIRT_BOTTOM) return null;
-    if (row === SHIRT_TOP)    return cx + 1;
-    if (row >= SHIRT_BOTTOM)  return cx + 1;
-    return cx + 2;
+    if (row === SHIRT_TOP)     return cx + 1;
+    if (row === SHIRT_TOP + 1) return cx + 2;
+    return cx + 3;
   };
-  // Shirt fabric: a desaturated mid-tone clearly contrasting with the
-  // jacket. Picking the jacket's HIGHLIGHT puts the shirt 1 step lighter
-  // than the base — reads cleanly on dark and light jackets alike.
-  const shirtBase   = colors.highlight;
-  const shirtShadow = colors.collar || colors.shadow;
 
   // ── 1. Fill jacket base ──────────────────────────────────────────────────
   for (let row = 0; row < numRows; row++) {
@@ -977,39 +977,41 @@ function drawJacketSouth(ctx, colors, x, y, w, h) {
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
 
-  // ── 3. Subtle waist crease (only at the narrowest rows) ──────────────────
+  // ── 3. Waist crease ──────────────────────────────────────────────────────
   for (let row = 9; row < 13; row++) {
     px(ctx, colors.shadow, rl(row) + 1, y + row);
     px(ctx, colors.shadow, rr(row) - 1, y + row);
   }
 
-  // ── 4. Shirt zone + lapels ───────────────────────────────────────────────
-  // Paint the shirt fabric, frame it with 1px lapel columns, and add a
-  // single column of inner-shadow on the shirt-side so the lapel reads
-  // as folded fabric rather than a flat seam.
+  // ── 4. Shirt zone + 2px lapel folds ──────────────────────────────────────
   const deepCol = colors.deep_shadow || colors.shadow;
   for (let row = 0; row < numRows; row++) {
     const sL = shirtL(row), sR = shirtR(row);
     if (sL === null || sR === null) continue;
-    // Shirt base fill
-    hLine(ctx, shirtBase, sL, y + row, sR - sL + 1);
-    // Right edge of the shirt is in shadow (the right lapel casts onto it)
-    px(ctx, shirtShadow, sR, y + row);
-    // Lapel columns (1px each side, in jacket-shadow)
+    // Shirt fabric fill
+    hLine(ctx, SHIRT_BASE, sL, y + row, sR - sL + 1);
+    // Right shirt edge in shadow (right lapel casts onto it)
+    px(ctx, SHIRT_DARK, sR, y + row);
+    // Left lapel fold: 2px — outer shadow then deep-shadow (the lap fold)
     px(ctx, colors.shadow, sL - 1, y + row);
+    px(ctx, deepCol,       sL - 2, y + row);
+    // Right lapel fold: 2px
     px(ctx, colors.shadow, sR + 1, y + row);
-    // Deep-shadow inner lapel fold on the right side, away from the light
     if (row >= 2 && row < SHIRT_BOTTOM) {
       px(ctx, deepCol, sR + 2, y + row);
     }
   }
 
-  // ── 5. Single bottom-button at hem closure ───────────────────────────────
-  if (numRows > SHIRT_BOTTOM + 1) {
-    px(ctx, colors.outline, cx, y + SHIRT_BOTTOM + 1);
+  // ── 5. Center placket + button ───────────────────────────────────────────
+  // A subtly-darker vertical line down the shirt suggests a button placket.
+  for (let row = SHIRT_TOP + 2; row <= SHIRT_BOTTOM; row++) {
+    px(ctx, SHIRT_DARK, cx, y + row);
   }
+  // Single button at row 9 (below the pec-line accent, above waist crease)
+  px(ctx, '#706858', cx,     y + 9);   // button
+  px(ctx, '#E8E0D0', cx - 1, y + 8);  // button sheen
 
-  // ── 6. Hip-level slit pockets (2px dash each side, in jacket-shadow) ─────
+  // ── 6. Hip-level slit pockets ────────────────────────────────────────────
   const POCKET_Y = numRows - 6;
   if (POCKET_Y > 10) {
     hLine(ctx, colors.shadow, rl(POCKET_Y) + 2, y + POCKET_Y, 2);
@@ -1861,20 +1863,17 @@ function drawTorsoWest(ctx, clothingStyle, clothingColors, x, y, skinColors) {
     // Soft shadow line where fabric meets skin
     hLine(ctx, clothingColors.shadow, x + 2, y + NECK_OPEN_ROWS, rowW(NECK_OPEN_ROWS) - 4);
   }
-  // ── Jacket front details (lapel/collar suggestion at top 4 rows) ──────────
+  // ── Jacket front details (lapel/collar + shirt strip on front edge) ────────
   else if (style === 'jacket') {
-    // Front opening strip: 2px wide from top, shows shirt/collar
-    const shirtCol = clothingColors.collar || clothingColors.highlight;
-    for (let row = 0; row < 5; row++) {
-      // Opening widens slightly: closed at top, open at row 4
-      const openW = Math.min(row + 1, 3);
-      hLine(ctx, shirtCol, x, y + row, openW);
-      px(ctx, clothingColors.shadow, x + openW, y + row);  // lapel shadow edge
-    }
-    // Shirt visible below lapel (faint suggestion)
-    for (let row = 5; row < 8; row++) {
-      px(ctx, clothingColors.highlight, x, y + row);
-      px(ctx, clothingColors.highlight, x + 1, y + row);
+    // Fixed off-white shirt (same tone as south-view) runs as a 1-2px strip
+    // on the front (x) edge of the side-profile torso so it reads clearly.
+    const SHIRT_BASE = '#D8D0C0';
+    for (let row = 0; row < h; row++) {
+      // Shirt 2px wide from top-collar to hem; 1px only at very top & bottom
+      const openW = (row === 0 || row >= h - 2) ? 1 : 2;
+      hLine(ctx, SHIRT_BASE, x, y + row, openW);
+      // Lapel shadow fold just inside the shirt strip
+      px(ctx, clothingColors.shadow, x + openW, y + row);
     }
   } else if (style === 'bomber') {
     // Ribbed collar at front top: 3 alternating rib stripes
