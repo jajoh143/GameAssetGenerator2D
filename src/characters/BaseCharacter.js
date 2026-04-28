@@ -1083,14 +1083,48 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
     if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
 
-  // Hood collar: 10px × 4 rows with highlight/shadow
-  const hoodX = cx - 5;
-  fillRect(ctx, colors.collar, hoodX, y, 10, 4);
-  hLine(ctx, colors.highlight, hoodX + 1, y,     8);   // top highlight
-  hLine(ctx, colors.shadow,    hoodX + 1, y + 3, 8);   // bottom shadow
-  outlineRect(ctx, colors.outline, hoodX, y, 10, 4);
+  // ── Hood: a bunched fabric mass behind the neck ─────────────────────────
+  // The hood sits BEHIND the head/shoulders and peeks up above and to the
+  // sides of the head so it's clearly readable as a hood, not a turtleneck.
+  // It's drawn into the head/neck region (negative y offsets — head is at
+  // y-30..y rows above the torso). We restrict to the narrow window between
+  // the head and shoulders.
+  //
+  // Shape:                                ┌───┐
+  //                                      ─┤   ├─        ← row -3..-1: side flares
+  //                                       └─┬─┘
+  //                                  ─────  │  ─────    ← row 0..3: collar bunch
+  const HOOD_COLOR = colors.collar || colors.shadow;
+  // Side flares: the hood pokes up alongside the head outline
+  const hoodSideY = y - 4;
+  fillRect(ctx, colors.base, cx - 8, hoodSideY,     4, 4);   // left flare
+  fillRect(ctx, colors.base, cx + 4, hoodSideY,     4, 4);   // right flare
+  // Highlight on top-left of left flare (lit from upper-left)
+  hLine(ctx, colors.highlight, cx - 7, hoodSideY,     2);
+  px(ctx,    colors.highlight, cx - 7, hoodSideY + 1);
+  // Shadow on right flare
+  hLine(ctx, colors.shadow,    cx + 5, hoodSideY + 3, 3);
+  px(ctx,    colors.shadow,    cx + 7, hoodSideY + 1);
+  // Outline around flares
+  outlineRect(ctx, colors.outline, cx - 8, hoodSideY,     4, 4);
+  outlineRect(ctx, colors.outline, cx + 4, hoodSideY,     4, 4);
 
-  // Center zipper (below 4-row collar)
+  // Hood collar bunch: wide, taller in the middle, thick fabric look
+  const hoodW = 14;
+  const hoodX = cx - Math.floor(hoodW / 2);
+  fillRect(ctx, colors.base, hoodX, y, hoodW, 4);
+  // Inner liner / shadow band (the inside of the hood)
+  hLine(ctx, HOOD_COLOR, hoodX + 2, y + 1, hoodW - 4);
+  hLine(ctx, HOOD_COLOR, hoodX + 2, y + 2, hoodW - 4);
+  // Top edge highlight (lit fabric)
+  hLine(ctx, colors.highlight, hoodX + 1, y, hoodW - 2);
+  // Bottom shadow (where hood meets collar)
+  hLine(ctx, colors.shadow,    hoodX + 1, y + 3, hoodW - 2);
+  // Deep shadow at the deepest part of the hood interior
+  hLine(ctx, colors.deep_shadow || colors.shadow, hoodX + 4, y + 1, hoodW - 8);
+  outlineRect(ctx, colors.outline, hoodX, y, hoodW, 4);
+
+  // Center zipper (below the hood collar)
   vLine(ctx, colors.shadow, cx, y + 4, numRows - 4);
 
   // Drawstrings — two cords hanging from hood collar with metal aglets
@@ -1133,32 +1167,99 @@ function drawHoodieSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawApronSouth(ctx, colors, x, y, w, h) {
-  // Base shirt underneath
-  const shirtBase  = colors.base_base      || '#7878A0';
-  const shirtHi    = colors.base_highlight || '#A8A8B8';
-  const shirtSh    = colors.base_shadow    || '#484870';
-  fillRect(ctx, shirtBase, x, y, w, h);
-  vLine(ctx, shirtHi, x + 1, y + 1, h - 2);
-  vLine(ctx, shirtHi, x + 2, y + 1, h - 2);
-  vLine(ctx, shirtSh, x + w - 3, y + 1, h - 2);
-  vLine(ctx, shirtSh, x + w - 2, y + 1, h - 2);
+  // Chef/work apron with proper shoulder straps + waist tie:
+  //   • Underlying shirt fills the torso silhouette using the same warm
+  //     cream we use for the jacket's shirt zone (always contrasts).
+  //   • Apron BIB starts BELOW the collarbone (~row 4) so the shirt collar
+  //     and shoulders are visible above it — that's what reads as "apron".
+  //   • Two SHOULDER STRAPS run from the bib top up to the neckline.
+  //   • Horizontal WAIST TIE at the bottom with little tail strings.
+  const cx = Math.floor(x + w / 2);
+  const numRows = Math.min(h, 20);
+  const { rl, rr } = torsoSilhouette(x, w);
 
-  // Apron bib: wider (x+3, w-6), full-height from row 0
-  const ax = x + 3, aw = w - 6;
-  fillRect(ctx, colors.base, ax, y, aw, h);
-  vLine(ctx, colors.highlight, ax + 1, y, h);
-  vLine(ctx, colors.shadow,    ax + aw - 2, y, h);
-  // Horizontal bib trim line at row 3
-  hLine(ctx, colors.shadow, ax + 1, y + 3, aw - 2);
-  // Neck strap hint at top center
-  hLine(ctx, colors.collar, ax + 2, y, 4);
+  // ── 1. Underlying shirt (warm cream) fills entire torso ─────────────────
+  const SHIRT_BASE = '#F0E8D0';
+  const SHIRT_DARK = '#A8A090';
+  for (let row = 0; row < numRows; row++) {
+    hLine(ctx, SHIRT_BASE, rl(row), y + row, rr(row) - rl(row) + 1);
+  }
+  // Shirt directional shading
+  for (let row = 0; row < numRows; row++) {
+    px(ctx, SHIRT_DARK, rr(row) - 1, y + row);   // right side shadow
+    if (rr(row) - rl(row) >= 8) px(ctx, SHIRT_DARK, rr(row) - 2, y + row);
+  }
 
-  // Tie strings at top corners
-  fillRect(ctx, colors.collar, x + 1, y, 3, 4);
-  fillRect(ctx, colors.collar, x + w - 4, y, 3, 4);
+  // ── 2. Apron bib — narrower than torso, starts below collar ─────────────
+  const BIB_TOP = 4;                 // skip rows 0-3 (collar/shoulder area)
+  const ax = x + 4, aw = w - 8;      // 16px wide, leaving 4px shirt each side
+  for (let row = BIB_TOP; row < numRows; row++) {
+    hLine(ctx, colors.base, ax, y + row, aw);
+  }
+  // Bib directional shading (light from upper-left)
+  vLine(ctx, colors.highlight, ax + 1, y + BIB_TOP, numRows - BIB_TOP);
+  vLine(ctx, colors.shadow,    ax + aw - 2, y + BIB_TOP, numRows - BIB_TOP);
+  // Shadow under the top edge of the bib (lip of fabric folding away)
+  hLine(ctx, colors.shadow, ax + 1, y + BIB_TOP, aw - 2);
+  // Highlight along the very top edge of the bib
+  hLine(ctx, colors.highlight, ax + 1, y + BIB_TOP + 1, aw - 2);
 
-  outlineRect(ctx, colors.outline, ax, y, aw, h);
-  outlineRect(ctx, '#404060',      x,  y,     w,  h);
+  // ── 3. Shoulder straps — two diagonals from bib corners to neckline ─────
+  // Left strap: from ax (bib top-left) up to neck base
+  for (let r = 0; r < BIB_TOP; r++) {
+    const sx = ax + r;               // diagonal: each row up shifts in by 1
+    px(ctx, colors.base,      sx,     y + (BIB_TOP - 1 - r));
+    px(ctx, colors.highlight, sx,     y + (BIB_TOP - 1 - r));
+    px(ctx, colors.shadow,    sx + 1, y + (BIB_TOP - 1 - r));   // strap depth
+  }
+  // Right strap: from ax+aw-1 (bib top-right) up to neck base, mirrored
+  for (let r = 0; r < BIB_TOP; r++) {
+    const sx = ax + aw - 1 - r;
+    px(ctx, colors.base,    sx,     y + (BIB_TOP - 1 - r));
+    px(ctx, colors.shadow,  sx,     y + (BIB_TOP - 1 - r));
+    px(ctx, colors.shadow,  sx - 1, y + (BIB_TOP - 1 - r));
+  }
+
+  // ── 4. Waist tie — horizontal ribbon across the bib at hip level ────────
+  const TIE_Y = numRows - 4;
+  fillRect(ctx, colors.collar || colors.shadow, ax, y + TIE_Y, aw, 2);
+  hLine(ctx, colors.highlight, ax + 1, y + TIE_Y,     aw - 2);
+  // Tail strings hanging outside the bib (left + right)
+  px(ctx, colors.collar || colors.shadow, ax - 1, y + TIE_Y);
+  px(ctx, colors.collar || colors.shadow, ax - 1, y + TIE_Y + 1);
+  px(ctx, colors.collar || colors.shadow, ax + aw, y + TIE_Y);
+  px(ctx, colors.collar || colors.shadow, ax + aw, y + TIE_Y + 1);
+
+  // ── 5. Center seam down the bib (faint, suggests fabric drape) ──────────
+  for (let row = BIB_TOP + 2; row < numRows - 1; row += 2) {
+    px(ctx, colors.shadow, cx, y + row);
+  }
+
+  // ── 6. Outlines ─────────────────────────────────────────────────────────
+  // Bib outline
+  for (let row = BIB_TOP; row < numRows; row++) {
+    px(ctx, colors.outline, ax,     y + row);
+    px(ctx, colors.outline, ax + aw - 1, y + row);
+  }
+  hLine(ctx, colors.outline, ax, y + BIB_TOP, aw);          // top edge
+  hLine(ctx, colors.outline, ax, y + numRows - 1, aw);       // bottom hem
+  // Strap outlines (1px shadow above the diagonal)
+  for (let r = 0; r < BIB_TOP; r++) {
+    px(ctx, colors.outline, ax + r,        y + (BIB_TOP - 1 - r) - 1);
+    px(ctx, colors.outline, ax + aw - 1 - r, y + (BIB_TOP - 1 - r) - 1);
+  }
+  // Torso silhouette outline (unchanged from generic clothing)
+  px(ctx, colors.shadow, x - 1, y - 1);
+  px(ctx, colors.shadow, x + w, y - 1);
+  px(ctx, colors.shadow, x - 1, y);
+  hLine(ctx, colors.outline, x, y, w);
+  px(ctx, colors.shadow, x + w, y);
+  for (let row = 1; row < numRows - 1; row++) {
+    px(ctx, colors.shadow, rl(row), y + row);
+    px(ctx, colors.shadow, rr(row), y + row);
+  }
+  const botL = rl(numRows - 1), botR = rr(numRows - 1);
+  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
 }
 
 function drawShirtSouth(ctx, colors, x, y, w, h) {
@@ -1205,41 +1306,76 @@ function drawShirtSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawVestSouth(ctx, colors, x, y, w, h) {
-  // Leather vest over shirt: shirt visible at sides, vest in center.
+  // Leather/work vest over a button-up shirt:
+  //   • Underlying SHIRT covers the full torso silhouette (warm cream so
+  //     it always contrasts with the vest leather/fabric).
+  //   • VEST has a deep V-NECK opening — wider at the top, tapering to a
+  //     narrow gap in the middle, then closed (buttoned) at the bottom.
+  //     The triangular shirt-V is the strongest visual cue this is a vest.
+  //   • Two BUTTONS down the front below the V.
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 28);
+  const numRows = Math.min(h, 20);
   const { rl, rr } = torsoSilhouette(x, w);
 
-  // Shirt base (full width, lighter)
-  const shirtCol = colors.shirt || colors.highlight;
+  // ── 1. Shirt underneath (warm cream) ────────────────────────────────────
+  const SHIRT_BASE = '#F0E8D0';
+  const SHIRT_DARK = '#A8A090';
   for (let row = 0; row < numRows; row++) {
-    hLine(ctx, shirtCol, rl(row), y + row, rr(row) - rl(row) + 1);
-    px(ctx, colors.shirt_shadow || colors.shadow, rl(row) + 1, y + row);
-    px(ctx, colors.shirt_shadow || colors.shadow, rr(row) - 1, y + row);
+    hLine(ctx, SHIRT_BASE, rl(row), y + row, rr(row) - rl(row) + 1);
   }
-  // Vest body: narrower (leaves 4px shirt visible each side)
-  const vl = (row) => rl(row) + 4;
-  const vr = (row) => rr(row) - 4;
+
+  // ── 2. Vest body fills the torso EXCEPT a V-shaped opening at top ──────
+  // V-opening: 7 rows tall, widens from 1px at row 6 to 7px at row 0.
+  const V_DEPTH = 7;
+  const vOpenL = (row) => {
+    if (row >= V_DEPTH) return null;
+    const halfW = Math.ceil((V_DEPTH - row) * 0.55);   // narrows downward
+    return cx - halfW;
+  };
+  const vOpenR = (row) => {
+    if (row >= V_DEPTH) return null;
+    const halfW = Math.ceil((V_DEPTH - row) * 0.55);
+    return cx + halfW;
+  };
+
   for (let row = 0; row < numRows; row++) {
-    if (vr(row) > vl(row)) {
-      hLine(ctx, colors.base, vl(row), y + row, vr(row) - vl(row) + 1);
-      px(ctx, colors.highlight, vl(row) + 1, y + row);
-      px(ctx, colors.shadow,    vr(row) - 1, y + row);
-      px(ctx, colors.shadow,    vr(row),     y + row);
+    const l = rl(row), r = rr(row);
+    const vL = vOpenL(row), vR = vOpenR(row);
+    if (vL === null) {
+      // Below the V — vest covers the full row
+      hLine(ctx, colors.base, l, y + row, r - l + 1);
+    } else {
+      // Within the V — split into left panel + V-gap (shirt) + right panel
+      if (vL - 1 >= l) hLine(ctx, colors.base, l, y + row, vL - l);
+      if (r >= vR + 1) hLine(ctx, colors.base, vR + 1, y + row, r - vR);
+    }
+    // Directional shading
+    px(ctx, colors.highlight, l + 1, y + row);
+    px(ctx, colors.shadow,    r - 1, y + row);
+    if (r - l >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 2, y + row);
+  }
+
+  // ── 3. Inner V-edge: thin shadow lines along the V opening ──────────────
+  for (let row = 0; row < V_DEPTH; row++) {
+    const vL = vOpenL(row), vR = vOpenR(row);
+    if (vL !== null && vL - 1 >= rl(row)) px(ctx, colors.shadow, vL - 1, y + row);
+    if (vR !== null && vR + 1 <= rr(row)) px(ctx, colors.shadow, vR + 1, y + row);
+  }
+  // Shirt collar tips peek into the V at top (shirt collar stays visible)
+  px(ctx, SHIRT_DARK, cx - 1, y);
+  px(ctx, SHIRT_DARK, cx + 1, y);
+
+  // ── 4. Center button placket below the V (3 dark dots) ──────────────────
+  for (const btnRow of [V_DEPTH + 1, V_DEPTH + 5, V_DEPTH + 9]) {
+    if (btnRow < numRows - 1) {
+      px(ctx, colors.outline, cx, y + btnRow);
+      px(ctx, colors.highlight, cx - 1, y + btnRow);
     }
   }
-  // Vest outline (inner seam)
-  for (let row = 0; row < numRows; row++) {
-    if (vr(row) > vl(row)) {
-      px(ctx, colors.outline, vl(row), y + row);
-      px(ctx, colors.outline, vr(row) + 1, y + row);
-    }
-  }
-  // Collar area: shirt collar visible at top
-  const shirtCollarW = 9;
-  fillRect(ctx, shirtCol, cx - 4, y, shirtCollarW, 4);
-  outlineRect(ctx, colors.outline, cx - 4, y, shirtCollarW, 4);
-  // Outer silhouette
+  // Center seam where vest closes (faint)
+  vLine(ctx, colors.shadow, cx, y + V_DEPTH, numRows - V_DEPTH);
+
+  // ── 5. Outer silhouette outline ─────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
@@ -1301,56 +1437,89 @@ function drawTunicSouth(ctx, colors, x, y, w, h) {
 }
 
 function drawRobeSouth(ctx, colors, x, y, w, h) {
-  // Mage robe: wide at bottom, ornate collar, deep shadow folds.
+  // Mage robe: long flowing garment that extends from the shoulders down
+  // past the knees, flaring outward at the hem. Drawn AFTER legs/belt so
+  // the lower portion overlays them — the wearer's pants don't show.
+  //
+  // Silhouette:
+  //   Rows 0-2  : shoulders (chunky chibi 1px outset)
+  //   Rows 3-19 : torso (uses standard organic silhouette)
+  //   Rows 20+  : skirt/tail flares outward 1-3px each side
   const cx = Math.floor(x + w / 2);
-  const numRows = Math.min(h, 24);
-  const SHOULDER = 3;
-  // Robes have minimal taper — flare wider at bottom
-  const rl = (row) => row < SHOULDER ? x - 1 : row > 14 ? x - 1 : x;
-  const rr = (row) => row < SHOULDER ? x + w : row > 14 ? x + w : x + w - 1;
+  const tailH = 18;                                // covers belt + most of legs
+  const totalH = h + tailH;
+  const torso = torsoSilhouette(x, w);
+  // Custom silhouette: torso for upper rows, then flare outward in steps.
+  const rl = (row) => {
+    if (row < h) return torso.rl(row);
+    const flareDelta = Math.min(Math.floor((row - h) / 5) + 1, 3);
+    return x - flareDelta;
+  };
+  const rr = (row) => {
+    if (row < h) return torso.rr(row);
+    const flareDelta = Math.min(Math.floor((row - h) / 5) + 1, 3);
+    return x + w - 1 + flareDelta;
+  };
 
-  for (let row = 0; row < numRows; row++) {
+  // ── 1. Base fill ────────────────────────────────────────────────────────
+  for (let row = 0; row < totalH; row++) {
     hLine(ctx, colors.base, rl(row), y + row, rr(row) - rl(row) + 1);
   }
-  // Directional shading
-  for (let row = 0; row < numRows; row++) {
-    px(ctx, colors.highlight, rl(row) + 1, y + row);
-    if (row < SHOULDER) px(ctx, colors.highlight, rl(row) + 2, y + row);
-    px(ctx, colors.shadow, rr(row) - 1, y + row);
-    px(ctx, colors.shadow, rr(row) - 2, y + row);
+
+  // ── 2. Directional shading ──────────────────────────────────────────────
+  for (let row = 0; row < totalH; row++) {
+    const l = rl(row), r = rr(row), rw = r - l + 1;
+    px(ctx, colors.highlight, l + 1, y + row);
+    if (rw >= 8) px(ctx, colors.highlight, l + 2, y + row);
+    px(ctx, colors.shadow, r - 1, y + row);
+    if (rw >= 8) px(ctx, colors.shadow, r - 2, y + row);
+    if (rw >= 13) px(ctx, colors.deep_shadow || colors.shadow, r - 3, y + row);
   }
-  // Deep fold shadows: robe has fabric bunching
-  const fold1 = Math.floor(numRows * 0.4);
-  const fold2 = Math.floor(numRows * 0.7);
-  for (const fr of [fold1, fold2]) {
-    hLine(ctx, colors.shadow, rl(fr) + 2, y + fr, (rr(fr) - rl(fr)) - 3);
-    if (colors.deep_shadow) px(ctx, colors.deep_shadow, cx, y + fr);
-  }
-  // Center ornament stripe (robe has a decorative front panel)
+
+  // ── 3. Center ornament stripe — decorative front panel from chest to hem
   const panelW = 6;
-  for (let row = 4; row < numRows; row++) {
-    hLine(ctx, colors.collar, cx - 3, y + row, panelW);
+  for (let row = 6; row < totalH - 1; row++) {
+    hLine(ctx, colors.collar || colors.shadow, cx - 3, y + row, panelW);
     px(ctx, colors.highlight, cx - 2, y + row);
     px(ctx, colors.shadow,    cx + 2, y + row);
   }
-  // Wide collar / hood base
+  // Decorative trim bands at top and bottom of panel
+  hLine(ctx, colors.outline, cx - 3, y + 6, panelW);
+  hLine(ctx, colors.outline, cx - 3, y + totalH - 2, panelW);
+
+  // ── 4. Vertical fabric folds running down the skirt ─────────────────────
+  // Three subtle fold lines: left-of-center, far-left, far-right (mage robe).
+  const SKIRT_TOP = h;
+  for (const foldX of [rl(SKIRT_TOP) + 4, rr(SKIRT_TOP) - 4, rl(totalH - 1) + 2]) {
+    for (let row = SKIRT_TOP; row < totalH - 1; row += 1) {
+      px(ctx, colors.shadow, foldX, y + row);
+    }
+  }
+
+  // ── 5. Hem shadow at very bottom (heavy fabric weight) ──────────────────
+  const HEM = totalH - 2;
+  hLine(ctx, colors.deep_shadow || colors.shadow,
+    rl(HEM) + 1, y + HEM, rr(HEM) - rl(HEM) - 1);
+
+  // ── 6. Wide collar at top ───────────────────────────────────────────────
   const collarW = 15;
-  fillRect(ctx, colors.collar, cx - 7, y, collarW, 6);
+  fillRect(ctx, colors.collar || colors.shadow, cx - 7, y, collarW, 5);
   hLine(ctx, colors.highlight, cx - 6, y,     collarW - 2);
-  hLine(ctx, colors.shadow,    cx - 6, y + 5, collarW - 2);
-  outlineRect(ctx, colors.outline, cx - 7, y, collarW, 6);
-  // Outlines
+  hLine(ctx, colors.shadow,    cx - 6, y + 4, collarW - 2);
+  outlineRect(ctx, colors.outline, cx - 7, y, collarW, 5);
+
+  // ── 7. Outlines ─────────────────────────────────────────────────────────
   px(ctx, colors.shadow, x - 1, y - 1);
   px(ctx, colors.shadow, x + w, y - 1);
   px(ctx, colors.shadow, x - 1, y);
   hLine(ctx, colors.outline, x, y, w);
   px(ctx, colors.shadow, x + w, y);
-  for (let row = 1; row < numRows - 1; row++) {
+  for (let row = 1; row < totalH - 1; row++) {
     px(ctx, colors.shadow, rl(row), y + row);
     px(ctx, colors.shadow, rr(row), y + row);
   }
-  const botL = rl(numRows - 1), botR = rr(numRows - 1);
-  hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
+  const botL = rl(totalH - 1), botR = rr(totalH - 1);
+  hLine(ctx, colors.outline, botL, y + totalH - 1, botR - botL + 1);
   px(ctx, colors.highlight, x - 1, y + 1);
 }
 
