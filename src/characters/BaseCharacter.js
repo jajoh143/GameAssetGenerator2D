@@ -142,29 +142,58 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     hLine(ctx, hairColors.base, HX + off, HY + r, w);
   }
 
-  // ── Hair dome — smooth rounded dome with strand-bundle shading ────────────
-  // Rows 0-6: full lit down the center, fading to shadow at edges
-  hLine(ctx, hairColors.highlight, HX + 12, HY,      8);  // row 0: full tip lit
-  hLine(ctx, hairColors.highlight, HX + 10, HY +  1, 10); // row 1
-  hLine(ctx, hairColors.highlight, HX +  9, HY +  2, 10); // row 2: partial
-  hLine(ctx, hairColors.highlight, HX +  7, HY +  3, 12); // row 3
-  hLine(ctx, hairColors.highlight, HX +  5, HY +  4, 12); // row 4
-  hLine(ctx, hairColors.highlight, HX +  4, HY +  5, 11); // row 5
-  hLine(ctx, hairColors.highlight, HX +  3, HY +  6, 13); // row 6
-  // Strand bundles (two separate groups with shadow gap between)
-  hLine(ctx, hairColors.highlight, HX +  2, HY +  7, 10); // left bundle
-  px(ctx,    hairColors.shadow,    HX + 14, HY +  7);     // strand shadow gap
-  hLine(ctx, hairColors.highlight, HX + 15, HY +  7,  6); // right bundle
-  hLine(ctx, hairColors.highlight, HX +  2, HY +  8, 12); // left dome
-  hLine(ctx, hairColors.highlight, HX + 18, HY +  8,  7); // right dome
-  // Lower dome
-  hLine(ctx, hairColors.highlight, HX +  2, HY +  9,  9); // left
-  px(ctx,    hairColors.shadow,    HX + 13, HY +  9);     // strand gap
-  hLine(ctx, hairColors.highlight, HX +  2, HY + 10, 14); // broad
-  px(ctx,    hairColors.shadow,    HX + 11, HY + 10);     // center break
-  hLine(ctx, hairColors.highlight, HX +  2, HY + 11, 10); // left
-  hLine(ctx, hairColors.highlight, HX + 18, HY + 11,  6); // right
-  // Side band (rows 12-15): alternating strand shadows + edge highlights
+  // ── Hair dome — locks + shine band (per pixel-art convention from
+  //    Saint11 "clumps not strands", MortMort "anti-helmet rule",
+  //    Stardew/Octopath shine-band reference).
+  //
+  // The cap is highlighted, then split into ~5 readable LOCKS by
+  // CONTINUOUS vertical shadow stripes (not isolated dots). A shine
+  // band runs ~1/3 down the head as 3 disconnected highlight clumps.
+  // ASYMMETRIC details break the mirrored-dome read.
+
+  // Crown highlights — full-width lit cap, narrows toward the sides.
+  hLine(ctx, hairColors.highlight, HX + 12, HY,      8);
+  hLine(ctx, hairColors.highlight, HX + 10, HY +  1, 10);
+  hLine(ctx, hairColors.highlight, HX +  9, HY +  2, 10);
+  hLine(ctx, hairColors.highlight, HX +  7, HY +  3, 12);
+  hLine(ctx, hairColors.highlight, HX +  5, HY +  4, 12);
+  hLine(ctx, hairColors.highlight, HX +  4, HY +  5, 11);
+  hLine(ctx, hairColors.highlight, HX +  3, HY +  6, 13);
+  hLine(ctx, hairColors.highlight, HX +  2, HY +  7, 22);
+  hLine(ctx, hairColors.highlight, HX +  2, HY +  8, 22);
+  hLine(ctx, hairColors.highlight, HX +  2, HY +  9, 22);
+  hLine(ctx, hairColors.highlight, HX +  2, HY + 10, 22);
+  hLine(ctx, hairColors.highlight, HX +  2, HY + 11, 22);
+
+  // Lock columns — CONTINUOUS vertical shadow stripes 1px wide that
+  // travel down through the highlighted dome, breaking it into 4 locks.
+  // Asymmetric x offsets (the right side is shifted by 1 vs a perfect
+  // mirror) so the head doesn't read as symmetric.
+  const LOCK_COLS = [HX + 8, HX + 14, HX + 20, HX + 25];
+  for (const lx of LOCK_COLS) {
+    vLine(ctx, hairColors.shadow, lx, HY + 6, 6);   // 6px-tall vertical stripe
+  }
+  // Extra short asymmetric stripe — only one side, ~breaks the mirror.
+  vLine(ctx, hairColors.shadow, HX + 17, HY + 9, 3);
+
+  // Shine band — three disconnected pure-highlight clumps in row 7-8.
+  // Sits on top of the existing highlight, but the surrounding shadow
+  // stripes from LOCK_COLS make these 3 segments read as discrete
+  // clumps of light catching the locks.
+  hLine(ctx, hairColors.highlight, HX +  3, HY +  7, 4);   // left clump
+  hLine(ctx, hairColors.highlight, HX + 11, HY +  7, 2);   // mid clump
+  hLine(ctx, hairColors.highlight, HX + 21, HY +  7, 3);   // right clump
+  // Repaint the lock stripes after the band so they're never overwritten.
+  for (const lx of LOCK_COLS) {
+    px(ctx, hairColors.shadow, lx, HY + 7);
+  }
+
+  // Asymmetric stray strand on the right edge — single pixel floating
+  // off the smooth dome silhouette.
+  px(ctx, hairColors.shadow, HX + 27, HY +  4);
+
+  // Side band (rows 12-15): keep the original alternating shadow strands
+  // for textured hair below the locks zone.
   for (let r = 12; r <= 15; r++) {
     const [off, w] = HEAD[r];
     const step = (r % 2 === 0) ? 4 : 5;
@@ -174,7 +203,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     px(ctx, hairColors.highlight, HX + off + 1,     HY + r);
     px(ctx, hairColors.highlight, HX + off + w - 2, HY + r);
   }
-  hLine(ctx, hairColors.shadow, HX + 1, HY + 16, 30);  // hairline shadow
+  // Hairline shadow (skin shadow under hair edge)
+  hLine(ctx, hairColors.shadow, HX + 1, HY + 16, 30);
 
   // ── FACE WINDOW — skin cutout ─────────────────────────────────────────────
   const FACE = [
