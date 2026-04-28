@@ -10,6 +10,7 @@ const {
   drawNeckSouth,
   drawTorsoSouth,
   drawTorsoWest,
+  drawTankStrapsOverlaySouth,
   drawBeltSouth,
   drawBeltWest,
   drawLegsSouth,
@@ -123,6 +124,11 @@ function drawSouth(ctx, config, offsets) {
   drawTorsoSouth(ctx, colors.clothingStyle, colors.clothing, 20, torsoY, 24, torsoH, colors.skin);
   // Arms — sleeveless styles draw bare skin via an adapted palette.
   drawArmsSouth(ctx, colors.armClothing, colors.skin, lArmDY, rArmDY, leftArmOut, rightArmOut, torsoY);
+  // Tank top: paint the shoulder straps on top of the deltoid so they cross
+  // OVER the shoulder rather than sitting beside it on the chest.
+  if (colors.clothingStyle === 'tank') {
+    drawTankStrapsOverlaySouth(ctx, colors.clothing, 20, torsoY, 24);
+  }
   // Neck
   drawNeckSouth(ctx, colors.skin, neckY);
   // Head

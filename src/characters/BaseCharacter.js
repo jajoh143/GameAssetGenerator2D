@@ -1191,12 +1191,13 @@ function drawTshirtSouth(ctx, colors, x, y, w, h, isVneck) {
 
 function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
   // Sleeveless tank top — body is fabric, the upper chest / collarbone area
-  // is bare skin with two narrow strap columns going over each shoulder.
-  // Same V-taper silhouette as the t-shirt so the body fits seamlessly.
+  // is bare skin. The shoulder straps that cross the deltoid are drawn
+  // AFTER the arms by drawTankStrapsOverlaySouth so they visibly sit on top
+  // of the shoulder instead of getting overwritten by the arm draw.
+  // This function only draws the body fabric and bare-chest skin.
   const cx = Math.floor(x + w / 2);
   const numRows = Math.min(h, 28);
   const SHOULDER = 3, MID_S = 5, WAIST_S = 8, NARROW_S = 11, WAIST_E = 15;
-  const STRAP_INSET = 4;          // strap column distance from outer torso edge
   const NECK_OPEN_ROWS = 4;       // how far down the chest is bare
 
   const rl = (row) => {
@@ -1223,7 +1224,8 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
   // Skin colours fall back to neutral if not provided (shouldn't happen).
   const skin = skinColors || { highlight: '#D4935A', base: '#B87040', shadow: '#8C4820', outline: '#3A1800' };
 
-  // 1. Top NECK_OPEN_ROWS: bare chest in skin colour with strap columns.
+  // 1. Top NECK_OPEN_ROWS: bare chest in skin colour. No strap pixels here —
+  //    straps are painted as a post-arm overlay so they cross the deltoid.
   for (let row = 0; row < NECK_OPEN_ROWS; row++) {
     const l = rl(row), r = rr(row);
     hLine(ctx, skin.base, l, y + row, r - l + 1);
@@ -1235,11 +1237,6 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
       px(ctx, skin.highlight, cx - 1, y + row);
       px(ctx, skin.shadow,    cx + 2, y + row);
     }
-    // Strap columns sit on top of the bare chest.
-    px(ctx, colors.base,      l + STRAP_INSET, y + row);
-    px(ctx, colors.highlight, l + STRAP_INSET, y + row);  // lit edge
-    px(ctx, colors.base,      r - STRAP_INSET, y + row);
-    px(ctx, colors.shadow,    r - STRAP_INSET, y + row);
   }
 
   // 2. Body fill from row NECK_OPEN_ROWS down — straight tank fabric.
@@ -1269,11 +1266,60 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
   }
   const botL = rl(numRows - 1), botR = rr(numRows - 1);
   hLine(ctx, colors.outline, botL, y + numRows - 1, botR - botL + 1);
-  // Strap selout — darken the outer edge of each strap so it reads as fabric.
-  for (let row = 0; row < NECK_OPEN_ROWS; row++) {
-    px(ctx, colors.outline, rl(row) + STRAP_INSET - 1, y + row); // outer side of left strap (toward arm)
-    px(ctx, colors.outline, rr(row) - STRAP_INSET + 1, y + row); // outer side of right strap
+}
+
+// Tank-top shoulder strap overlay — draws the two straps that cross OVER the
+// deltoid. Called AFTER drawArmsSouth so the straps visibly sit on top of
+// the arm/shoulder rather than getting overwritten by the arm draw.
+//
+// Geometry:
+//   • Left strap occupies x = STRAP_LX .. STRAP_LX+1 (2px wide)
+//   • Right strap occupies x = STRAP_RX .. STRAP_RX+1 (2px wide)
+//   • Vertical span: from y = baseY-1 (just above the deltoid, on the trap)
+//     down to y = torsoY + NECK_OPEN_ROWS (where the body fabric begins)
+//
+// The strap appears to start on the body fabric (chest), travel UP across
+// the bare skin, OVER the deltoid, and disappear over the trapezius — the
+// classic tank-top silhouette from front view.
+function drawTankStrapsOverlaySouth(ctx, clothingColors, torsoX, torsoY, w) {
+  const NECK_OPEN_ROWS = 4;
+  const baseY = torsoY - 1;          // top of deltoid
+  // Strap x positions chosen to centre on each deltoid (left arm spans
+  // x=16..22; right arm spans x=43..49). 2px wide strap reads cleanly at
+  // sprite scale. Slightly biased toward the inner side so the strap
+  // visually attaches to the body fabric.
+  const STRAP_LX = 19;               // covers left deltoid inner half
+  const STRAP_RX = 43;               // covers right deltoid inner half
+  const STRAP_W  = 2;
+  const topY     = baseY - 1;        // 1px above deltoid (on trap)
+  const botY     = torsoY + NECK_OPEN_ROWS;  // first row of body fabric
+
+  // Fill straps with base colour
+  for (let row = topY; row <= botY; row++) {
+    fillRect(ctx, clothingColors.base, STRAP_LX, row, STRAP_W, 1);
+    fillRect(ctx, clothingColors.base, STRAP_RX, row, STRAP_W, 1);
   }
+  // Lit edge on left strap (light comes from upper-left)
+  for (let row = topY; row <= botY; row++) {
+    px(ctx, clothingColors.highlight, STRAP_LX,     row);
+    px(ctx, clothingColors.shadow,    STRAP_RX + 1, row);
+  }
+  // Inner shadow column: gives the strap thickness/depth
+  for (let row = topY; row <= botY; row++) {
+    px(ctx, clothingColors.shadow,    STRAP_LX + STRAP_W - 1, row);
+    px(ctx, clothingColors.highlight, STRAP_RX,               row);
+  }
+  // Outline the strap edges so it reads as fabric on top of skin
+  for (let row = topY; row <= botY; row++) {
+    px(ctx, clothingColors.outline, STRAP_LX - 1,           row);
+    px(ctx, clothingColors.outline, STRAP_LX + STRAP_W,     row);
+    px(ctx, clothingColors.outline, STRAP_RX - 1,           row);
+    px(ctx, clothingColors.outline, STRAP_RX + STRAP_W,     row);
+  }
+  // Top cap: the strap "ends" at the trap with a 1px outline so it doesn't
+  // appear to float into the head area.
+  hLine(ctx, clothingColors.outline, STRAP_LX - 1, topY - 1, STRAP_W + 2);
+  hLine(ctx, clothingColors.outline, STRAP_RX - 1, topY - 1, STRAP_W + 2);
 }
 
 function drawBomberSouth(ctx, colors, x, y, w, h) {
@@ -2125,28 +2171,41 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   const rArmX = shoulderRX + Math.round(rArmOut);
   const rArmY = baseY      + Math.round(rArmDY);
 
-  // ── Left arm (lit side — deltoid cap + cylinder + forearm flare) ─────────
-  for (let row = 0; row < sleeveH; row++) {
+  // Helper to paint one row of the LEFT arm at a given y, with all the
+  // shading rules. Wrapped so we can call it multiple times (gap-filling)
+  // without duplicating logic.
+  const paintLeftRow = (row, ry) => {
     const rX = lRowX(row);
-    const ry = lRowY(row);
     const aw = armW(row);
     if (row === 0) {
       // Chipped outer-top corner: skip the outermost pixel, fill the rest.
-      // The chipped pixel will be replaced with an AA midtone below.
       hLine(ctx, clothingColors.base, rX + 1, ry, aw - 1);
-      // Soft top rim: highlight on second-from-outer column (rounded deltoid crown)
       px(ctx, clothingColors.highlight, rX + 1, ry);
       hLine(ctx, clothingColors.highlight, rX + 2, ry, aw - 3);
-      // Inner-top corner stays in shadow (it's tucked under the trap ramp)
       px(ctx, clothingColors.shadow, rX + aw - 1, ry);
     } else {
       hLine(ctx, clothingColors.base, rX, ry, aw);
-      px(ctx, clothingColors.shadow,    rX,     ry);        // outer selout
-      px(ctx, clothingColors.highlight, rX + 1, ry);        // highlight column
-      if (row < 8) px(ctx, clothingColors.highlight, rX + 2, ry);  // 2px lit on cap+bicep
-      if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rX + aw - 2, ry);  // secondary cylinder shadow
-      px(ctx, clothingColors.shadow, rX + aw - 1, ry);      // inner shadow (toward torso)
+      px(ctx, clothingColors.shadow,    rX,     ry);
+      px(ctx, clothingColors.highlight, rX + 1, ry);
+      if (row < 8) px(ctx, clothingColors.highlight, rX + 2, ry);
+      if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rX + aw - 2, ry);
+      px(ctx, clothingColors.shadow, rX + aw - 1, ry);
     }
+  };
+
+  // ── Left arm (lit side — deltoid cap + cylinder + forearm flare) ─────────
+  // Gap fill: when arm swings, Math.round on adjacent rows can land on
+  // non-consecutive y values, leaving a 1px see-through hole. We track
+  // the previous y and repaint the current row's content at any skipped
+  // y so the arm stays a continuous strip.
+  let prevLY = -1;
+  for (let row = 0; row < sleeveH; row++) {
+    const ry = lRowY(row);
+    if (prevLY !== -1) {
+      for (let fillY = prevLY + 1; fillY < ry; fillY++) paintLeftRow(row, fillY);
+    }
+    paintLeftRow(row, ry);
+    prevLY = ry;
   }
   hLine(ctx, clothingColors.shadow, lRowX(maxRow), lRowY(maxRow), armW(maxRow));
 
@@ -2182,25 +2241,31 @@ function drawArmsSouth(ctx, clothingColors, skinColors, lArmDY, rArmDY, lArmOut=
   outlineRect(ctx, skinColors.outline, lhx,  lArmY + sleeveH, lhw, handH);
 
   // ── Right arm (shadow side — deltoid cap + muted cylinder + forearm flare) ──
-  for (let row = 0; row < sleeveH; row++) {
+  const paintRightRow = (row, ry) => {
     const rx = rRowX(row);
-    const ry = rRowY(row);
     const aw = armW(row);
     if (row === 0) {
-      // Chipped outer-top corner on the right side: the outermost (rightmost)
-      // pixel is skipped so the deltoid silhouette rounds inward.
+      // Chipped outer-top corner on the right (rightmost pixel dropped)
       hLine(ctx, clothingColors.base, rx, ry, aw - 1);
-      px(ctx, clothingColors.shadow, rx,     ry);             // inner-toward-torso shadow
-      px(ctx, clothingColors.shadow, rx + 1, ry);             // dark deltoid inner crown
-      // Right arm is the shadow side — keep deltoid darker overall
+      px(ctx, clothingColors.shadow, rx,     ry);
+      px(ctx, clothingColors.shadow, rx + 1, ry);
       hLine(ctx, clothingColors.shadow, rx + 1, ry, aw - 3);
     } else {
       hLine(ctx, clothingColors.base, rx, ry, aw);
-      px(ctx, clothingColors.shadow,   rx,         ry);       // inner shadow (toward torso)
-      px(ctx, clothingColors.shadow,   rx + 1,     ry);       // secondary inner shadow
-      if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rx + aw - 2, ry);  // cylinder shadow
-      px(ctx, clothingColors.shadow,   rx + aw - 1, ry);      // outer selout
+      px(ctx, clothingColors.shadow,   rx,         ry);
+      px(ctx, clothingColors.shadow,   rx + 1,     ry);
+      if (row >= 2 && row < 10) px(ctx, clothingColors.shadow, rx + aw - 2, ry);
+      px(ctx, clothingColors.shadow,   rx + aw - 1, ry);
     }
+  };
+  let prevRY = -1;
+  for (let row = 0; row < sleeveH; row++) {
+    const ry = rRowY(row);
+    if (prevRY !== -1) {
+      for (let fillY = prevRY + 1; fillY < ry; fillY++) paintRightRow(row, fillY);
+    }
+    paintRightRow(row, ry);
+    prevRY = ry;
   }
   hLine(ctx, clothingColors.shadow, rRowX(maxRow), rRowY(maxRow), armW(maxRow));
 
@@ -2447,6 +2512,7 @@ module.exports = {
   drawBomberSouth,
   drawCoatSouth,
   drawTankSouth,
+  drawTankStrapsOverlaySouth,
   drawTorsoWest,
   drawBeltSouth,
   drawBeltWest,
