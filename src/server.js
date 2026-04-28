@@ -68,7 +68,8 @@ function handleOptions(res) {
   json(res, 200, {
     skinTones:       paletteMap(SKIN_TONES),
     hairColors:      paletteMap(HAIR_COLORS),
-    hairStyles:      ['short', 'medium', 'long', 'curly', 'undercut'],
+    hairStyles:      ['short', 'medium', 'long', 'curly', 'undercut',
+                      'spiky', 'mohawk', 'topknot', 'buzzed', 'bald'],
     eyeColors:       Object.fromEntries(Object.entries(EYE_COLORS).map(([k, v]) => [k, v.iris])),
     beardStyles:     ['none', 'stubble', 'handlebar', 'goatee', 'full'],
     // Clothing is split into independent style and colour pickers.

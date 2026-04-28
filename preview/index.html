@@ -452,11 +452,7 @@
 
     <div>
       <div class="section-label">Hair Style</div>
-      <div class="btn-row" id="hair-style-row">
-        <button class="toggle-btn active" data-val="short">Short</button>
-        <button class="toggle-btn"        data-val="medium">Medium</button>
-        <button class="toggle-btn"        data-val="long">Long</button>
-      </div>
+      <select id="hair-style-select"></select>
     </div>
 
     <div id="eye-color-section">
@@ -884,6 +880,7 @@ function populateSidebar() {
   buildSwatches('hair-color-swatches', options.hairColors, 'hair');
   if (options.eyeColors) buildSwatches('eye-color-swatches', options.eyeColors, 'eyes');
   buildSwatches('demon-skin-swatches', options.demonSkins, 'demonSkin');
+  if (options.hairStyles) buildSelect('hair-style-select', options.hairStyles, 'hairStyle');
   // Clothing: independent style + colour pickers.
   if (options.clothingStyles) buildSelect('clothing-style-select', options.clothingStyles, 'clothingStyle');
   if (options.clothingColors) buildSwatches('clothing-color-swatches', options.clothingColors, 'clothingColor');
@@ -901,6 +898,10 @@ function populateSidebar() {
   activateSwatch('hair-color-swatches', d.hair,      'hair');
   if (d.eyes)      activateSwatch('eye-color-swatches', d.eyes, 'eyes');
   activateSwatch('demon-skin-swatches', d.demonSkin, 'demonSkin');
+  if (d.hairStyle) {
+    setSelectVal('hair-style-select', d.hairStyle);
+    state.hairStyle = d.hairStyle;
+  }
   if (d.clothingStyle) {
     setSelectVal('clothing-style-select', d.clothingStyle);
     state.clothingStyle = d.clothingStyle;
@@ -973,7 +974,7 @@ function applyConfig(cfg) {
   if (cfg.type)       setType(cfg.type);
   if (cfg.skin)       activateSwatch('skin-swatches',       cfg.skin,       'skin');
   if (cfg.hair)       activateSwatch('hair-color-swatches', cfg.hair,       'hair');
-  if (cfg.hairStyle)  activateToggle('hair-style-row',  cfg.hairStyle,  'hairStyle');
+  if (cfg.hairStyle)  { state.hairStyle = cfg.hairStyle; setSelectVal('hair-style-select', cfg.hairStyle); }
   if (cfg.eyes)       activateSwatch('eye-color-swatches',  cfg.eyes,       'eyes');
   if (cfg.beardStyle) activateToggle('beard-style-row', cfg.beardStyle, 'beardStyle');
   // Resolve clothing — support both new (style+color) and legacy combined `clothing` keys.
@@ -1030,13 +1031,14 @@ function setType(val) {
     const el = document.getElementById(id);
     if (el) el.style.display = hideHumanGear ? 'none' : '';
   });
-  document.getElementById('hair-style-row').closest('div').style.display = hideHumanGear ? 'none' : '';
+  const hairSelEl = document.getElementById('hair-style-select');
+  if (hairSelEl) hairSelEl.closest('div').style.display = hideHumanGear ? 'none' : '';
   document.getElementById('eye-color-section').style.display = hideHumanGear ? 'none' : '';
   document.getElementById('beard-section').style.display     = hideHumanGear ? 'none' : '';
 }
 
 wireToggleRow('type-row',        'type',       setType);
-wireToggleRow('hair-style-row',  'hairStyle',  null);
+// hair-style-select is wired by buildSelect(); no toggle row needed.
 wireToggleRow('beard-style-row', 'beardStyle', null);
 wireToggleRow('horn-row',        'hornStyle',  null);
 wireToggleRow('tail-row',        'tailStyle',  null);

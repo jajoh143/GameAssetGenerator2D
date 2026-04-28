@@ -8,7 +8,7 @@ const DEFAULT_CONFIG = {
   type:          'human',      // 'human' | 'demon' | 'fairy'
   skin:          'medium',     // skin tone key from Colors.SKIN_TONES
   hair:          'black',      // hair color key from Colors.HAIR_COLORS
-  hairStyle:     'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut'
+  hairStyle:     'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut' | 'spiky' | 'mohawk' | 'topknot' | 'buzzed' | 'bald'
   beardStyle:    'none',       // 'none' | 'stubble' | 'handlebar' | 'goatee' | 'full'
   eyes:          'brown',      // eye color key from Colors.EYE_COLORS
 

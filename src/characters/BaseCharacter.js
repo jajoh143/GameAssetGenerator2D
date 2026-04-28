@@ -139,6 +139,12 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   const HX = 16, HY = 21, HW = 32;
   const cx = HX + Math.floor(HW / 2); // center x = 32
   const outline = '#111111';
+  // 'bald' fills the dome with skin instead of hair, skipping the dome
+  // shading entirely so no locks/shine band are painted.
+  const isBald   = hairStyle === 'bald';
+  // 'buzzed' uses the hair shadow tone for the dome (close-cropped stubble),
+  // skipping the bright highlights of the standard dome.
+  const isBuzzed = hairStyle === 'buzzed';
 
   // ── HEAD SHAPE — chibi: 29 rows tall, 30px wide at max ──────────────────
   const HEAD = [
@@ -174,10 +180,20 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     [ 9, 14],  // 29: chin tip        (y=50)
   ];
 
+  // Fill the head silhouette. Bald characters fill it with skin tone so
+  // there's no hair to be visible above the face window.
+  // Buzzed characters fill with the darker hair shadow tone (close crop).
+  const domeFill = isBald ? skinColors.base
+                  : isBuzzed ? hairColors.shadow
+                  : hairColors.base;
   for (let r = 0; r < HEAD.length; r++) {
     const [off, w] = HEAD[r];
-    hLine(ctx, hairColors.base, HX + off, HY + r, w);
+    hLine(ctx, domeFill, HX + off, HY + r, w);
   }
+
+  // Skip the entire dome-shading block for bald and buzzed. Both use a
+  // uniform fill — locks/shine would look wrong on a shaved head.
+  if (!isBald && !isBuzzed) {
 
   // ── Hair dome — locks + shine band (per pixel-art convention from
   //    Saint11 "clumps not strands", MortMort "anti-helmet rule",
@@ -242,6 +258,21 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   }
   // Hairline shadow (skin shadow under hair edge)
   hLine(ctx, hairColors.shadow, HX + 1, HY + 16, 30);
+
+  } // end of !isBald && !isBuzzed dome shading
+
+  // Buzzed: speckle the dome with sparse base-color stubble dots so the
+  // shadow fill doesn't read as a flat helmet.
+  if (isBuzzed) {
+    for (let r = 2; r < 16; r += 2) {
+      const [off, w] = HEAD[r];
+      for (let dx = (r % 4 === 0) ? 2 : 4; dx < w - 2; dx += 4) {
+        px(ctx, hairColors.base, HX + off + dx, HY + r);
+      }
+    }
+    // Soft hairline at the forehead so it doesn't blend into the face skin.
+    hLine(ctx, hairColors.shadow, HX + 1, HY + 16, 30);
+  }
 
   // ── FACE WINDOW — skin cutout ─────────────────────────────────────────────
   const FACE = [
@@ -384,14 +415,34 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   drawBeardSouth(ctx, hairColors, beardStyle);
 
   // ── Head silhouette outline ───────────────────────────────────────────────
+  // Use the skin outline for bald characters so the dome reads as bare scalp,
+  // not as a hair-coloured edge.
+  const silhouetteEdge = isBald ? skinColors.outline : hairColors.shadow;
   for (let r = 0; r < HEAD.length; r++) {
     const [off, w] = HEAD[r];
-    px(ctx, hairColors.shadow, HX + off, HY + r);
-    px(ctx, hairColors.shadow, HX + off + w - 1, HY + r);
+    px(ctx, silhouetteEdge, HX + off, HY + r);
+    px(ctx, silhouetteEdge, HX + off + w - 1, HY + r);
   }
-  hLine(ctx, outline, HX + 12, HY, 8);  // crown top outline (HEAD[0]=[12,8])
+  // Crown top outline — use skin outline for bald so the silhouette reads
+  // as bare scalp, not a hair-coloured cap.
+  const crownEdge = isBald ? skinColors.outline : outline;
+  hLine(ctx, crownEdge, HX + 12, HY, 8);  // crown top outline (HEAD[0]=[12,8])
   const last = HEAD[HEAD.length - 1];
   hLine(ctx, outline, HX + last[0], HY + HEAD.length, last[1]);  // chin outline
+
+  // For bald characters, add a subtle scalp highlight at the very top of
+  // the dome to give the head some volume / lit-from-above read.
+  if (isBald) {
+    hLine(ctx, skinColors.highlight, HX + 13, HY + 1, 6);
+    hLine(ctx, skinColors.highlight, HX + 11, HY + 2, 8);
+    hLine(ctx, skinColors.highlight, HX +  9, HY + 3, 8);
+    // Subtle shadow on the right side (away from light)
+    px(ctx, skinColors.shadow, HX + 24, HY + 4);
+    px(ctx, skinColors.shadow, HX + 25, HY + 5);
+    px(ctx, skinColors.shadow, HX + 26, HY + 6);
+    // The face window normally erases the dome between rows 16-29; for
+    // bald, leave the silhouette intact (no hairline shadow).
+  }
 
   // ── Hair style extensions — drawn after face so bangs overlap forehead ────
   if (hairStyle === 'long') {
@@ -456,6 +507,133 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     }
     hLine(ctx, hairColors.highlight, HX + 2, HY + 11, HW - 4);
     hLine(ctx, hairColors.highlight, HX + 2, HY + 12, HW - 5);
+  } else if (hairStyle === 'spiky') {
+    // Asymmetric triangular spike tips above the crown silhouette.
+    // Heights alternate dramatically (4-3-6-3-5-3) for the "hedgehog"
+    // silhouette. Per pixel-art research, spike tops are lit from above
+    // and the outer-right edge sits in shadow.
+    const SPIKES = [
+      { x: HX +  5, h: 4 },  // far-left
+      { x: HX +  9, h: 3 },  // mid-left, short
+      { x: HX + 13, h: 6 },  // center, tallest
+      { x: HX + 17, h: 3 },  // mid-right, short
+      { x: HX + 21, h: 5 },  // right
+      { x: HX + 25, h: 3 },  // far-right
+    ];
+    for (const s of SPIKES) {
+      // 2px-wide spike body
+      vLine(ctx, hairColors.base, s.x,     HY - s.h, s.h);
+      vLine(ctx, hairColors.base, s.x + 1, HY - s.h, s.h);
+      // Lit edge (left column highlights, top tip extra-lit)
+      vLine(ctx, hairColors.highlight, s.x, HY - s.h + 1, s.h - 1);
+      px(ctx, hairColors.highlight,    s.x, HY - s.h);
+      // Right column slight shadow for thickness
+      px(ctx, hairColors.shadow, s.x + 1, HY - 1);
+    }
+    // Outline each spike's silhouette edges so they read against the bg
+    for (const s of SPIKES) {
+      // Top tip outline (1 row above top)
+      px(ctx, outline, s.x,     HY - s.h - 1);
+      px(ctx, outline, s.x + 1, HY - s.h - 1);
+      // Side outlines for the tip
+      px(ctx, outline, s.x - 1, HY - s.h);
+      px(ctx, outline, s.x + 2, HY - s.h);
+    }
+    // Tight sideburn fade (same as 'short')
+    px(ctx, hairColors.shadow, HX + 1, HY + 14);
+    px(ctx, hairColors.shadow, HX + 1, HY + 15);
+    px(ctx, hairColors.shadow, HX + HW - 2, HY + 14);
+    px(ctx, hairColors.shadow, HX + HW - 2, HY + 15);
+  } else if (hairStyle === 'mohawk') {
+    // Mohawk: shaved sides + tall central spike strip.
+    // 1. Shave the sides — erase hair from x=HX..HX+9 and HX+22..HX+HW
+    //    for rows 1..15 (everything except the central strip).
+    for (let r = 0; r < 16; r++) {
+      const [off, w] = HEAD[r];
+      // Left shave: from silhouette edge to x=HX+10
+      for (let x = HX + off; x < HX + 11 && x < HX + off + w; x++) {
+        // Replace with skin: the face area below already shows skin; here we
+        // need scalp colour above the brow. Use skin highlight for "lit scalp".
+        px(ctx, skinColors.base, x, HY + r);
+      }
+      // Right shave
+      for (let x = HX + 22; x < HX + off + w; x++) {
+        px(ctx, skinColors.base, x, HY + r);
+      }
+    }
+    // 2. Soft scalp shading on the shaved sides
+    for (let r = 4; r < 14; r++) {
+      px(ctx, skinColors.shadow,    HX + 10, HY + r);  // border shadow inner
+      px(ctx, skinColors.shadow,    HX + 22, HY + r);
+      px(ctx, skinColors.highlight, HX +  3, HY + r);  // highlight on left
+      px(ctx, skinColors.shadow,    HX + 28, HY + r);  // shadow on right
+    }
+    // 3. Central strip with tall spike tips above the crown
+    const stripL = HX + 11;
+    const STRIP_W = 11;    // 11px wide central strip (x=27..37)
+    for (let r = 0; r < 16; r++) {
+      hLine(ctx, hairColors.base, stripL, HY + r, STRIP_W);
+    }
+    // Strip shading: 2px highlight on left, 2px shadow on right
+    vLine(ctx, hairColors.highlight, stripL + 1, HY, 16);
+    vLine(ctx, hairColors.highlight, stripL + 2, HY, 16);
+    vLine(ctx, hairColors.shadow,    stripL + STRIP_W - 2, HY, 16);
+    vLine(ctx, hairColors.shadow,    stripL + STRIP_W - 1, HY, 16);
+    // Tall spike tips on top — these are the mohawk's signature look.
+    // 4 asymmetric tall spikes (heights 5-7-8-6) for a punkish, dramatic shape.
+    const SPIKES = [
+      { x: stripL + 1, h: 5 },
+      { x: stripL + 4, h: 8 },  // center: tallest
+      { x: stripL + 6, h: 7 },
+      { x: stripL + 9, h: 6 },
+    ];
+    for (const s of SPIKES) {
+      // 2px-wide tall spike
+      vLine(ctx, hairColors.base, s.x,     HY - s.h, s.h);
+      vLine(ctx, hairColors.base, s.x + 1, HY - s.h, s.h);
+      // Lit left edge (column highlights)
+      vLine(ctx, hairColors.highlight, s.x, HY - s.h + 1, s.h - 1);
+      px(ctx,    hairColors.highlight, s.x, HY - s.h);
+      // Subtle shadow on right column
+      px(ctx, hairColors.shadow, s.x + 1, HY - 1);
+      // Outline above the tip
+      px(ctx, outline, s.x,     HY - s.h - 1);
+      px(ctx, outline, s.x + 1, HY - s.h - 1);
+    }
+    // Strip side outlines so it reads clearly against the shaved scalp
+    vLine(ctx, outline, stripL - 1,         HY, 16);
+    vLine(ctx, outline, stripL + STRIP_W,   HY, 16);
+  } else if (hairStyle === 'topknot') {
+    // Topknot: pulled-back hair leaves a smooth crown, with a small
+    // round bun protruding above the head.
+    // 1. Smooth out the crown — overdraw rows 0-7 with the base + small
+    //    central highlight (hair pulled tight).
+    for (let r = 0; r < 8; r++) {
+      const [off, w] = HEAD[r];
+      hLine(ctx, hairColors.base, HX + off, HY + r, w);
+    }
+    hLine(ctx, hairColors.highlight, HX + 12, HY + 1, 8);
+    hLine(ctx, hairColors.highlight, HX + 11, HY + 2, 6);
+    // 2. The bun — 6×4 rounded rectangle above the crown
+    const bx = HX + 12, by = HY - 5;
+    fillRect(ctx, hairColors.base,      bx,     by,     6, 4);
+    px(ctx,       hairColors.base,      bx + 1, by - 1);
+    px(ctx,       hairColors.base,      bx + 2, by - 1);
+    px(ctx,       hairColors.base,      bx + 3, by - 1);
+    px(ctx,       hairColors.base,      bx + 4, by - 1);
+    // Bun shading
+    hLine(ctx, hairColors.highlight, bx + 1, by,     2);
+    hLine(ctx, hairColors.highlight, bx + 1, by + 1, 2);
+    px(ctx,    hairColors.shadow,    bx + 4, by + 2);
+    px(ctx,    hairColors.shadow,    bx + 5, by + 2);
+    px(ctx,    hairColors.shadow,    bx + 4, by + 3);
+    // Outline the bun
+    hLine(ctx, outline, bx + 1, by - 2, 4);
+    px(ctx, outline, bx,     by - 1);
+    px(ctx, outline, bx + 5, by - 1);
+    vLine(ctx, outline, bx - 1, by,     4);
+    vLine(ctx, outline, bx + 6, by,     4);
+    hLine(ctx, outline, bx,     by + 4, 6);
   } else {
     // 'short' — small asymmetric tufts at crown, tightest cut
     hLine(ctx, hairColors.base,      HX + 11, HY - 1, 3); // center-left tuft
@@ -1219,6 +1397,16 @@ function drawTankSouth(ctx, colors, skinColors, x, y, w, h) {
       px(ctx, skin.shadow,    cx + 2, y + row);
     }
   }
+  // ── Pec underline + abs hint (visible on bare chest, per pixel-art
+  //    musculature research). Single horizontal shadow band reads as the
+  //    underside of the pectorals catching shadow.
+  if (NECK_OPEN_ROWS >= 3) {
+    // Pec underline: 6px shadow at the bottom of the bare-chest area
+    hLine(ctx, skin.shadow, cx - 3, y + NECK_OPEN_ROWS - 1, 6);
+    // 1px highlight just above the pec line to suggest the pec's lit upper curve
+    px(ctx, skin.highlight, cx - 2, y + NECK_OPEN_ROWS - 2);
+    px(ctx, skin.highlight, cx - 1, y + NECK_OPEN_ROWS - 2);
+  }
 
   // 2. Body fill from row NECK_OPEN_ROWS down — straight tank fabric.
   for (let row = NECK_OPEN_ROWS; row < numRows; row++) {
@@ -1520,8 +1708,19 @@ function drawTorsoAccentsSouth(ctx, clothingColors, x, y, w) {
   hLine(ctx, clothingColors.highlight, x + 1, y + 3, 4);
   hLine(ctx, clothingColors.highlight, x + 1, y + 4, 2);
 
-  // Single under-chest shadow line (implies volume below pec)
-  hLine(ctx, clothingColors.shadow, x + 3, y + 9, Math.floor(w * 0.55));
+  // ── Muscle hints (through-clothing rule) ─────────────────────────────────
+  // Per pixel-art research (Saint11/MortMort/AdamCYounis): on a ~22-px-wide
+  // chibi torso, ONE 6-7px horizontal shadow line at ~1/3 down from the
+  // collarbone reads as "underside of pec catching shadow" — never split
+  // into two separate pec rectangles, and never use pure black.
+  // Position y+6 = upper-third of a 20-row torso = correct pec underline.
+  const cx2 = Math.floor(x + w / 2);
+  hLine(ctx, clothingColors.shadow, cx2 - 4, y + 6, 8);
+  // Subtle highlight on the upper-left of the pec line (lit edge curving away)
+  px(ctx, clothingColors.highlight, cx2 - 4, y + 5);
+  // Single faint under-chest fold (smaller than before, just suggests the
+  // ribcage shadow tucking under the pec — only on the lit side)
+  hLine(ctx, clothingColors.shadow, x + 3, y + 9, 5);
 
   // Step-corner AA at every silhouette transition — blends the stepped
   // V-taper into an organic curved armhole/waist sweep
