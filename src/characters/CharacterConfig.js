@@ -126,6 +126,11 @@ function resolveConfig(config) {
     if (!config || !config.hairStyle) merged.hairStyle = 'bald';
     if (!config || !config.beardStyle) merged.beardStyle = 'none';
   }
+  // Lizardfolk / dragonborn default to TALL — they're typically larger and
+  // more heavily-built than humans, with broader torsos and longer limbs.
+  if (merged.type === 'lizardfolk' && (!config || !config.height)) {
+    merged.height = 'tall';
+  }
 
   return merged;
 }

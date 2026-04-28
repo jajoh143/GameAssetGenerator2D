@@ -158,48 +158,65 @@ function drawLizardHeadSouth(ctx, scaleColors, hornColors, eyeColors, headBobY) 
   pixel(ctx, ol, 40, eyeY + 2);
   pixel(ctx, ol, 41, eyeY + 2);
 
-  // ── 7. Snout — protrudes 5 rows below the lower jaw ─────────────────────
-  // Snout occupies x=27..36 (10 wide), 5 rows below the face area.
-  const sx0 = 27, sw = 10, snoutY = HY + 26 + yShift;
-  // Top of snout — wider, then taper
-  fillRect(ctx, ba, sx0, snoutY,     sw, 1);
-  fillRect(ctx, ba, sx0, snoutY + 1, sw, 1);
-  fillRect(ctx, ba, sx0 + 1, snoutY + 2, sw - 2, 1);
-  fillRect(ctx, ba, sx0 + 1, snoutY + 3, sw - 2, 1);
-  fillRect(ctx, ba, sx0 + 2, snoutY + 4, sw - 4, 1);
-  // Belly/underjaw lighter on bottom row
-  hLine(ctx, bel, sx0 + 2, snoutY + 4, sw - 4);
-  // Lit upper edge of snout
-  hLine(ctx, hi, sx0 + 1, snoutY,     sw - 4);
-  // Right-side shadow on snout
-  pixel(ctx, sh, sx0 + sw - 1, snoutY);
-  pixel(ctx, sh, sx0 + sw - 1, snoutY + 1);
-  pixel(ctx, sh, sx0 + sw - 2, snoutY + 2);
-  pixel(ctx, sh, sx0 + sw - 2, snoutY + 3);
-  // Nostrils — two dark dots at the top of the snout
-  pixel(ctx, ol, sx0 + 2, snoutY);
-  pixel(ctx, ol, sx0 + 6, snoutY);
-  // Snout outline (silhouette)
-  pixel(ctx, ol, sx0 - 1, snoutY);
-  pixel(ctx, ol, sx0 - 1, snoutY + 1);
-  pixel(ctx, ol, sx0,     snoutY + 2);
-  pixel(ctx, ol, sx0 + 1, snoutY + 3);
-  pixel(ctx, ol, sx0 + 2, snoutY + 4);
-  hLine(ctx, ol, sx0 + 2, snoutY + 5, sw - 4);
-  pixel(ctx, ol, sx0 + sw - 2, snoutY + 4);
-  pixel(ctx, ol, sx0 + sw - 1, snoutY + 3);
-  pixel(ctx, ol, sx0 + sw,     snoutY + 2);
-  pixel(ctx, ol, sx0 + sw,     snoutY + 1);
-  pixel(ctx, ol, sx0 + sw,     snoutY);
+  // ── 7. Snout — pronounced muzzle protruding 8 rows below the cheekbone ──
+  // Wider at the base (14 px), tapers down to 6 px at the tip. Extends well
+  // past the human chin so the silhouette clearly reads as "muzzle", not
+  // "human face with a small nose". Width-per-row pattern:
+  //   row 0..1: 14   (cheek/nose bridge — widest)
+  //   row 2..3: 12   (mouth area — fangs visible here)
+  //   row 4..5: 10
+  //   row 6..7: 8
+  //   row 8:    6    (chin tip)
+  const cxS = 32;                  // snout centre x = head centre
+  const SNOUT_TOP = HY + 24 + yShift;
+  const snoutWidths = [14, 14, 12, 12, 10, 10, 8, 8, 6];
+  for (let r = 0; r < snoutWidths.length; r++) {
+    const w = snoutWidths[r];
+    const x0 = cxS - Math.floor(w / 2);
+    fillRect(ctx, ba, x0, SNOUT_TOP + r, w, 1);
+  }
+  // Lit upper-left edge along the bridge of the muzzle
+  hLine(ctx, hi, cxS - 6, SNOUT_TOP,     6);
+  hLine(ctx, hi, cxS - 5, SNOUT_TOP + 1, 4);
+  pixel(ctx, hi, cxS - 5, SNOUT_TOP + 2);
+  pixel(ctx, hi, cxS - 4, SNOUT_TOP + 3);
+  // Right-side shadow column (curving away from the light)
+  for (let r = 0; r < snoutWidths.length; r++) {
+    const w = snoutWidths[r];
+    const x0 = cxS - Math.floor(w / 2);
+    pixel(ctx, sh, x0 + w - 1, SNOUT_TOP + r);
+    if (w >= 12) pixel(ctx, sh, x0 + w - 2, SNOUT_TOP + r);
+  }
+  // Belly / underjaw — paler scales on the lower rows of the snout
+  hLine(ctx, bel, cxS - 4, SNOUT_TOP + 6, 8);
+  hLine(ctx, bel, cxS - 3, SNOUT_TOP + 7, 6);
+  hLine(ctx, bel, cxS - 2, SNOUT_TOP + 8, 4);
+  // Nostrils — two dark dots near the top of the muzzle
+  pixel(ctx, ol, cxS - 4, SNOUT_TOP);
+  pixel(ctx, ol, cxS + 3, SNOUT_TOP);
+  // Snout outline — trace the diagonal taper on each side
+  for (let r = 0; r < snoutWidths.length; r++) {
+    const w = snoutWidths[r];
+    const x0 = cxS - Math.floor(w / 2);
+    pixel(ctx, ol, x0 - 1, SNOUT_TOP + r);
+    pixel(ctx, ol, x0 + w, SNOUT_TOP + r);
+  }
+  // Bottom of the muzzle (chin tip)
+  hLine(ctx, ol, cxS - 3, SNOUT_TOP + snoutWidths.length, 6);
 
   // ── 8. Mouth line + visible fangs across the snout ──────────────────────
-  const mouthY = snoutY + 2;
-  hLine(ctx, ol, sx0 + 1, mouthY, sw - 2);
-  // Upper fangs — 2 small ivory fangs hanging from the upper lip
-  pixel(ctx, '#FFFFCC', sx0 + 2, mouthY + 1);
-  pixel(ctx, '#FFFFCC', sx0 + sw - 3, mouthY + 1);
-  pixel(ctx, '#E8D89C', sx0 + 2, mouthY + 2);
-  pixel(ctx, '#E8D89C', sx0 + sw - 3, mouthY + 2);
+  // Mouth opens at row 3 (the 12-wide section). Wider mouth than before.
+  const mouthY = SNOUT_TOP + 3;
+  hLine(ctx, ol, cxS - 5, mouthY, 10);
+  // Upper fangs — 2 ivory fangs hanging from the upper lip onto the lower jaw
+  pixel(ctx, '#FFFFCC', cxS - 4, mouthY + 1);
+  pixel(ctx, '#FFFFCC', cxS + 3, mouthY + 1);
+  pixel(ctx, '#E8D89C', cxS - 4, mouthY + 2);
+  pixel(ctx, '#E8D89C', cxS + 3, mouthY + 2);
+  // Smaller incisors between the fangs
+  pixel(ctx, '#FFFFCC', cxS - 2, mouthY + 1);
+  pixel(ctx, '#FFFFCC', cxS,     mouthY + 1);
+  pixel(ctx, '#FFFFCC', cxS + 1, mouthY + 1);
 
   // ── 9. Head silhouette outline ─────────────────────────────────────────
   for (let r = 0; r < HEAD.length; r++) {

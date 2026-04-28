@@ -36,11 +36,19 @@ function erasePixel(ctx, x, y) {
 // Build profiles — control left-edge insets at six row bands (shoulder,
 // chest, upper-waist, narrow-waist, hip-transition, hip). Positive values
 // pull the silhouette IN; negative values push it OUT past `x`.
+//
+// Differentials between builds were doubled vs the first pass — the new
+// silhouettes give a much more obvious slim/muscular/heavy read at the
+// 96 px frame size.
 const BUILD_INSETS = {
-  slim:     [ 0,  1,  2,  3,  2,  1],   // narrower throughout
-  average:  [-1,  0,  1,  2,  1,  0],   // baseline (former hardcoded values)
-  muscular: [-2, -1,  0,  1,  0, -1],   // wider chest/shoulders, slim waist
-  heavy:    [-2, -1, -1,  0, -1, -2],   // wider all over, gentle waist
+  // Lean: pinched everywhere, dramatic waist. Narrowest profile.
+  slim:     [ 1,  2,  4,  5,  4,  2],
+  // Baseline chibi proportions (unchanged).
+  average:  [-1,  0,  1,  2,  1,  0],
+  // Athletic V-shape: broad shoulders & chest, hard waist taper, narrow hip.
+  muscular: [-3, -2,  0,  2,  0, -2],
+  // Bulky/round: pushed out everywhere, only a hint of waist.
+  heavy:    [-3, -3, -2,  0, -2, -3],
 };
 
 // Module-level build setter — read by torsoSilhouette. HumanCharacter
