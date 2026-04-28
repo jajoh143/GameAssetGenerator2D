@@ -2483,6 +2483,42 @@ function drawBeltWest(ctx, beltColors, x, y) {
 // drawLegsSouth
 // ---------------------------------------------------------------------------
 
+// drawHipsSouth — pelvis bridge between belt and legs. Adds 2 px of pant
+// material that tapers from the wider belt zone down to the combined leg
+// width, with an inseam V-notch in the middle so the legs don't appear
+// to sprout out of a flat torso line. Per pixel-art anatomy convention
+// (Slynyrd, Kandi Runner): the hip silhouette is widest at the iliac
+// crest, narrows toward the inseam, and the crotch is suggested with a
+// 1-2 px outline notch at the centre-bottom.
+function drawHipsSouth(ctx, pantColors, hipY, hipH = 2) {
+  // Row widths from belt-bottom (wider) to leg-tops (narrower).
+  // Belt is 22 px wide centred on x=32; legs combined span 16 px (x=24..39).
+  const widths = [20, 18];      // 20 → 18 across 2 rows (default)
+  const cx = 32;                // body centre
+  for (let r = 0; r < hipH; r++) {
+    const w = widths[Math.min(r, widths.length - 1)];
+    const x = cx - Math.floor(w / 2);
+    hLine(ctx, pantColors.base, x, hipY + r, w);
+    // Directional shading: lit upper-left, shadow lower-right
+    px(ctx, pantColors.highlight, x + 1, hipY + r);
+    if (w >= 12) px(ctx, pantColors.highlight, x + 2, hipY + r);
+    px(ctx, pantColors.shadow,    x + w - 2, hipY + r);
+    if (w >= 12) px(ctx, pantColors.shadow, x + w - 3, hipY + r);
+    // Selout edges
+    px(ctx, pantColors.outline,   x,         hipY + r);
+    px(ctx, pantColors.outline,   x + w - 1, hipY + r);
+  }
+  // Inseam V-notch: 2 px outline pixels at bottom-centre suggesting the crotch
+  px(ctx, pantColors.outline, cx - 1, hipY + hipH - 1);
+  px(ctx, pantColors.outline, cx,     hipY + hipH - 1);
+  // Subtle inner-thigh shadow rising into the leg gap (1 px shadow above
+  // the outline notch) so the inseam reads as a vertical seam, not a flat dot.
+  if (hipH >= 2) {
+    px(ctx, pantColors.shadow, cx - 1, hipY + hipH - 2);
+    px(ctx, pantColors.shadow, cx,     hipY + hipH - 2);
+  }
+}
+
 function drawLegsSouth(ctx, pantColors, lLegDX, rLegDX, baseY, lLegDY=0, rLegDY=0, forwardLeg='none', legH=22) {
   // Legs redesigned from research (Slynyrd, Tsugumo, Kandi Runner):
   //   Row widths taper naturally from thigh to ankle.
@@ -3178,6 +3214,7 @@ module.exports = {
   drawTankStrapsOverlaySouth,
   drawTorsoWest,
   drawBeltSouth,
+  drawHipsSouth,
   drawBeltWest,
   drawLegsSouth,
   drawLegsWest,

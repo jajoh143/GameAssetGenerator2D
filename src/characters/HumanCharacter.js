@@ -13,6 +13,7 @@ const {
   drawTorsoWest,
   drawTankStrapsOverlaySouth,
   drawBeltSouth,
+  drawHipsSouth,
   drawBeltWest,
   drawLegsSouth,
   drawLegsWest,
@@ -148,13 +149,15 @@ function drawSouth(ctx, config, offsets) {
   const dims = heightDims(config);
   const shoeH  = 5;
   const legH   = dims.legH;
+  const hipH   = 2;                  // pelvis bridge between belt and legs
   const beltH  = 3;
   const torsoH = dims.torsoH;
   const neckH  = 4;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
-  const beltY  = legY - beltH;
+  const hipY   = legY - hipH;
+  const beltY  = hipY - beltH;
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
@@ -174,6 +177,8 @@ function drawSouth(ctx, config, offsets) {
   const forwardLeg = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawLegsSouth(ctx, colors.pants, lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLeg, legH);
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
+  // Hip bridge — sits just above the legs, just below the belt.
+  drawHipsSouth(ctx, colors.pants, hipY, hipH);
   if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
   drawTorsoSouth(ctx, colors.clothingStyle, colors.clothing, 20, torsoY, 24, torsoH, colors.skin);
   // Arms — sleeveless styles draw bare skin via an adapted palette.
@@ -218,13 +223,15 @@ function drawNorth(ctx, config, offsets) {
   const dims = heightDims(config);
   const shoeH  = 5;
   const legH   = dims.legH;
+  const hipH   = 2;
   const beltH  = 3;
   const torsoH = dims.torsoH;
   const neckH  = 4;
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
-  const beltY  = legY - beltH;
+  const hipY   = legY - hipH;
+  const beltY  = hipY - beltH;
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - neckH;
 
@@ -240,6 +247,7 @@ function drawNorth(ctx, config, offsets) {
   const forwardLegN = leftLegFwd > 0 ? 'left' : leftLegFwd < 0 ? 'right' : 'none';
   drawLegsSouth(ctx, colors.pants,  lLegDX, rLegDX, legY, lLegDY, rLegDY, forwardLegN, legH);
   drawShoesSouth(ctx, colors.shoes, lLegDX, rLegDX, shoeY, lLegDY, rLegDY);
+  drawHipsSouth(ctx, colors.pants, hipY, hipH);
   if (config.belt !== false) drawBeltSouth(ctx, colors.belt, 20, beltY);
 
   // Back of torso — hourglass silhouette
@@ -320,12 +328,14 @@ function drawWest(ctx, config, offsets) {
   const dims = heightDims(config);
   const shoeH  = 5;
   const legH   = dims.legH;
+  const hipH   = 2;
   const beltH  = 3;
   const torsoH = dims.torsoH;  // match south for consistency
 
   const shoeY  = base - shoeH;
   const legY   = shoeY - legH;
-  const beltY  = legY - beltH;
+  const hipY   = legY - hipH;
+  const beltY  = hipY - beltH;
   const torsoY = beltY - torsoH;
   const neckY  = torsoY - 4;  // 4px neck bridges head bottom (y=49) to torso (y=54)
 
@@ -411,17 +421,18 @@ function getDirectionFromAnim(animName) {
 // height. Returns { base, shoeY, legY, beltY, torsoY, neckY, headTopY }.
 function getYAnchors(config) {
   const dims = heightDims(config);
-  const base = 96;
+  const base = 88;                       // matches drawSouth/drawNorth/drawWest
   const shoeY  = base - 5;
   const legY   = shoeY - dims.legH;
-  const beltY  = legY - 3;
+  const hipY   = legY - 2;
+  const beltY  = hipY - 3;
   const torsoY = beltY - dims.torsoH;
   const neckY  = torsoY - 4;
   // The drawHeadSouth function plants chin at y=50 by default; we shift it
   // by neckY - 50 to bridge to the new neck. The head's top is therefore
   // at HY=21 + headDeltaY = 21 + (neckY - 50) = neckY - 29.
   const headTopY = neckY - 29;
-  return { base, shoeY, legY, beltY, torsoY, neckY, headTopY };
+  return { base, shoeY, legY, hipY, beltY, torsoY, neckY, headTopY };
 }
 
 module.exports = {
