@@ -62,34 +62,51 @@ function drawCapSouth(ctx, colors) {
 }
 
 function drawFullHelmSouth(ctx, colors) {
-  // Knight's helm — full coverage, eye slit, neck guard.
-  const top = HY - 1;            // helm extends 1 px above default head top
-  const cx  = HX + HW / 2;       // 32
-  const bottom = HY + 18;        // covers down to mid-face
+  // Knight's helm — full coverage from above-the-crown down to the chin,
+  // with an eye slit at brow level. The character head spans HY=21 to chin
+  // at y=50 (29 px tall in source coords); a real full-helm covers the
+  // whole head plus a small neck guard at the bottom.
+  const top    = HY - 1;            // 20
+  const cx     = HX + HW / 2;       // 32
+  const bottom = HY + 30;           // 51 — chin level + 1 row neck guard
+  const h      = bottom - top;      // 31
 
-  // Helmet body: 20×20 vertical capsule
-  fillRect(ctx, colors.primary.base, cx - 10, top, 20, bottom - top);
-  // Top dome (taper top corners)
+  // Main helm body — 20 px wide capsule.
+  fillRect(ctx, colors.primary.base, cx - 10, top, 20, h);
+  // Top dome (taper outer corners by 1 row).
   hLine(ctx, colors.primary.base, cx - 8, top - 1, 16);
-  // Highlights
-  vLine(ctx, colors.primary.highlight, cx - 9, top + 1, bottom - top - 2);
+  // Side highlights / shadows.
+  vLine(ctx, colors.primary.highlight, cx - 9, top + 1, h - 2);
   hLine(ctx, colors.primary.highlight, cx - 7, top, 6);
-  // Shadows
-  vLine(ctx, colors.primary.shadow, cx + 8,  top + 1, bottom - top - 2);
-  hLine(ctx, colors.primary.shadow, cx + 2,  top, 6);
-  hLine(ctx, colors.primary.shadow, cx - 9,  bottom - 1, 19);
-  // Outline
-  outlineRect(ctx, colors.primary.outline, cx - 10, top, 20, bottom - top);
+  vLine(ctx, colors.primary.shadow, cx + 8, top + 1, h - 2);
+  hLine(ctx, colors.primary.shadow, cx + 2, top, 6);
+  hLine(ctx, colors.primary.shadow, cx - 9, bottom - 1, 19);
+  // Outline (perimeter).
+  outlineRect(ctx, colors.primary.outline, cx - 10, top, 20, h);
   hLine(ctx, colors.primary.outline, cx - 7, top - 2, 14);
   px(ctx, colors.primary.outline, cx - 8, top - 1);
   px(ctx, colors.primary.outline, cx + 7, top - 1);
 
-  // Eye slit — horizontal dark band across mid-helm
-  fillRect(ctx, colors.primary.outline, cx - 7, HY + 8, 14, 2);
-  px(ctx, colors.metal.highlight, cx - 5, HY + 8);
-  px(ctx, colors.metal.highlight, cx + 4, HY + 8);
+  // Eye slit at brow level (~1/3 down the head).
+  fillRect(ctx, colors.primary.outline, cx - 7, HY + 9, 14, 2);
+  px(ctx, colors.metal.highlight, cx - 5, HY + 9);
+  px(ctx, colors.metal.highlight, cx + 4, HY + 9);
 
-  // Crest / ridge along the top
+  // Vertical seam down the face — gives the helm a "two-half" look.
+  vLine(ctx, colors.primary.shadow,  cx,     HY + 12, 12);
+  vLine(ctx, colors.primary.outline, cx - 1, HY + 14, 8);
+
+  // Breathing slits across the lower jaw.
+  for (let r = HY + 22; r <= HY + 26; r += 2) {
+    hLine(ctx, colors.primary.outline, cx - 4, r, 9);
+  }
+
+  // Neck guard flare — extends 2 px wider at the bottom.
+  hLine(ctx, colors.primary.base,    cx - 11, bottom - 1, 22);
+  hLine(ctx, colors.primary.shadow,  cx - 11, bottom - 1, 22);
+  hLine(ctx, colors.primary.outline, cx - 11, bottom,     22);
+
+  // Crest / ridge along the top.
   vLine(ctx, colors.metal.base,    cx,     top - 1, 4);
   vLine(ctx, colors.metal.outline, cx - 1, top - 1, 4);
   vLine(ctx, colors.metal.outline, cx + 1, top - 1, 4);
@@ -160,18 +177,28 @@ function drawCapWest(ctx, colors) {
 }
 
 function drawFullHelmWest(ctx, colors) {
-  // Side-profile knight's helm with eye slit and neck guard.
-  const top = HY - 1;
-  const left = 17, right = 33;
-  fillRect(ctx, colors.primary.base, left, top, right - left, 18);
+  // Side-profile knight's helm — full coverage with eye slit and neck guard.
+  const top    = HY - 1;
+  const bottom = HY + 30;
+  const left   = 16;
+  const right  = 32;
+  const h      = bottom - top;
+  fillRect(ctx, colors.primary.base, left, top, right - left, h);
   hLine(ctx, colors.primary.highlight, left + 1, top + 1, right - left - 2);
-  vLine(ctx, colors.primary.highlight, left + 1, top + 1, 16);
-  vLine(ctx, colors.primary.shadow,    right - 2, top + 1, 16);
-  hLine(ctx, colors.primary.shadow,    left + 1, top + 16, right - left - 2);
-  outlineRect(ctx, colors.primary.outline, left, top, right - left, 18);
-  // Eye slit
-  fillRect(ctx, colors.primary.outline, left + 2, HY + 8, right - left - 4, 2);
-  // Crest
+  vLine(ctx, colors.primary.highlight, left + 1, top + 1, h - 2);
+  vLine(ctx, colors.primary.shadow,    right - 2, top + 1, h - 2);
+  hLine(ctx, colors.primary.shadow,    left + 1, bottom - 2, right - left - 2);
+  outlineRect(ctx, colors.primary.outline, left, top, right - left, h);
+  // Eye slit at brow.
+  fillRect(ctx, colors.primary.outline, left + 2, HY + 9, right - left - 4, 2);
+  // Breathing slits along the jaw line.
+  for (let r = HY + 22; r <= HY + 26; r += 2) {
+    hLine(ctx, colors.primary.outline, left + 3, r, right - left - 6);
+  }
+  // Neck guard flare.
+  hLine(ctx, colors.primary.shadow,  left - 1, bottom - 1, right - left + 2);
+  hLine(ctx, colors.primary.outline, left - 1, bottom,     right - left + 2);
+  // Crest along the top.
   vLine(ctx, colors.metal.base,    left + 8, top - 2, 3);
   vLine(ctx, colors.metal.outline, left + 7, top - 2, 3);
   vLine(ctx, colors.metal.outline, left + 9, top - 2, 3);

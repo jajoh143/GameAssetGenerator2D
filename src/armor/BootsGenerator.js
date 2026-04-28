@@ -57,7 +57,9 @@ const BOOTS_VARIANTS = {
 function generateBootsFrame(variantInfo, colors, config, animName, frameOffset, direction) {
   const yA     = getYAnchors(config);
   const bodyY  = frameOffset.bodyY || 0;
-  const legH   = yA.shoeY - yA.legY + 4;          // include shoe row
+  // shoeY is the GROUND line (one row below the shoe sole). Boots cover the
+  // full leg from legY down to shoeY-1 — past that is the ground shadow.
+  const legH   = yA.shoeY - yA.legY;
   const top    = yA.legY + bodyY;
 
   const { canvas, ctx } = makeCanvas(FRAME_W, FRAME_H);
