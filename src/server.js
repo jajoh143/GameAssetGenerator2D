@@ -9,7 +9,8 @@ const { generateAllWeapons }   = require('./generators/WeaponGenerator');
 const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
-  SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHING, PANTS, SHOES, DEMON_SKIN,
+  SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHING, CLOTHING_COLORS, CLOTHING_STYLES,
+  PANTS, SHOES, BELT, DEMON_SKIN, GOBLIN_SKIN,
   FAIRY_SKIN, FAIRY_WING, FAIRY_DRESS, FAIRY_GLOW,
 } = require('./core/Colors');
 
@@ -65,23 +66,36 @@ function paletteMap(obj) {
 
 function handleOptions(res) {
   json(res, 200, {
-    skinTones:   paletteMap(SKIN_TONES),
-    hairColors:  paletteMap(HAIR_COLORS),
-    hairStyles:  ['short', 'medium', 'long', 'curly', 'undercut'],
-    eyeColors:   Object.fromEntries(Object.entries(EYE_COLORS).map(([k, v]) => [k, v.iris])),
-    beardStyles: ['none', 'stubble', 'handlebar', 'goatee', 'full'],
-    clothing:    Object.keys(CLOTHING),
-    pants:       Object.keys(PANTS),
-    shoes:       Object.keys(SHOES),
+    skinTones:       paletteMap(SKIN_TONES),
+    hairColors:      paletteMap(HAIR_COLORS),
+    hairStyles:      ['short', 'medium', 'long', 'curly', 'undercut',
+                      'spiky', 'mohawk', 'topknot', 'buzzed', 'bald'],
+    eyeColors:       Object.fromEntries(Object.entries(EYE_COLORS).map(([k, v]) => [k, v.iris])),
+    beardStyles:     ['none', 'stubble', 'handlebar', 'goatee', 'full'],
+    heights:         ['tiny', 'short', 'medium', 'tall'],
+    builds:          ['slim', 'average', 'muscular', 'heavy'],
+    // Clothing is split into independent style and colour pickers.
+    clothingStyles:  CLOTHING_STYLES,
+    clothingColors:  paletteMap(CLOTHING_COLORS),
+    // Legacy combined list kept for any older client code that still needs it.
+    clothing:        Object.keys(CLOTHING),
+    pants:           Object.keys(PANTS),
+    shoes:           Object.keys(SHOES),
+    beltColors:      paletteMap(BELT),
     demonSkins:  paletteMap(DEMON_SKIN),
+    goblinSkins: paletteMap(GOBLIN_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
+    hornLengths: ['short', 'medium', 'long'],
+    tailLengths: ['short', 'medium', 'long'],
     // Fairy options
     fairySkins:  paletteMap(FAIRY_SKIN),
     wingStyles:  ['butterfly', 'dragonfly'],
+    wingSizes:   ['small', 'medium', 'large'],
     wingColors:  Object.fromEntries(Object.entries(FAIRY_WING).map(([k, v]) => [k, v.outer])),
     fairyDresses: Object.fromEntries(Object.entries(FAIRY_DRESS).map(([k, v]) => [k, v.base])),
     glowColors:  Object.fromEntries(Object.entries(FAIRY_GLOW).map(([k, v]) => [k, v.bright])),
+    glowIntensities: ['subtle', 'medium', 'bright'],
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
     frameSizes:  [64, 96, 128],

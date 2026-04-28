@@ -139,6 +139,7 @@
 
     #demon-section  { display: none; }
     #fairy-section  { display: none; }
+    #goblin-section { display: none; }
 
     .generate-btn {
       width: 100%;
@@ -437,6 +438,7 @@
         <button class="toggle-btn active" data-val="human">Human</button>
         <button class="toggle-btn"        data-val="demon">Demon</button>
         <button class="toggle-btn"        data-val="fairy">Fairy</button>
+        <button class="toggle-btn"        data-val="goblin">Goblin</button>
       </div>
     </div>
 
@@ -452,11 +454,7 @@
 
     <div>
       <div class="section-label">Hair Style</div>
-      <div class="btn-row" id="hair-style-row">
-        <button class="toggle-btn active" data-val="short">Short</button>
-        <button class="toggle-btn"        data-val="medium">Medium</button>
-        <button class="toggle-btn"        data-val="long">Long</button>
-      </div>
+      <select id="hair-style-select"></select>
     </div>
 
     <div id="eye-color-section">
@@ -475,9 +473,34 @@
       </div>
     </div>
 
-    <div>
-      <div class="section-label">Clothing</div>
-      <select id="clothing-select"></select>
+    <div id="height-section">
+      <div class="section-label">Height</div>
+      <div class="btn-row" id="height-row">
+        <button class="toggle-btn"        data-val="tiny">Tiny</button>
+        <button class="toggle-btn"        data-val="short">Short</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="tall">Tall</button>
+      </div>
+    </div>
+
+    <div id="build-section">
+      <div class="section-label">Build</div>
+      <div class="btn-row" id="build-row">
+        <button class="toggle-btn"        data-val="slim">Slim</button>
+        <button class="toggle-btn active" data-val="average">Average</button>
+        <button class="toggle-btn"        data-val="muscular">Muscular</button>
+        <button class="toggle-btn"        data-val="heavy">Heavy</button>
+      </div>
+    </div>
+
+    <div id="clothing-style-section">
+      <div class="section-label">Clothing Style</div>
+      <select id="clothing-style-select"></select>
+    </div>
+
+    <div id="clothing-color-section">
+      <div class="section-label">Clothing Color</div>
+      <div class="swatches" id="clothing-color-swatches"></div>
     </div>
 
     <div>
@@ -488,6 +511,17 @@
     <div>
       <div class="section-label">Shoes</div>
       <select id="shoes-select"></select>
+    </div>
+
+    <div id="belt-section">
+      <div class="section-label">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font:inherit">
+          <input type="checkbox" id="belt-toggle" checked /> Belt
+        </label>
+      </div>
+      <div id="belt-color-row">
+        <div class="swatches" id="belt-color-swatches"></div>
+      </div>
     </div>
 
     <div id="demon-section">
@@ -501,12 +535,24 @@
         <button class="toggle-btn"        data-val="ram">Ram</button>
       </div>
 
-      <div class="section-label" style="margin-top:14px">Tail Style</div>
-      <div class="btn-row" id="tail-row">
-        <button class="toggle-btn active" data-val="long">Long</button>
-        <button class="toggle-btn"        data-val="medium">Medium</button>
+      <div class="section-label" style="margin-top:14px">Horn Length</div>
+      <div class="btn-row" id="horn-length-row">
         <button class="toggle-btn"        data-val="short">Short</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="long">Long</button>
       </div>
+
+      <div class="section-label" style="margin-top:14px">Tail Length</div>
+      <div class="btn-row" id="tail-row">
+        <button class="toggle-btn"        data-val="short">Short</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="long">Long</button>
+      </div>
+    </div>
+
+    <div id="goblin-section">
+      <div class="section-label">Goblin Skin</div>
+      <div class="swatches" id="goblin-skin-swatches"></div>
     </div>
 
     <div id="fairy-section">
@@ -519,6 +565,13 @@
         <button class="toggle-btn"        data-val="dragonfly">Dragonfly</button>
       </div>
 
+      <div class="section-label" style="margin-top:14px">Wing Size</div>
+      <div class="btn-row" id="wing-size-row">
+        <button class="toggle-btn"        data-val="small">Small</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="large">Large</button>
+      </div>
+
       <div class="section-label" style="margin-top:14px">Wing Color</div>
       <div class="swatches" id="wing-color-swatches"></div>
 
@@ -527,6 +580,13 @@
 
       <div class="section-label" style="margin-top:14px">Glow Color</div>
       <div class="swatches" id="glow-color-swatches"></div>
+
+      <div class="section-label" style="margin-top:14px">Glow Intensity</div>
+      <div class="btn-row" id="glow-intensity-row">
+        <button class="toggle-btn"        data-val="subtle">Subtle</button>
+        <button class="toggle-btn active" data-val="medium">Medium</button>
+        <button class="toggle-btn"        data-val="bright">Bright</button>
+      </div>
     </div>
 
     <div>
@@ -571,11 +631,30 @@
 const state = {
   type: 'human', skin: null, hair: null, hairStyle: 'short',
   eyes: 'brown', beardStyle: 'none',
-  clothing: null, pants: null, shoes: null,
-  demonSkin: null, hornStyle: 'curved', tailStyle: 'long',
-  fairySkin: null, wingStyle: 'butterfly', wingColor: null, fairyDress: null, glowColor: null,
+  height: 'medium', build: 'average',
+  clothingStyle: 'jacket', clothingColor: 'grey',
+  pants: null, shoes: null,
+  belt: true, beltColor: 'standard',
+  demonSkin: null, hornStyle: 'curved', hornLength: 'medium', tailStyle: 'medium', tailLength: 'medium',
+  goblinSkin: null,
+  fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
   frameSize: 64, name: '',
 };
+
+// ── Legacy "<style>_<color>" key splitter — used when applying old presets
+// that still carry a combined `clothing` field.
+const STYLE_PREFIXES = [
+  'tshirt_vneck','tshirt','jacket','hoodie','apron','shirt','vest',
+  'tunic','robe','bomber','coat','tank',
+];
+function splitLegacyClothing(key) {
+  if (!key || typeof key !== 'string') return { style: null, color: null };
+  for (const p of STYLE_PREFIXES) {
+    if (key === p) return { style: p, color: null };
+    if (key.startsWith(p + '_')) return { style: p, color: key.slice(p.length + 1) };
+  }
+  return { style: null, color: null };
+}
 
 let options = null;
 const liveAnimations = {};
@@ -863,9 +942,14 @@ function populateSidebar() {
   buildSwatches('hair-color-swatches', options.hairColors, 'hair');
   if (options.eyeColors) buildSwatches('eye-color-swatches', options.eyeColors, 'eyes');
   buildSwatches('demon-skin-swatches', options.demonSkins, 'demonSkin');
-  buildSelect('clothing-select', options.clothing, 'clothing');
+  if (options.goblinSkins) buildSwatches('goblin-skin-swatches', options.goblinSkins, 'goblinSkin');
+  if (options.hairStyles) buildSelect('hair-style-select', options.hairStyles, 'hairStyle');
+  // Clothing: independent style + colour pickers.
+  if (options.clothingStyles) buildSelect('clothing-style-select', options.clothingStyles, 'clothingStyle');
+  if (options.clothingColors) buildSwatches('clothing-color-swatches', options.clothingColors, 'clothingColor');
   buildSelect('pants-select',    options.pants,    'pants');
   buildSelect('shoes-select',    options.shoes,    'shoes');
+  if (options.beltColors) buildSwatches('belt-color-swatches', options.beltColors, 'beltColor');
   // Fairy controls
   if (options.fairySkins)  buildSwatches('fairy-skin-swatches',  options.fairySkins,  'fairySkin');
   if (options.wingColors)  buildSwatches('wing-color-swatches',  options.wingColors,  'wingColor');
@@ -878,9 +962,38 @@ function populateSidebar() {
   activateSwatch('hair-color-swatches', d.hair,      'hair');
   if (d.eyes)      activateSwatch('eye-color-swatches', d.eyes, 'eyes');
   activateSwatch('demon-skin-swatches', d.demonSkin, 'demonSkin');
-  setSelectVal('clothing-select', d.clothing); state.clothing = d.clothing;
+  if (d.goblinSkin) activateSwatch('goblin-skin-swatches', d.goblinSkin, 'goblinSkin');
+  if (d.hairStyle) {
+    setSelectVal('hair-style-select', d.hairStyle);
+    state.hairStyle = d.hairStyle;
+  }
+  if (d.clothingStyle) {
+    setSelectVal('clothing-style-select', d.clothingStyle);
+    state.clothingStyle = d.clothingStyle;
+  }
+  if (d.clothingColor) {
+    activateSwatch('clothing-color-swatches', d.clothingColor, 'clothingColor');
+  }
   setSelectVal('pants-select',    d.pants);    state.pants    = d.pants;
   setSelectVal('shoes-select',    d.shoes);    state.shoes    = d.shoes;
+  // Belt: toggle + colour swatch
+  if (typeof d.belt === 'boolean') {
+    state.belt = d.belt;
+    const btog = document.getElementById('belt-toggle');
+    if (btog) btog.checked = d.belt;
+  }
+  if (d.beltColor) activateSwatch('belt-color-swatches', d.beltColor, 'beltColor');
+  // Hide colour row when toggle is unchecked
+  const beltTog = document.getElementById('belt-toggle');
+  const beltRow = document.getElementById('belt-color-row');
+  if (beltTog && beltRow) {
+    const sync = () => {
+      state.belt = beltTog.checked;
+      beltRow.style.display = beltTog.checked ? '' : 'none';
+    };
+    beltTog.addEventListener('change', sync);
+    sync();
+  }
   // Fairy defaults
   if (d.fairySkin)  { activateSwatch('fairy-skin-swatches', d.fairySkin, 'fairySkin'); }
   if (d.wingColor)  { activateSwatch('wing-color-swatches', d.wingColor, 'wingColor'); }
@@ -944,21 +1057,47 @@ function applyConfig(cfg) {
   if (cfg.type)       setType(cfg.type);
   if (cfg.skin)       activateSwatch('skin-swatches',       cfg.skin,       'skin');
   if (cfg.hair)       activateSwatch('hair-color-swatches', cfg.hair,       'hair');
-  if (cfg.hairStyle)  activateToggle('hair-style-row',  cfg.hairStyle,  'hairStyle');
+  if (cfg.hairStyle)  { state.hairStyle = cfg.hairStyle; setSelectVal('hair-style-select', cfg.hairStyle); }
   if (cfg.eyes)       activateSwatch('eye-color-swatches',  cfg.eyes,       'eyes');
   if (cfg.beardStyle) activateToggle('beard-style-row', cfg.beardStyle, 'beardStyle');
-  if (cfg.clothing)  { state.clothing = cfg.clothing; setSelectVal('clothing-select', cfg.clothing); }
+  if (cfg.height)     activateToggle('height-row',     cfg.height,     'height');
+  if (cfg.build)      activateToggle('build-row',      cfg.build,      'build');
+  // Resolve clothing — support both new (style+color) and legacy combined `clothing` keys.
+  let cs = cfg.clothingStyle, cc = cfg.clothingColor;
+  if ((!cs || !cc) && cfg.clothing) {
+    const split = splitLegacyClothing(cfg.clothing);
+    cs = cs || split.style;
+    cc = cc || split.color;
+  }
+  if (cs) { state.clothingStyle = cs; setSelectVal('clothing-style-select', cs); }
+  if (cc) { activateSwatch('clothing-color-swatches', cc, 'clothingColor'); }
   if (cfg.pants)     { state.pants    = cfg.pants;    setSelectVal('pants-select',    cfg.pants); }
   if (cfg.shoes)     { state.shoes    = cfg.shoes;    setSelectVal('shoes-select',    cfg.shoes); }
+  if (typeof cfg.belt === 'boolean') {
+    state.belt = cfg.belt;
+    const t = document.getElementById('belt-toggle');
+    const r = document.getElementById('belt-color-row');
+    if (t) t.checked = cfg.belt;
+    if (r) r.style.display = cfg.belt ? '' : 'none';
+  }
+  if (cfg.beltColor) activateSwatch('belt-color-swatches', cfg.beltColor, 'beltColor');
   if (cfg.demonSkin) activateSwatch('demon-skin-swatches', cfg.demonSkin, 'demonSkin');
-  if (cfg.hornStyle) activateToggle('horn-row',  cfg.hornStyle, 'hornStyle');
-  if (cfg.tailStyle) activateToggle('tail-row',  cfg.tailStyle, 'tailStyle');
+  if (cfg.hornStyle)  activateToggle('horn-row',         cfg.hornStyle,  'hornStyle');
+  if (cfg.hornLength) activateToggle('horn-length-row',  cfg.hornLength, 'hornLength');
+  // Tail row carries length (short/medium/long) — accept either tailLength or tailStyle.
+  const tl = cfg.tailLength || cfg.tailStyle;
+  if (tl) {
+    activateToggle('tail-row', tl, 'tailLength');
+    state.tailStyle = tl;
+  }
   // Fairy fields
   if (cfg.fairySkin) activateSwatch('fairy-skin-swatches', cfg.fairySkin, 'fairySkin');
-  if (cfg.wingStyle) activateToggle('wing-style-row', cfg.wingStyle, 'wingStyle');
-  if (cfg.wingColor) activateSwatch('wing-color-swatches', cfg.wingColor, 'wingColor');
-  if (cfg.fairyDress){ state.fairyDress = cfg.fairyDress; setSelectVal('fairy-dress-select', cfg.fairyDress); }
-  if (cfg.glowColor) activateSwatch('glow-color-swatches', cfg.glowColor, 'glowColor');
+  if (cfg.wingStyle)     activateToggle('wing-style-row',     cfg.wingStyle,     'wingStyle');
+  if (cfg.wingSize)      activateToggle('wing-size-row',      cfg.wingSize,      'wingSize');
+  if (cfg.wingColor)     activateSwatch('wing-color-swatches', cfg.wingColor,    'wingColor');
+  if (cfg.fairyDress)    { state.fairyDress = cfg.fairyDress; setSelectVal('fairy-dress-select', cfg.fairyDress); }
+  if (cfg.glowColor)     activateSwatch('glow-color-swatches', cfg.glowColor,    'glowColor');
+  if (cfg.glowIntensity) activateToggle('glow-intensity-row', cfg.glowIntensity, 'glowIntensity');
 }
 
 // ── Toggle rows ────────────────────────────────────────────────────────────
@@ -980,26 +1119,37 @@ function activateToggle(rowId, val, stateKey) {
 
 function setType(val) {
   activateToggle('type-row', val, 'type');
-  document.getElementById('demon-section').style.display      = val === 'demon' ? '' : 'none';
-  document.getElementById('human-skin-section').style.display = val === 'human' ? '' : 'none';
-  document.getElementById('fairy-section').style.display      = val === 'fairy' ? '' : 'none';
+  document.getElementById('demon-section').style.display      = val === 'demon'  ? '' : 'none';
+  document.getElementById('human-skin-section').style.display = val === 'human'  ? '' : 'none';
+  document.getElementById('fairy-section').style.display      = val === 'fairy'  ? '' : 'none';
+  document.getElementById('goblin-section').style.display     = val === 'goblin' ? '' : 'none';
   // Hair + human clothing controls hidden for fairy (fairy uses dress instead)
   const hideHumanGear = val === 'fairy';
-  ['clothing-select', 'pants-select', 'shoes-select'].forEach(id => {
+  ['pants-select', 'shoes-select'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.closest('div').style.display = hideHumanGear ? 'none' : '';
   });
-  document.getElementById('hair-style-row').closest('div').style.display = hideHumanGear ? 'none' : '';
+  ['clothing-style-section', 'clothing-color-section', 'belt-section'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hideHumanGear ? 'none' : '';
+  });
+  const hairSelEl = document.getElementById('hair-style-select');
+  if (hairSelEl) hairSelEl.closest('div').style.display = hideHumanGear ? 'none' : '';
   document.getElementById('eye-color-section').style.display = hideHumanGear ? 'none' : '';
   document.getElementById('beard-section').style.display     = hideHumanGear ? 'none' : '';
 }
 
 wireToggleRow('type-row',        'type',       setType);
-wireToggleRow('hair-style-row',  'hairStyle',  null);
+// hair-style-select is wired by buildSelect(); no toggle row needed.
 wireToggleRow('beard-style-row', 'beardStyle', null);
+wireToggleRow('height-row',      'height',     null);
+wireToggleRow('build-row',       'build',      null);
 wireToggleRow('horn-row',        'hornStyle',  null);
-wireToggleRow('tail-row',        'tailStyle',  null);
-wireToggleRow('wing-style-row',  'wingStyle',  null);
+wireToggleRow('horn-length-row', 'hornLength', null);
+wireToggleRow('tail-row',        'tailLength', null);
+wireToggleRow('wing-style-row',     'wingStyle',     null);
+wireToggleRow('wing-size-row',      'wingSize',      null);
+wireToggleRow('glow-intensity-row', 'glowIntensity', null);
 wireToggleRow('size-row',        'frameSize',  null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
@@ -1052,30 +1202,59 @@ async function generate() {
 function buildConfig() {
   const cfg = { type: state.type, hair: state.hair };
   if (state.type === 'human') {
-    cfg.skin       = state.skin;
-    cfg.hairStyle  = state.hairStyle;
-    cfg.eyes       = state.eyes;
-    cfg.beardStyle = state.beardStyle;
-    cfg.clothing   = state.clothing;
-    cfg.pants      = state.pants;
-    cfg.shoes      = state.shoes;
+    cfg.skin          = state.skin;
+    cfg.hairStyle     = state.hairStyle;
+    cfg.eyes          = state.eyes;
+    cfg.beardStyle    = state.beardStyle;
+    cfg.height        = state.height;
+    cfg.build         = state.build;
+    cfg.clothingStyle = state.clothingStyle;
+    cfg.clothingColor = state.clothingColor;
+    cfg.pants         = state.pants;
+    cfg.shoes         = state.shoes;
+    cfg.belt          = state.belt !== false;
+    cfg.beltColor     = state.beltColor;
   } else if (state.type === 'demon') {
-    cfg.hairStyle  = state.hairStyle;
-    cfg.eyes       = state.eyes;
-    cfg.beardStyle = state.beardStyle;
-    cfg.clothing   = state.clothing;
-    cfg.pants      = state.pants;
-    cfg.shoes      = state.shoes;
-    cfg.demonSkin  = state.demonSkin;
-    cfg.hornStyle  = state.hornStyle;
-    cfg.tailStyle  = state.tailStyle;
+    cfg.hairStyle     = state.hairStyle;
+    cfg.eyes          = state.eyes;
+    cfg.beardStyle    = state.beardStyle;
+    cfg.height        = state.height;
+    cfg.build         = state.build;
+    cfg.clothingStyle = state.clothingStyle;
+    cfg.clothingColor = state.clothingColor;
+    cfg.pants         = state.pants;
+    cfg.shoes         = state.shoes;
+    cfg.belt          = state.belt !== false;
+    cfg.beltColor     = state.beltColor;
+    cfg.demonSkin     = state.demonSkin;
+    cfg.hornStyle     = state.hornStyle;
+    cfg.hornLength    = state.hornLength;
+    cfg.tailLength    = state.tailLength;
+    cfg.tailStyle     = state.tailLength;   // legacy field — keep in sync
   } else if (state.type === 'fairy') {
     cfg.eyes      = state.eyes;
+    cfg.height    = state.height;
+    cfg.build     = state.build;
     cfg.fairySkin = state.fairySkin;
-    cfg.wingStyle = state.wingStyle;
-    cfg.wingColor = state.wingColor;
-    cfg.fairyDress = state.fairyDress;
-    cfg.glowColor = state.glowColor;
+    cfg.wingStyle     = state.wingStyle;
+    cfg.wingSize      = state.wingSize;
+    cfg.wingColor     = state.wingColor;
+    cfg.fairyDress    = state.fairyDress;
+    cfg.glowColor     = state.glowColor;
+    cfg.glowIntensity = state.glowIntensity;
+  } else if (state.type === 'goblin') {
+    cfg.hairStyle     = state.hairStyle;
+    cfg.eyes          = state.eyes;
+    cfg.beardStyle    = state.beardStyle;
+    cfg.height        = state.height;
+    cfg.build         = state.build;
+    cfg.clothingStyle = state.clothingStyle;
+    cfg.clothingColor = state.clothingColor;
+    cfg.pants         = state.pants;
+    cfg.shoes         = state.shoes;
+    cfg.belt          = state.belt !== false;
+    cfg.beltColor     = state.beltColor;
+    cfg.goblinSkin    = state.goblinSkin;
   }
   return cfg;
 }

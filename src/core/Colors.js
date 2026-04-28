@@ -1,5 +1,215 @@
 'use strict';
 
+// ─── Clothing colour palettes ──────────────────────────────────────────────
+// Muted, slightly desaturated tones tuned for a gritty survival aesthetic
+// (think project-zomboid / post-apocalypse).  Highlights skew warm,
+// shadows skew cool — matches the SDV / SNES shading guide used elsewhere.
+//
+// Each palette provides a complete shading set:
+//   highlight    — main lit face
+//   base         — mid tone (the colour the user "picks")
+//   shadow       — dark side / underside
+//   deep_shadow  — crease / fold
+//   outline      — silhouette outline
+//   collar       — a slightly tinted accent (collar / pocket / zipper)
+const CLOTHING_COLORS = {
+  grey: {
+    highlight:   '#A8A0A0',
+    base:        '#6A6A70',
+    shadow:      '#34384A',
+    deep_shadow: '#22232E',
+    outline:     '#0E0E18',
+    collar:      '#80808A',
+  },
+  charcoal: {
+    highlight:   '#5C5C68',
+    base:        '#2C2E36',
+    shadow:      '#14141C',
+    deep_shadow: '#0A0A10',
+    outline:     '#020208',
+    collar:      '#3E3E48',
+  },
+  black: {
+    highlight:   '#3A3838',
+    base:        '#16161A',
+    shadow:      '#06060A',
+    deep_shadow: '#040408',
+    outline:     '#000004',
+    collar:      '#26242A',
+  },
+  white: {
+    highlight:   '#F0EAD8',
+    base:        '#C8BFAD',
+    shadow:      '#7A7468',
+    deep_shadow: '#52504A',
+    outline:     '#28261E',
+    collar:      '#A89C88',
+  },
+  red: {
+    highlight:   '#B04040',
+    base:        '#7A1A1A',
+    shadow:      '#400808',
+    deep_shadow: '#2A0606',
+    outline:     '#180000',
+    collar:      '#8C2828',
+  },
+  burgundy: {
+    highlight:   '#7A2828',
+    base:        '#4A1010',
+    shadow:      '#260606',
+    deep_shadow: '#180404',
+    outline:     '#0E0202',
+    collar:      '#5A1818',
+  },
+  blue: {
+    highlight:   '#3A6090',
+    base:        '#1E3860',
+    shadow:      '#0A1830',
+    deep_shadow: '#06101F',
+    outline:     '#020812',
+    collar:      '#2A4A78',
+  },
+  navy: {
+    highlight:   '#28385C',
+    base:        '#101830',
+    shadow:      '#070C1A',
+    deep_shadow: '#040810',
+    outline:     '#020308',
+    collar:      '#1C2848',
+  },
+  olive: {
+    highlight:   '#7A7848',
+    base:        '#48482A',
+    shadow:      '#202010',
+    deep_shadow: '#15150A',
+    outline:     '#080802',
+    collar:      '#5A5A38',
+  },
+  forest: {
+    highlight:   '#3A6038',
+    base:        '#1E3818',
+    shadow:      '#0E1C0A',
+    deep_shadow: '#081004',
+    outline:     '#040804',
+    collar:      '#2C4A24',
+  },
+  sage: {
+    highlight:   '#80927A',
+    base:        '#4A584A',
+    shadow:      '#222A22',
+    deep_shadow: '#161B15',
+    outline:     '#080C08',
+    collar:      '#5E6E5A',
+  },
+  brown: {
+    highlight:   '#8A5028',
+    base:        '#552C12',
+    shadow:      '#2A1408',
+    deep_shadow: '#1A0C04',
+    outline:     '#0E0500',
+    collar:      '#6A3818',
+  },
+  tan: {
+    highlight:   '#A87A48',
+    base:        '#704C20',
+    shadow:      '#3A2410',
+    deep_shadow: '#241608',
+    outline:     '#100800',
+    collar:      '#88602C',
+  },
+  sand: {
+    highlight:   '#C8A878',
+    base:        '#8C7048',
+    shadow:      '#4E3C24',
+    deep_shadow: '#322512',
+    outline:     '#160E04',
+    collar:      '#A88858',
+  },
+  rust: {
+    highlight:   '#A05028',
+    base:        '#6A2C12',
+    shadow:      '#34140A',
+    deep_shadow: '#200C06',
+    outline:     '#100400',
+    collar:      '#80381A',
+  },
+  mustard: {
+    highlight:   '#B89028',
+    base:        '#80601C',
+    shadow:      '#3E2E08',
+    deep_shadow: '#241C04',
+    outline:     '#100A00',
+    collar:      '#967428',
+  },
+  purple: {
+    highlight:   '#683878',
+    base:        '#3E1E48',
+    shadow:      '#1F0E24',
+    deep_shadow: '#150818',
+    outline:     '#0A0410',
+    collar:      '#502860',
+  },
+  teal: {
+    highlight:   '#2C7068',
+    base:        '#0E4038',
+    shadow:      '#06201C',
+    deep_shadow: '#031410',
+    outline:     '#020A08',
+    collar:      '#1C5048',
+  },
+  cream: {
+    highlight:   '#F8E8C8',
+    base:        '#D8B888',
+    shadow:      '#8C7048',
+    deep_shadow: '#5E4C30',
+    outline:     '#2C2010',
+    collar:      '#B89868',
+  },
+};
+
+// Per-style additions layered on top of the chosen colour palette.
+// Used when a garment exposes another fabric (apron has a shirt under it,
+// vest shows the shirt at the sides/collar).
+const STYLE_OVERLAYS = {
+  apron: {
+    base_highlight: '#A8A8B8',
+    base_base:      '#7878A0',
+    base_shadow:    '#484870',
+  },
+  vest: {
+    shirt:        '#D0C8A0',
+    shirt_shadow: '#A09868',
+  },
+};
+
+// Available top styles — user picks one of these from the "Clothing Style"
+// dropdown.  Each maps to a draw function in BaseCharacter.js.
+const CLOTHING_STYLES = [
+  'jacket',
+  'hoodie',
+  'tshirt',
+  'tshirt_vneck',
+  'tank',
+  'shirt',
+  'vest',
+  'tunic',
+  'robe',
+  'bomber',
+  'coat',
+  'apron',
+];
+
+/**
+ * Resolve a clothing style + colour key into a full colour record that the
+ * existing draw functions expect (highlight / base / shadow / deep_shadow /
+ * outline / collar, plus any style-specific overlays).
+ */
+function resolveClothing(style, colorKey) {
+  const color   = CLOTHING_COLORS[colorKey] || CLOTHING_COLORS.grey;
+  const overlay = STYLE_OVERLAYS[style] || {};
+  return Object.assign({}, color, overlay);
+}
+
 // Skin tone palettes: highlight, base, shadow, outline
 const SKIN_TONES = {
   pale: {
@@ -390,6 +600,55 @@ const DEMON_SKIN = {
     deep_shadow: '#350202',
     outline:     '#280000',
   },
+  scarlet: {
+    highlight:   '#FF5A30',
+    base:        '#C82820',
+    shadow:      '#7A1408',
+    deep_shadow: '#3E0804',
+    outline:     '#240000',
+  },
+  brick: {
+    highlight:   '#C8584A',
+    base:        '#8C3024',
+    shadow:      '#501610',
+    deep_shadow: '#280808',
+    outline:     '#180404',
+  },
+  rust: {
+    highlight:   '#D4683A',
+    base:        '#94381A',
+    shadow:      '#561C0A',
+    deep_shadow: '#2A0A04',
+    outline:     '#1A0400',
+  },
+  coral: {
+    highlight:   '#FF7060',
+    base:        '#D44844',
+    shadow:      '#7A1E20',
+    deep_shadow: '#400810',
+    outline:     '#200408',
+  },
+  maroon: {
+    highlight:   '#783030',
+    base:        '#481818',
+    shadow:      '#280808',
+    deep_shadow: '#140404',
+    outline:     '#0A0000',
+  },
+  burgundy: {
+    highlight:   '#8C2840',
+    base:        '#5C1028',
+    shadow:      '#300814',
+    deep_shadow: '#18040A',
+    outline:     '#0C0004',
+  },
+  blood: {
+    highlight:   '#B82828',
+    base:        '#7A0808',
+    shadow:      '#440000',
+    deep_shadow: '#220000',
+    outline:     '#180000',
+  },
   dark_red: {
     highlight:   '#A02828',
     base:        '#681010',
@@ -420,6 +679,53 @@ const DEMON_SKIN = {
   },
 };
 
+// Goblin skin palettes — D&D goblins typically come in mossy greens with
+// some tribes in orange/yellow/red. Tones are muted and earthy.
+const GOBLIN_SKIN = {
+  moss_green: {
+    highlight:   '#7AA84A',
+    base:        '#4E7A2A',
+    shadow:      '#284A14',
+    deep_shadow: '#142808',
+    outline:     '#0A1804',
+  },
+  swamp_green: {
+    highlight:   '#5A7838',
+    base:        '#3A5020',
+    shadow:      '#1E2C10',
+    deep_shadow: '#0E1808',
+    outline:     '#080E04',
+  },
+  bog_grey: {
+    highlight:   '#7A8A6E',
+    base:        '#4E5C46',
+    shadow:      '#28342A',
+    deep_shadow: '#141A14',
+    outline:     '#0A0D0A',
+  },
+  cave_yellow: {
+    highlight:   '#C8B048',
+    base:        '#967428',
+    shadow:      '#5C4410',
+    deep_shadow: '#2E2008',
+    outline:     '#181004',
+  },
+  ember_orange: {
+    highlight:   '#D87838',
+    base:        '#A04818',
+    shadow:      '#5C2408',
+    deep_shadow: '#2C1004',
+    outline:     '#180800',
+  },
+  rust_red: {
+    highlight:   '#A8482E',
+    base:        '#742818',
+    shadow:      '#40140A',
+    deep_shadow: '#200A04',
+    outline:     '#100400',
+  },
+};
+
 const DEMON_PARTS = {
   horn: {
     highlight: '#D0C080',
@@ -441,7 +747,7 @@ const DEMON_PARTS = {
   },
 };
 
-// Belt color
+// Belt color palettes — leather/cloth in common pixel-art tones.
 const BELT = {
   standard: {
     highlight: '#6A4030',
@@ -449,6 +755,41 @@ const BELT = {
     shadow:    '#1E0E08',
     buckle:    '#C8A820',
     outline:   '#1A0800',
+  },
+  brown: {
+    highlight: '#7A4D2E',
+    base:      '#4A2A14',
+    shadow:    '#28160A',
+    buckle:    '#C8A820',
+    outline:   '#1A0800',
+  },
+  dark_brown: {
+    highlight: '#3E2410',
+    base:      '#22120A',
+    shadow:    '#100804',
+    buckle:    '#A88820',
+    outline:   '#080402',
+  },
+  black: {
+    highlight: '#3A3838',
+    base:      '#16161A',
+    shadow:    '#06060A',
+    buckle:    '#A0A0A8',
+    outline:   '#000004',
+  },
+  tan: {
+    highlight: '#C8A878',
+    base:      '#9A7B50',
+    shadow:    '#5C4628',
+    buckle:    '#C8A820',
+    outline:   '#3A2818',
+  },
+  white: {
+    highlight: '#F8F4E8',
+    base:      '#D4CCB8',
+    shadow:    '#9A9078',
+    buckle:    '#A0A0A8',
+    outline:   '#5A4E38',
   },
 };
 
@@ -623,9 +964,14 @@ module.exports = {
   HAIR_COLORS,
   EYE_COLORS,
   CLOTHING,
+  CLOTHING_COLORS,
+  CLOTHING_STYLES,
+  STYLE_OVERLAYS,
+  resolveClothing,
   PANTS,
   SHOES,
   DEMON_SKIN,
+  GOBLIN_SKIN,
   DEMON_PARTS,
   BELT,
   GROUND_SHADOW,
