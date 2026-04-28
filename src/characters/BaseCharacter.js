@@ -335,7 +335,10 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   // eyeY-1: curved arch (skin corners, lash 1px in, iris center) — brow-curve shape
   // eyeY/+1: main rows — 2px outer sclera, 2px iris, 1px inner sclera
   // eyeY+2: open white bottom arc
+  // For "solid" eyes (e.g. tieflings/demons), the sclera is replaced with the
+  // iris colour so the entire eye reads as a glowing solid shape.
   const eyeY = HY + 19;
+  const sclera = eyeColors.solid ? eyeColors.iris : '#FFFFFF';
 
   // Left eye — x=22..28; outer=left, inner=right (toward nose)
   // Arch row: corners=skin, lash at x=23 & x=27, iris fills x=24..26
@@ -344,27 +347,27 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, eyeColors.iris,  25, eyeY - 1);
   px(ctx, eyeColors.iris,  26, eyeY - 1);
   px(ctx, eyeColors.lash,  27, eyeY - 1);
-  // Main rows: W W iris iris W
+  // Main rows: sclera sclera iris iris sclera
   px(ctx, eyeColors.lash,  22, eyeY);
-  px(ctx, '#FFFFFF',       23, eyeY);
-  px(ctx, '#FFFFFF',       24, eyeY);
+  px(ctx, sclera,          23, eyeY);
+  px(ctx, sclera,          24, eyeY);
   px(ctx, eyeColors.iris,  25, eyeY);
   px(ctx, eyeColors.iris,  26, eyeY);
-  px(ctx, '#FFFFFF',       27, eyeY);
+  px(ctx, sclera,          27, eyeY);
   px(ctx, eyeColors.lash,  28, eyeY);
   px(ctx, eyeColors.lash,  22, eyeY + 1);
-  px(ctx, '#FFFFFF',       23, eyeY + 1);
-  px(ctx, '#FFFFFF',       24, eyeY + 1);
+  px(ctx, sclera,          23, eyeY + 1);
+  px(ctx, sclera,          24, eyeY + 1);
   px(ctx, eyeColors.iris,  25, eyeY + 1);
   px(ctx, eyeColors.iris,  26, eyeY + 1);
-  px(ctx, '#FFFFFF',       27, eyeY + 1);
+  px(ctx, sclera,          27, eyeY + 1);
   px(ctx, eyeColors.lash,  28, eyeY + 1);
   // Open bottom arc
-  px(ctx, '#FFFFFF',       23, eyeY + 2);
-  px(ctx, '#FFFFFF',       24, eyeY + 2);
-  px(ctx, '#FFFFFF',       25, eyeY + 2);
-  px(ctx, '#FFFFFF',       26, eyeY + 2);
-  px(ctx, '#FFFFFF',       27, eyeY + 2);
+  px(ctx, sclera,          23, eyeY + 2);
+  px(ctx, sclera,          24, eyeY + 2);
+  px(ctx, sclera,          25, eyeY + 2);
+  px(ctx, sclera,          26, eyeY + 2);
+  px(ctx, sclera,          27, eyeY + 2);
 
   // Right eye — x=35..41; inner=left (toward nose), outer=right
   // Arch row: corners=skin, lash at x=36 & x=40, iris fills x=37..39
@@ -373,27 +376,27 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
   px(ctx, eyeColors.iris,  38, eyeY - 1);
   px(ctx, eyeColors.iris,  39, eyeY - 1);
   px(ctx, eyeColors.lash,  40, eyeY - 1);
-  // Main rows: W iris iris W W
+  // Main rows: sclera iris iris sclera sclera
   px(ctx, eyeColors.lash,  35, eyeY);
-  px(ctx, '#FFFFFF',       36, eyeY);
+  px(ctx, sclera,          36, eyeY);
   px(ctx, eyeColors.iris,  37, eyeY);
   px(ctx, eyeColors.iris,  38, eyeY);
-  px(ctx, '#FFFFFF',       39, eyeY);
-  px(ctx, '#FFFFFF',       40, eyeY);
+  px(ctx, sclera,          39, eyeY);
+  px(ctx, sclera,          40, eyeY);
   px(ctx, eyeColors.lash,  41, eyeY);
   px(ctx, eyeColors.lash,  35, eyeY + 1);
-  px(ctx, '#FFFFFF',       36, eyeY + 1);
+  px(ctx, sclera,          36, eyeY + 1);
   px(ctx, eyeColors.iris,  37, eyeY + 1);
   px(ctx, eyeColors.iris,  38, eyeY + 1);
-  px(ctx, '#FFFFFF',       39, eyeY + 1);
-  px(ctx, '#FFFFFF',       40, eyeY + 1);
+  px(ctx, sclera,          39, eyeY + 1);
+  px(ctx, sclera,          40, eyeY + 1);
   px(ctx, eyeColors.lash,  41, eyeY + 1);
   // Open bottom arc
-  px(ctx, '#FFFFFF',       36, eyeY + 2);
-  px(ctx, '#FFFFFF',       37, eyeY + 2);
-  px(ctx, '#FFFFFF',       38, eyeY + 2);
-  px(ctx, '#FFFFFF',       39, eyeY + 2);
-  px(ctx, '#FFFFFF',       40, eyeY + 2);
+  px(ctx, sclera,          36, eyeY + 2);
+  px(ctx, sclera,          37, eyeY + 2);
+  px(ctx, sclera,          38, eyeY + 2);
+  px(ctx, sclera,          39, eyeY + 2);
+  px(ctx, sclera,          40, eyeY + 2);
 
   // ── Nose — vertical bridge + nostril depth ────────────────────────────────
   px(ctx, skinColors.highlight, cx,     eyeY + 1);   // bridge highlight
@@ -878,12 +881,14 @@ function drawHeadWest(ctx, skinColors, hairColors, hairStyle, eyeColors, beardSt
 
   // ── Eye — outline at HX acts as the eyelid; sclera+iris visible behind it ─
   // The white row at HY+13 was removed: it was overwriting the brow above.
+  // For "solid" eyes (tieflings/demons), the sclera takes the iris colour.
   const ec = eyeColors || { iris: '#7B4820', pupil: '#160800', lash: '#2A1800' };
+  const ws = ec.solid ? ec.iris : '#FFFFFF';
   px(ctx, ec.lash,    HX,     HY + 14);  // front lid (outline will redraw this black = eyelid)
-  px(ctx, '#FFFFFF',  HX + 1, HY + 14);  // sclera front
+  px(ctx, ws,         HX + 1, HY + 14);  // sclera front
   px(ctx, ec.iris,    HX + 2, HY + 14);  // iris
-  px(ctx, '#FFFFFF',  HX + 3, HY + 14);  // sclera back
-  px(ctx, '#FFFFFF',  HX + 1, HY + 15);  // lower sclera
+  px(ctx, ws,         HX + 3, HY + 14);  // sclera back
+  px(ctx, ws,         HX + 1, HY + 15);  // lower sclera
 
   // ── Cheekbone highlight ───────────────────────────────────────────────────
   px(ctx, skinColors.highlight, HX + 3, HY + 16);

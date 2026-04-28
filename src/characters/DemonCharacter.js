@@ -13,6 +13,10 @@ function resolveColors(config) {
   base.skin = DEMON_SKIN[config.demonSkin] || DEMON_SKIN.crimson;
   base.horn = DEMON_PARTS.horn;
   base.tail = DEMON_PARTS.tail;
+  // Tiefling eyes: solid iris colour with no sclera (no whites of the eye).
+  // Mark the eye palette so drawHeadSouth/drawHeadWest know to fill the
+  // sclera with the iris colour for that "glowing solid" tiefling look.
+  base.eyes = Object.assign({}, base.eyes, { solid: true });
   return base;
 }
 

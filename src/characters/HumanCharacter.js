@@ -44,10 +44,17 @@ function resolveColors(config) {
   const isSleeveless = clothingStyle === 'tank';
   const armClothing  = isSleeveless ? skinAsClothing(skinColors) : clothing;
 
+  // Tieflings/demons get solid (no-sclera) eyes — the entire eye reads as
+  // the iris colour for the glowing demonic look.
+  const baseEyes = Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown;
+  const eyeColors = config.type === 'demon'
+    ? Object.assign({}, baseEyes, { solid: true })
+    : baseEyes;
+
   return {
     skin:          skinColors,
     hair:          Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
-    eyes:          Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown,
+    eyes:          eyeColors,
     clothing:      clothing,
     armClothing:   armClothing,
     clothingStyle: clothingStyle,
