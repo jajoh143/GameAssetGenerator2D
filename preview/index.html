@@ -742,6 +742,17 @@
       </div>
     </div>
 
+    <!-- Vector-only: chibi (~3 heads tall) vs natural (~5.5–6 heads tall).
+         Hidden when the active style tab is Pixel since the pixel
+         pipeline ignores the field. -->
+    <div id="proportion-section" style="display:none">
+      <div class="section-label">Proportion</div>
+      <div class="btn-row" id="proportion-row">
+        <button class="toggle-btn active" data-val="chibi">Chibi</button>
+        <button class="toggle-btn"        data-val="natural">Natural</button>
+      </div>
+    </div>
+
     <div>
       <div class="section-label">Character Name</div>
       <input type="text" id="char-name" placeholder="my_character" maxlength="64">
@@ -797,6 +808,7 @@ const state = {
   lizardScale: null,
   fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
   frameSize: 128, name: '',
+  proportion: 'chibi',     // vector-only: chibi | natural
   // Selected render style — toggled by the Pixel | Vector tab in the header.
   // Each style has its own card list, generation endpoint, and manifest section.
   style: 'pixel',
@@ -1596,6 +1608,7 @@ wireToggleRow('wing-style-row',     'wingStyle',     null);
 wireToggleRow('wing-size-row',      'wingSize',      null);
 wireToggleRow('glow-intensity-row', 'glowIntensity', null);
 wireToggleRow('size-row',        'frameSize',  null);
+wireToggleRow('proportion-row',  'proportion', null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
 document.getElementById('gen-btn').addEventListener('click', generate);
@@ -1616,9 +1629,17 @@ document.querySelectorAll('#style-tabs .style-tab').forEach((tab) => {
     });
     const btn = document.getElementById('gen-btn');
     if (btn) btn.textContent = style === 'vector' ? 'Generate Vector Character' : 'Generate Character';
+    // Proportion toggle is vector-only; hide it on the pixel tab.
+    const propSection = document.getElementById('proportion-section');
+    if (propSection) propSection.style.display = style === 'vector' ? '' : 'none';
     updateClearBtn();
   });
 });
+// Initial visibility based on default tab.
+{
+  const propSection = document.getElementById('proportion-section');
+  if (propSection) propSection.style.display = state.style === 'vector' ? '' : 'none';
+}
 document.getElementById('expand-all-btn').addEventListener('click', () => {
   document.querySelectorAll('.char-card').forEach(c => c.classList.remove('collapsed'));
 });
@@ -1667,7 +1688,8 @@ async function generate() {
 }
 
 function buildConfig() {
-  const cfg = { type: state.type, hair: state.hair };
+  // proportion is set on every config — vector-only, pixel ignores it.
+  const cfg = { type: state.type, hair: state.hair, proportion: state.proportion };
   if (state.type === 'human') {
     cfg.skin          = state.skin;
     cfg.hairStyle     = state.hairStyle;

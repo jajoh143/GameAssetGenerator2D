@@ -73,11 +73,26 @@ function resolveColors(config) {
     chestPocket: ['jacket', 'bomber', 'coat', 'shirt'].includes(cs),
   };
 
+  // Optional accessory palettes (hood, cape, shoulder pads). Each falls
+  // back to the main clothing palette if its specific key isn't set.
+  const hoodPalette = config.hoodColor
+    ? (Colors.CLOTHING_COLORS && Colors.CLOTHING_COLORS[config.hoodColor]) || clothing
+    : clothing;
+  const capePalette = config.capeColor
+    ? (Colors.CLOTHING_COLORS && Colors.CLOTHING_COLORS[config.capeColor]) || clothing
+    : clothing;
+  const shoulderPalette = config.shoulderColor
+    ? (Colors.CLOTHING_COLORS && Colors.CLOTHING_COLORS[config.shoulderColor]) || clothing
+    : clothing;
+
   return {
     skin,
     hair:     Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
     eyes,
     clothing,
+    hood:     hoodPalette,
+    cape:     capePalette,
+    shoulder: shoulderPalette,
     pants:    Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
     shoes:    Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
     belt:     Colors.BELT[config.beltColor] || Colors.BELT.standard,
@@ -154,6 +169,10 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
 
   if (hooks.before) hooks.before(ctx, rig, colors);
 
+  // Cape — drawn BEFORE the body so the body silhouette occludes the
+  // front, leaving the cape visible as a fan around the legs and behind.
+  if (config.cape) Body.drawCape(ctx, rig, colors.cape);
+
   // Decide front/back leg ordering by which one is farther forward (y bigger).
   // The deeper leg should be drawn first, the shallower (in front) on top.
   const lFwd = offsets.leftLegFwd  || 0;
@@ -205,6 +224,9 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   if (lArmFwd >= rArmFwd) { drawArmR(); drawArmL(); }
   else                    { drawArmL(); drawArmR(); }
 
+  // Shoulder pads — drawn AFTER arms so they cap the shoulder seam.
+  if (config.shoulderPads) Body.drawShoulderPads(ctx, rig, colors.shoulder);
+
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
 
   // Head and friends
@@ -217,9 +239,17 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   // long-fringe hair styles.
   Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
-  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  // When the character is hooded, the hair is mostly hidden under the
+  // hood — skip drawHair so it doesn't clip through the cowl.
+  if (!config.hood) {
+    Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  }
   Body.drawEyesSouth(ctx, rig, colors.eyes, { blink: meta.blink, open: meta.openMouth });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
+
+  // Hood — drawn LAST among the head pieces so it overlays hair + face
+  // and casts its own shadow on the upper half of the face.
+  if (config.hood) Body.drawHood(ctx, rig, colors.hood);
 
   // Weapon — drawn LAST so it sits on top of everything (the action hand
   // grips it). Skipped when the animation isn't an attack.
@@ -257,6 +287,10 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   }
 
   if (hooks.before) hooks.before(ctx, rig, colors);
+
+  // Cape — viewed from behind shows the most cape; drawn before the body
+  // so the body/legs cut through it.
+  if (config.cape) Body.drawCape(ctx, rig, colors.cape);
 
   const lFwd = offsets.leftLegFwd  || 0;
   const rFwd = offsets.rightLegFwd || 0;
@@ -296,6 +330,9 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   };
   drawArmL(); drawArmR();
 
+  // Shoulder pads cap the back-shoulder seam.
+  if (config.shoulderPads) Body.drawShoulderPads(ctx, rig, colors.shoulder);
+
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
 
   Body.drawNeck(ctx, rig, colors.skin);
@@ -303,7 +340,11 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   Body.drawHead(ctx, rig, colors.skin);
   // North view shows the BACK of the head — most of the hair should be
   // visible. Drawing the full wig on top covers the bare skull.
-  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  if (!config.hood) {
+    Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  }
+  // Hood overlays from behind too.
+  if (config.hood) Body.drawHood(ctx, rig, colors.hood);
   // Weapon — drawn after head/hair so it sits on top.
   drawWeaponForFrame(ctx, rig, meta);
   // No eyes / beard from behind.
@@ -321,6 +362,9 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   }
 
   if (hooks.before) hooks.before(ctx, rig, colors);
+
+  // Cape draws first so the body silhouette occludes the front of it.
+  if (config.cape) Body.drawCape(ctx, rig, colors.cape);
 
   // Decide which leg/arm is "front" by smaller X (west = facing left, so
   // smaller X is closer to the camera-face).
@@ -375,14 +419,20 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   if (config.belt !== false) Body.drawBelt(ctx, rig, colors.belt);
   drawArm(frontArm);
 
+  // Shoulder pads cap both shoulders in profile.
+  if (config.shoulderPads) Body.drawShoulderPads(ctx, rig, colors.shoulder);
+
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
 
   Body.drawNeck(ctx, rig, colors.skin);
   Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
-  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  if (!config.hood) {
+    Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  }
   Body.drawEyeWest(ctx, rig, colors.eyes, { open: meta.openMouth });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
+  if (config.hood) Body.drawHood(ctx, rig, colors.hood);
   drawWeaponForFrame(ctx, rig, meta);
 
   if (hooks.afterHead) hooks.afterHead(ctx, rig, colors);

@@ -125,6 +125,12 @@ function resolveConfig(config) {
     if (!config || !config.height)    merged.height    = 'short';
     if (!config || !config.hairStyle) merged.hairStyle = 'bald';
     if (!config || !config.beardStyle) merged.beardStyle = 'none';
+    // Vector-only: goblins default to a hooded cowl (the
+    // reference art shows them as hooded scouts/rogues). The pixel
+    // pipeline ignores `hood` / `hoodColor`. Caller can set hood:false
+    // explicitly to disable.
+    if (!config || config.hood === undefined) merged.hood = true;
+    if (!config || !config.hoodColor) merged.hoodColor = 'charcoal';
   }
   // Lizardfolk / dragonborn default to TALL — they're typically larger and
   // more heavily-built than humans, with broader torsos and longer limbs.

@@ -1814,6 +1814,227 @@ function drawBeard(ctx, rig, hair, style) {
 // Public API
 // ---------------------------------------------------------------------------
 
+/**
+ * Hood — a hooded cowl that drapes over the head. Drawn as a smooth blob
+ * that wraps the upper head + neck + shoulders. Works in conjunction
+ * with a face-cast shadow so the hood reads as casting onto the face.
+ *
+ *   palette: any clothing palette (uses base + shadow + highlight).
+ *   opts.lift = optional outline color override.
+ */
+function drawHood(ctx, rig, palette) {
+  const { head, neck, chest } = rig;
+  const direction = rig.direction;
+  // Hood silhouette anchors on the shoulder line, wraps up over the head.
+  let pts;
+  if (direction === 'south' || direction === 'north') {
+    pts = [
+      [head.x - head.r * 1.20, neck.y + rig.limbR * 0.50],
+      [head.x - head.r * 1.30, head.y - head.r * 0.20],
+      [head.x - head.r * 0.90, head.y - head.r * 1.20],
+      [head.x,                 head.y - head.r * 1.35],
+      [head.x + head.r * 0.90, head.y - head.r * 1.20],
+      [head.x + head.r * 1.30, head.y - head.r * 0.20],
+      [head.x + head.r * 1.20, neck.y + rig.limbR * 0.50],
+      // bottom shoulder line — clips by the chest line
+      [chest.x + chest.w * 0.4, chest.y + rig.limbR * 0.10],
+      [chest.x - chest.w * 0.4, chest.y + rig.limbR * 0.10],
+    ];
+  } else {
+    // Side view: a directional cowl that protrudes more on one side.
+    const ds = direction === 'west' ? -1 : 1;
+    pts = [
+      [head.x - ds * head.r * 1.10, neck.y + rig.limbR * 0.40],
+      [head.x - ds * head.r * 1.30, head.y - head.r * 0.40],
+      [head.x - ds * head.r * 1.00, head.y - head.r * 1.30],
+      [head.x,                       head.y - head.r * 1.35],
+      [head.x + ds * head.r * 0.85, head.y - head.r * 1.20],
+      [head.x + ds * head.r * 1.05, head.y - head.r * 0.10],
+      [head.x + ds * head.r * 0.95, neck.y + rig.limbR * 0.50],
+      [chest.x + ds * chest.w * 0.30, chest.y + rig.limbR * 0.05],
+    ];
+  }
+  // 1. Flat fill + outline.
+  blobPath(ctx, pts, 0.55);
+  ctx.fillStyle = palette.base;
+  ctx.fill();
+  ctx.strokeStyle = palette.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.32);
+  ctx.stroke();
+
+  // 2. Cel shadow on the right (under the hood lip + bottom-right).
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = palette.shadow || palette.base;
+  ctx.beginPath();
+  ctx.moveTo(head.x + head.r * 0.10, head.y - head.r * 1.30);
+  ctx.quadraticCurveTo(
+    head.x + head.r * 1.50, head.y - head.r * 0.30,
+    head.x + head.r * 0.40, head.y + head.r * 1.10,
+  );
+  ctx.lineTo(head.x + head.r * 0.10, head.y + head.r * 1.10);
+  ctx.quadraticCurveTo(
+    head.x + head.r * 0.30, head.y - head.r * 0.40,
+    head.x + head.r * 0.10, head.y - head.r * 1.30,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Hood lip — a small darker arc at the front of the hood opening,
+  // suggesting the inside of the hood is darker than the outside.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = palette.deep_shadow || palette.outline || '#000';
+  ctx.beginPath();
+  if (direction === 'south' || direction === 'north') {
+    ctx.moveTo(head.x - head.r * 0.95, head.y - head.r * 0.35);
+    ctx.quadraticCurveTo(head.x, head.y - head.r * 0.15,
+                         head.x + head.r * 0.95, head.y - head.r * 0.35);
+    ctx.lineTo(head.x + head.r * 0.95, head.y - head.r * 0.55);
+    ctx.quadraticCurveTo(head.x, head.y - head.r * 0.40,
+                         head.x - head.r * 0.95, head.y - head.r * 0.55);
+  } else {
+    const ds = direction === 'west' ? -1 : 1;
+    ctx.moveTo(head.x - ds * head.r * 0.95, head.y - head.r * 0.35);
+    ctx.quadraticCurveTo(head.x, head.y - head.r * 0.20,
+                         head.x + ds * head.r * 0.10, head.y - head.r * 0.30);
+    ctx.lineTo(head.x + ds * head.r * 0.10, head.y - head.r * 0.55);
+    ctx.quadraticCurveTo(head.x, head.y - head.r * 0.40,
+                         head.x - ds * head.r * 0.95, head.y - head.r * 0.55);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Cast shadow onto the face — the hood always shadows the upper
+  // half of the face for a "hooded" look. Drawn on top of the head fill
+  // since the head is rendered before the hood.
+  if (direction !== 'north') {
+    VC.castShadow(ctx,
+      head.x, head.y - head.r * 0.10,
+      head.r * 0.85, head.r * 0.40,
+      0.55, palette.outline || '#000');
+  }
+}
+
+/**
+ * Cape — a flowing rectangle of cloth that drapes from the shoulders to
+ * mid-leg. Drawn BEFORE the body so the body silhouette occludes the
+ * front, leaving the cape visible only on the sides + bottom.
+ */
+function drawCape(ctx, rig, palette, opts = {}) {
+  const { chest, pelvis } = rig;
+  const direction = rig.direction;
+  const sway = opts.sway || 0;            // lateral offset for animation drift
+  const len = (pelvis.y - chest.y) * 1.85; // extends below the hips
+  const wTop = chest.w * 0.95;
+  const wBot = chest.w * 1.30;
+  let pts;
+  if (direction === 'south' || direction === 'north') {
+    pts = [
+      [chest.x - wTop / 2,            chest.y + rig.limbR * 0.15],
+      [chest.x - wBot / 2 + sway,     chest.y + len * 0.55],
+      [chest.x - wBot / 2 + sway * 1.4, chest.y + len],
+      [chest.x + wBot / 2 + sway * 1.4, chest.y + len],
+      [chest.x + wBot / 2 + sway,     chest.y + len * 0.55],
+      [chest.x + wTop / 2,            chest.y + rig.limbR * 0.15],
+    ];
+  } else {
+    const ds = direction === 'west' ? -1 : 1;
+    pts = [
+      [chest.x + ds * wTop * 0.10,                   chest.y + rig.limbR * 0.10],
+      [chest.x + ds * wTop * 0.30 + sway,            chest.y + len * 0.4],
+      [chest.x + ds * wTop * 0.55 + sway * 1.4,      chest.y + len],
+      [chest.x - ds * wTop * 0.10,                   chest.y + len],
+      [chest.x - ds * wTop * 0.05,                   chest.y + len * 0.4],
+      [chest.x - ds * wTop * 0.10,                   chest.y + rig.limbR * 0.10],
+    ];
+  }
+  blobPath(ctx, pts, 0.50);
+  ctx.fillStyle = palette.base;
+  ctx.fill();
+  ctx.strokeStyle = palette.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.30);
+  ctx.stroke();
+
+  // Vertical fold creases — three soft dark lines for cloth volume.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.strokeStyle = palette.shadow || palette.outline;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = Math.max(1.0, rig.limbR * 0.18);
+  ctx.lineCap = 'round';
+  for (const k of [-0.30, 0, 0.30]) {
+    ctx.beginPath();
+    ctx.moveTo(chest.x + wTop * k * 0.5, chest.y + rig.limbR * 0.4);
+    ctx.lineTo(chest.x + wBot * k * 0.55 + sway * 1.2, chest.y + len * 0.95);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/**
+ * Shoulder pads — domed armor caps on each shoulder. Drawn after the
+ * torso + arm so they overlay the shoulder seam.
+ */
+function drawShoulderPads(ctx, rig, palette) {
+  const { shoulderL, shoulderR } = rig;
+  const direction = rig.direction;
+  const r = rig.limbR * 1.50;
+  const drawOne = (sh, sign) => {
+    ctx.save();
+    ctx.translate(sh.x, sh.y - rig.limbR * 0.10);
+    // A half-dome capped over the shoulder. Use a quadratic curve so the
+    // dome reads as armor plate rather than a flat circle.
+    ctx.fillStyle = palette.base;
+    ctx.strokeStyle = palette.outline || '#000';
+    ctx.lineWidth = outlineW(rig, 0.30);
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.95, r * 0.30);
+    ctx.quadraticCurveTo(-r * 1.05, -r * 0.85, 0, -r * 0.95);
+    ctx.quadraticCurveTo( r * 1.05, -r * 0.85,  r * 0.95, r * 0.30);
+    ctx.quadraticCurveTo( 0,         r * 0.55, -r * 0.95, r * 0.30);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Cel shadow on the bottom-right side
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = palette.shadow || palette.base;
+    ctx.beginPath();
+    ctx.moveTo(0,         -r * 0.95);
+    ctx.quadraticCurveTo(r * 1.20, -r * 0.30, r * 0.95, r * 0.30);
+    ctx.quadraticCurveTo(0, r * 0.55, 0, r * 0.30);
+    ctx.lineTo(0, -r * 0.95);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    // Highlight rim
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.strokeStyle = palette.highlight || '#fff';
+    ctx.lineWidth = Math.max(1.2, r * 0.10);
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.85, r * 0.10);
+    ctx.quadraticCurveTo(-r * 0.95, -r * 0.70, -r * 0.10, -r * 0.85);
+    ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+    void sign;
+  };
+  if (direction === 'south' || direction === 'north') {
+    drawOne(shoulderL, -1);
+    drawOne(shoulderR,  1);
+  } else if (direction === 'west') {
+    drawOne(shoulderR, 1);   // back shoulder visible
+    drawOne(shoulderL, -1);  // front shoulder
+  } else {
+    drawOne(shoulderL, -1);
+    drawOne(shoulderR,  1);
+  }
+}
+
 module.exports = {
   drawLimb,
   drawHand,
@@ -1832,5 +2053,8 @@ module.exports = {
   drawHair,
   drawHairHalo,
   drawBeard,
+  drawHood,
+  drawCape,
+  drawShoulderPads,
   outlineW,
 };
