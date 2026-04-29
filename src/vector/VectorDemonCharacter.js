@@ -197,16 +197,96 @@ function drawTail(ctx, rig, demonSkinPalette, tailLen, direction, frameIdx = 0) 
   ctx.restore();
 }
 
+/**
+ * Shoulder spikes — small bone-spike triangles cresting each shoulder.
+ * Drawn for muscular / heavy demon builds (the warrior archetype) on
+ * south + north views. Adds a natural-armor / aggressive accent that
+ * separates demons from generic humans even before the horns/tail
+ * read.
+ */
+function drawShoulderSpikes(ctx, rig, demonSkinPalette) {
+  const { shoulderL, shoulderR } = rig;
+  const direction = rig.direction;
+  if (direction === 'west' || direction === 'east') {
+    // Side view: spikes only on the visible (nearer) shoulder.
+    drawSpikeCluster(ctx, rig, direction === 'west' ? shoulderL : shoulderR,
+      direction === 'west' ? -1 : 1, demonSkinPalette);
+    return;
+  }
+  drawSpikeCluster(ctx, rig, shoulderL, -1, demonSkinPalette);
+  drawSpikeCluster(ctx, rig, shoulderR,  1, demonSkinPalette);
+}
+
+function drawSpikeCluster(ctx, rig, shoulder, sign, palette) {
+  const r = rig.limbR;
+  const baseColor = '#3a1a14';
+  const tipColor  = (palette && palette.shadow) || '#2a0a08';
+  const hiColor   = (palette && palette.base)   || '#7a3220';
+  // Three spikes per shoulder, fanning out + up + back.
+  const spikes = [
+    { angle: -0.45, len: 1.30 },     // back-leaning
+    { angle: -0.10, len: 1.50 },     // up
+    { angle:  0.30, len: 1.10 },     // forward-leaning
+  ];
+  ctx.save();
+  for (const s of spikes) {
+    const a = -Math.PI / 2 + s.angle * sign;
+    const tipX = shoulder.x + sign * Math.cos(a) * r * s.len;
+    const tipY = shoulder.y - 1 + Math.sin(a) * r * s.len;
+    const baseW = r * 0.35;
+    const ax = shoulder.x + Math.cos(a + Math.PI / 2) * baseW * 0.5;
+    const ay = shoulder.y + Math.sin(a + Math.PI / 2) * baseW * 0.5;
+    const bx = shoulder.x - Math.cos(a + Math.PI / 2) * baseW * 0.5;
+    const by = shoulder.y - Math.sin(a + Math.PI / 2) * baseW * 0.5;
+    // Body of the spike
+    ctx.fillStyle = baseColor;
+    ctx.strokeStyle = '#1a0a06';
+    ctx.lineWidth = Body.outlineW(rig, 0.16);
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(bx, by);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Highlight stripe on the lit side
+    ctx.fillStyle = hiColor;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo((ax + tipX) * 0.5, (ay + tipY) * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    // Tip darker dot for sharpness
+    ctx.fillStyle = tipColor;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, Math.max(0.6, r * 0.06), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function generateFrame(config, animationName, frameOffset) {
   const direction = Human.directionOf(animationName);
   const hornStyle = config.hornStyle  || 'curved';
   const hornLen   = config.hornLength || 'medium';
   const tailLen   = config.tailLength || config.tailStyle || 'medium';
+  // Demon defaults to muscular build — add shoulder spikes when the
+  // resolved build is muscular / heavy. Caller can pass spikes:false to
+  // disable on a slim/average demon build.
+  const buildKey = config.build || 'muscular';
+  const showSpikes = (config.spikes !== false) &&
+    (buildKey === 'muscular' || buildKey === 'heavy');
 
   const hooks = {
     before(ctx, rig, colors) {
       // Tail goes BEHIND the body so the rear half occludes naturally.
       drawTail(ctx, rig, colors.skin, tailLen, direction, frameOffset.bodyY || 0);
+    },
+    afterBody(ctx, rig, colors) {
+      // Shoulder spikes drawn after the body so they overlay the
+      // shoulder seam (and any shoulder pad below).
+      if (showSpikes) drawShoulderSpikes(ctx, rig, colors.skin);
     },
     afterHead(ctx, rig) {
       if (direction === 'south') drawHornsSouth(ctx, rig, hornStyle, hornLen);
