@@ -124,6 +124,39 @@ function swingAngleFor(animName, frameIdx) {
   return (arr && frameIdx < arr.length) ? arr[frameIdx] : null;
 }
 
+// ── West/East overhand swing grip-lift offsets ──────────────────────────────
+// In side-profile view the arm only moves horizontally — the wrist stays at a
+// fixed Y (torsoY - 1 + sleeveH ≈ 55). To make the apex look like a true
+// overhand strike (grip near ear level, not chest level) we apply a per-frame
+// upward visual offset to the rendered weapon position without touching the
+// animation skeleton. dy is negative = upward in canvas space (64-px coords).
+const SWING_WEAPON_LIFT_Y = {
+  west: [  -4,  -10,  -16,  -20,   -8,    0,    0,    0],
+  east: [  -4,  -10,  -16,  -20,   -8,    0,    0,    0],
+};
+
+function swingWeaponLiftY(animName, frameIdx) {
+  const m = animName && animName.match(/^attack_swing_(west|east)$/);
+  if (!m) return 0;
+  const arr = SWING_WEAPON_LIFT_Y[m[1]];
+  return (arr && frameIdx < arr.length) ? arr[frameIdx] : 0;
+}
+
+// ── Per-frame weapon-behind-body flag ──────────────────────────────────────
+// When true, the runtime should draw the weapon sprite UNDER the character
+// body so the torso acts as an occluder. Used for south-facing animations
+// where the weapon is swinging toward or aimed at the camera — the body
+// provides a natural foreshortening illusion without altering the weapon art.
+const WEAPON_BEHIND_FRAMES = {
+  attack_swing_south: [false, true, true, true, false, false, false, false],
+  attack_shoot_south: [false, true, true, true, false, false],
+};
+
+function weaponBehindBodyFor(animName, frameIdx) {
+  const arr = WEAPON_BEHIND_FRAMES[animName];
+  return arr ? (arr[frameIdx] || false) : false;
+}
+
 function bodyPoint(x, y) {
   return { x, y };
 }
@@ -237,8 +270,10 @@ function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn, config
     const offsets   = getFramesFn(animName);
 
     const frames = offsets.map((f, frameIdx) => {
-      const anchors = computeFrameAnchors(direction, f, yAnchors);
+      const anchors    = computeFrameAnchors(direction, f, yAnchors);
       const swingAngle = swingAngleFor(animName, frameIdx);
+      const liftY      = swingWeaponLiftY(animName, frameIdx);
+      const behind     = weaponBehindBodyFor(animName, frameIdx);
       return {
         weaponHand: scaleHandAnchor(anchors.weaponHand),
         offHand:    scaleHandAnchor(anchors.offHand),
@@ -249,6 +284,13 @@ function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn, config
         weaponAngle: swingAngle != null
           ? swingAngle
           : (anchors.weaponHand ? anchors.weaponHand.angleDeg : null),
+        // weaponOffsetY: pixels to shift the weapon grip upward from the
+        // anchor point (negative = up). Used for side-view overhand swing to
+        // lift the grip to ear/shoulder level without altering the skeleton.
+        weaponOffsetY: liftY ? Math.round(liftY * scale) : 0,
+        // weaponBehind: when true, render weapon under the body sprite so the
+        // torso occludes it (foreshortening illusion for south-facing attacks).
+        weaponBehind: behind || undefined,
         head:       scalePoint(anchors.head),
         torso:      scalePoint(anchors.torso),
         leftFoot:   scalePoint(anchors.leftFoot),
