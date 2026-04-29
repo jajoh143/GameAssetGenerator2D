@@ -103,7 +103,7 @@ function handleOptions(res) {
     glowIntensities: ['subtle', 'medium', 'bright'],
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
-    frameSizes:  [128, 192, 256],
+    frameSizes:  [128, 192, 256, 384],
   });
 }
 
@@ -112,7 +112,7 @@ async function handleGenerate(req, res) {
   try { body = await parseBody(req); }
   catch { json(res, 400, { error: 'Invalid JSON body' }); return; }
 
-  const { config = {}, name = 'character', frameSize = 128 } = body;
+  const { config = {}, name = 'character', frameSize = 192 } = body;
 
   // Sanitise filename
   const safeName = (name || 'character')
@@ -126,7 +126,7 @@ async function handleGenerate(req, res) {
   if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
   try {
-    generateSpritesheet(config, outputPath, Number(frameSize) || 128);
+    generateSpritesheet(config, outputPath, Number(frameSize) || 192);
     json(res, 200, { success: true, file: `/output/${fileName}`, name: safeName });
   } catch (err) {
     console.error('[generate]', err.message);
@@ -185,7 +185,7 @@ function regenerateAll() {
     try {
       const cfg = resolveConfig(config);
       const out = path.join(OUTPUT_DIR, `${name}_spritesheet.png`);
-      generateSpritesheet(cfg, out, 96);
+      generateSpritesheet(cfg, out, 192);
       manifest.characters.push({ name, file: `../output/${name}_spritesheet.png`, config });
       charDone++;
     } catch (e) {

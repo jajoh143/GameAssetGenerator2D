@@ -18,10 +18,10 @@ const { buildPhaserSpritesheetConfig, savePhaserConfig } = require('../core/Phas
  *
  * @param {object} rawConfig   - Character config
  * @param {string} outputPath  - Where to save the PNG
- * @param {number} [frameSize=128] - Output frame size in pixels (128 | 192 | 256)
+ * @param {number} [frameSize=192] - Output frame size in pixels (128 | 192 | 256 | 384)
  * @returns {string}           - Resolved output path
  */
-function generateSpritesheet(rawConfig, outputPath, frameSize = 128) {
+function generateSpritesheet(rawConfig, outputPath, frameSize = 192) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
     config.type === 'demon'      ? generateDemonFrame      :
