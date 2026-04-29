@@ -2407,72 +2407,212 @@ function drawBeard(ctx, rig, hair, style) {
   if (!style || style === 'none') return;
   const { head } = rig;
   const direction = rig.direction;
+  const r = head.r;
+  // Eyebrow / mouth Y reference points used by every style — keep these
+  // values in sync with drawEyesSouth / drawMouthSouth so the beard
+  // never crosses an eye, brow, or the mouth line.
+  // mouth:  y = +0.58 * r
+  // chin:   y = +0.95 * r
+  // jaw side starts at ~ ±0.78 * r at y = +0.05 * r
 
-  // Mustache + chin variants
   if (style === 'stubble') {
+    // Sprinkle of tiny dots on the chin + jaw — reads as 5-o'clock
+    // shadow without occluding the mouth or cheeks. Each dot is a
+    // pixel-sized ellipse.
     ctx.save();
-    ctx.globalAlpha = 0.35;
-    VC.oval(ctx, head.x, head.y + head.r * 0.55, head.r * 0.55, head.r * 0.22,
-      hair.shadow, null);
+    ctx.fillStyle = hair.shadow || '#3a2010';
+    ctx.globalAlpha = 0.50;
+    // Two small bands of dots — under-jaw + chin sides — laid out by
+    // a deterministic offset list so all frames match.
+    const dotsSouth = [
+      [-0.45, 0.62], [-0.30, 0.68], [-0.15, 0.74], [ 0.00, 0.78],
+      [ 0.15, 0.74], [ 0.30, 0.68], [ 0.45, 0.62],
+      [-0.55, 0.50], [-0.50, 0.40], [ 0.50, 0.40], [ 0.55, 0.50],
+      [-0.20, 0.85], [ 0.00, 0.92], [ 0.20, 0.85],
+    ];
+    const dotsWest = [
+      [-0.55, 0.55], [-0.35, 0.65], [-0.15, 0.78], [ 0.05, 0.85],
+      [-0.40, 0.80], [-0.20, 0.90], [-0.55, 0.40],
+    ];
+    const dots = (direction === 'south' || direction === 'north') ? dotsSouth : dotsWest;
+    const dotR = r * 0.045;
+    for (const [nx, ny] of dots) {
+      ctx.beginPath();
+      ctx.ellipse(head.x + nx * r, head.y + ny * r, dotR, dotR * 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
     return;
   }
+
   if (style === 'handlebar') {
+    // A thin curled mustache that sits ABOVE the mouth, leaving the
+    // mouth and cheeks fully visible. Two symmetric tendrils with a
+    // small dip in the center.
     ctx.save();
     ctx.fillStyle = hair.base;
-    ctx.beginPath();
-    ctx.moveTo(head.x - head.r * 0.45, head.y + head.r * 0.35);
-    ctx.quadraticCurveTo(head.x, head.y + head.r * 0.55,
-                         head.x + head.r * 0.45, head.y + head.r * 0.35);
-    ctx.quadraticCurveTo(head.x + head.r * 0.55, head.y + head.r * 0.20,
-                         head.x + head.r * 0.40, head.y + head.r * 0.30);
-    ctx.quadraticCurveTo(head.x, head.y + head.r * 0.45,
-                         head.x - head.r * 0.40, head.y + head.r * 0.30);
-    ctx.quadraticCurveTo(head.x - head.r * 0.55, head.y + head.r * 0.20,
-                         head.x - head.r * 0.45, head.y + head.r * 0.35);
-    ctx.closePath();
-    ctx.fill();
-    ctx.lineWidth = outlineW(rig, 0.10);
-    ctx.strokeStyle = hair.shadow;
-    ctx.stroke();
+    ctx.strokeStyle = hair.shadow || '#1a0a06';
+    ctx.lineWidth = outlineW(rig, 0.12);
+    if (direction === 'south' || direction === 'north') {
+      ctx.beginPath();
+      // Left tendril
+      ctx.moveTo(head.x,                 head.y + r * 0.42);
+      ctx.quadraticCurveTo(head.x - r * 0.30, head.y + r * 0.45,
+                           head.x - r * 0.50, head.y + r * 0.36);
+      ctx.quadraticCurveTo(head.x - r * 0.62, head.y + r * 0.20,
+                           head.x - r * 0.42, head.y + r * 0.22);
+      ctx.quadraticCurveTo(head.x - r * 0.20, head.y + r * 0.36,
+                           head.x,             head.y + r * 0.40);
+      // Right tendril (mirror)
+      ctx.quadraticCurveTo(head.x + r * 0.20, head.y + r * 0.36,
+                           head.x + r * 0.42, head.y + r * 0.22);
+      ctx.quadraticCurveTo(head.x + r * 0.62, head.y + r * 0.20,
+                           head.x + r * 0.50, head.y + r * 0.36);
+      ctx.quadraticCurveTo(head.x + r * 0.30, head.y + r * 0.45,
+                           head.x,             head.y + r * 0.42);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      // Side view: single curled tendril on the visible side.
+      const ds = direction === 'west' ? -1 : 1;
+      ctx.beginPath();
+      ctx.moveTo(head.x + ds * r * 0.10, head.y + r * 0.42);
+      ctx.quadraticCurveTo(head.x + ds * r * 0.40, head.y + r * 0.45,
+                           head.x + ds * r * 0.62, head.y + r * 0.30);
+      ctx.quadraticCurveTo(head.x + ds * r * 0.55, head.y + r * 0.20,
+                           head.x + ds * r * 0.40, head.y + r * 0.32);
+      ctx.quadraticCurveTo(head.x + ds * r * 0.20, head.y + r * 0.40,
+                           head.x + ds * r * 0.10, head.y + r * 0.42);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
     ctx.restore();
     return;
   }
+
   if (style === 'goatee') {
-    const pts = [
-      [head.x - head.r * 0.30, head.y + head.r * 0.55],
-      [head.x,                 head.y + head.r * 0.95],
-      [head.x + head.r * 0.30, head.y + head.r * 0.55],
-      [head.x,                 head.y + head.r * 0.45],
-    ];
-    VC.smoothBlob(ctx, pts, hair.base, hair.shadow, outlineW(rig, 0.10), 0.5);
+    // Chin-only patch BELOW the mouth + a small mustache strip above.
+    // Mouth stays visible between them.
+    ctx.save();
+    ctx.fillStyle = hair.base;
+    ctx.strokeStyle = hair.shadow || '#1a0a06';
+    ctx.lineWidth = outlineW(rig, 0.12);
+    if (direction === 'south' || direction === 'north') {
+      // Chin patch (below mouth)
+      ctx.beginPath();
+      ctx.moveTo(head.x - r * 0.18, head.y + r * 0.72);
+      ctx.quadraticCurveTo(head.x - r * 0.22, head.y + r * 0.92,
+                           head.x,             head.y + r * 0.97);
+      ctx.quadraticCurveTo(head.x + r * 0.22, head.y + r * 0.92,
+                           head.x + r * 0.18, head.y + r * 0.72);
+      ctx.quadraticCurveTo(head.x,             head.y + r * 0.66,
+                           head.x - r * 0.18, head.y + r * 0.72);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Thin mustache strip ABOVE the mouth
+      ctx.beginPath();
+      ctx.moveTo(head.x - r * 0.20, head.y + r * 0.46);
+      ctx.quadraticCurveTo(head.x, head.y + r * 0.52,
+                           head.x + r * 0.20, head.y + r * 0.46);
+      ctx.quadraticCurveTo(head.x + r * 0.16, head.y + r * 0.40,
+                           head.x,             head.y + r * 0.43);
+      ctx.quadraticCurveTo(head.x - r * 0.16, head.y + r * 0.40,
+                           head.x - r * 0.20, head.y + r * 0.46);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      const ds = direction === 'west' ? -1 : 1;
+      // Side chin patch
+      ctx.beginPath();
+      ctx.moveTo(head.x - ds * r * 0.10, head.y + r * 0.72);
+      ctx.quadraticCurveTo(head.x - ds * r * 0.30, head.y + r * 0.95,
+                           head.x - ds * r * 0.55, head.y + r * 0.85);
+      ctx.quadraticCurveTo(head.x - ds * r * 0.45, head.y + r * 0.65,
+                           head.x - ds * r * 0.10, head.y + r * 0.72);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
     return;
   }
+
   if (style === 'full') {
-    // Full beard wraps the jaw — a wide blob from ear to ear via chin.
-    const pts = direction === 'west' || direction === 'east'
-      ? [
-          [head.x - head.r * 0.65, head.y + head.r * 0.20],
-          [head.x - head.r * 0.55, head.y + head.r * 0.85],
-          [head.x + head.r * 0.45, head.y + head.r * 0.95],
-          [head.x + head.r * 0.65, head.y + head.r * 0.55],
-          [head.x + head.r * 0.55, head.y + head.r * 0.35],
-        ]
-      : [
-          [head.x - head.r * 0.85, head.y + head.r * 0.20],
-          [head.x - head.r * 0.65, head.y + head.r * 0.95],
-          [head.x,                 head.y + head.r * 1.10],
-          [head.x + head.r * 0.65, head.y + head.r * 0.95],
-          [head.x + head.r * 0.85, head.y + head.r * 0.20],
-          [head.x + head.r * 0.50, head.y + head.r * 0.30],
-          [head.x - head.r * 0.50, head.y + head.r * 0.30],
-        ];
-    const grad = VC.vGradient(
-      ctx,
-      head.x - head.r, head.y + head.r * 0.10, 0, head.r * 1.05,
-      hair,
-    );
-    VC.smoothBlob(ctx, pts, grad, hair.shadow, outlineW(rig, 0.12), 0.5);
+    // Trimmed beard along the JAW LINE only — leaves the cheeks and
+    // mouth visible. Connects from sideburn down to chin and back up,
+    // hugging the jaw without spreading onto the cheek plane. Combined
+    // with the existing mustache strip for a full-face look that still
+    // shows the face features.
+    ctx.save();
+    ctx.fillStyle = hair.base;
+    ctx.strokeStyle = hair.shadow || '#1a0a06';
+    ctx.lineWidth = outlineW(rig, 0.14);
+    if (direction === 'south' || direction === 'north') {
+      // Lower-jaw chin/jaw patch sitting BELOW the mouth line. Top
+      // edge is uniformly y=+0.66 (mouth at +0.58 stays visible above
+      // it). Outer perimeter follows the jawline + chin. Compact
+      // "trimmed beard" rather than a face-eating mass.
+      ctx.beginPath();
+      // Top-right corner — JUST below mouth line
+      ctx.moveTo(head.x + r * 0.62, head.y + r * 0.66);
+      // Outer jawline: curve down + in to the chin
+      ctx.quadraticCurveTo(head.x + r * 0.65, head.y + r * 0.84,
+                           head.x + r * 0.40, head.y + r * 0.97);
+      ctx.quadraticCurveTo(head.x,             head.y + r * 1.02,
+                           head.x - r * 0.40, head.y + r * 0.97);
+      ctx.quadraticCurveTo(head.x - r * 0.65, head.y + r * 0.84,
+                           head.x - r * 0.62, head.y + r * 0.66);
+      // Top edge — flat across, slight upward bow to follow lip line
+      ctx.quadraticCurveTo(head.x - r * 0.30, head.y + r * 0.62,
+                           head.x,             head.y + r * 0.63);
+      ctx.quadraticCurveTo(head.x + r * 0.30, head.y + r * 0.62,
+                           head.x + r * 0.62, head.y + r * 0.66);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Thin mustache strip just above the mouth.
+      ctx.beginPath();
+      ctx.moveTo(head.x - r * 0.32, head.y + r * 0.46);
+      ctx.quadraticCurveTo(head.x, head.y + r * 0.52,
+                           head.x + r * 0.32, head.y + r * 0.46);
+      ctx.quadraticCurveTo(head.x + r * 0.20, head.y + r * 0.40,
+                           head.x,             head.y + r * 0.43);
+      ctx.quadraticCurveTo(head.x - r * 0.20, head.y + r * 0.40,
+                           head.x - r * 0.32, head.y + r * 0.46);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      const ds = direction === 'west' ? -1 : 1;
+      // Side-view jaw strap: thin band along the underside of the jaw.
+      ctx.beginPath();
+      ctx.moveTo(head.x + ds * r * 0.50, head.y + r * 0.18);         // ear/sideburn
+      ctx.quadraticCurveTo(head.x + ds * r * 0.10, head.y + r * 0.95,
+                           head.x - ds * r * 0.50, head.y + r * 0.85);
+      // Inner edge runs along the upper jawline (no cheek coverage).
+      ctx.quadraticCurveTo(head.x - ds * r * 0.20, head.y + r * 0.80,
+                           head.x + ds * r * 0.20, head.y + r * 0.68);
+      ctx.quadraticCurveTo(head.x + ds * r * 0.40, head.y + r * 0.40,
+                           head.x + ds * r * 0.50, head.y + r * 0.18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Side mustache curl
+      ctx.beginPath();
+      ctx.moveTo(head.x - ds * r * 0.05, head.y + r * 0.46);
+      ctx.quadraticCurveTo(head.x - ds * r * 0.30, head.y + r * 0.50,
+                           head.x - ds * r * 0.55, head.y + r * 0.42);
+      ctx.quadraticCurveTo(head.x - ds * r * 0.40, head.y + r * 0.36,
+                           head.x - ds * r * 0.05, head.y + r * 0.40);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 }
 
