@@ -120,11 +120,13 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'south');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'south');
   };
   if (lFwd >= rFwd) { drawR(); drawL(); }
@@ -191,11 +193,13 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'north');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'north');
   };
   if (lFwd >= rFwd) { drawR(); drawL(); }
@@ -253,6 +257,7 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
     const foot = side === 'L' ? rig.footL : rig.footR;
     Body.drawLimb(ctx, hip, knee, foot, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantCuff(ctx, foot, knee, rig, colors.pants);
     Body.drawShoe(ctx, foot, colors.shoes, rig, 'west');
   };
   drawLeg(backLeg);

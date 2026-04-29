@@ -149,6 +149,29 @@ function drawHand(ctx, hand, skin, rig, opts = {}) {
 }
 
 /**
+ * Pant cuff — a slightly darker band at the ankle to suggest a hem,
+ * similar in spirit to drawCuff but for legs. Direction comes from the
+ * unit vector along the lower leg so the band orients perpendicular.
+ */
+function drawPantCuff(ctx, foot, knee, rig, pants) {
+  const dx = foot.x - knee.x, dy = foot.y - knee.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const cx = foot.x - ux * rig.limbR * 0.55;
+  const cy = foot.y - uy * rig.limbR * 0.55;
+  const w = rig.limbR * 1.10;     // slightly wider than the leg radius
+  const h = rig.limbR * 0.42;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(Math.atan2(uy, ux));
+  VC.roundRect(ctx, -h * 0.5, -w * 0.5, h, w, h * 0.4,
+    pants.deep_shadow || pants.shadow || '#222',
+    pants.outline || '#000',
+    Math.max(0.8, h * 0.18));
+  ctx.restore();
+}
+
+/**
  * Sleeve cuff — a thin contrasting band drawn at the wrist end of a sleeve.
  * Used for jacket/bomber/hoodie styles to suggest a separately-stitched
  * cuff. Direction comes from the unit vector along the forearm so the band
@@ -433,56 +456,159 @@ function drawNeck(ctx, rig, skin) {
 
 function drawHead(ctx, rig, skin) {
   const { head } = rig;
+  const direction = rig.direction;
 
-  // 1. Base ovoid with a top-left → bottom-right radial gradient.
-  const grad = VC.radial(
-    ctx,
-    head.x - head.r * 0.30, head.y - head.r * 0.40,
-    head.r * 1.6,
-    skin.highlight,
-    skin.base,
+  // 1. Build the head silhouette as a tapered blob (wider at the
+  // temples / cheekbones, narrower at the chin). This is the single
+  // biggest readability boost over a plain oval — chibi heads should
+  // taper to a soft chin point.
+  let pts;
+  if (direction === 'south' || direction === 'north') {
+    pts = [
+      [-0.50, -1.00],   // top-left of skull
+      [-0.92, -0.55],   // upper temple
+      [-0.95, -0.05],   // cheekbone (widest point)
+      [-0.78,  0.55],   // jaw
+      [-0.32,  0.92],   // chin-left
+      [ 0.00,  1.00],   // chin
+      [ 0.32,  0.92],
+      [ 0.78,  0.55],
+      [ 0.95, -0.05],
+      [ 0.92, -0.55],
+      [ 0.50, -1.00],
+      [ 0.00, -1.05],   // skull-top
+    ];
+  } else {
+    // Side view: narrower in profile depth, slight forehead/chin curve.
+    // Negative-X faces forward (west); the back of the skull is +X.
+    pts = [
+      [-0.55, -0.95],
+      [-0.85, -0.55],
+      [-0.92,  0.00],   // brow / forehead
+      [-0.85,  0.40],   // upper lip
+      [-0.62,  0.78],   // chin
+      [-0.20,  0.92],
+      [ 0.45,  0.85],
+      [ 0.85,  0.40],
+      [ 0.95,  0.00],
+      [ 0.85, -0.55],
+      [ 0.40, -1.00],
+    ];
+  }
+  const blob = pts.map(([nx, ny]) => [
+    head.x + nx * head.r * 0.92,
+    head.y + ny * head.r,
+  ]);
+
+  // 2. Base fill — diagonal radial gradient (light from top-left).
+  const grad = ctx.createRadialGradient(
+    head.x - head.r * 0.30, head.y - head.r * 0.40, 0,
+    head.x - head.r * 0.30, head.y - head.r * 0.40, head.r * 1.7,
   );
-  VC.oval(ctx, head.x, head.y, head.r * 0.92, head.r,
-    grad, skin.outline, outlineW(rig, 0.22));
+  grad.addColorStop(0, skin.highlight);
+  grad.addColorStop(0.55, skin.base);
+  grad.addColorStop(1, skin.shadow || skin.base);
 
-  // 2. Core shadow — a darker crescent on the bottom-right that defines
-  // the terminator between lit and shadowed cheek.
-  VC.coreShadowOval(ctx, head.x, head.y, head.r * 0.92, head.r,
-    skin.shadow, 0.55);
+  blobPath(ctx, blob, 0.55);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = skin.outline;
+  ctx.lineWidth = outlineW(rig, 0.22);
+  ctx.stroke();
 
-  // 3. Reflected (bounced) light — a faint warm bloom on the bottom-left
-  // edge, simulating light bouncing off the chest/clothing.
+  // 3. Core shadow — a darker crescent on the bottom-right cheek that
+  // defines the terminator. Painted via source-atop so it's clipped to
+  // the new tapered silhouette.
   ctx.save();
-  ctx.globalAlpha = 0.20;
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.55;
+  const coreGrad = ctx.createRadialGradient(
+    head.x + head.r * 0.55, head.y + head.r * 0.40, 0,
+    head.x + head.r * 0.55, head.y + head.r * 0.40, head.r * 1.10,
+  );
+  coreGrad.addColorStop(0,   skin.shadow);
+  coreGrad.addColorStop(0.5, skin.shadow);
+  coreGrad.addColorStop(1,   VC.hexAlpha(skin.shadow, 0));
+  ctx.fillStyle = coreGrad;
+  blobPath(ctx, blob, 0.55);
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Reflected light — a faint warm bloom on the bottom-left jaw.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.22;
   const bounce = ctx.createRadialGradient(
-    head.x - head.r * 0.55, head.y + head.r * 0.45, 0,
-    head.x - head.r * 0.55, head.y + head.r * 0.45, head.r * 0.85,
+    head.x - head.r * 0.55, head.y + head.r * 0.55, 0,
+    head.x - head.r * 0.55, head.y + head.r * 0.55, head.r * 0.95,
   );
   bounce.addColorStop(0, skin.highlight);
   bounce.addColorStop(1, VC.hexAlpha(skin.highlight, 0));
   ctx.fillStyle = bounce;
-  ctx.beginPath();
-  ctx.ellipse(head.x, head.y, head.r * 0.92, head.r, 0, 0, Math.PI * 2);
+  blobPath(ctx, blob, 0.55);
   ctx.fill();
   ctx.restore();
 
-  // 4. Cheek blush — only south view (faces camera, blush reads).
-  if (rig.direction === 'south') {
+  // 5. Cheek blush — south view only.
+  if (direction === 'south') {
     ctx.save();
-    ctx.globalAlpha = 0.18;
-    VC.oval(ctx, head.x + head.r * 0.42, head.y + head.r * 0.20,
-      head.r * 0.22, head.r * 0.14, '#c84848', null);
-    VC.oval(ctx, head.x - head.r * 0.42, head.y + head.r * 0.20,
-      head.r * 0.22, head.r * 0.14, '#c84848', null);
+    ctx.globalAlpha = 0.20;
+    VC.oval(ctx, head.x + head.r * 0.46, head.y + head.r * 0.22,
+      head.r * 0.20, head.r * 0.12, '#c84848', null);
+    VC.oval(ctx, head.x - head.r * 0.46, head.y + head.r * 0.22,
+      head.r * 0.20, head.r * 0.12, '#c84848', null);
     ctx.restore();
   }
 
-  // 5. Cast shadow under the chin onto the neck — drawn AFTER the head,
-  // so it lands on the neck (which was rendered before the head).
+  // 6. Ears — small bumps on the side of the head. South view shows
+  // both, side view shows only the visible side. Skipped for snouted
+  // / horned variants that draw their own ears (goblin, lizardfolk).
+  if (!rig.skipEars) drawEars(ctx, rig, skin);
+
+  // 7. Cast shadow under the chin onto the neck.
   VC.castShadow(ctx,
-    head.x, head.y + head.r * 0.95,
-    head.r * 0.55, head.r * 0.22,
+    head.x, head.y + head.r * 0.98,
+    head.r * 0.50, head.r * 0.20,
     0.45, skin.outline);
+}
+
+function drawEars(ctx, rig, skin) {
+  const { head } = rig;
+  const direction = rig.direction;
+  const earR = head.r * 0.18;
+  const lineW = outlineW(rig, 0.18);
+  const drawOne = (sign) => {
+    const ex = head.x + sign * head.r * 0.92;
+    const ey = head.y + head.r * 0.10;
+    ctx.save();
+    ctx.fillStyle = skin.base;
+    ctx.strokeStyle = skin.outline;
+    ctx.lineWidth = lineW;
+    ctx.beginPath();
+    // Slightly egg-shaped ear leaning back-and-up
+    ctx.ellipse(ex + sign * earR * 0.20, ey,
+      earR * 0.55, earR * 0.85, sign * -0.20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Inner-ear shadow
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = skin.shadow || skin.outline;
+    ctx.beginPath();
+    ctx.ellipse(ex + sign * earR * 0.30, ey + earR * 0.05,
+      earR * 0.25, earR * 0.55, sign * -0.20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+  if (direction === 'south' || direction === 'north') {
+    drawOne(-1);
+    drawOne( 1);
+  } else if (direction === 'west') {
+    // Only the back-of-camera ear shows in profile (we look LEFT, so the
+    // visible ear is on the right side of the head silhouette).
+    drawOne(1);
+  } else if (direction === 'east') {
+    drawOne(-1);
+  }
 }
 
 /**
@@ -780,6 +906,20 @@ const HAIR_BLOBS = {
     [0.45, -1.05], [0.85, -0.85], [0.85, -0.30],
   ],
   bald: null,
+  // Hair pulled back into a ponytail — short on top, with a separate
+  // tail rendered as a tail-bezier in drawHair.
+  ponytail: [
+    [-0.78, -0.15], [-0.85, -0.55], [-0.50, -1.00], [0.0, -1.10],
+    [0.50, -1.00], [0.85, -0.55], [0.78, -0.05], [0.40, -0.30],
+    [-0.40, -0.30],
+  ],
+  // Long hair swept asymmetrically to the right side — bigger on one
+  // side than the other.
+  side_swept: [
+    [-1.05, -0.10], [-1.05, -0.55], [-0.55, -1.10], [0.10, -1.20],
+    [0.65, -1.05], [1.10, -0.45], [1.20,  0.30], [1.05,  0.95],
+    [0.55,  1.00], [-0.20,  0.45], [-0.95,  0.40],
+  ],
 };
 
 function drawHair(ctx, rig, hair, style) {
@@ -896,6 +1036,63 @@ function drawHair(ctx, rig, hair, style) {
   if (!['buzzed', 'mohawk', 'topknot'].includes(style)) {
     drawForelock(ctx, rig, hair, style);
   }
+
+  // 7. Ponytail tail — a separate strand hanging behind the head when
+  // the style is "ponytail". Tail position depends on facing direction:
+  // south/north: a small loop behind the head; west/east: visible tail
+  // sweeping back-and-down.
+  if (style === 'ponytail') {
+    drawPonytail(ctx, rig, hair, direction);
+  }
+}
+
+function drawPonytail(ctx, rig, hair, direction) {
+  const { head } = rig;
+  const tailLen = head.r * 1.45;
+  let rootX, rootY, midX, midY, tipX, tipY;
+  if (direction === 'west') {
+    rootX = head.x + head.r * 0.55;
+    rootY = head.y - head.r * 0.10;
+    midX  = rootX + tailLen * 0.55;
+    midY  = rootY + tailLen * 0.30;
+    tipX  = rootX + tailLen * 0.90;
+    tipY  = rootY + tailLen * 0.65;
+  } else if (direction === 'east') {
+    rootX = head.x - head.r * 0.55;
+    rootY = head.y - head.r * 0.10;
+    midX  = rootX - tailLen * 0.55;
+    midY  = rootY + tailLen * 0.30;
+    tipX  = rootX - tailLen * 0.90;
+    tipY  = rootY + tailLen * 0.65;
+  } else {
+    // South/North — tail visible past the silhouette on the right side.
+    rootX = head.x + head.r * 0.20;
+    rootY = head.y - head.r * 0.30;
+    midX  = rootX + tailLen * 0.40;
+    midY  = rootY + tailLen * 0.20;
+    tipX  = rootX + tailLen * 0.60;
+    tipY  = rootY + tailLen * 0.55;
+  }
+  ctx.save();
+  // Dark base
+  ctx.lineCap = 'round';
+  ctx.lineWidth = head.r * 0.40;
+  ctx.strokeStyle = hair.shadow || hair.base;
+  ctx.beginPath();
+  ctx.moveTo(rootX, rootY);
+  ctx.quadraticCurveTo(midX, midY, tipX, tipY);
+  ctx.stroke();
+  // Highlight stripe along the lit side
+  ctx.lineWidth = head.r * 0.18;
+  ctx.strokeStyle = hair.highlight || hair.base;
+  ctx.beginPath();
+  ctx.moveTo(rootX, rootY);
+  ctx.quadraticCurveTo(midX - head.r * 0.05, midY - head.r * 0.05, tipX, tipY);
+  ctx.stroke();
+  // Hair-tie at the root
+  ctx.fillStyle = hair.shadow || '#000';
+  VC.oval(ctx, rootX, rootY, head.r * 0.18, head.r * 0.13, hair.shadow || '#000', null);
+  ctx.restore();
 }
 
 /**
@@ -1098,6 +1295,7 @@ module.exports = {
   drawHand,
   drawShoe,
   drawCuff,
+  drawPantCuff,
   drawTorso,
   drawBelt,
   drawNeck,
