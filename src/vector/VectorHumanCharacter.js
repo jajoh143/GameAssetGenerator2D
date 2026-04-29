@@ -163,22 +163,7 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const colors = resolveColors(config);
   const rig = buildRig(config, 'south', offsets);
 
-  // Ground shadow — shrinks when the character lifts off (negative bodyY
-  // == higher up) AND tracks the character's center of mass horizontally
-  // (mid-pelvis X) instead of being glued to frame center. So when the
-  // body shifts during a stride or strike, the shadow slides with it.
-  if (!offsets.skipGroundShadow) {
-    const sx = rig.frameW * 0.22;
-    const sy = rig.limbR * 0.6;
-    const lift = Math.max(0, -((offsets.bodyY || 0) * (rig.frameH / 96)));
-    const sScale = Math.max(0.55, 1 - lift * 0.04);
-    const sAlpha = Math.max(0.15, 0.35 - lift * 0.025);
-    // Average foot X gives a good approximation of where the character
-    // is actually standing — works for stride-shifted west walks too.
-    const shadowX = (rig.footL.x + rig.footR.x) / 2;
-    VC.groundShadow(ctx, shadowX, rig.groundY + rig.limbR * 0.6,
-      sx * sScale, sy * sScale, sAlpha);
-  }
+  drawGroundShadow(ctx, rig, config, offsets);
 
   if (hooks.before) hooks.before(ctx, rig, colors);
 
@@ -225,6 +210,8 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
     const fist = meta.isAttack && meta.actionSide === 'L';
     const toward = handToward(rig.elbowL, rig.handL);
     Body.drawHand(ctx, rig.handL, colors.skin, rig, { fist, toward });
+    if (config.gloves) Body.drawGlove(ctx, rig.handL, colors.glove, rig,
+      { fist, toward, elbow: rig.elbowL });
   };
   const drawArmR = () => {
     Body.drawLimb(ctx, rig.shoulderR, rig.elbowR, rig.handR, colors.clothing,
@@ -235,6 +222,8 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
     const fist = meta.isAttack && meta.actionSide === 'R';
     const toward = handToward(rig.elbowR, rig.handR);
     Body.drawHand(ctx, rig.handR, colors.skin, rig, { fist, toward });
+    if (config.gloves) Body.drawGlove(ctx, rig.handR, colors.glove, rig,
+      { fist, toward, elbow: rig.elbowR });
   };
   if (lArmFwd >= rArmFwd) { drawArmR(); drawArmL(); }
   else                    { drawArmL(); drawArmR(); }
@@ -296,10 +285,7 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   const colors = resolveColors(config);
   const rig = buildRig(config, 'north', offsets);
 
-  if (!offsets.skipGroundShadow) {
-    VC.groundShadow(ctx, rig.frameW / 2, rig.groundY + rig.limbR * 0.6,
-      rig.frameW * 0.22, rig.limbR * 0.6, 0.35);
-  }
+  drawGroundShadow(ctx, rig, config, offsets);
 
   if (hooks.before) hooks.before(ctx, rig, colors);
 
@@ -336,6 +322,8 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
     if (colors.detailFlags.cuffBand) Body.drawCuff(ctx, rig.handL, rig.elbowL, rig, colors.clothing);
     const fist = meta.isAttack && meta.actionSide === 'L';
     Body.drawHand(ctx, rig.handL, colors.skin, rig, { fist, toward: handToward(rig.elbowL, rig.handL) });
+    if (config.gloves) Body.drawGlove(ctx, rig.handL, colors.glove, rig,
+      { fist, toward: handToward(rig.elbowL, rig.handL), elbow: rig.elbowL });
   };
   const drawArmR = () => {
     Body.drawLimb(ctx, rig.shoulderR, rig.elbowR, rig.handR, colors.clothing,
@@ -343,6 +331,8 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
     if (colors.detailFlags.cuffBand) Body.drawCuff(ctx, rig.handR, rig.elbowR, rig, colors.clothing);
     const fist = meta.isAttack && meta.actionSide === 'R';
     Body.drawHand(ctx, rig.handR, colors.skin, rig, { fist, toward: handToward(rig.elbowR, rig.handR) });
+    if (config.gloves) Body.drawGlove(ctx, rig.handR, colors.glove, rig,
+      { fist, toward: handToward(rig.elbowR, rig.handR), elbow: rig.elbowR });
   };
   drawArmL(); drawArmR();
 
@@ -372,10 +362,7 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   const colors = resolveColors(config);
   const rig = buildRig(config, 'west', offsets);
 
-  if (!offsets.skipGroundShadow) {
-    VC.groundShadow(ctx, rig.frameW / 2, rig.groundY + rig.limbR * 0.6,
-      rig.frameW * 0.20, rig.limbR * 0.55, 0.35);
-  }
+  drawGroundShadow(ctx, rig, config, offsets);
 
   if (hooks.before) hooks.before(ctx, rig, colors);
 
@@ -424,6 +411,8 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
     if (colors.detailFlags.cuffBand) Body.drawCuff(ctx, hd, el, rig, colors.clothing);
     const fist = meta.isAttack && meta.actionSide === side;
     Body.drawHand(ctx, hd, colors.skin, rig, { fist, toward: handToward(el, hd) });
+    if (config.gloves) Body.drawGlove(ctx, hd, colors.glove, rig,
+      { fist, toward: handToward(el, hd), elbow: el });
   };
   drawArm(backArm);
 
@@ -468,6 +457,52 @@ function drawEast(ctx, config, offsets, hooks = {}, meta = {}) {
 // ---------------------------------------------------------------------------
 // Frame entry
 // ---------------------------------------------------------------------------
+
+// Per-build shadow size multiplier. Heavier characters cast a bigger
+// shadow; slim/fairy characters cast a smaller one. Multiplier applied
+// on top of the lift / animation shrink.
+const BUILD_SHADOW_SCALE = {
+  slim:     0.85,
+  average:  1.00,
+  muscular: 1.10,
+  heavy:    1.25,
+};
+const SPECIES_SHADOW_SCALE = {
+  fairy:      0.55,    // tiny pixie body → small shadow
+  goblin:     0.85,
+  lizardfolk: 1.20,
+};
+
+/**
+ * Ground shadow renderer used by all four direction renderers.
+ *
+ *   - Tracks the average foot X so the shadow slides with the stride.
+ *   - Shrinks + dims by lift (negative bodyY) so attack peak / passing
+ *     frames clearly read as airborne.
+ *   - Scales with build (slim → small, heavy → big) and species
+ *     (fairy small, lizardfolk big).
+ *   - Skipped when offsets.skipGroundShadow is set (used by hooks that
+ *     want to render their own shadow, e.g. a fairy ground rune).
+ */
+function drawGroundShadow(ctx, rig, config, offsets) {
+  if (offsets && offsets.skipGroundShadow) return;
+  const buildKey = (config && config.build) ||
+    (config && config.type === 'demon' ? 'muscular' :
+     config && config.type === 'lizardfolk' ? 'heavy' :
+     config && config.type === 'goblin' ? 'slim' : 'average');
+  const buildMult   = BUILD_SHADOW_SCALE[buildKey] || 1.0;
+  const speciesMult = (config && SPECIES_SHADOW_SCALE[config.type]) || 1.0;
+  const sizeMult    = buildMult * speciesMult;
+
+  const sx = rig.frameW * 0.22 * sizeMult;
+  const sy = rig.limbR * 0.6 * sizeMult;
+  const lift = Math.max(0, -((offsets && offsets.bodyY || 0) * (rig.frameH / 96)));
+  const sScale = Math.max(0.55, 1 - lift * 0.04);
+  const sAlpha = Math.max(0.15, 0.35 - lift * 0.025);
+  const shadowX = (rig.footL.x + rig.footR.x) / 2;
+  VC.groundShadow(ctx, shadowX, rig.groundY + rig.limbR * 0.6,
+    sx * sScale, sy * sScale, sAlpha);
+}
 
 // Unit vector from elbow → hand, used to orient the fist's knuckle row
 // so it points along the forearm (correct under any animation pose).

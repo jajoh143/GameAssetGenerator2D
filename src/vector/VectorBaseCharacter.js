@@ -746,18 +746,58 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ctx.restore();
   }
 
-  // 6. Centerline crease (south view) — the seam where shirt buttons / zip
-  // would run. Subtle but adds depth.
+  // 6. Centerline / zipper (south view).
+  //   - Jacket-family styles (lapels / zipper / coat) get a visible
+  //     two-line zipper with small horizontal teeth marks at intervals.
+  //   - Other styles get the older subtle centerline crease.
   if (direction === 'south' && opts.chestCrease !== false) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(chest.x, chest.y + rig.limbR * 0.4);
-    ctx.lineTo(chest.x, pelvis.y - rig.limbR * 0.2);
-    ctx.lineWidth = outlineW(rig, 0.10);
-    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
-    ctx.globalAlpha = 0.45;
-    ctx.stroke();
-    ctx.restore();
+    const zipTop = chest.y + limbR * 0.45;
+    const zipBot = pelvis.y - limbR * 0.10;
+    if (opts.lapels) {
+      ctx.save();
+      // Two parallel zipper rails
+      ctx.strokeStyle = clothing.outline || '#000';
+      ctx.lineWidth = outlineW(rig, 0.14);
+      ctx.lineCap = 'round';
+      const zipDx = limbR * 0.10;
+      ctx.beginPath();
+      ctx.moveTo(chest.x - zipDx, zipTop);
+      ctx.lineTo(chest.x - zipDx, zipBot);
+      ctx.moveTo(chest.x + zipDx, zipTop);
+      ctx.lineTo(chest.x + zipDx, zipBot);
+      ctx.stroke();
+      // Teeth — small horizontal dashes between the rails
+      ctx.lineWidth = outlineW(rig, 0.10);
+      const teeth = 6;
+      for (let i = 0; i < teeth; i++) {
+        const t = i / (teeth - 1);
+        const y = zipTop + (zipBot - zipTop) * t;
+        ctx.beginPath();
+        ctx.moveTo(chest.x - zipDx, y);
+        ctx.lineTo(chest.x + zipDx, y);
+        ctx.stroke();
+      }
+      // Small zipper pull at the bottom
+      ctx.fillStyle = clothing.highlight || '#aaa';
+      ctx.strokeStyle = clothing.outline || '#000';
+      ctx.lineWidth = Math.max(0.8, limbR * 0.08);
+      ctx.beginPath();
+      ctx.rect(chest.x - limbR * 0.20, zipBot - limbR * 0.05,
+               limbR * 0.40, limbR * 0.30);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(chest.x, zipTop);
+      ctx.lineTo(chest.x, zipBot);
+      ctx.lineWidth = outlineW(rig, 0.10);
+      ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+      ctx.globalAlpha = 0.45;
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   // 7. Jacket lapels — V-shape from collar to chest. Drawn at FULL opacity
