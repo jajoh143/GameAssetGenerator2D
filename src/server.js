@@ -6,17 +6,19 @@ const path    = require('path');
 
 const { generateSpritesheet }  = require('./generators/CharacterGenerator');
 const { generateAllWeapons }   = require('./generators/WeaponGenerator');
+const { generateAllArmor }     = require('./generators/ArmorGenerator');
 const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
 const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 const {
   SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHING, CLOTHING_COLORS, CLOTHING_STYLES,
-  PANTS, SHOES, BELT, DEMON_SKIN, GOBLIN_SKIN,
+  PANTS, SHOES, BELT, DEMON_SKIN, GOBLIN_SKIN, LIZARD_SKIN,
   FAIRY_SKIN, FAIRY_WING, FAIRY_DRESS, FAIRY_GLOW,
 } = require('./core/Colors');
 
 const PORT        = 3000;
 const OUTPUT_DIR  = path.join(__dirname, '..', 'output');
 const WEAPONS_DIR = path.join(OUTPUT_DIR, 'weapons');
+const ARMOR_DIR   = path.join(OUTPUT_DIR, 'armor');
 const PREVIEW_DIR = path.join(__dirname, '..', 'preview');
 
 const MIME = {
@@ -84,6 +86,9 @@ function handleOptions(res) {
     beltColors:      paletteMap(BELT),
     demonSkins:  paletteMap(DEMON_SKIN),
     goblinSkins: paletteMap(GOBLIN_SKIN),
+    goblinHornStyles:  ['none', 'curved', 'straight', 'ram'],
+    goblinHornLengths: ['short', 'medium', 'long'],
+    lizardScales: paletteMap(LIZARD_SKIN),
     hornStyles:  ['curved', 'straight', 'ram'],
     tailStyles:  ['long', 'medium', 'short'],
     hornLengths: ['short', 'medium', 'long'],
@@ -98,7 +103,7 @@ function handleOptions(res) {
     glowIntensities: ['subtle', 'medium', 'bright'],
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
-    frameSizes:  [64, 96, 128],
+    frameSizes:  [128, 192, 256],
   });
 }
 
@@ -107,7 +112,7 @@ async function handleGenerate(req, res) {
   try { body = await parseBody(req); }
   catch { json(res, 400, { error: 'Invalid JSON body' }); return; }
 
-  const { config = {}, name = 'character', frameSize = 64 } = body;
+  const { config = {}, name = 'character', frameSize = 128 } = body;
 
   // Sanitise filename
   const safeName = (name || 'character')
@@ -121,7 +126,7 @@ async function handleGenerate(req, res) {
   if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
   try {
-    generateSpritesheet(config, outputPath, Number(frameSize) || 64);
+    generateSpritesheet(config, outputPath, Number(frameSize) || 128);
     json(res, 200, { success: true, file: `/output/${fileName}`, name: safeName });
   } catch (err) {
     console.error('[generate]', err.message);
@@ -161,6 +166,7 @@ async function handleRequest(req, res) {
 function regenerateAll() {
   if (!fs.existsSync(OUTPUT_DIR))  fs.mkdirSync(OUTPUT_DIR,  { recursive: true });
   if (!fs.existsSync(WEAPONS_DIR)) fs.mkdirSync(WEAPONS_DIR, { recursive: true });
+  if (!fs.existsSync(ARMOR_DIR))   fs.mkdirSync(ARMOR_DIR,   { recursive: true });
 
   const { resolveConfig } = require('./characters/CharacterConfig');
 
@@ -170,6 +176,7 @@ function regenerateAll() {
     animations:  ROWS.map((r, i) => ({ name: r.name, row: i, frameCount: r.frameCount })),
     characters:  [],
     weapons:     [],
+    armor:       [],
   };
 
   // Characters
@@ -195,11 +202,20 @@ function regenerateAll() {
     console.error('  [weapons] generation failed:', e.message);
   }
 
+  // Armor
+  let armorEntries = [];
+  try {
+    armorEntries = generateAllArmor(ARMOR_DIR);
+    manifest.armor = armorEntries;
+  } catch (e) {
+    console.error('  [armor] generation failed:', e.message);
+  }
+
   // Write manifest so preview page has up-to-date data
   const manifestPath = path.join(PREVIEW_DIR, 'manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
-  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}`);
+  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}  Armor: ${armorEntries.length}`);
 }
 
 // ─── start ───────────────────────────────────────────────────────────────────

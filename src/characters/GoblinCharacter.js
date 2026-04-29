@@ -1,6 +1,7 @@
 'use strict';
 
 const { makeCanvas, fillRect, pixel, hLine, vLine, mirrorCanvasH, clear } = require('../core/Canvas');
+const Colors = require('../core/Colors');
 const { resolveConfig } = require('./CharacterConfig');
 const {
   drawSouth: humanSouth,
@@ -9,12 +10,18 @@ const {
   resolveColors: humanColors,
   getYAnchors,
 } = require('./HumanCharacter');
+const {
+  drawHornsSouth: drawDemonHornsSouth,
+  drawHornsWest:  drawDemonHornsWest,
+} = require('./DemonCharacter');
 
 const FRAME_W = 96;
 const FRAME_H = 96;
 
 function resolveColors(config) {
-  return humanColors(config);
+  const base = humanColors(config);
+  base.horn = Colors.GOBLIN_HORN;            // bone/ivory horns for goblins
+  return base;
 }
 
 // ─── Long pointed goblin ears (south view) ────────────────────────────────
@@ -184,6 +191,26 @@ function renderDirection(ctx, config, colors, off, direction, by, headBob) {
   // 3. Snaggle fang on the south-facing face (goblin trademark)
   if (direction === 'south') {
     drawGoblinFangSouth(ctx, headBob + ovBy);
+  }
+
+  // 4. Optional ivory horns — goblins can have small horns/tusks crowning
+  //    their heads. Reuse the demon horn-drawing routines but with the
+  //    GOBLIN_HORN palette so they read as bone, not gilded brass.
+  const hornStyle = config.goblinHorns || 'none';
+  if (hornStyle !== 'none') {
+    const hornLength = config.goblinHornLength || 'short';
+    const hornY = yA.headTopY;
+    if (direction === 'south' || direction === 'north') {
+      ctx.save();
+      ctx.translate(0, by + headBob);
+      drawDemonHornsSouth(ctx, colors, hornStyle, hornLength, hornY);
+      ctx.restore();
+    } else if (direction === 'west') {
+      ctx.save();
+      ctx.translate(0, by + headBob);
+      drawDemonHornsWest(ctx, colors, hornStyle, hornLength, 13, hornY + 3);
+      ctx.restore();
+    }
   }
 }
 

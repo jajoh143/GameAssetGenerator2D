@@ -5,7 +5,7 @@
  * All fields are optional - missing ones will use these defaults.
  */
 const DEFAULT_CONFIG = {
-  type:          'human',      // 'human' | 'demon' | 'fairy' | 'goblin'
+  type:          'human',      // 'human' | 'demon' | 'fairy' | 'goblin' | 'lizardfolk'
   skin:          'medium',     // skin tone key from Colors.SKIN_TONES
   hair:          'black',      // hair color key from Colors.HAIR_COLORS
   hairStyle:     'short',      // 'short' | 'medium' | 'long' | 'curly' | 'undercut' | 'spiky' | 'mohawk' | 'topknot' | 'buzzed' | 'bald'
@@ -32,7 +32,12 @@ const DEFAULT_CONFIG = {
   tailLength:    'medium',
 
   // Goblin-only (small green humanoid with long ears + sharp fangs)
-  goblinSkin:    'moss_green',  // any key from Colors.GOBLIN_SKIN
+  goblinSkin:    'moss_green',     // any key from Colors.GOBLIN_SKIN
+  goblinHorns:   'none',           // 'none' | 'curved' | 'straight' | 'ram'
+  goblinHornLength: 'short',       // 'short' | 'medium' | 'long'
+
+  // Lizardfolk / dragonborn-only (reptilian humanoid with snout + scales)
+  lizardScale:   'emerald',        // any key from Colors.LIZARD_SKIN
 
   // Fairy-only (pixie/elven humanoid with wings + glow)
   fairySkin:      'peach',
@@ -114,9 +119,17 @@ function resolveConfig(config) {
     merged.height = 'tiny';
   }
   // Goblins default to SHORT — D&D goblins are 3-4 ft tall, smaller than
-  // humans but bigger than pixies.
-  if (merged.type === 'goblin' && (!config || !config.height)) {
-    merged.height = 'short';
+  // humans but bigger than pixies. They're hairless by default; users can
+  // pick a hair style if they want a hairy variant.
+  if (merged.type === 'goblin') {
+    if (!config || !config.height)    merged.height    = 'short';
+    if (!config || !config.hairStyle) merged.hairStyle = 'bald';
+    if (!config || !config.beardStyle) merged.beardStyle = 'none';
+  }
+  // Lizardfolk / dragonborn default to TALL — they're typically larger and
+  // more heavily-built than humans, with broader torsos and longer limbs.
+  if (merged.type === 'lizardfolk' && (!config || !config.height)) {
+    merged.height = 'tall';
   }
 
   return merged;
