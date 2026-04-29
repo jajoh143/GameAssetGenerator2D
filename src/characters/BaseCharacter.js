@@ -203,8 +203,8 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     [ 3, 26],  // 25: jaw wide        (y=46)
     [ 4, 24],  // 26: lower jaw       (y=47)
     [ 5, 22],  // 27: chin            (y=48)
-    [ 7, 18],  // 28: chin base       (y=49)
-    [ 9, 14],  // 29: chin tip        (y=50)
+    [ 6, 20],  // 28: chin base       (y=49)
+    [ 8, 16],  // 29: chin tip        (y=50)
   ];
 
   // Fill the head silhouette. Bald characters fill it with skin tone so
@@ -315,7 +315,7 @@ function drawHeadSouth(ctx, skinColors, hairColors, hairStyle, eyeColors, beardS
     [21, 22],  //  9: lower jaw  (y=46)
     [22, 20],  // 10: chin       (y=47)
     [23, 18],  // 11: chin btm   (y=48)
-    [24, 16],  // 12: chin base  (y=49)
+    [23, 18],  // 12: chin base  (y=49)
     [25, 14],  // 13: chin tip   (y=50)
   ];
   const faceStartRow = 16;
@@ -743,8 +743,8 @@ function drawHeadNorth(ctx, skinColors, hairColors, hairStyle) {
     [ 2, 24],  // 21: jaw wide     (y=45)
     [ 3, 22],  // 22: lower jaw    (y=46)
     [ 4, 20],  // 23: chin         (y=47)
-    [ 5, 18],  // 24: chin bottom  (y=48)
-    [ 7, 14],  // 25: chin base    (y=49)
+    [ 4, 20],  // 24: chin bottom  (y=48)
+    [ 6, 16],  // 25: chin base    (y=49)
   ];
 
   fillRect(ctx, skinColors.base, HX + 5, HY + 22, HW - 10, 4);  // neck-back skin

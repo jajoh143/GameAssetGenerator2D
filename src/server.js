@@ -185,7 +185,7 @@ function regenerateAll() {
     try {
       const cfg = resolveConfig(config);
       const out = path.join(OUTPUT_DIR, `${name}_spritesheet.png`);
-      generateSpritesheet(cfg, out, 192);
+      generateSpritesheet(cfg, out, 96);
       manifest.characters.push({ name, file: `../output/${name}_spritesheet.png`, config });
       charDone++;
     } catch (e) {
