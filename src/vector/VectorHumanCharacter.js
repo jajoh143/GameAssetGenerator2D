@@ -135,10 +135,17 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const colors = resolveColors(config);
   const rig = buildRig(config, 'south', offsets);
 
-  // Ground shadow
+  // Ground shadow — shrinks when the character lifts off (negative bodyY
+  // == higher up). Sells the "lift" on attack peak frames + walk passing
+  // frames where the character bobs up.
   if (!offsets.skipGroundShadow) {
+    const sx = rig.frameW * 0.22;
+    const sy = rig.limbR * 0.6;
+    const lift = Math.max(0, -((offsets.bodyY || 0) * (rig.frameH / 96)));
+    const sScale = Math.max(0.55, 1 - lift * 0.04);
+    const sAlpha = Math.max(0.15, 0.35 - lift * 0.025);
     VC.groundShadow(ctx, rig.frameW / 2, rig.groundY + rig.limbR * 0.6,
-      rig.frameW * 0.22, rig.limbR * 0.6, 0.35);
+      sx * sScale, sy * sScale, sAlpha);
   }
 
   if (hooks.before) hooks.before(ctx, rig, colors);
@@ -150,12 +157,14 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'south');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'south');
   };
@@ -250,12 +259,14 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'north');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'north');
   };

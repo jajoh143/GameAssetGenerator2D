@@ -191,28 +191,40 @@ function drawHand(ctx, hand, skin, rig, opts = {}) {
 }
 
 /**
- * Pant fold / seam — a single soft vertical line down the side of a leg
- * in profile view. Suggests the outer-leg seam of jeans / trousers and
- * adds form to the otherwise-flat side-view leg.
+ * Pant fold / seam — a soft vertical line down the side of a leg.
+ * Two passes:
+ *   1. A heavier stitch line on the OUTSIDE of the leg (always visible).
+ *   2. A lighter inseam shadow on the inside (only meaningful in profile).
+ * Together they break up an otherwise flat leg silhouette.
  */
 function drawPantFold(ctx, hip, knee, foot, rig, pants) {
   // Use the seam direction along the hip→foot vector. Bias the line
   // slightly toward the outside (perpendicular to the leg axis).
   const dx1 = knee.x - hip.x, dy1 = knee.y - hip.y;
   const dx2 = foot.x - knee.x, dy2 = foot.y - knee.y;
-  // Outside perpendicular: rotate +90° from the hip→knee vector.
   const len1 = Math.hypot(dx1, dy1) || 1;
+  // Outside perpendicular: rotate +90° from the hip→knee vector.
   const ox = -dy1 / len1, oy = dx1 / len1;
-  const off = rig.limbR * 0.18;
+  const off = rig.limbR * 0.30;       // bigger offset so seam reads
   ctx.save();
   ctx.strokeStyle = pants.deep_shadow || pants.shadow || pants.outline || '#222';
-  ctx.lineWidth = Math.max(0.8, rig.limbR * 0.10);
+  ctx.lineWidth = Math.max(1.2, rig.limbR * 0.16);
   ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.65;
+  // Outside seam
   ctx.beginPath();
   ctx.moveTo(hip.x + ox * off, hip.y + oy * off);
   ctx.lineTo(knee.x + ox * off, knee.y + oy * off);
   ctx.lineTo(foot.x + ox * off * 0.6, foot.y + oy * off * 0.6);
+  ctx.stroke();
+  // Inseam — opposite side, thinner + softer. Adds a second line of
+  // form so the leg reads as a tube rather than a flat ribbon.
+  ctx.lineWidth = Math.max(0.8, rig.limbR * 0.10);
+  ctx.globalAlpha = 0.40;
+  ctx.beginPath();
+  ctx.moveTo(hip.x - ox * off * 0.6, hip.y - oy * off * 0.6);
+  ctx.lineTo(knee.x - ox * off * 0.6, knee.y - oy * off * 0.6);
+  ctx.lineTo(foot.x - ox * off * 0.4, foot.y - oy * off * 0.4);
   ctx.stroke();
   ctx.restore();
   void dx2; void dy2;
@@ -579,6 +591,25 @@ function drawNeck(ctx, rig, skin) {
   VC.roundRect(ctx, x, y, w, h, w * 0.3,
     VC.vGradient(ctx, x, y, 0, h, skin),
     skin.outline, outlineW(rig, 0.18));
+
+  // Neck-shoulder junction — a soft curved accent line where the neck
+  // meets the upper torso. Sells the depth of the throat hollow vs.
+  // the collarbone shelf and gives the silhouette a subtle break that
+  // reads even at thumbnail size.
+  ctx.save();
+  ctx.strokeStyle = skin.shadow || skin.outline;
+  ctx.lineWidth = Math.max(1.0, rig.limbR * 0.16);
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  // Shallow U from one shoulder side to the other across the throat hollow
+  ctx.moveTo(neck.x - w * 0.55, chest.y - rig.limbR * 0.15);
+  ctx.quadraticCurveTo(
+    neck.x, chest.y + rig.limbR * 0.10,
+    neck.x + w * 0.55, chest.y - rig.limbR * 0.15,
+  );
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawHead(ctx, rig, skin) {
@@ -793,6 +824,28 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   // hair color (passed via eyes.brow); fall back to a near-black if
   // missing. Adds the single biggest "personality" cue to the face.
   drawEyebrowsSouth(ctx, rig, eyes);
+
+  // Nose-bridge crease — a short, soft vertical line between the brow
+  // ridge and where the nose tip would be. Skipped for snouted/lizard
+  // species and for fairies (their faces are stylized smoother).
+  if (rig.species !== 'lizardfolk' && rig.species !== 'fairy') {
+    const { head } = rig;
+    ctx.save();
+    ctx.strokeStyle = eyes.outline || '#1a1010';
+    ctx.lineWidth = Math.max(0.8, head.r * 0.04);
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.30;
+    ctx.beginPath();
+    // Slight rightward lean to match the top-left light source — the
+    // shadow side of a nose ridge falls on the right.
+    ctx.moveTo(head.x + head.r * 0.04, head.y - head.r * 0.05);
+    ctx.quadraticCurveTo(
+      head.x + head.r * 0.08, head.y + head.r * 0.18,
+      head.x + head.r * 0.05, head.y + head.r * 0.32,
+    );
+    ctx.stroke();
+    ctx.restore();
+  }
 
   for (const sign of [-1, 1]) {
     const ex = head.x + dx * sign;
