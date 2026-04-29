@@ -208,45 +208,46 @@ function buildRig(config, direction, offsets) {
     // organic curve than a straight ribbon.
     const armBendIn = limbR * 0.6;   // small inward bow at elbow
     elbowL = {
-      x: shoulderL.x + armBendIn * 0.5 + lArmOut * 0.4,  // bow slightly toward body
-      y: shoulderL.y + armLen * 0.48 + lArmFwd * 0.45,
+      x: shoulderL.x + armBendIn * 0.5 + lArmOut * 0.55,
+      y: shoulderL.y + armLen * 0.48 + lArmFwd * 0.58,
     };
     handL  = {
       x: shoulderL.x - 2 + lArmOut * 1.0,
       y: shoulderL.y + armLen + lArmFwd * 1.0,
     };
     elbowR = {
-      x: shoulderR.x - armBendIn * 0.5 + rArmOut * 0.4,
-      y: shoulderR.y + armLen * 0.48 + rArmFwd * 0.45,
+      x: shoulderR.x - armBendIn * 0.5 + rArmOut * 0.55,
+      y: shoulderR.y + armLen * 0.48 + rArmFwd * 0.58,
     };
     handR  = {
       x: shoulderR.x + 2 + rArmOut * 1.0,
       y: shoulderR.y + armLen + rArmFwd * 1.0,
     };
 
-    // ── Legs ──
-    // The knee LEADS the foot in the direction of stride. When the leg
-    // swings forward (lLegFwd > 0), the knee shifts forward more than
-    // halfway, then the foot continues past it — creates a forward-bent
-    // knee silhouette typical of a chibi walk cycle.
-    const lLegSign = lLegFwd >= 0 ? 1 : -1;
-    const rLegSign = rLegFwd >= 0 ? 1 : -1;
-    const baseBend = limbR * 0.20;
+    // ── Legs (south/north front-facing view) ──
+    // In front view the legs swing like a pendulum: positive lLegFwd
+    // swings the LEFT foot OUTWARD (to the left), negative swings it
+    // inward (toward center / behind the stance). Using the signed
+    // value rather than Math.abs means the two half-cycles of the
+    // walk look different — the previous Math.abs bug made frames
+    // 2 and 6 of the walk cycle produce identical leg positions.
+    // Back leg (negative fwd): foot lifts slightly off the ground and
+    // knee rises, simulating the recovery swing.
     kneeL = {
-      x: hipL.x - Math.abs(lLegFwd) * 0.55 + baseBend * 0.6,
-      y: hipL.y + legLen * 0.45 + Math.abs(lLegFwd) * 0.30 * lLegSign,
+      x: hipL.x - lLegFwd * 0.45,
+      y: hipL.y + legLen * 0.45 - Math.max(0, -lLegFwd) * 0.20,
     };
     footL = {
-      x: hipL.x - Math.abs(lLegFwd) * 0.85,
-      y: footY + lLegFwd * 0.40 * lLegSign,
+      x: hipL.x - lLegFwd * 0.68,
+      y: footY - Math.max(0, -lLegFwd) * 0.35,
     };
     kneeR = {
-      x: hipR.x + Math.abs(rLegFwd) * 0.55 - baseBend * 0.6,
-      y: hipR.y + legLen * 0.45 + Math.abs(rLegFwd) * 0.30 * rLegSign,
+      x: hipR.x + rLegFwd * 0.45,
+      y: hipR.y + legLen * 0.45 - Math.max(0, -rLegFwd) * 0.20,
     };
     footR = {
-      x: hipR.x + Math.abs(rLegFwd) * 0.85,
-      y: footY + rLegFwd * 0.40 * rLegSign,
+      x: hipR.x + rLegFwd * 0.68,
+      y: footY - Math.max(0, -rLegFwd) * 0.35,
     };
   } else {
     // SIDE VIEW (west).  Both shoulders collapse onto a single x. Arms swing

@@ -23,7 +23,7 @@ const VC = require('./VectorCanvas');
 // because at chibi proportions a thin line gets lost in the shading —
 // a stronger silhouette reads cleaner at any zoom.
 function outlineW(rig, factor = 0.32) {
-  return Math.max(2.0, rig.limbR * factor);
+  return Math.max(1.0, rig.limbR * factor * 0.50);
 }
 
 // ---------------------------------------------------------------------------
@@ -404,15 +404,17 @@ function drawPelvisBridge(ctx, rig, pants) {
     ctx.restore();
     return;
   }
-  // South / north: hourglass — narrow at the waist (top), widest at the
-  // hip line (mid), then the bottom "cradles" the leg tops. The bottom
-  // edge dips DOWN around each thigh and rises UP between the legs at
-  // the groin so the legs emerge organically from the hip mass instead
-  // of sprouting from a flat horizontal cut.
+  // South / north: hourglass — narrow at the waist (top), flares at the
+  // hip, then the thigh cradles align with the actual leg root joints so
+  // the legs emerge directly from the hip mass.
   const hw = pelvis.w / 2;
-  const wWaist = Math.min(rig.frameW * 0.20, hw * 0.85);  // waist top width
-  // Shadow side hip flare matches build via a hipFlareScale built into
-  // the rig — for the basic pants shape it's pelvis.w * 1.02 wide.
+  const wWaist = Math.min(rig.frameW * 0.20, hw * 0.85);
+  const r = rig.limbR;
+  // Use the actual hip-joint X positions so the thigh cradles follow
+  // the legs wherever the rig places them (animation offsets included).
+  const legL = rig.hipL ? rig.hipL.x : pelvis.x - hw + r * 0.5;
+  const legR = rig.hipR ? rig.hipR.x : pelvis.x + hw - r * 0.5;
+
   ctx.save();
   ctx.fillStyle = pants.base;
   ctx.strokeStyle = pants.outline || '#000';
@@ -420,36 +422,37 @@ function drawPelvisBridge(ctx, rig, pants) {
   ctx.beginPath();
   // Top-left at the waist line
   ctx.moveTo(pelvis.x - wWaist, wy);
-  // Curve down + out to the hip
-  ctx.quadraticCurveTo(pelvis.x - hw * 1.02, pelvis.y - rig.limbR * 0.30,
-                       pelvis.x - hw * 0.92, pelvis.y + rig.limbR * 0.10);
-  // Outer-left thigh-top — dips DOWN around the leg root
-  ctx.quadraticCurveTo(pelvis.x - hw * 0.78, pelvis.y + rig.limbR * 0.55,
-                       pelvis.x - hw * 0.45, pelvis.y + rig.limbR * 0.50);
-  // Inverted V at the groin — rises UP between the legs so the inner
-  // thighs read as separate masses peeking out below.
-  ctx.quadraticCurveTo(pelvis.x - hw * 0.20, pelvis.y - rig.limbR * 0.05,
-                       pelvis.x,             pelvis.y - rig.limbR * 0.10);
-  // Mirror up the right side
-  ctx.quadraticCurveTo(pelvis.x + hw * 0.20, pelvis.y - rig.limbR * 0.05,
-                       pelvis.x + hw * 0.45, pelvis.y + rig.limbR * 0.50);
-  ctx.quadraticCurveTo(pelvis.x + hw * 0.78, pelvis.y + rig.limbR * 0.55,
-                       pelvis.x + hw * 0.92, pelvis.y + rig.limbR * 0.10);
-  ctx.quadraticCurveTo(pelvis.x + hw * 1.02, pelvis.y - rig.limbR * 0.30,
+  // Curve down + out to the outer hip flare
+  ctx.quadraticCurveTo(pelvis.x - hw * 1.02, pelvis.y - r * 0.30,
+                       legL - r * 0.28,       pelvis.y + r * 0.08);
+  // Wrap around the outside of the left thigh root and dip beneath it
+  ctx.quadraticCurveTo(legL - r * 0.05,       pelvis.y + r * 0.58,
+                       legL + r * 0.42,       pelvis.y + r * 0.54);
+  // Groin inverted-V: rises between the legs
+  ctx.quadraticCurveTo(pelvis.x - r * 0.12,  pelvis.y + r * 0.08,
+                       pelvis.x,             pelvis.y - r * 0.10);
+  // Mirror right side
+  ctx.quadraticCurveTo(pelvis.x + r * 0.12,  pelvis.y + r * 0.08,
+                       legR - r * 0.42,       pelvis.y + r * 0.54);
+  ctx.quadraticCurveTo(legR + r * 0.05,       pelvis.y + r * 0.58,
+                       legR + r * 0.28,       pelvis.y + r * 0.08);
+  ctx.quadraticCurveTo(pelvis.x + hw * 1.02, pelvis.y - r * 0.30,
                        pelvis.x + wWaist,    wy);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Cel shadow on the right side to match body lighting.
+  // Cel shadow on the right side.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = pants.shadow || pants.base;
   ctx.beginPath();
   ctx.moveTo(pelvis.x + wWaist * 0.10, wy);
-  ctx.quadraticCurveTo(pelvis.x + hw * 1.02, pelvis.y - rig.limbR * 0.10,
-                       pelvis.x + hw * 0.40, pelvis.y + rig.limbR * 0.50);
-  ctx.lineTo(pelvis.x + wWaist * 0.10, pelvis.y + rig.limbR * 0.55);
+  ctx.quadraticCurveTo(pelvis.x + hw * 1.02, pelvis.y - r * 0.10,
+                       legR + r * 0.28,       pelvis.y + r * 0.08);
+  ctx.quadraticCurveTo(legR + r * 0.05,       pelvis.y + r * 0.58,
+                       legR - r * 0.42,       pelvis.y + r * 0.54);
+  ctx.lineTo(pelvis.x + wWaist * 0.10, pelvis.y + r * 0.54);
   ctx.lineTo(pelvis.x + wWaist * 0.10, wy);
   ctx.closePath();
   ctx.fill();

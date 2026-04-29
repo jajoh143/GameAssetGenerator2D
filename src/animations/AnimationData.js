@@ -74,15 +74,20 @@ const WALK_EAST_FRAMES = WALK_WEST_FRAMES; // same offsets, mirrored at render t
 // ATTACK SWING SOUTH: 8 frames - melee sword/weapon swing facing camera
 // Structure: anticipation(squat) → wind-up(slow) → apex(hold) → smear → STRIKE(fastest Δ) → overshoot+squash → recovery
 // rArmDY = round(rightArmFwd * 0.9); at strike rFwd=12 → rArmDY≈11px down from torso.
+// ATTACK SWING SOUTH: 8 frames - melee sword/weapon swing facing camera
+// rArmOut positive = hand moves RIGHT (toward sword side).
+// Wind-up raises arm UP-RIGHT above the shoulder; strike slashes DOWN-LEFT
+// across the body.  This gives a proper right-hand diagonal slash arc
+// instead of the old backhand motion.
 const ATTACK_SWING_SOUTH_FRAMES = [
-  { bodyY: +1, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  -4, leftArmOut: 0, rightArmOut:  -1, tilt: 0, headBob:  0 }, // F0 anticipation: squat, arm barely raised
-  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd: -1, rightArmFwd: -12, leftArmOut: 0, rightArmOut:  -4, tilt: 0, headBob:  0 }, // F1 wind-up: body rises, arm pulls back (Δ=8)
-  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -20, leftArmOut: 0, rightArmOut:  -7, tilt: 0, headBob:  0 }, // F2 wind-up high: arm overhead (Δ=8)
-  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -22, leftArmOut: 0, rightArmOut:  -8, tilt: 0, headBob: -1 }, // F3 apex: pause at top, headBob commits (Δ=2)
-  { bodyY: -1, leftLegFwd: -1, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd:  -6, leftArmOut: 0, rightArmOut:  -1, tilt: 0, headBob:  0 }, // F4 smear: arm whips through arc (Δ=16)
-  { bodyY:  0, leftLegFwd: -2, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  12, leftArmOut: 0, rightArmOut:   9, tilt: 0, headBob:  0 }, // F5 STRIKE: biggest Δ=18, arm at full extension
-  { bodyY: +1, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  14, leftArmOut: 0, rightArmOut:  10, tilt: 0, headBob:  0 }, // F6 overshoot+squash: arm 2 past, body drops (Δ=2)
-  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd: -1, rightArmFwd:   5, leftArmOut: 0, rightArmOut:   3, tilt: 0, headBob:  0 }, // F7 recovery (Δ=9)
+  { bodyY: +1, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd:  0, rightArmFwd:  -4, leftArmOut: 0, rightArmOut:   1, tilt: 0, headBob:  0 }, // F0 anticipation
+  { bodyY: -1, leftLegFwd:  0, rightLegFwd:  1, leftArmFwd: -1, rightArmFwd: -12, leftArmOut: 0, rightArmOut:   5, tilt: 0, headBob:  0 }, // F1 wind-up: arm rises right
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -20, leftArmOut: 0, rightArmOut:   8, tilt: 0, headBob:  0 }, // F2 wind-up high: arm upper-right
+  { bodyY: -2, leftLegFwd:  0, rightLegFwd:  2, leftArmFwd: -2, rightArmFwd: -22, leftArmOut: 0, rightArmOut:   9, tilt: 0, headBob: -1 }, // F3 apex: arm overhead-right
+  { bodyY: -1, leftLegFwd: -1, rightLegFwd:  2, leftArmFwd: -3, rightArmFwd:  -6, leftArmOut: 0, rightArmOut:   1, tilt: 0, headBob:  0 }, // F4 smear: arm whips through
+  { bodyY:  0, leftLegFwd: -2, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  12, leftArmOut: 0, rightArmOut: -10, tilt: 0, headBob:  0 }, // F5 STRIKE: slashes down-left
+  { bodyY: +1, leftLegFwd: -3, rightLegFwd:  3, leftArmFwd: -4, rightArmFwd:  14, leftArmOut: 0, rightArmOut: -12, tilt: 0, headBob:  0 }, // F6 overshoot
+  { bodyY:  0, leftLegFwd:  0, rightLegFwd:  0, leftArmFwd: -1, rightArmFwd:   5, leftArmOut: 0, rightArmOut:  -3, tilt: 0, headBob:  0 }, // F7 recovery
 ];
 
 // ATTACK SWING WEST: 8 frames - melee swing in side profile (facing left)
