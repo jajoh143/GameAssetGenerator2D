@@ -527,13 +527,70 @@ function drawShoe(ctx, foot, shoes, rig, direction, opts = {}) {
   ctx.save();
   ctx.translate(foot.x, foot.y);
   if (tilt) ctx.rotate(tilt);
-  // Upper
+  // Upper — flat fill (replaces the diagonal gradient for a less
+  // cartoony cel-shaded look).
   VC.oval(ctx, 0, 0, sx, sy,
-    VC.diagGradient(ctx, -sx, -sy, sx * 2, sy * 2, shoes),
-    shoes.outline, outlineW(rig));
-  // Sole
-  VC.oval(ctx, 0, sy * 0.55, sx * 0.95, sy * 0.4,
-    shoes.shadow || shoes.outline, shoes.outline, outlineW(rig, 0.15));
+    shoes.base, shoes.outline, outlineW(rig));
+  // Cel shadow on the bottom-right of the upper.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = shoes.shadow || shoes.outline;
+  ctx.beginPath();
+  ctx.ellipse(sx * 0.20, sy * 0.20, sx * 0.85, sy * 0.65, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // Sole — visible separator stripe in deep_shadow + a thin highlight
+  // on the upper edge for crisp definition.
+  ctx.save();
+  ctx.fillStyle = shoes.deep_shadow || shoes.outline || '#000';
+  ctx.strokeStyle = shoes.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.18);
+  ctx.beginPath();
+  ctx.ellipse(0, sy * 0.55, sx * 0.95, sy * 0.40, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Sole upper-edge highlight
+  ctx.strokeStyle = shoes.highlight || '#fff';
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = outlineW(rig, 0.10);
+  ctx.beginPath();
+  ctx.moveTo(-sx * 0.85, sy * 0.20);
+  ctx.quadraticCurveTo(0, sy * 0.05, sx * 0.85, sy * 0.20);
+  ctx.stroke();
+  ctx.restore();
+  // Lace detail — a few small horizontal stitches across the front of
+  // the boot. South / north only since the laces would face the camera.
+  if (direction === 'south' || direction === 'north') {
+    ctx.save();
+    ctx.strokeStyle = shoes.outline || '#000';
+    ctx.lineWidth = Math.max(0.8, r * 0.10);
+    ctx.lineCap = 'round';
+    for (const ly of [-0.20, -0.05, 0.10]) {
+      ctx.beginPath();
+      ctx.moveTo(-sx * 0.30, ly * sy);
+      ctx.lineTo( sx * 0.30, ly * sy);
+      ctx.stroke();
+    }
+    // Center vertical lace hint
+    ctx.beginPath();
+    ctx.moveTo(0, -sy * 0.25);
+    ctx.lineTo(0,  sy * 0.15);
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    // Side view: a couple of small lace stitches on the visible side.
+    ctx.save();
+    ctx.strokeStyle = shoes.outline || '#000';
+    ctx.lineWidth = Math.max(0.8, r * 0.10);
+    ctx.lineCap = 'round';
+    for (const lx of [-0.30, -0.05, 0.20]) {
+      ctx.beginPath();
+      ctx.moveTo(lx * sx, -sy * 0.20);
+      ctx.lineTo(lx * sx,  sy * 0.05);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   ctx.restore();
 }
 
@@ -680,14 +737,27 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
       0.30, clothing.deep_shadow || clothing.outline);
   }
 
-  // Collar / neck-line accent (drawn after shading so it stays visible)
+  // Collar / neck-line accent — replaces the simple stroke with a
+  // small curved layer in `clothing.collar`, so the shirt shows as a
+  // distinct band UNDER the jacket lapel/zipper. Adds visible clothing
+  // depth (jacket → collar / shirt-front → body) without a separate
+  // shirt sublayer.
   if (clothing.collar && (direction === 'south' || direction === 'west' || direction === 'east')) {
+    ctx.save();
+    ctx.fillStyle = clothing.collar;
+    ctx.strokeStyle = clothing.outline || '#000';
+    ctx.lineWidth = outlineW(rig, 0.18);
     ctx.beginPath();
-    ctx.moveTo(neck.x - rig.limbR * 1.2, chest.y + 1);
-    ctx.quadraticCurveTo(neck.x, chest.y + rig.limbR * 0.7, neck.x + rig.limbR * 1.2, chest.y + 1);
-    ctx.lineWidth = outlineW(rig, 0.20);
-    ctx.strokeStyle = clothing.collar;
+    ctx.moveTo(neck.x - rig.limbR * 1.20, chest.y + 1);
+    ctx.quadraticCurveTo(neck.x, chest.y + rig.limbR * 0.85,
+                         neck.x + rig.limbR * 1.20, chest.y + 1);
+    ctx.lineTo(neck.x + rig.limbR * 0.85, chest.y - rig.limbR * 0.10);
+    ctx.quadraticCurveTo(neck.x, chest.y + rig.limbR * 0.45,
+                         neck.x - rig.limbR * 0.85, chest.y - rig.limbR * 0.10);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
+    ctx.restore();
   }
 
   // 5a. Pectoral V — a thin dark line splitting the chest plane down the
@@ -987,6 +1057,34 @@ function drawBelt(ctx, rig, belt) {
     ctx.fillStyle = beltOutline;
     ctx.fillRect(pelvis.x - 1, y + h * 0.30, 2, buckleH * 0.45);
     ctx.restore();
+    // Hip pouch — a small rectangular pouch hanging on the side of the
+    // belt at hip height. Adds adventurer / RPG character detail and
+    // breaks up the silhouette near the hip in pants-color zone.
+    const pouchX = pelvis.x + w * 0.32;
+    const pouchY = y + h * 0.20;
+    const pouchW = h * 1.20;
+    const pouchH = h * 1.30;
+    ctx.save();
+    ctx.fillStyle = belt.shadow || '#5a3a14';
+    ctx.strokeStyle = beltOutline;
+    ctx.lineWidth = outlineW(rig, 0.20);
+    VC.roundRect(ctx, pouchX, pouchY, pouchW, pouchH, h * 0.20,
+      belt.shadow || '#5a3a14', beltOutline, outlineW(rig, 0.20));
+    // Pouch flap line
+    ctx.strokeStyle = beltOutline;
+    ctx.globalAlpha = 0.7;
+    ctx.lineWidth = outlineW(rig, 0.12);
+    ctx.beginPath();
+    ctx.moveTo(pouchX, pouchY + pouchH * 0.40);
+    ctx.lineTo(pouchX + pouchW, pouchY + pouchH * 0.40);
+    ctx.stroke();
+    // Tiny clasp dot
+    ctx.fillStyle = belt.highlight || '#d4a800';
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(pouchX + pouchW * 0.5, pouchY + pouchH * 0.40, h * 0.10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 }
 
@@ -1222,10 +1320,14 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
     return;
   }
 
-  const eyeRX = head.r * 0.24;       // bigger almond — readable at thumb size
-  const eyeRY = head.r * 0.18;
-  const irisRX = head.r * 0.13;
-  const irisRY = head.r * 0.17;       // taller-than-wide iris reads as "anime"
+  // Smaller, more anatomically proportioned eyes — references like the
+  // bartender / patron pixel art have eyes that are ~3-4 px in a 32 px
+  // head, i.e. roughly 12-15% of head radius. Anime-huge eyes read as
+  // "chibi cartoon"; tight eyes read as "stylized but grounded".
+  const eyeRX = head.r * 0.16;
+  const eyeRY = head.r * 0.13;
+  const irisRX = head.r * 0.09;
+  const irisRY = head.r * 0.12;
 
   const irisColor   = eyes.iris   || eyes.base || '#3a2510';
   const irisShadow  = eyes.shadow || mixColor(irisColor, '#000', 0.45);
@@ -1237,25 +1339,41 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   // missing. Adds the single biggest "personality" cue to the face.
   drawEyebrowsSouth(ctx, rig, eyes);
 
-  // Nose-bridge crease — a short, soft vertical line between the brow
-  // ridge and where the nose tip would be. Skipped for snouted/lizard
-  // species and for fairies (their faces are stylized smoother).
+  // Nose — a small visible nose mark at the center of the lower face.
+  // Two passes: a soft bridge crease (the shadow side of the nose ridge)
+  // and a small darker nostril dot at the tip. Skipped for snouted /
+  // lizard species (handled by their snout overlay) and fairies (their
+  // faces are stylized smoother).
   if (rig.species !== 'lizardfolk' && rig.species !== 'fairy') {
     const { head } = rig;
     ctx.save();
+    // Bridge crease — slight rightward lean to match the top-left light.
     ctx.strokeStyle = eyes.outline || '#1a1010';
     ctx.lineWidth = Math.max(0.8, head.r * 0.04);
     ctx.lineCap = 'round';
-    ctx.globalAlpha = 0.30;
+    ctx.globalAlpha = 0.45;
     ctx.beginPath();
-    // Slight rightward lean to match the top-left light source — the
-    // shadow side of a nose ridge falls on the right.
-    ctx.moveTo(head.x + head.r * 0.04, head.y - head.r * 0.05);
+    ctx.moveTo(head.x + head.r * 0.04, head.y + head.r * 0.05);
     ctx.quadraticCurveTo(
-      head.x + head.r * 0.08, head.y + head.r * 0.18,
-      head.x + head.r * 0.05, head.y + head.r * 0.32,
+      head.x + head.r * 0.10, head.y + head.r * 0.22,
+      head.x + head.r * 0.06, head.y + head.r * 0.34,
     );
     ctx.stroke();
+    ctx.restore();
+    // Tip dot — a tiny darker mark at the bottom of the bridge for
+    // a clearly visible "nose tip" feature even at thumbnail size.
+    ctx.save();
+    ctx.fillStyle = eyes.outline || '#1a1010';
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.ellipse(
+      head.x + head.r * 0.04,
+      head.y + head.r * 0.36,
+      Math.max(0.8, head.r * 0.04),
+      Math.max(0.8, head.r * 0.05),
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
     ctx.restore();
   }
 
@@ -1594,10 +1712,11 @@ function drawEyeWest(ctx, rig, eyes, opts = {}) {
   const { head } = rig;
   const ex = head.x - head.r * 0.42;
   const ey = head.y + head.r * 0.10;
-  const eyeRX = head.r * 0.20;       // bigger than before
-  const eyeRY = head.r * 0.17;
-  const irisRX = head.r * 0.11;
-  const irisRY = head.r * 0.16;
+  // Smaller side-view eye to match the front view's reduction.
+  const eyeRX = head.r * 0.14;
+  const eyeRY = head.r * 0.12;
+  const irisRX = head.r * 0.08;
+  const irisRY = head.r * 0.11;
 
   const irisColor  = eyes.iris || eyes.base || '#3a2510';
   const irisShadow = eyes.shadow || mixColor(irisColor, '#000', 0.4);
