@@ -125,6 +125,12 @@ function resolveConfig(config) {
     if (!config || !config.height)    merged.height    = 'short';
     if (!config || !config.hairStyle) merged.hairStyle = 'bald';
     if (!config || !config.beardStyle) merged.beardStyle = 'none';
+    // Vector-only: goblins default to a hooded cowl (the
+    // reference art shows them as hooded scouts/rogues). The pixel
+    // pipeline ignores `hood` / `hoodColor`. Caller can set hood:false
+    // explicitly to disable.
+    if (!config || config.hood === undefined) merged.hood = true;
+    if (!config || !config.hoodColor) merged.hoodColor = 'charcoal';
   }
   // Lizardfolk / dragonborn default to TALL — they're typically larger and
   // more heavily-built than humans, with broader torsos and longer limbs.
@@ -343,6 +349,31 @@ const PRESETS = {
     wingColor:     'twilight',
     fairyDress:    'violet',
     glowColor:     'violet',
+  },
+  // Vector-only: a hooded warrior bundle (hood + cape + shoulder pads
+  // + gloves + heavy build). The pixel pipeline ignores hood / cape /
+  // shoulderPads / gloves / proportion fields and renders a regular
+  // human in the same clothing.
+  human_warrior: {
+    type:          'human',
+    skin:          'tan',
+    hair:          'dark_brown',
+    hairStyle:     'short',
+    beardStyle:    'full',
+    eyes:          'brown',
+    build:         'heavy',
+    clothingStyle: 'jacket',
+    clothingColor: 'charcoal',
+    pants:         'pants_black',
+    shoes:         'shoe_black',
+    hood:          true,
+    hoodColor:     'black',
+    cape:          true,
+    capeColor:     'red',
+    shoulderPads:  true,
+    shoulderColor: 'grey',
+    gloves:        true,
+    gloveColor:    'black',
   },
 };
 
