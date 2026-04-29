@@ -5,6 +5,10 @@ const fs      = require('fs');
 const path    = require('path');
 
 const { generateSpritesheet }  = require('./generators/CharacterGenerator');
+const { generateSpritesheet: generateVectorSpritesheet,
+        ROWS:    VECTOR_ROWS,
+        FRAME_W: VECTOR_FRAME_W,
+        FRAME_H: VECTOR_FRAME_H } = require('./generators/VectorCharacterGenerator');
 const { generateAllWeapons }   = require('./generators/WeaponGenerator');
 const { generateAllArmor }     = require('./generators/ArmorGenerator');
 const { PRESETS, DEFAULT_CONFIG } = require('./characters/CharacterConfig');
@@ -19,6 +23,7 @@ const PORT        = 3000;
 const OUTPUT_DIR  = path.join(__dirname, '..', 'output');
 const WEAPONS_DIR = path.join(OUTPUT_DIR, 'weapons');
 const ARMOR_DIR   = path.join(OUTPUT_DIR, 'armor');
+const VECTOR_DIR  = path.join(OUTPUT_DIR, 'vector');
 const PREVIEW_DIR = path.join(__dirname, '..', 'preview');
 
 const MIME = {
@@ -134,6 +139,38 @@ async function handleGenerate(req, res) {
   }
 }
 
+async function handleGenerateVector(req, res) {
+  let body;
+  try { body = await parseBody(req); }
+  catch { json(res, 400, { error: 'Invalid JSON body' }); return; }
+
+  const { config = {}, name = 'character', frameSize = VECTOR_FRAME_W } = body;
+
+  const safeName = (name || 'character')
+    .replace(/[^a-zA-Z0-9_\- ]/g, '_')
+    .replace(/\s+/g, '_')
+    .slice(0, 64) || 'character';
+
+  const fileName   = `${safeName}_vector_spritesheet.png`;
+  const outputPath = path.join(VECTOR_DIR, fileName);
+
+  if (!fs.existsSync(VECTOR_DIR)) fs.mkdirSync(VECTOR_DIR, { recursive: true });
+
+  try {
+    generateVectorSpritesheet(config, outputPath, Number(frameSize) || VECTOR_FRAME_W);
+    json(res, 200, {
+      success: true,
+      file:    `/output/vector/${fileName}`,
+      name:    safeName,
+      style:   'vector',
+    });
+  } catch (err) {
+    console.error('[generate-vector]', err.message);
+    if (process.env.DEBUG) console.error(err.stack);
+    json(res, 500, { error: err.message });
+  }
+}
+
 // ─── router ──────────────────────────────────────────────────────────────────
 
 async function handleRequest(req, res) {
@@ -148,6 +185,7 @@ async function handleRequest(req, res) {
 
   if (pathname === '/api/options' && req.method === 'GET') { handleOptions(res); return; }
   if (pathname === '/api/generate' && req.method === 'POST') { await handleGenerate(req, res); return; }
+  if (pathname === '/api/generate-vector' && req.method === 'POST') { await handleGenerateVector(req, res); return; }
 
   // Static: root → preview/index.html
   if (pathname === '/' || pathname === '/index.html') {
@@ -167,6 +205,7 @@ function regenerateAll() {
   if (!fs.existsSync(OUTPUT_DIR))  fs.mkdirSync(OUTPUT_DIR,  { recursive: true });
   if (!fs.existsSync(WEAPONS_DIR)) fs.mkdirSync(WEAPONS_DIR, { recursive: true });
   if (!fs.existsSync(ARMOR_DIR))   fs.mkdirSync(ARMOR_DIR,   { recursive: true });
+  if (!fs.existsSync(VECTOR_DIR))  fs.mkdirSync(VECTOR_DIR,  { recursive: true });
 
   const { resolveConfig } = require('./characters/CharacterConfig');
 
@@ -177,9 +216,17 @@ function regenerateAll() {
     characters:  [],
     weapons:     [],
     armor:       [],
+    // Vector pipeline metadata + character list (rendered separately so the
+    // pixel preview tab can stay untouched).
+    vector: {
+      frameWidth:  VECTOR_FRAME_W,
+      frameHeight: VECTOR_FRAME_H,
+      animations:  VECTOR_ROWS.map((r, i) => ({ name: r.name, row: i, frameCount: r.frameCount })),
+      characters:  [],
+    },
   };
 
-  // Characters
+  // Characters (pixel pipeline)
   let charDone = 0;
   for (const [name, config] of Object.entries(PRESETS)) {
     try {
@@ -190,6 +237,25 @@ function regenerateAll() {
       charDone++;
     } catch (e) {
       console.error(`  [presets] failed ${name}:`, e.message);
+    }
+  }
+
+  // Characters (vector pipeline) — same presets, rendered with smooth paths.
+  let vectorDone = 0;
+  for (const [name, config] of Object.entries(PRESETS)) {
+    try {
+      const cfg = resolveConfig(config);
+      const out = path.join(VECTOR_DIR, `${name}_vector_spritesheet.png`);
+      generateVectorSpritesheet(cfg, out, VECTOR_FRAME_W);
+      manifest.vector.characters.push({
+        name,
+        file: `../output/vector/${name}_vector_spritesheet.png`,
+        config,
+      });
+      vectorDone++;
+    } catch (e) {
+      console.error(`  [vector presets] failed ${name}:`, e.message);
+      if (process.env.DEBUG) console.error(e.stack);
     }
   }
 
@@ -215,7 +281,7 @@ function regenerateAll() {
   const manifestPath = path.join(PREVIEW_DIR, 'manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
-  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}  Armor: ${armorEntries.length}`);
+  console.log(`  Characters: ${charDone}/${Object.keys(PRESETS).length}  Vector: ${vectorDone}/${Object.keys(PRESETS).length}  Weapons: ${weaponEntries.length}  Armor: ${armorEntries.length}`);
 }
 
 // ─── start ───────────────────────────────────────────────────────────────────

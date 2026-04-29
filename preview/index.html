@@ -429,6 +429,56 @@
       text-transform: uppercase;
     }
 
+    /* ── Style tabs (Pixel | Vector) ── */
+    .style-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+    .style-tab {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      transition: background 0.15s, color 0.15s;
+    }
+    .style-tab:hover  { color: var(--text); }
+    .style-tab.active { background: var(--accent); color: #fff; }
+    .style-tab .badge {
+      font-size: 0.6rem;
+      letter-spacing: 0;
+      text-transform: none;
+      opacity: 0.7;
+      margin-left: 4px;
+    }
+
+    /* Vector cards have a distinct accent strip so the two pipelines are
+       visually separable when both are present. */
+    .char-card[data-style="vector"] .card-name { color: #b0e8ff; }
+    .char-card[data-style="vector"] {
+      border-color: #356a8a;
+    }
+    .char-card[data-style="vector"] canvas.live {
+      image-rendering: auto;       /* vector frames look better with smoothing */
+    }
+
+    /* Pixel/vector mutual hiding */
+    body[data-active-style="pixel"]  .char-card[data-style="vector"] { display: none; }
+    body[data-active-style="vector"] .char-card[data-style="pixel"]  { display: none; }
+    body[data-active-style="vector"] #armor-lab { display: none !important; }
+    body[data-active-style="vector"] #weapon-gallery { display: none; }
+
     /* ── Mobile ── */
     @media (max-width: 767px) {
       body { overflow-y: auto; height: auto; min-height: 100vh; }
@@ -485,6 +535,10 @@
 <header>
   <h1>GameAssetGenerator2D</h1>
   <span>Character Builder</span>
+  <div class="style-tabs" id="style-tabs" role="tablist" aria-label="Render style">
+    <button class="style-tab active" data-style="pixel"  role="tab" aria-selected="true">Pixel <span class="badge">crisp</span></button>
+    <button class="style-tab"        data-style="vector" role="tab" aria-selected="false">Vector <span class="badge">smooth</span></button>
+  </div>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
     <button id="expand-all-btn" class="card-btn" style="display:none">Expand All</button>
     <button id="collapse-all-btn" class="card-btn" style="display:none">Collapse All</button>
@@ -743,7 +797,11 @@ const state = {
   lizardScale: null,
   fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
   frameSize: 128, name: '',
+  // Selected render style — toggled by the Pixel | Vector tab in the header.
+  // Each style has its own card list, generation endpoint, and manifest section.
+  style: 'pixel',
 };
+document.body.dataset.activeStyle = 'pixel';
 
 // ── Legacy "<style>_<color>" key splitter — used when applying old presets
 // that still carry a combined `clothing` field.
@@ -965,14 +1023,23 @@ async function loadManifest() {
       document.getElementById('empty-state').style.display = 'none';
       for (const char of manifest.characters) {
         const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
-        loadAndShowCard(char.name, filePath);
+        loadAndShowCard(char.name, filePath, false, 'pixel');
       }
-      // After all images load, ensure all cards are expanded and scroll to top
-      setTimeout(() => {
-        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('collapsed'));
-        document.getElementById('main').scrollTop = 0;
-      }, 600);
     }
+    // Vector pipeline: same characters, smooth-paths render. Loaded into
+    // the Vector tab's card list. Frame dimensions read from manifest.vector.
+    if (manifest.vector && manifest.vector.characters && manifest.vector.characters.length) {
+      const v = manifest.vector;
+      for (const char of v.characters) {
+        const filePath = char.file.replace(/^\.\.\/output\//, '/output/');
+        loadAndShowCard(char.name, filePath, false, 'vector', v.frameWidth, v.frameHeight);
+      }
+    }
+    // After all images load, ensure all cards are expanded and scroll to top
+    setTimeout(() => {
+      document.querySelectorAll('.char-card').forEach(c => c.classList.remove('collapsed'));
+      document.getElementById('main').scrollTop = 0;
+    }, 600);
     // Weapons are now picked from the Armor Lab's Weapon dropdown — no separate gallery.
     if ((manifest.armor && manifest.armor.length) || (manifest.weapons && manifest.weapons.length)) {
       if (manifest.characters && manifest.characters.length) loadArmorLab(manifest);
@@ -1532,6 +1599,26 @@ wireToggleRow('size-row',        'frameSize',  null);
 
 document.getElementById('char-name').addEventListener('input', e => { state.name = e.target.value.trim(); });
 document.getElementById('gen-btn').addEventListener('click', generate);
+
+// ── Style tabs ─────────────────────────────────────────────────────────────
+// Switching tabs flips a body-level data attribute that hides cards belonging
+// to the inactive pipeline (see CSS). The Generate button posts to whichever
+// endpoint matches the active style.
+document.querySelectorAll('#style-tabs .style-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const style = tab.dataset.style;
+    state.style = style;
+    document.body.dataset.activeStyle = style;
+    document.querySelectorAll('#style-tabs .style-tab').forEach((t) => {
+      const active = t.dataset.style === style;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    const btn = document.getElementById('gen-btn');
+    if (btn) btn.textContent = style === 'vector' ? 'Generate Vector Character' : 'Generate Character';
+    updateClearBtn();
+  });
+});
 document.getElementById('expand-all-btn').addEventListener('click', () => {
   document.querySelectorAll('.char-card').forEach(c => c.classList.remove('collapsed'));
 });
@@ -1558,9 +1645,11 @@ async function generate() {
   const name     = state.name || ('character_' + Date.now());
   const frameSize = Number(state.frameSize) || 128;
   const config   = buildConfig();
+  const style   = state.style || 'pixel';
+  const endpoint = style === 'vector' ? '/api/generate-vector' : '/api/generate';
 
   try {
-    const r = await fetch('/api/generate', {
+    const r = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ config, name, frameSize }),
@@ -1569,7 +1658,7 @@ async function generate() {
     if (!r.ok || !data.success) throw new Error(data.error || 'Unknown error');
 
     setStatus('Done!', 'ok');
-    loadAndShowCard(data.name, data.file, true);
+    loadAndShowCard(data.name, data.file, true, style);
   } catch (e) {
     setStatus('Error: ' + e.message, 'err');
   } finally {
@@ -1651,21 +1740,27 @@ function buildConfig() {
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────
-function loadAndShowCard(name, filePath, scrollToCard = false) {
+// Pixel and vector cards share the same DOM structure; they're scoped via
+// `data-style` so the active tab can hide the inactive set with one CSS rule.
+function loadAndShowCard(name, filePath, scrollToCard = false, style = 'pixel', frameWHint, frameHHint) {
   const img = new Image();
   img.onload = () => {
-    // Derive actual frame dimensions from the spritesheet image size.
-    // Sheet is always SHEET_COLS=8 wide × SHEET_ROWS=13 tall.
-    const frameW = Math.round(img.naturalWidth  / 8);
-    const frameH = Math.round(img.naturalHeight / 13);
+    // Vector frames are 128×192 (manifest-supplied); pixel frames default to
+    // sheetW/8 × sheetH/13. When the caller knows the exact dims (manifest
+    // load), use them; otherwise infer from the image.
+    const frameW = frameWHint || Math.round(img.naturalWidth  / 8);
+    const frameH = frameHHint || Math.round(img.naturalHeight / 13);
 
-    // Replace existing card for same name (e.g. re-generating)
-    if (cardsByName[name]) removeCard(cardsByName[name]);
+    // Card key includes style so a pixel and vector character can both
+    // exist for the same name.
+    const cardKey = `${style}:${name}`;
+    if (cardsByName[cardKey]) removeCard(cardsByName[cardKey]);
 
     const card = buildCard(name, filePath, frameW, frameH, img);
+    card.dataset.style = style;
     const main = document.getElementById('main');
     main.insertBefore(card, document.getElementById('empty-state').nextSibling);
-    cardsByName[name] = card.dataset.cardId;
+    cardsByName[cardKey] = card.dataset.cardId;
     updateClearBtn();
     startCardAnims(card.dataset.cardId, img, frameW, frameH);
     if (scrollToCard) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1690,10 +1785,15 @@ function removeCard(id) {
 
 function updateClearBtn() {
   const hasCards = !!document.querySelector('.char-card');
+  // The empty-state's visibility tracks whether the ACTIVE tab has any cards,
+  // not whether either tab does — otherwise switching to vector with no
+  // vector cards would leave the page mysteriously blank.
+  const activeStyle = document.body.dataset.activeStyle || 'pixel';
+  const hasActiveCards = !!document.querySelector(`.char-card[data-style="${activeStyle}"]`);
   document.getElementById('clear-btn').style.display         = hasCards ? '' : 'none';
   document.getElementById('expand-all-btn').style.display    = hasCards ? '' : 'none';
   document.getElementById('collapse-all-btn').style.display  = hasCards ? '' : 'none';
-  document.getElementById('empty-state').style.display       = hasCards ? 'none' : '';
+  document.getElementById('empty-state').style.display       = hasActiveCards ? 'none' : '';
 }
 
 function buildCard(name, filePath, frameW, frameH, img) {
