@@ -76,6 +76,13 @@ function resolveColors(config) {
     pockets:     ['jacket', 'bomber', 'coat', 'apron', 'vest'].includes(cs),
     cuffBand:    ['jacket', 'bomber', 'coat', 'hoodie'].includes(cs),
     chestPocket: ['jacket', 'bomber', 'coat', 'shirt'].includes(cs),
+    // Hoodie-specific: kangaroo pouch + drawstrings on the front.
+    hoodiePouch: cs === 'hoodie',
+    // Varsity jacket: contrast cream sleeves + chest letter (modern
+    // Chicago streetwear). Triggered when clothingStyle is 'jacket' AND
+    // the user opts in via config.varsity.
+    varsity:     cs === 'jacket' && !!config.varsity,
+    varsityLetter: config.varsityLetter || 'C',
     // Pec V is drawn on bare-chest / sleeveless styles where it makes
     // anatomical sense — tank, vest, tshirt — for the muscular builds.
     muscular:    (buildKey === 'muscular' || buildKey === 'heavy') &&
@@ -145,6 +152,14 @@ function frameMeta(animationName, offsets, config) {
   const fwd = actionSide === 'L' ? (offsets.leftArmFwd || 0) : (offsets.rightArmFwd || 0);
   const flash = animationName && animationName.startsWith('attack_shoot_') &&
                 Math.abs(fwd) >= 12;
+  // Sword swing peak — strike + overshoot frames produce a motion arc
+  // trail behind the blade. Direction tells the arc which way to sweep.
+  const isSwing = animationName && animationName.startsWith('attack_swing_');
+  const swingArc = isSwing && fwd >= 10;
+  let swingDir = 'left';
+  if (animationName && (animationName.includes('west') || animationName.includes('east'))) {
+    swingDir = 'down';
+  }
   // Glow color for fairy wand orb — pulled from the configured glow.
   let glow = null;
   if (species === 'fairy' && config) {
@@ -160,7 +175,7 @@ function frameMeta(animationName, offsets, config) {
   // Open mouth tag for attack frames at the peak — used by drawEyesSouth /
   // drawEyeWest to render a "battle cry" mouth instead of the soft smile.
   const openMouth = isAttack && Math.abs(fwd) >= 10;
-  return { isAttack, actionSide, weapon, flash, blink, openMouth, glow };
+  return { isAttack, actionSide, weapon, flash, swingArc, swingDir, blink, openMouth, glow };
 }
 
 function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
@@ -262,10 +277,17 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   }
   Body.drawEyesSouth(ctx, rig, colors.eyes, { blink: meta.blink, open: meta.openMouth });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
+  if (config.glasses) {
+    Body.drawGlasses(ctx, rig, { color: config.glassesColor, tinted: config.glassesTinted });
+  }
 
   // Hood — drawn LAST among the head pieces so it overlays hair + face
   // and casts its own shadow on the upper half of the face.
   if (config.hood) Body.drawHood(ctx, rig, colors.hood);
+  // Headwear (beanie / cap) — covers the top of the head + hair.
+  if (config.headwear && config.headwear !== 'none' && !config.hood) {
+    Body.drawHeadwear(ctx, rig, config.headwear, config.headwearColor || 'charcoal');
+  }
 
   // Weapon — drawn LAST so it sits on top of everything (the action hand
   // grips it). Skipped when the animation isn't an attack.
@@ -285,11 +307,14 @@ function drawWeaponForFrame(ctx, rig, meta) {
   const elbow = meta.actionSide === 'L' ? rig.elbowL : rig.elbowR;
   const hand  = meta.actionSide === 'L' ? rig.handL  : rig.handR;
   Weapon.drawWeapon(ctx, {
-    weapon:  meta.weapon,
-    handPos: hand,
-    forward: handToward(elbow, hand),
-    limbR:   rig.limbR,
-    flash:   meta.flash,
+    weapon:   meta.weapon,
+    handPos:  hand,
+    forward:  handToward(elbow, hand),
+    limbR:    rig.limbR,
+    flash:    meta.flash,
+    swingArc: meta.swingArc,
+    swingDir: meta.swingDir,
+    glow:     meta.glow,
   });
 }
 
@@ -367,6 +392,9 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   }
   // Hood overlays from behind too.
   if (config.hood) Body.drawHood(ctx, rig, colors.hood);
+  if (config.headwear && config.headwear !== 'none' && !config.hood) {
+    Body.drawHeadwear(ctx, rig, config.headwear, config.headwearColor || 'charcoal');
+  }
   // Weapon — drawn after head/hair so it sits on top.
   drawWeaponForFrame(ctx, rig, meta);
   // No eyes / beard from behind.
@@ -457,7 +485,13 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   }
   Body.drawEyeWest(ctx, rig, colors.eyes, { open: meta.openMouth });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
+  if (config.glasses) {
+    Body.drawGlasses(ctx, rig, { color: config.glassesColor, tinted: config.glassesTinted });
+  }
   if (config.hood) Body.drawHood(ctx, rig, colors.hood);
+  if (config.headwear && config.headwear !== 'none' && !config.hood) {
+    Body.drawHeadwear(ctx, rig, config.headwear, config.headwearColor || 'charcoal');
+  }
   drawWeaponForFrame(ctx, rig, meta);
 
   if (hooks.afterHead) hooks.afterHead(ctx, rig, colors);

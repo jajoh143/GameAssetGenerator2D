@@ -307,9 +307,55 @@ function drawWand(ctx, handPos, forward, limbR, opts = {}) {
  */
 function drawWeapon(ctx, meta) {
   if (!meta || !meta.weapon) return;
+  // Motion arc — drawn FIRST so the weapon sits on top of the trail.
+  // Triggered at swing peak frames (set by frameMeta as `swingArc`).
+  if (meta.weapon === 'sword' && meta.swingArc) {
+    drawSwingArc(ctx, meta.handPos, meta.forward, meta.limbR, meta.swingDir);
+  }
   if (meta.weapon === 'sword') drawSword(ctx, meta.handPos, meta.forward, meta.limbR);
   else if (meta.weapon === 'gun')  drawGun (ctx, meta.handPos, meta.forward, meta.limbR, { flash: meta.flash });
   else if (meta.weapon === 'wand') drawWand(ctx, meta.handPos, meta.forward, meta.limbR, { flash: meta.flash, glow: meta.glow });
+}
+
+/**
+ * Swing arc — a curved white trail that arcs behind the weapon at the
+ * peak of a swing. Reads as motion blur / slash effect. Direction is
+ * either 'left' (south right-handed slash sweeps to the left) or
+ * 'down' for side-view downward chops.
+ */
+function drawSwingArc(ctx, handPos, forward, limbR, dir) {
+  const reach = limbR * 4.8;
+  const tipX = handPos.x + forward.dx * reach;
+  const tipY = handPos.y + forward.dy * reach;
+  // Perpendicular for arc curvature
+  const px = -forward.dy, py = forward.dx;
+  // The arc starts behind the swing direction and ends at the tip,
+  // bulging outward in the perpendicular direction.
+  const sgn = dir === 'right' || dir === 'down' ? -1 : 1;
+  const startBack = limbR * 3.0;
+  const startX = tipX - forward.dx * startBack + sgn * px * limbR * 2.6;
+  const startY = tipY - forward.dy * startBack + sgn * py * limbR * 2.6;
+  const ctrlX  = handPos.x + forward.dx * limbR * 1.2 + sgn * px * limbR * 3.4;
+  const ctrlY  = handPos.y + forward.dy * limbR * 1.2 + sgn * py * limbR * 3.4;
+
+  ctx.save();
+  // Outer thick white halo
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = Math.max(2.5, limbR * 0.55);
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
+  ctx.stroke();
+  // Inner crisp white core
+  ctx.globalAlpha = 0.95;
+  ctx.lineWidth = Math.max(1.2, limbR * 0.18);
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
+  ctx.stroke();
+  ctx.restore();
 }
 
 module.exports = {

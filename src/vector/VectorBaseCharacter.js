@@ -610,14 +610,23 @@ function drawShoe(ctx, foot, shoes, rig, direction, opts = {}) {
   const sx = direction === 'west' || direction === 'east' ? r * 2.2 : r * 1.4;
   const sy = r * 0.95;
   const tilt = opts.tilt || 0;
+  // Cream/white midsole colour for the sneaker stripe. For shoes that
+  // already have a light upper, use a slightly darker cream so the sole
+  // band still reads as a separate band.
+  const isLightUpper = shoes.base && shoes.base.toLowerCase() === '#d8d8d8';
+  const sole         = isLightUpper ? '#bcb09a' : '#efe6cc';
+  const soleEdge     = '#5a4f38';
+  const accentStripe = shoes.shadow || shoes.outline || '#000';
+
   ctx.save();
   ctx.translate(foot.x, foot.y);
   if (tilt) ctx.rotate(tilt);
-  // Upper — flat fill (replaces the diagonal gradient for a less
-  // cartoony cel-shaded look).
+
+  // 1. UPPER — single ellipse that fills the whole shoe silhouette.
   VC.oval(ctx, 0, 0, sx, sy,
     shoes.base, shoes.outline, outlineW(rig));
-  // Cel shadow on the bottom-right of the upper.
+
+  // 2. Cel shadow on bottom-right of the upper (form-shading).
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = shoes.shadow || shoes.outline;
@@ -625,53 +634,81 @@ function drawShoe(ctx, foot, shoes, rig, direction, opts = {}) {
   ctx.ellipse(sx * 0.20, sy * 0.20, sx * 0.85, sy * 0.65, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  // Sole — visible separator stripe in deep_shadow + a thin highlight
-  // on the upper edge for crisp definition.
+
+  // 3. MIDSOLE STRIPE — thin contrast band along the BOTTOM of the
+  // upper (a sliver, not a separate oval). Drawn via source-atop so
+  // it clips to the upper silhouette.
   ctx.save();
-  ctx.fillStyle = shoes.deep_shadow || shoes.outline || '#000';
-  ctx.strokeStyle = shoes.outline || '#000';
-  ctx.lineWidth = outlineW(rig, 0.18);
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = sole;
   ctx.beginPath();
-  ctx.ellipse(0, sy * 0.55, sx * 0.95, sy * 0.40, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, sy * 0.65, sx * 1.05, sy * 0.45, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
-  // Sole upper-edge highlight
-  ctx.strokeStyle = shoes.highlight || '#fff';
-  ctx.globalAlpha = 0.45;
-  ctx.lineWidth = outlineW(rig, 0.10);
+  // Thin dark divider line between upper and sole
+  ctx.strokeStyle = soleEdge;
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = Math.max(0.8, r * 0.07);
   ctx.beginPath();
-  ctx.moveTo(-sx * 0.85, sy * 0.20);
-  ctx.quadraticCurveTo(0, sy * 0.05, sx * 0.85, sy * 0.20);
+  ctx.moveTo(-sx * 0.95, sy * 0.30);
+  ctx.quadraticCurveTo(0, sy * 0.40, sx * 0.95, sy * 0.30);
   ctx.stroke();
   ctx.restore();
-  // Lace detail — a few small horizontal stitches across the front of
-  // the boot. South / north only since the laces would face the camera.
+
+  // 4. SIDE ACCENT — Nike-style swoosh stripe across the side. Side
+  // view gets a long swoosh; front view gets a small chevron hint.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.strokeStyle = accentStripe;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = Math.max(1.0, r * 0.16);
+  ctx.beginPath();
+  if (direction === 'west' || direction === 'east') {
+    ctx.moveTo(-sx * 0.55, sy * 0.10);
+    ctx.quadraticCurveTo(-sx * 0.10, -sy * 0.30,
+                          sx * 0.65, sy * 0.00);
+  } else {
+    ctx.moveTo(-sx * 0.62, sy * 0.10);
+    ctx.quadraticCurveTo(-sx * 0.30, -sy * 0.25, -sx * 0.05, sy * 0.00);
+    ctx.moveTo( sx * 0.62, sy * 0.10);
+    ctx.quadraticCurveTo( sx * 0.30, -sy * 0.25,  sx * 0.05, sy * 0.00);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // 5. Tongue — small visible patch above the laces (front view only).
+  if (direction === 'south' || direction === 'north') {
+    ctx.save();
+    ctx.fillStyle = shoes.highlight || shoes.base;
+    ctx.strokeStyle = shoes.outline || '#000';
+    ctx.lineWidth = Math.max(0.6, r * 0.07);
+    ctx.beginPath();
+    ctx.ellipse(0, -sy * 0.40, sx * 0.28, sy * 0.30, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 6. Lace stitches.
   if (direction === 'south' || direction === 'north') {
     ctx.save();
     ctx.strokeStyle = shoes.outline || '#000';
-    ctx.lineWidth = Math.max(0.8, r * 0.10);
+    ctx.lineWidth = Math.max(0.7, r * 0.09);
     ctx.lineCap = 'round';
-    for (const ly of [-0.20, -0.05, 0.10]) {
+    for (const ly of [-0.25, -0.10, 0.05]) {
       ctx.beginPath();
-      ctx.moveTo(-sx * 0.30, ly * sy);
-      ctx.lineTo( sx * 0.30, ly * sy);
+      ctx.moveTo(-sx * 0.25, ly * sy);
+      ctx.lineTo( sx * 0.25, ly * sy);
       ctx.stroke();
     }
-    // Center vertical lace hint
-    ctx.beginPath();
-    ctx.moveTo(0, -sy * 0.25);
-    ctx.lineTo(0,  sy * 0.15);
-    ctx.stroke();
     ctx.restore();
   } else {
-    // Side view: a couple of small lace stitches on the visible side.
     ctx.save();
     ctx.strokeStyle = shoes.outline || '#000';
-    ctx.lineWidth = Math.max(0.8, r * 0.10);
+    ctx.lineWidth = Math.max(0.7, r * 0.09);
     ctx.lineCap = 'round';
     for (const lx of [-0.30, -0.05, 0.20]) {
       ctx.beginPath();
-      ctx.moveTo(lx * sx, -sy * 0.20);
+      ctx.moveTo(lx * sx, -sy * 0.25);
       ctx.lineTo(lx * sx,  sy * 0.05);
       ctx.stroke();
     }
@@ -1085,6 +1122,133 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ctx.lineWidth = outlineW(rig, 0.10);
     ctx.strokeStyle = VC.hexAlpha(clothing.highlight || '#fff', 0.5);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  // 9b. HEM RIBBING — short vertical stitch dashes along the bottom
+  // edge of the torso (south view only) for hoodie / jacket / bomber
+  // styles. Reads as the elastic ribbed waistband of streetwear tops.
+  if (direction === 'south' && (opts.hoodiePouch || opts.cuffBand)) {
+    ctx.save();
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = Math.max(0.7, rig.limbR * 0.07);
+    ctx.lineCap = 'round';
+    const ribY1 = wy - rig.limbR * 0.18;
+    const ribY2 = wy - rig.limbR * 0.02;
+    const ribCount = 9;
+    for (let i = 0; i < ribCount; i++) {
+      const t = (i + 0.5) / ribCount;
+      const xx = chest.x - wWaist + 2 * wWaist * t;
+      ctx.beginPath();
+      ctx.moveTo(xx, ribY1);
+      ctx.lineTo(xx, ribY2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 10. HOODIE pouch + drawstrings — defines hoodies as a distinct
+  // streetwear silhouette. Drawn south view only since the kangaroo
+  // pocket is on the front of the garment.
+  if (direction === 'south' && opts.hoodiePouch) {
+    const pouchTop  = chest.y + (pelvis.y - chest.y) * 0.42;
+    const pouchBot  = wy - rig.limbR * 0.10;
+    const pouchHalf = sw * 0.62;
+    ctx.save();
+    // Pouch outline curve — a wide U across the lower torso with hand
+    // openings on each side. Drawn as a dark crease line.
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.globalAlpha = 0.65;
+    ctx.lineWidth = outlineW(rig, 0.16);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(chest.x - pouchHalf, pouchTop);
+    ctx.quadraticCurveTo(chest.x, pouchTop + rig.limbR * 0.35,
+                         chest.x + pouchHalf, pouchTop);
+    ctx.stroke();
+    // Hand-opening slashes — short angled cuts where hands enter the pouch.
+    ctx.lineWidth = outlineW(rig, 0.18);
+    ctx.beginPath();
+    ctx.moveTo(chest.x - pouchHalf * 0.95, pouchTop + rig.limbR * 0.05);
+    ctx.lineTo(chest.x - pouchHalf * 0.55, pouchBot - rig.limbR * 0.10);
+    ctx.moveTo(chest.x + pouchHalf * 0.95, pouchTop + rig.limbR * 0.05);
+    ctx.lineTo(chest.x + pouchHalf * 0.55, pouchBot - rig.limbR * 0.10);
+    ctx.stroke();
+    ctx.restore();
+
+    // Drawstrings — two short cords hanging from the collar down across
+    // the upper chest, each capped with a small aglet bead.
+    ctx.save();
+    ctx.strokeStyle = clothing.highlight || '#ffffff';
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = Math.max(1.0, rig.limbR * 0.10);
+    ctx.lineCap = 'round';
+    const stringTop = chest.y + rig.limbR * 0.10;
+    const stringLen = rig.limbR * 1.40;
+    for (const sgn of [-1, 1]) {
+      const xs = chest.x + sgn * rig.limbR * 0.30;
+      ctx.beginPath();
+      ctx.moveTo(xs, stringTop);
+      ctx.quadraticCurveTo(xs + sgn * rig.limbR * 0.30, stringTop + stringLen * 0.55,
+                           xs + sgn * rig.limbR * 0.10, stringTop + stringLen);
+      ctx.stroke();
+      // Aglet bead at the end
+      ctx.fillStyle = clothing.deep_shadow || clothing.outline || '#000';
+      ctx.beginPath();
+      ctx.ellipse(xs + sgn * rig.limbR * 0.10, stringTop + stringLen,
+        rig.limbR * 0.16, rig.limbR * 0.22, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 11. VARSITY JACKET details — small cream shoulder yoke + ribbed
+  // collar/cuff bands and a chest letter. The cream is a tight band
+  // across the upper shoulder rather than a full sleeve so the jacket
+  // body colour still dominates.
+  if (direction === 'south' && opts.varsity) {
+    const cream = '#efe4c8';
+    const creamShadow = '#bba874';
+    const creamOutline = '#5a4a26';
+    ctx.save();
+    ctx.fillStyle = cream;
+    ctx.strokeStyle = creamOutline;
+    ctx.lineWidth = outlineW(rig, 0.16);
+    for (const sgn of [-1, 1]) {
+      // Small cream shoulder patch — sits at the very top of the sleeve
+      // seam, wrapping the deltoid like a varsity yoke.
+      ctx.beginPath();
+      ctx.ellipse(chest.x + sgn * sw * 0.90,
+                  chest.y + rig.limbR * 0.55,
+                  sw * 0.22, rig.limbR * 0.65, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    // Cream stripe under the cream patch (a contrast piping line)
+    ctx.strokeStyle = creamShadow;
+    ctx.lineWidth = Math.max(0.8, rig.limbR * 0.10);
+    for (const sgn of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(chest.x + sgn * sw * 0.70, chest.y + rig.limbR * 0.95);
+      ctx.lineTo(chest.x + sgn * sw * 1.05, chest.y + rig.limbR * 1.05);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Chest letter — a single bold serif character on the left chest.
+    ctx.save();
+    const letter = opts.varsityLetter || 'C';
+    ctx.fillStyle = '#a01818';
+    ctx.strokeStyle = cream;
+    ctx.lineWidth = Math.max(1.0, rig.limbR * 0.15);
+    ctx.font = 'bold ' + Math.round(rig.limbR * 1.8) + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lx = chest.x - sw * 0.42;
+    const ly = chest.y + rig.limbR * 1.70;
+    ctx.strokeText(letter, lx, ly);
+    ctx.fillText(letter, lx, ly);
     ctx.restore();
   }
 }
@@ -1533,21 +1697,30 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
     // Pupil
     VC.oval(ctx, ex, ey + eyeRY * 0.05, irisRX * 0.42, irisRY * 0.42, '#080605', null);
 
-    // Vertical catch-light (anime reflection)
+    // Catch-lights — bright sparkle dots on the iris (anime convention).
+    // The PRIMARY catch-light is a large oval at the upper-left where
+    // the off-screen key light hits the eye, and a smaller secondary at
+    // the lower-right where reflected ambient picks up. A tiny third
+    // pinprick at center-right adds wet-eye sparkle.
     ctx.save();
-    ctx.globalAlpha = 0.92;
-    VC.oval(ctx, ex - irisRX * 0.30, ey - irisRY * 0.35,
-      irisRX * 0.30, irisRY * 0.18, '#ffffff', null);
-    VC.oval(ctx, ex + irisRX * 0.30, ey + irisRY * 0.40,
-      irisRX * 0.16, irisRY * 0.10, '#ffffff', null);
+    ctx.globalAlpha = 0.95;
+    VC.oval(ctx, ex - irisRX * 0.35, ey - irisRY * 0.40,
+      irisRX * 0.42, irisRY * 0.30, '#ffffff', null);
+    ctx.globalAlpha = 0.85;
+    VC.oval(ctx, ex + irisRX * 0.30, ey + irisRY * 0.42,
+      irisRX * 0.20, irisRY * 0.14, '#ffffff', null);
+    ctx.globalAlpha = 0.75;
+    VC.oval(ctx, ex + irisRX * 0.10, ey - irisRY * 0.10,
+      irisRX * 0.10, irisRY * 0.08, '#ffffff', null);
     ctx.restore();
 
-    // Lower-iris reflected light
+    // Lower-iris reflected light — a soft bright crescent at the bottom
+    // of the iris where ambient bounces back (gives the iris depth).
     ctx.save();
-    ctx.globalAlpha = 0.40;
+    ctx.globalAlpha = 0.55;
     VC.oval(ctx, ex, ey + irisRY * 0.55,
-      irisRX * 0.65, irisRY * 0.18,
-      lighten(irisColor, 0.45), null);
+      irisRX * 0.78, irisRY * 0.22,
+      lighten(irisColor, 0.55), null);
     ctx.restore();
 
     ctx.restore(); // clip
@@ -1708,18 +1881,29 @@ function drawMouthSouth(ctx, rig, opts = {}) {
     return;
   }
 
-  // Neutral mouth — a flatter line with the slightest dip in the middle.
-  // Replaces the older upward-curving "smile" which was reading too
-  // grin-cartoony. Adult / stoic expression suits the references better.
+  // Neutral mouth — a flatter dark line with the slightest dip in the
+  // middle, plus a subtle lower-lip highlight tint just below it so the
+  // mouth reads as a 3D feature rather than a flat scratch on the face.
   ctx.save();
   ctx.strokeStyle = '#3a1808';
   ctx.lineWidth = Math.max(1.0, head.r * 0.05);
   ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.65;
+  ctx.globalAlpha = 0.70;
+  // Upper lip line
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.13, head.y + head.r * 0.58);
-  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.61,
-                       head.x + head.r * 0.13, head.y + head.r * 0.58);
+  ctx.moveTo(head.x - head.r * 0.14, head.y + head.r * 0.58);
+  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.62,
+                       head.x + head.r * 0.14, head.y + head.r * 0.58);
+  ctx.stroke();
+  // Lower-lip warm shadow — a soft pink-brown band just below the line
+  // suggesting the curve of the lower lip.
+  ctx.strokeStyle = '#8a3826';
+  ctx.globalAlpha = 0.30;
+  ctx.lineWidth = Math.max(1.2, head.r * 0.07);
+  ctx.beginPath();
+  ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.66);
+  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.69,
+                       head.x + head.r * 0.10, head.y + head.r * 0.66);
   ctx.stroke();
   ctx.restore();
 }
@@ -2189,26 +2373,71 @@ function drawHair(ctx, rig, hair, style) {
   ctx.fill();
   ctx.restore();
 
-  // 4. Strand streaks — a couple of subtle dark lines in the mid-tone
-  // that suggest individual hair strands. Skipped for very-short / buzzed.
-  if (['medium', 'long', 'curly', 'topknot'].includes(style)) {
+  // 4. Strand streaks — short flowing lines in the dark hair tone that
+  // suggest individual strands. Style-specific stroke patterns so each
+  // cut reads distinctly. Skipped for buzzed / bald.
+  if (style !== 'buzzed' && style !== 'bald') {
+    let strokes;
+    if (style === 'spiky') {
+      // Vertical strokes along each spike for jagged texture.
+      strokes = [
+        [-0.45, -0.55, -0.50, -1.05],
+        [ 0.00, -0.65, -0.05, -1.30],
+        [ 0.45, -0.55,  0.50, -1.05],
+        [-0.20, -0.60, -0.20, -1.10],
+        [ 0.20, -0.60,  0.20, -1.10],
+      ];
+    } else if (style === 'short' || style === 'undercut' || style === 'ponytail') {
+      // A handful of short curved lines following the crown shape.
+      strokes = [
+        [-0.55, -0.85, -0.20, -0.95],
+        [-0.10, -1.00,  0.30, -0.95],
+        [ 0.40, -0.90,  0.65, -0.70],
+        [-0.65, -0.45, -0.45, -0.30],
+        [ 0.45, -0.30,  0.65, -0.45],
+      ];
+    } else {
+      // medium / long / curly / topknot / side_swept — long flowing strands.
+      strokes = [
+        [-0.45, -0.95, -0.10, -0.50],
+        [ 0.25, -0.85,  0.55, -0.30],
+        [-0.05, -1.05,  0.10, -0.55],
+        [-0.85, -0.30, -0.65,  0.30],
+        [ 0.85, -0.30,  0.65,  0.30],
+      ];
+    }
     ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
-    ctx.globalAlpha = 0.30;
+    ctx.globalAlpha = 0.40;
     ctx.strokeStyle = hair.shadow || '#000';
-    ctx.lineWidth = head.r * 0.06;
+    ctx.lineWidth = Math.max(0.8, head.r * 0.05);
     ctx.lineCap = 'round';
+    for (const offsets of strokes) {
+      ctx.beginPath();
+      ctx.moveTo(head.x + offsets[0] * head.r * scaleX + shiftX,
+                 head.y + offsets[1] * head.r);
+      ctx.quadraticCurveTo(
+        head.x + ((offsets[0] + offsets[2]) / 2) * head.r * scaleX + shiftX,
+        head.y + ((offsets[1] + offsets[3]) / 2 - 0.10) * head.r,
+        head.x + offsets[2] * head.r * scaleX + shiftX,
+        head.y + offsets[3] * head.r);
+      ctx.stroke();
+    }
+    // Bright fringe highlight strands — a few thinner pale lines on the
+    // lit side for that anime-glossy specular streak detail.
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = hair.highlight || '#fff';
+    ctx.lineWidth = Math.max(0.6, head.r * 0.035);
     for (const offsets of [
-      [-0.45, -0.95, -0.10, -0.50],
-      [ 0.25, -0.85,  0.55, -0.30],
-      [-0.05, -1.05,  0.10, -0.55],
+      [-0.70, -0.95, -0.55, -0.55],
+      [-0.30, -1.10, -0.20, -0.65],
     ]) {
       ctx.beginPath();
       ctx.moveTo(head.x + offsets[0] * head.r * scaleX + shiftX,
                  head.y + offsets[1] * head.r);
       ctx.quadraticCurveTo(
         head.x + ((offsets[0] + offsets[2]) / 2) * head.r * scaleX + shiftX,
-        head.y + ((offsets[1] + offsets[3]) / 2 - 0.15) * head.r,
+        head.y + ((offsets[1] + offsets[3]) / 2 - 0.05) * head.r,
         head.x + offsets[2] * head.r * scaleX + shiftX,
         head.y + offsets[3] * head.r);
       ctx.stroke();
@@ -2844,6 +3073,256 @@ function drawShoulderPads(ctx, rig, palette) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Headwear — beanie & baseball cap (modern Chicago streetwear accessories)
+// ---------------------------------------------------------------------------
+
+const HEADWEAR_PALETTES = {
+  black:   { base: '#1a1a1a', shadow: '#080808', highlight: '#444444', outline: '#000000' },
+  charcoal:{ base: '#2c2c30', shadow: '#16161a', highlight: '#4a4a52', outline: '#06060a' },
+  grey:    { base: '#7c7c80', shadow: '#4a4a4e', highlight: '#a0a0a4', outline: '#1a1a1c' },
+  navy:    { base: '#1a2848', shadow: '#0a1428', highlight: '#3a4868', outline: '#000010' },
+  red:     { base: '#a01818', shadow: '#5a0a0a', highlight: '#d04040', outline: '#200000' },
+  white:   { base: '#f0f0e8', shadow: '#bcbcb0', highlight: '#ffffff', outline: '#3a3a36' },
+  olive:   { base: '#5c5a30', shadow: '#322f10', highlight: '#807d4c', outline: '#181808' },
+  cream:   { base: '#dccfa0', shadow: '#a4986a', highlight: '#f4ecc8', outline: '#3a3018' },
+};
+
+function resolveHeadwearPalette(key) {
+  return HEADWEAR_PALETTES[key] || HEADWEAR_PALETTES.charcoal;
+}
+
+/**
+ * Beanie — knit cap pulled snug over the crown of the head. The brim
+ * folds up at the bottom edge, with a subtle horizontal rib texture
+ * across the cap. Sits on top of hair so the hair pokes out below.
+ */
+function drawBeanie(ctx, rig, palette) {
+  const { head } = rig;
+  const direction = rig.direction;
+  const p = resolveHeadwearPalette(palette);
+  ctx.save();
+  ctx.fillStyle = p.base;
+  ctx.strokeStyle = p.outline;
+  ctx.lineWidth = outlineW(rig, 0.22);
+  // Cap silhouette — wraps the crown from temple to temple.
+  const yTop = head.y - head.r * 1.05;
+  const yBot = head.y - head.r * 0.05;
+  const xL = head.x - head.r * 1.00;
+  const xR = head.x + head.r * 1.00;
+  ctx.beginPath();
+  ctx.moveTo(xL, yBot);
+  ctx.quadraticCurveTo(xL - head.r * 0.05, head.y - head.r * 0.85,
+                       head.x - head.r * 0.55, yTop);
+  ctx.quadraticCurveTo(head.x, yTop - head.r * 0.20,
+                       head.x + head.r * 0.55, yTop);
+  ctx.quadraticCurveTo(xR + head.r * 0.05, head.y - head.r * 0.85, xR, yBot);
+  ctx.lineTo(xR, yBot);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Folded brim — a thicker band at the bottom edge in the highlight color
+  // suggesting the rolled-up hem.
+  ctx.fillStyle = p.highlight;
+  ctx.strokeStyle = p.outline;
+  ctx.beginPath();
+  ctx.moveTo(xL, yBot);
+  ctx.quadraticCurveTo(head.x, yBot + head.r * 0.18,
+                       xR, yBot);
+  ctx.quadraticCurveTo(head.x, yBot - head.r * 0.06,
+                       xL, yBot);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Rib stripes — three faint horizontal grooves across the cap.
+  ctx.strokeStyle = p.shadow;
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = Math.max(0.8, head.r * 0.04);
+  ctx.lineCap = 'round';
+  for (const t of [0.32, 0.55, 0.78]) {
+    const yy = yTop + (yBot - yTop) * t;
+    const xx = head.r * 0.85 * Math.sin(t * Math.PI);
+    ctx.beginPath();
+    ctx.moveTo(head.x - xx, yy);
+    ctx.quadraticCurveTo(head.x, yy + head.r * 0.04,
+                         head.x + xx, yy);
+    ctx.stroke();
+  }
+  // Cel shadow on the right side of the cap.
+  ctx.globalAlpha = 1;
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = p.shadow;
+  ctx.beginPath();
+  ctx.ellipse(head.x + head.r * 0.45, head.y - head.r * 0.55,
+              head.r * 0.65, head.r * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  ctx.restore();
+  void direction;
+}
+
+/**
+ * Baseball cap — flat-brim snapback with a curved crown and forward-
+ * facing brim. Front view shows the bill projecting downward across
+ * the upper face; side view shows the bill extending forward.
+ */
+function drawCap(ctx, rig, palette) {
+  const { head } = rig;
+  const direction = rig.direction;
+  const p = resolveHeadwearPalette(palette);
+  ctx.save();
+  ctx.fillStyle = p.base;
+  ctx.strokeStyle = p.outline;
+  ctx.lineWidth = outlineW(rig, 0.22);
+
+  // Crown — rounded dome covering the top of the skull, slightly taller
+  // and narrower than the beanie.
+  const yTop = head.y - head.r * 1.00;
+  const yBot = head.y - head.r * 0.05;
+  const xL = head.x - head.r * 0.92;
+  const xR = head.x + head.r * 0.92;
+  ctx.beginPath();
+  ctx.moveTo(xL, yBot);
+  ctx.quadraticCurveTo(xL, head.y - head.r * 0.85,
+                       head.x - head.r * 0.52, yTop);
+  ctx.quadraticCurveTo(head.x, yTop - head.r * 0.05,
+                       head.x + head.r * 0.52, yTop);
+  ctx.quadraticCurveTo(xR, head.y - head.r * 0.85, xR, yBot);
+  ctx.lineTo(xR, yBot);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Cel shadow on right side of crown.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = p.shadow;
+  ctx.beginPath();
+  ctx.ellipse(head.x + head.r * 0.40, head.y - head.r * 0.50,
+              head.r * 0.60, head.r * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Top button — small dot at the crown apex.
+  ctx.fillStyle = p.shadow;
+  ctx.beginPath();
+  ctx.ellipse(head.x, yTop + head.r * 0.05,
+              head.r * 0.06, head.r * 0.06, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Brim — wide flat curve. Direction-dependent: south/north shows the
+  // brim extending downward across the eyes; west/east projects forward.
+  ctx.fillStyle = p.shadow;
+  ctx.strokeStyle = p.outline;
+  ctx.beginPath();
+  if (direction === 'west' || direction === 'east') {
+    const sgn = direction === 'west' ? -1 : 1;
+    ctx.moveTo(head.x, yBot);
+    ctx.quadraticCurveTo(head.x + sgn * head.r * 0.85, yBot - head.r * 0.05,
+                         head.x + sgn * head.r * 1.20, yBot + head.r * 0.05);
+    ctx.quadraticCurveTo(head.x + sgn * head.r * 0.55, yBot + head.r * 0.20,
+                         head.x, yBot + head.r * 0.05);
+  } else {
+    ctx.moveTo(head.x - head.r * 0.92, yBot);
+    ctx.quadraticCurveTo(head.x, yBot + head.r * 0.45,
+                         head.x + head.r * 0.92, yBot);
+    ctx.quadraticCurveTo(head.x, yBot + head.r * 0.30,
+                         head.x - head.r * 0.92, yBot);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawHeadwear(ctx, rig, kind, palette) {
+  if (!kind || kind === 'none') return;
+  if (kind === 'beanie') return drawBeanie(ctx, rig, palette);
+  if (kind === 'cap')    return drawCap(ctx, rig, palette);
+}
+
+// ---------------------------------------------------------------------------
+// Glasses — black/clear frame eyewear sitting over the eye line
+// ---------------------------------------------------------------------------
+
+function drawGlasses(ctx, rig, opts = {}) {
+  const direction = rig.direction;
+  const { head } = rig;
+  const frame = opts.color || '#101014';
+  const lensFill = opts.tinted ? '#1a1a22' : null;
+  const lensAlpha = opts.tinted ? 0.55 : 0;
+
+  ctx.save();
+  ctx.strokeStyle = frame;
+  ctx.lineWidth = Math.max(1.2, head.r * 0.07);
+  ctx.lineCap = 'round';
+
+  if (direction === 'south' || direction === 'north') {
+    // Two circular lenses centered on the eye positions, joined by a
+    // small bridge across the nose.
+    const dx = head.r * 0.32;
+    const dy = head.r * 0.04;
+    const lensR = head.r * 0.24;
+    for (const sign of [-1, 1]) {
+      const ex = head.x + dx * sign;
+      const ey = head.y + dy;
+      if (lensFill) {
+        ctx.save();
+        ctx.fillStyle = lensFill;
+        ctx.globalAlpha = lensAlpha;
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, lensR, lensR * 0.85, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, lensR, lensR * 0.85, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Bridge — short horizontal connector.
+    ctx.beginPath();
+    ctx.moveTo(head.x - head.r * 0.10, head.y + dy - head.r * 0.02);
+    ctx.lineTo(head.x + head.r * 0.10, head.y + dy - head.r * 0.02);
+    ctx.stroke();
+    // Tiny temple stems on each side.
+    for (const sign of [-1, 1]) {
+      const ex = head.x + dx * sign;
+      const ey = head.y + dy;
+      ctx.beginPath();
+      ctx.moveTo(ex + sign * head.r * 0.22, ey - head.r * 0.05);
+      ctx.lineTo(ex + sign * head.r * 0.40, ey - head.r * 0.10);
+      ctx.stroke();
+    }
+  } else {
+    // Side view — single visible lens with a temple stem behind.
+    const sgn = direction === 'east' ? 1 : -1;
+    const ex = head.x + sgn * head.r * 0.42;
+    const ey = head.y - head.r * 0.04;
+    const lensR = head.r * 0.22;
+    if (lensFill) {
+      ctx.save();
+      ctx.fillStyle = lensFill;
+      ctx.globalAlpha = lensAlpha;
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, lensR, lensR * 0.80, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, lensR, lensR * 0.80, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Temple bar to ear.
+    ctx.beginPath();
+    ctx.moveTo(ex - sgn * lensR * 0.95, ey);
+    ctx.lineTo(head.x - sgn * head.r * 0.05, ey - head.r * 0.05);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 module.exports = {
   drawLimb,
   drawHand,
@@ -2869,5 +3348,7 @@ module.exports = {
   drawHood,
   drawCape,
   drawShoulderPads,
+  drawHeadwear,
+  drawGlasses,
   outlineW,
 };
