@@ -19,9 +19,11 @@
 const VC = require('./VectorCanvas');
 
 // Default outline width relative to limb radius (keeps the rim visually
-// consistent across height/build presets).
-function outlineW(rig, factor = 0.18) {
-  return Math.max(1.2, rig.limbR * factor);
+// consistent across height/build presets). Tuned thicker than CSS default
+// because at chibi proportions a thin line gets lost in the shading —
+// a stronger silhouette reads cleaner at any zoom.
+function outlineW(rig, factor = 0.32) {
+  return Math.max(2.0, rig.limbR * factor);
 }
 
 // ---------------------------------------------------------------------------
@@ -32,120 +34,160 @@ function outlineW(rig, factor = 0.18) {
  * Draw a 2-segment limb (shoulder → elbow → hand, or hip → knee → foot)
  * with tapered radii for a hand-drawn feel.
  *
- * Shading layers (back-to-front):
- *   1. base gradient along limb axis (highlight → base → shadow)
- *   2. cross-axis form-shadow gradient (lit on top-left, shadowed on
- *      bottom-right) — gives the limb a cylindrical feel
- *   3. rim highlight on the top-left edge
- *   4. small AO blob at the joint (elbow/knee crease)
+ * Cel-shading approach (replaces the earlier 3-stop gradient + cross-axis
+ * form-shadow + rim-light combo, which made limbs read as inflated tubes):
+ *
+ *   1. Solid base color across the whole limb — sharp, readable silhouette
+ *   2. Single hard-edged shadow shape on the bottom-right (shadow side),
+ *      filled with `palette.shadow`. The shadow path is the limb itself
+ *      offset to one side and clipped to the limb body via source-atop.
+ *   3. Strong outline stroke around the silhouette.
+ *   4. Joint cap oval at the elbow / knee for a clean bend.
  */
 function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
   const r0 = opts.rootR || 1.0;
   const r1 = opts.midR  || 0.92;
   const r2 = opts.tipR  || 0.75;
-  const lineWidth = opts.lineWidth || 1.4;
+  const lineWidth = opts.lineWidth || outlineW({ limbR: r0 }, 0.30);
 
-  // 1. Base axial gradient (lighter toward root, darker toward tip — useful
-  // when limbs hang down so the foot is darker than the hip).
-  const grad = ctx.createLinearGradient(root.x, root.y, tip.x, tip.y);
-  grad.addColorStop(0,   palette.highlight);
-  grad.addColorStop(0.55, palette.base);
-  grad.addColorStop(1,   palette.shadow || palette.base);
-
+  const base    = palette.base;
+  const shadow  = palette.shadow || palette.base;
   const outline = palette.outline || '#000';
-  VC.limb(ctx, root.x, root.y, r0, mid.x, mid.y, r1, grad, outline, lineWidth);
-  VC.limb(ctx, mid.x,  mid.y,  r1, tip.x, tip.y, r2, grad, outline, lineWidth);
 
-  // 2. Cylindrical form shadow — overlay a cross-axis dark band on the
-  // bottom-right side so the limb reads as a tube, not a flat ribbon.
-  if (palette.shadow) {
-    const seg = (a, b, ra, rb) => {
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const len = Math.hypot(dx, dy) || 1;
-      const nx = -dy / len, ny = dx / len;       // perpendicular unit (right side)
-      const offX = nx * ra * 0.55, offY = ny * ra * 0.55;
-      const formGrad = ctx.createLinearGradient(
-        a.x - nx * ra, a.y - ny * ra,
-        a.x + nx * ra, a.y + ny * ra,
-      );
-      formGrad.addColorStop(0,   VC.hexAlpha(palette.shadow, 0));
-      formGrad.addColorStop(0.45, VC.hexAlpha(palette.shadow, 0));
-      formGrad.addColorStop(1,   VC.hexAlpha(palette.shadow, 0.55));
-      ctx.save();
-      ctx.globalCompositeOperation = 'source-atop';
-      VC.limb(ctx, a.x, a.y, ra, b.x, b.y, rb, formGrad, null, 0);
-      ctx.restore();
-      // Rim highlight on the lit edge
-      const rimGrad = ctx.createLinearGradient(
-        a.x - nx * ra, a.y - ny * ra,
-        a.x + nx * ra, a.y + ny * ra,
-      );
-      rimGrad.addColorStop(0,   VC.hexAlpha(palette.highlight, 0.55));
-      rimGrad.addColorStop(0.35, VC.hexAlpha(palette.highlight, 0));
-      ctx.save();
-      ctx.globalCompositeOperation = 'source-atop';
-      VC.limb(ctx, a.x, a.y, ra, b.x, b.y, rb, rimGrad, null, 0);
-      ctx.restore();
-      void offX; void offY;
-    };
-    seg(root, mid, r0, r1);
-    seg(mid,  tip, r1, r2);
-  }
+  // 1. Flat-fill the limb silhouette
+  VC.limb(ctx, root.x, root.y, r0, mid.x, mid.y, r1, base, outline, lineWidth);
+  VC.limb(ctx, mid.x,  mid.y,  r1, tip.x, tip.y, r2, base, outline, lineWidth);
 
-  // 3. Joint AO + cap — a small dark oval that smooths the bend AND
-  // hints at how the limb folds at the joint.
-  VC.oval(ctx, mid.x, mid.y, r1 * 0.95, r1 * 0.92, palette.shadow || palette.base, null);
-  VC.castShadow(ctx, mid.x + r1 * 0.20, mid.y + r1 * 0.30,
-    r1 * 0.65, r1 * 0.45, 0.35, palette.outline);
+  // 2. Hard-edged shadow band on the bottom-right side. The shadow shape
+  // is the limb itself, but offset perpendicular toward the shadow side,
+  // and clipped to the limb body so it reads as the right-half being
+  // in shadow.
+  const seg = (a, b, ra, rb) => {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;     // perpendicular (right side of arm)
+    // Offset both ends ~40% of the radius toward the shadow side.
+    const offA = { x: a.x + nx * ra * 0.45, y: a.y + ny * ra * 0.45 };
+    const offB = { x: b.x + nx * rb * 0.45, y: b.y + ny * rb * 0.45 };
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    VC.limb(ctx, offA.x, offA.y, ra, offB.x, offB.y, rb, shadow, null, 0);
+    ctx.restore();
+  };
+  seg(root, mid, r0, r1);
+  seg(mid,  tip, r1, r2);
+
+  // 3. Joint cap — a small filled oval that smooths the bend.
+  VC.oval(ctx, mid.x, mid.y, r1 * 0.95, r1 * 0.92, shadow, null);
 }
 
 /**
- * Hand — skin-coloured oval at the end of an arm.
+ * Hand — drawn as a chibi mitten: a rounded silhouette with a thumb
+ * notch on one side and a single palm-crease line. Reads as a hand
+ * rather than a "skin pebble".
  *
- *   opts.fist:    draw a slightly larger, stronger-shaded fist instead of an
- *                 open hand (used during attack animations / weapon grip).
- *   opts.toward:  optional unit vector { dx, dy } pointing away from the
- *                 wrist toward where a weapon would extend — when supplied,
- *                 the fist's knuckle ridge orients along it.
+ *   opts.fist:    draw closed fist (knuckle ridges instead of palm crease)
+ *   opts.toward:  unit vector { dx, dy } from elbow → hand. Used to
+ *                 orient the thumb (which always sits on the elbow side
+ *                 of the hand) and the knuckle ridges.
  */
 function drawHand(ctx, hand, skin, rig, opts = {}) {
-  const r = rig.limbR * (opts.fist ? 1.15 : 1.05);
-  VC.oval(ctx, hand.x, hand.y, r, r * (opts.fist ? 0.92 : 0.95),
-    VC.radial(ctx, hand.x - r * 0.3, hand.y - r * 0.3, r * 1.1, skin.highlight, skin.base),
-    skin.outline, outlineW(rig));
+  const r = rig.limbR * (opts.fist ? 1.20 : 1.10);
+  const tx = (opts.toward && opts.toward.dx) || 0;
+  const ty = (opts.toward && opts.toward.dy) || 1;
+  const len = Math.hypot(tx, ty) || 1;
+  const ux = tx / len, uy = ty / len;
+  const px = -uy, py = ux;       // perpendicular (the "thumb side")
 
-  // For a fist, add knuckle ridges + a darker palm shadow so it reads as
-  // closed instead of open.
+  // Mitten silhouette: rounded body + thumb bump on one side.
+  // The thumb sits on +perpendicular for symmetry with how the rig
+  // orients itself in screen coordinates.
+  ctx.save();
+  ctx.fillStyle = skin.base;
+  ctx.strokeStyle = skin.outline;
+  ctx.lineWidth = outlineW(rig, 0.30);
+  ctx.beginPath();
+  // Start at the wrist and trace around the mitten. Use the forearm
+  // axis (ux, uy) and the perpendicular (px, py) as a local frame.
+  const wx = hand.x - ux * r * 0.40;   // wrist center
+  const wy = hand.y - uy * r * 0.40;
+  // Wrist edge (thumb side)
+  ctx.moveTo(wx + px * r * 0.55, wy + py * r * 0.55);
+  // Thumb bump
+  ctx.quadraticCurveTo(
+    wx + ux * r * 0.20 + px * r * 1.05, wy + uy * r * 0.20 + py * r * 1.05,
+    wx + ux * r * 0.55 + px * r * 0.85, wy + uy * r * 0.55 + py * r * 0.85,
+  );
+  // Notch between thumb and fingers
+  ctx.quadraticCurveTo(
+    hand.x + ux * r * 0.30 + px * r * 0.55, hand.y + uy * r * 0.30 + py * r * 0.55,
+    hand.x + ux * r * 0.95 + px * r * 0.45, hand.y + uy * r * 0.95 + py * r * 0.45,
+  );
+  // Fingertip arc (forward edge of the mitten)
+  ctx.quadraticCurveTo(
+    hand.x + ux * r * 1.20,                  hand.y + uy * r * 1.20,
+    hand.x + ux * r * 0.95 - px * r * 0.55,  hand.y + uy * r * 0.95 - py * r * 0.55,
+  );
+  // Pinky-side wrist
+  ctx.quadraticCurveTo(
+    wx + ux * r * 0.30 - px * r * 0.65, wy + uy * r * 0.30 - py * r * 0.65,
+    wx - px * r * 0.50,                  wy - py * r * 0.50,
+  );
+  // Wrist-bottom (closing)
+  ctx.quadraticCurveTo(
+    wx, wy,
+    wx + px * r * 0.55, wy + py * r * 0.55,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Cel shadow on the pinky side (opposite the thumb, which is the
+  // shadow side because top-left light hits the thumb).
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = skin.shadow || skin.outline;
+  ctx.beginPath();
+  ctx.moveTo(wx - px * r * 0.50, wy - py * r * 0.50);
+  ctx.quadraticCurveTo(
+    hand.x + ux * r * 0.55 - px * r * 0.85, hand.y + uy * r * 0.55 - py * r * 0.85,
+    hand.x + ux * r * 1.05 - px * r * 0.20, hand.y + uy * r * 1.05 - py * r * 0.20,
+  );
+  ctx.lineTo(hand.x + ux * r * 0.40, hand.y + uy * r * 0.40);
+  ctx.lineTo(wx - px * r * 0.20, wy - py * r * 0.20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Palm crease (open hand) or knuckle ridges (fist).
+  ctx.save();
+  ctx.strokeStyle = skin.outline;
+  ctx.lineWidth = Math.max(1.0, r * 0.14);
+  ctx.lineCap = 'round';
   if (opts.fist) {
-    const tx = (opts.toward && opts.toward.dx) || 0;
-    const ty = (opts.toward && opts.toward.dy) || 1;
-    const len = Math.hypot(tx, ty) || 1;
-    const ux = tx / len, uy = ty / len;
-    // Perpendicular for the knuckle row
-    const px = -uy, py = ux;
-    // Knuckle row: 3 short dark dashes across the wrist-forward face
-    ctx.save();
-    ctx.strokeStyle = skin.outline || '#1a0a06';
-    ctx.lineWidth = Math.max(1.0, r * 0.18);
-    ctx.lineCap = 'round';
-    for (const k of [-0.55, -0.10, 0.35]) {
-      const cx = hand.x + ux * r * 0.25 + px * r * k;
-      const cy = hand.y + uy * r * 0.25 + py * r * k;
+    // Three short knuckle dashes across the front of the hand.
+    for (const k of [-0.45, 0.0, 0.45]) {
+      const cx = hand.x + ux * r * 0.55 + px * r * k * 0.6;
+      const cy = hand.y + uy * r * 0.55 + py * r * k * 0.6;
       ctx.beginPath();
       ctx.moveTo(cx - ux * r * 0.18, cy - uy * r * 0.18);
       ctx.lineTo(cx + ux * r * 0.18, cy + uy * r * 0.18);
       ctx.stroke();
     }
-    ctx.restore();
-    // Palm shadow on the opposite side
-    ctx.save();
-    ctx.globalAlpha = 0.35;
-    VC.oval(ctx,
-      hand.x - ux * r * 0.30, hand.y - uy * r * 0.30,
-      r * 0.60, r * 0.45,
-      skin.shadow || skin.outline, null);
-    ctx.restore();
+  } else {
+    // Single curved palm crease running from thumb-base to pinky.
+    ctx.beginPath();
+    ctx.moveTo(
+      hand.x + ux * r * 0.10 + px * r * 0.55,
+      hand.y + uy * r * 0.10 + py * r * 0.55,
+    );
+    ctx.quadraticCurveTo(
+      hand.x + ux * r * 0.40, hand.y + uy * r * 0.40,
+      hand.x + ux * r * 0.30 - px * r * 0.45,
+      hand.y + uy * r * 0.30 - py * r * 0.45,
+    );
+    ctx.stroke();
   }
+  ctx.restore();
 }
 
 /**
@@ -300,49 +342,43 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ];
   }
 
-  const grad = VC.diagGradient(
-    ctx,
-    chest.x - sw, chest.y,
-    sw * 2,       pelvis.y - chest.y,
-    clothing,
-  );
-  // Lay down the blob path so subsequent shading layers can re-issue it.
+  // 1. Flat-fill the torso silhouette with a strong outline.
   blobPath(ctx, pts, 0.55);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = clothing.base;
   ctx.fill();
   ctx.strokeStyle = clothing.outline || '#000';
-  ctx.lineWidth = outlineW(rig, 0.22);
+  ctx.lineWidth = outlineW(rig, 0.32);
   ctx.stroke();
 
-  // 2. Form shadow on the right side — overlay a vertical dark band so
-  // the torso reads as a 3D barrel / cylinder.
+  // 2. Cel shadow — a soft curved shadow on the right side (shadow side)
+  // of the torso. Drawn via source-atop so it clips to the torso shape.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = 0.55;
-  const formGrad = ctx.createLinearGradient(
-    chest.x - sw, 0,
-    chest.x + sw, 0,
-  );
-  formGrad.addColorStop(0,   VC.hexAlpha(clothing.shadow || '#000', 0));
-  formGrad.addColorStop(0.55, VC.hexAlpha(clothing.shadow || '#000', 0));
-  formGrad.addColorStop(1,   VC.hexAlpha(clothing.deep_shadow || clothing.shadow || '#000', 0.85));
-  ctx.fillStyle = formGrad;
-  blobPath(ctx, pts, 0.55);
-  ctx.fill();
-  ctx.restore();
-
-  // 3. Rim highlight along the upper-left chest edge.
-  ctx.save();
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = 0.40;
-  const rimGrad = ctx.createLinearGradient(
-    chest.x - sw,        chest.y,
-    chest.x + sw * 0.20, chest.y + (pelvis.y - chest.y) * 0.4,
-  );
-  rimGrad.addColorStop(0,   VC.hexAlpha(clothing.highlight || '#fff', 0.85));
-  rimGrad.addColorStop(0.5, VC.hexAlpha(clothing.highlight || '#fff', 0));
-  ctx.fillStyle = rimGrad;
-  blobPath(ctx, pts, 0.55);
+  ctx.fillStyle = clothing.shadow || clothing.base;
+  ctx.beginPath();
+  if (direction === 'south' || direction === 'north') {
+    const tH = pelvis.y - chest.y;
+    ctx.moveTo(chest.x + sw * 0.20, chest.y - rig.limbR * 0.6);
+    ctx.quadraticCurveTo(
+      chest.x + sw * 1.30, chest.y + tH * 0.40,
+      chest.x + hw * 0.30, pelvis.y + rig.limbR * 0.6,
+    );
+    ctx.lineTo(chest.x + sw * 0.10, pelvis.y);
+    ctx.quadraticCurveTo(
+      chest.x + sw * 0.40, chest.y + tH * 0.50,
+      chest.x + sw * 0.20, chest.y - rig.limbR * 0.6,
+    );
+  } else {
+    // Side view: shadow wraps the back side of the torso depth.
+    const sd = sw * 0.55;
+    const tH = pelvis.y - chest.y;
+    ctx.moveTo(chest.x + sd * 0.10, chest.y);
+    ctx.quadraticCurveTo(
+      chest.x + sd * 1.30, chest.y + tH * 0.4,
+      chest.x + sd * 0.10, pelvis.y,
+    );
+  }
+  ctx.closePath();
   ctx.fill();
   ctx.restore();
 
@@ -387,36 +423,45 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ctx.restore();
   }
 
-  // 7. Jacket lapels — V-shape from collar to chest, drawn for jacket-
-  // family clothing (jacket / bomber / coat). Skipped for shirts/tanks.
+  // 7. Jacket lapels — V-shape from collar to chest. Drawn at FULL opacity
+  // in the contrasting collar color so they read clearly against the
+  // jacket body. Skipped for shirts/tanks.
   if (direction === 'south' && opts.lapels) {
     const lapelTop = chest.y + rig.limbR * 0.10;
     const lapelBot = chest.y + (pelvis.y - chest.y) * 0.55;
     const lapelW   = sw * 0.42;
+    const lapelColor = clothing.deep_shadow || clothing.shadow || '#0a0a10';
     ctx.save();
-    ctx.fillStyle = clothing.deep_shadow || clothing.shadow || '#222';
+    ctx.fillStyle = lapelColor;
+    ctx.strokeStyle = clothing.outline || '#000';
+    ctx.lineWidth = outlineW(rig, 0.18);
+    // Left lapel triangle
     ctx.beginPath();
     ctx.moveTo(chest.x - rig.limbR * 0.65, lapelTop);
     ctx.lineTo(chest.x - lapelW * 0.50,    lapelBot);
-    ctx.lineTo(chest.x,                    lapelBot - rig.limbR * 0.5);
+    ctx.lineTo(chest.x,                    lapelBot - rig.limbR * 0.4);
     ctx.lineTo(chest.x,                    lapelTop);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+    // Right lapel triangle
     ctx.beginPath();
     ctx.moveTo(chest.x + rig.limbR * 0.65, lapelTop);
     ctx.lineTo(chest.x + lapelW * 0.50,    lapelBot);
-    ctx.lineTo(chest.x,                    lapelBot - rig.limbR * 0.5);
+    ctx.lineTo(chest.x,                    lapelBot - rig.limbR * 0.4);
     ctx.lineTo(chest.x,                    lapelTop);
     ctx.closePath();
     ctx.fill();
-    // Subtle stitch line along the lapel edge
-    ctx.strokeStyle = VC.hexAlpha(clothing.highlight || '#fff', 0.35);
-    ctx.lineWidth = outlineW(rig, 0.06);
+    ctx.stroke();
+    // Highlight stitch line along the lapel edge — full opacity now
+    ctx.strokeStyle = clothing.highlight || '#fff';
+    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = outlineW(rig, 0.10);
     ctx.beginPath();
-    ctx.moveTo(chest.x - rig.limbR * 0.65, lapelTop);
-    ctx.lineTo(chest.x - lapelW * 0.50,    lapelBot);
-    ctx.moveTo(chest.x + rig.limbR * 0.65, lapelTop);
-    ctx.lineTo(chest.x + lapelW * 0.50,    lapelBot);
+    ctx.moveTo(chest.x - rig.limbR * 0.65 + 1, lapelTop + 1);
+    ctx.lineTo(chest.x - lapelW * 0.50 + 1,    lapelBot - 1);
+    ctx.moveTo(chest.x + rig.limbR * 0.65 - 1, lapelTop + 1);
+    ctx.lineTo(chest.x + lapelW * 0.50 - 1,    lapelBot - 1);
     ctx.stroke();
     ctx.restore();
   }
@@ -449,21 +494,39 @@ function drawBelt(ctx, rig, belt) {
   if (!belt) return;
   const { pelvis } = rig;
   const direction = rig.direction;
-  const w = pelvis.w * 0.95;
-  const h = rig.limbR * 0.7;
+  const w = pelvis.w * 1.00;     // wider — runs the full hip line
+  const h = rig.limbR * 0.85;    // taller — beefier strap
   const x = pelvis.x - w / 2;
   const y = pelvis.y - h * 0.4;
+  const beltOutline = belt.outline || '#000';
 
   if (direction === 'west' || direction === 'east') {
-    const sd = pelvis.w * 0.32;
+    const sd = pelvis.w * 0.40;
     VC.roundRect(ctx, pelvis.x - sd, y, sd * 2, h,
-      h * 0.45, belt.base, belt.outline || '#000', outlineW(rig, 0.15));
+      h * 0.30, belt.base, beltOutline, outlineW(rig, 0.22));
+    // Side-view buckle stub
+    VC.roundRect(ctx, pelvis.x - h * 0.45, y + h * 0.15, h * 0.9, h * 0.7,
+      h * 0.20, belt.highlight || '#d4a800', beltOutline, outlineW(rig, 0.18));
   } else {
-    VC.roundRect(ctx, x, y, w, h, h * 0.45,
-      belt.base, belt.outline || '#000', outlineW(rig, 0.15));
-    // Buckle
-    VC.roundRect(ctx, pelvis.x - h * 0.7, y + h * 0.1, h * 1.4, h * 0.8, h * 0.2,
-      belt.highlight || belt.base, belt.outline || '#000', outlineW(rig, 0.12));
+    // Belt strap
+    VC.roundRect(ctx, x, y, w, h, h * 0.30,
+      belt.base, beltOutline, outlineW(rig, 0.22));
+    // Buckle — bigger gold rectangle with an inner notch for definition.
+    const buckleW = h * 1.8;
+    const buckleH = h * 0.95;
+    VC.roundRect(ctx, pelvis.x - buckleW / 2, y + h * 0.025, buckleW, buckleH, h * 0.15,
+      belt.highlight || '#d4a800', beltOutline, outlineW(rig, 0.18));
+    // Inner buckle notch (a darker rectangle inside)
+    ctx.save();
+    ctx.fillStyle = belt.shadow || '#8a6000';
+    ctx.fillRect(
+      pelvis.x - buckleW * 0.35, y + h * 0.30,
+      buckleW * 0.70, buckleH * 0.45,
+    );
+    // Center pin
+    ctx.fillStyle = beltOutline;
+    ctx.fillRect(pelvis.x - 1, y + h * 0.30, 2, buckleH * 0.45);
+    ctx.restore();
   }
 }
 
@@ -528,52 +591,32 @@ function drawHead(ctx, rig, skin) {
     head.y + ny * head.r,
   ]);
 
-  // 2. Base fill — diagonal radial gradient (light from top-left).
-  const grad = ctx.createRadialGradient(
-    head.x - head.r * 0.30, head.y - head.r * 0.40, 0,
-    head.x - head.r * 0.30, head.y - head.r * 0.40, head.r * 1.7,
-  );
-  grad.addColorStop(0, skin.highlight);
-  grad.addColorStop(0.55, skin.base);
-  grad.addColorStop(1, skin.shadow || skin.base);
-
+  // 2. Flat-fill the head — solid base skin tone with a strong outline.
   blobPath(ctx, blob, 0.55);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = skin.base;
   ctx.fill();
   ctx.strokeStyle = skin.outline;
-  ctx.lineWidth = outlineW(rig, 0.22);
+  ctx.lineWidth = outlineW(rig, 0.32);
   ctx.stroke();
 
-  // 3. Core shadow — a darker crescent on the bottom-right cheek that
-  // defines the terminator. Painted via source-atop so it's clipped to
-  // the new tapered silhouette.
+  // 3. Cel shadow — a soft cheek/jaw shadow on the bottom-right (shadow
+  // side). Drawn as a curved blob via source-atop so the terminator reads
+  // as a smooth crescent rather than a hard wedge.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = 0.55;
-  const coreGrad = ctx.createRadialGradient(
-    head.x + head.r * 0.55, head.y + head.r * 0.40, 0,
-    head.x + head.r * 0.55, head.y + head.r * 0.40, head.r * 1.10,
+  ctx.fillStyle = skin.shadow;
+  ctx.beginPath();
+  ctx.moveTo(head.x + head.r * 0.18, head.y - head.r * 0.95);
+  ctx.quadraticCurveTo(
+    head.x + head.r * 1.15, head.y - head.r * 0.10,
+    head.x + head.r * 0.30, head.y + head.r * 1.00,
   );
-  coreGrad.addColorStop(0,   skin.shadow);
-  coreGrad.addColorStop(0.5, skin.shadow);
-  coreGrad.addColorStop(1,   VC.hexAlpha(skin.shadow, 0));
-  ctx.fillStyle = coreGrad;
-  blobPath(ctx, blob, 0.55);
-  ctx.fill();
-  ctx.restore();
-
-  // 4. Reflected light — a faint warm bloom on the bottom-left jaw.
-  ctx.save();
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = 0.22;
-  const bounce = ctx.createRadialGradient(
-    head.x - head.r * 0.55, head.y + head.r * 0.55, 0,
-    head.x - head.r * 0.55, head.y + head.r * 0.55, head.r * 0.95,
+  ctx.lineTo(head.x + head.r * 0.05, head.y + head.r * 0.95);
+  ctx.quadraticCurveTo(
+    head.x + head.r * 0.30, head.y - head.r * 0.05,
+    head.x + head.r * 0.18, head.y - head.r * 0.95,
   );
-  bounce.addColorStop(0, skin.highlight);
-  bounce.addColorStop(1, VC.hexAlpha(skin.highlight, 0));
-  ctx.fillStyle = bounce;
-  blobPath(ctx, blob, 0.55);
+  ctx.closePath();
   ctx.fill();
   ctx.restore();
 
@@ -683,15 +726,20 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
     return;
   }
 
-  const eyeRX = head.r * 0.18;       // wider almond
-  const eyeRY = head.r * 0.13;
-  const irisRX = head.r * 0.10;
-  const irisRY = head.r * 0.13;       // taller-than-wide iris reads as "anime"
+  const eyeRX = head.r * 0.24;       // bigger almond — readable at thumb size
+  const eyeRY = head.r * 0.18;
+  const irisRX = head.r * 0.13;
+  const irisRY = head.r * 0.17;       // taller-than-wide iris reads as "anime"
 
   const irisColor   = eyes.iris   || eyes.base || '#3a2510';
   const irisShadow  = eyes.shadow || mixColor(irisColor, '#000', 0.45);
   const sclera      = eyes.solid ? irisColor : (eyes.sclera || '#f6efe1');
   const lashColor   = eyes.outline || '#1a1010';
+
+  // Eyebrows — drawn first so the eye shape sits below them. Match the
+  // hair color (passed via eyes.brow); fall back to a near-black if
+  // missing. Adds the single biggest "personality" cue to the face.
+  drawEyebrowsSouth(ctx, rig, eyes);
 
   for (const sign of [-1, 1]) {
     const ex = head.x + dx * sign;
@@ -789,6 +837,66 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   // Mouth is drawn separately (skipped for species that draw their own —
   // goblin gets fanged grin, lizardfolk's snout covers the mouth area).
   drawMouthSouth(ctx, rig, opts);
+}
+
+/**
+ * Eyebrows (south view) — short, slightly arched bars above each eye.
+ * Color comes from eyes.brow (set by resolveColors to the hair shadow
+ * tone) so light-haired characters get light brows and vice versa.
+ */
+function drawEyebrowsSouth(ctx, rig, eyes) {
+  const { head } = rig;
+  const dx = head.r * 0.32;
+  const dy = -head.r * 0.18;        // slightly above eye line
+  const browW = head.r * 0.28;
+  const browH = head.r * 0.07;
+  const browColor = eyes.brow || '#1a1010';
+  ctx.save();
+  ctx.fillStyle = browColor;
+  ctx.strokeStyle = browColor;
+  ctx.lineWidth = 1.0;
+  for (const sign of [-1, 1]) {
+    const cx = head.x + dx * sign;
+    const cy = head.y + dy;
+    // Slight arch — outer end up, inner end down. Mirror per side so the
+    // outer edge always tilts upward.
+    ctx.beginPath();
+    ctx.moveTo(cx - browW * 0.5, cy + browH * 0.40 * sign);
+    ctx.quadraticCurveTo(
+      cx, cy - browH * 0.35,
+      cx + browW * 0.5, cy + browH * 0.10 * -sign,
+    );
+    ctx.lineTo(cx + browW * 0.45, cy + browH * 0.45 * -sign);
+    ctx.quadraticCurveTo(
+      cx, cy + browH * 0.05,
+      cx - browW * 0.45, cy + browH * 0.85 * sign,
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/**
+ * Eyebrow (side view) — single brow on the visible side.
+ */
+function drawEyebrowWest(ctx, rig, eyes) {
+  const { head } = rig;
+  const cx = head.x - head.r * 0.42;
+  const cy = head.y - head.r * 0.10;
+  const browW = head.r * 0.26;
+  const browH = head.r * 0.07;
+  const browColor = eyes.brow || '#1a1010';
+  ctx.save();
+  ctx.fillStyle = browColor;
+  ctx.beginPath();
+  ctx.moveTo(cx - browW * 0.5, cy + browH * 0.20);
+  ctx.quadraticCurveTo(cx, cy - browH * 0.40, cx + browW * 0.5, cy);
+  ctx.lineTo(cx + browW * 0.45, cy + browH * 0.45);
+  ctx.quadraticCurveTo(cx, cy + browH * 0.10, cx - browW * 0.45, cy + browH * 0.65);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 /**
@@ -908,13 +1016,16 @@ function drawGoblinMouthSouth(ctx, rig, opts = {}) {
  * Eye (side view) — single eye on the visible side, plus mouth + nose tip.
  */
 function drawEyeWest(ctx, rig, eyes, opts = {}) {
+  // Eyebrow first so the eye sits below it.
+  drawEyebrowWest(ctx, rig, eyes);
+
   const { head } = rig;
   const ex = head.x - head.r * 0.42;
   const ey = head.y + head.r * 0.10;
-  const eyeRX = head.r * 0.16;
-  const eyeRY = head.r * 0.13;
-  const irisRX = head.r * 0.08;
-  const irisRY = head.r * 0.12;
+  const eyeRX = head.r * 0.20;       // bigger than before
+  const eyeRY = head.r * 0.17;
+  const irisRX = head.r * 0.11;
+  const irisRY = head.r * 0.16;
 
   const irisColor  = eyes.iris || eyes.base || '#3a2510';
   const irisShadow = eyes.shadow || mixColor(irisColor, '#000', 0.4);

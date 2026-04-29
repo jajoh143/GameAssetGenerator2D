@@ -55,9 +55,14 @@ function resolveColors(config) {
   }
 
   const baseEyes = Colors.EYE_COLORS[config.eyes] || Colors.EYE_COLORS.brown;
+  // Eyebrows pick up the hair's shadow tone so brunettes get dark brows
+  // and blondes get light. Bald/buzzed/bald-by-default species (goblin)
+  // still need a sensible brow color — use a dark fallback.
+  const hairPal = Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black;
+  const brow = hairPal.shadow || hairPal.base || '#1a1010';
   const eyes = (config.type === 'demon' || config.type === 'fairy')
-    ? Object.assign({}, baseEyes, { solid: true })
-    : baseEyes;
+    ? Object.assign({}, baseEyes, { solid: true, brow })
+    : Object.assign({}, baseEyes, { brow });
 
   // Style-driven clothing detail flags (lapels, pockets, sleeve cuff bands).
   const cs = config.clothingStyle || 'jacket';
