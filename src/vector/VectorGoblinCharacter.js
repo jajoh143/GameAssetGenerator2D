@@ -14,37 +14,64 @@ const { FRAME_W, FRAME_H } = require('./VectorRig');
 
 function drawEar(ctx, rig, sign, skin) {
   const { head } = rig;
-  const baseX = head.x + head.r * 0.78 * sign;
-  const baseY = head.y + head.r * 0.05;
-  const tipX  = baseX + sign * head.r * 0.85;
-  const tipY  = baseY - head.r * 0.55;
+  // Anchor the ear at the upper-temple: the new tapered head has its
+  // widest point at the cheekbone (y=-0.05) so the ear root needs to
+  // sit slightly higher (y=-0.10) and further out so it clearly attaches
+  // OUTSIDE the head silhouette rather than vanishing inside it.
+  const baseX = head.x + head.r * 0.92 * sign;
+  const baseY = head.y - head.r * 0.10;
+  const tipX  = baseX + sign * head.r * 0.95;
+  const tipY  = baseY - head.r * 0.65;
   const earColor = skin.shadow || '#3a6a30';
 
   ctx.save();
   ctx.fillStyle = skin.base;
   ctx.strokeStyle = skin.outline || '#1a2a10';
-  ctx.lineWidth = Body.outlineW(rig, 0.16);
+  ctx.lineWidth = Body.outlineW(rig, 0.18);
   ctx.beginPath();
-  ctx.moveTo(baseX, baseY - head.r * 0.18);
-  ctx.quadraticCurveTo(baseX + sign * head.r * 0.4, baseY - head.r * 0.55,
-                       tipX, tipY);
-  ctx.quadraticCurveTo(baseX + sign * head.r * 0.4, baseY - head.r * 0.10,
-                       baseX, baseY + head.r * 0.18);
+  // A more clearly pointy ear silhouette: wider at the base, sharp tip,
+  // slightly back-swept.
+  ctx.moveTo(baseX,                       baseY + head.r * 0.18);
+  ctx.quadraticCurveTo(
+    baseX + sign * head.r * 0.50, baseY - head.r * 0.65,
+    tipX,                         tipY,
+  );
+  ctx.quadraticCurveTo(
+    baseX + sign * head.r * 0.20, baseY - head.r * 0.05,
+    baseX - sign * head.r * 0.10, baseY + head.r * 0.20,
+  );
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
   ctx.restore();
 
-  // Inner-ear shadow
+  // Inner-ear shadow — a darker streak along the leading inner edge.
   ctx.save();
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.55;
   ctx.beginPath();
-  ctx.moveTo(baseX + sign * head.r * 0.10, baseY - head.r * 0.10);
-  ctx.quadraticCurveTo(baseX + sign * head.r * 0.30, baseY - head.r * 0.40,
-                       tipX - sign * head.r * 0.10, tipY + head.r * 0.20);
-  ctx.lineWidth = head.r * 0.10;
+  ctx.moveTo(baseX + sign * head.r * 0.10, baseY);
+  ctx.quadraticCurveTo(
+    baseX + sign * head.r * 0.40, baseY - head.r * 0.45,
+    tipX - sign * head.r * 0.15, tipY + head.r * 0.25,
+  );
+  ctx.lineWidth = head.r * 0.12;
   ctx.lineCap = 'round';
   ctx.strokeStyle = earColor;
+  ctx.stroke();
+  ctx.restore();
+
+  // Ear-tip highlight rim (top-left lit edge)
+  ctx.save();
+  ctx.globalAlpha = 0.50;
+  ctx.beginPath();
+  ctx.moveTo(baseX, baseY + head.r * 0.10);
+  ctx.quadraticCurveTo(
+    baseX + sign * head.r * 0.55, baseY - head.r * 0.45,
+    tipX, tipY,
+  );
+  ctx.lineWidth = head.r * 0.05;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = skin.highlight || '#88c060';
   ctx.stroke();
   ctx.restore();
 }

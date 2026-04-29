@@ -615,11 +615,46 @@ function drawEars(ctx, rig, skin) {
  * Eyes (front view) — anime-style almond ovals with a vertical iris,
  * a bright catch-light at top-left, and a soft warm shadow under the
  * upper lid (tarsal shadow) for depth.
+ *
+ * When opts.blink is true, draws closed eyes (a curved arc with eyelashes)
+ * instead — used for one frame of idle so the character feels alive.
  */
-function drawEyesSouth(ctx, rig, eyes) {
+function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   const { head } = rig;
   const dx = head.r * 0.32;
   const dy = head.r * 0.10;          // eyes sit slightly below head center
+
+  // Closed-eye blink — short downward-curving arc with an underline.
+  if (opts.blink) {
+    const lashColorB = eyes.outline || '#1a1010';
+    ctx.save();
+    ctx.strokeStyle = lashColorB;
+    ctx.lineWidth = Math.max(1.5, head.r * 0.06);
+    ctx.lineCap = 'round';
+    for (const sign of [-1, 1]) {
+      const ex = head.x + dx * sign;
+      const ey = head.y + dy;
+      ctx.beginPath();
+      ctx.moveTo(ex - head.r * 0.16, ey);
+      ctx.quadraticCurveTo(ex, ey + head.r * 0.10, ex + head.r * 0.16, ey);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // Mouth still drawn so the rest of the face is consistent
+    ctx.save();
+    ctx.strokeStyle = '#3a1808';
+    ctx.lineWidth = Math.max(1.0, head.r * 0.04);
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath();
+    ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.55);
+    ctx.quadraticCurveTo(head.x, head.y + head.r * 0.62,
+                         head.x + head.r * 0.10, head.y + head.r * 0.55);
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
   const eyeRX = head.r * 0.18;       // wider almond
   const eyeRY = head.r * 0.13;
   const irisRX = head.r * 0.10;
@@ -922,6 +957,36 @@ const HAIR_BLOBS = {
   ],
 };
 
+/**
+ * Back-hair halo — paints just the silhouette of the hair blob, scaled
+ * up slightly so it pokes past the head outline in every direction.
+ * Drawn BEFORE the head so the head silhouette covers the inner part,
+ * leaving a clean rim of hair around the back/top of the head. Use this
+ * in conjunction with drawHair (which now draws the bulk of the wig on
+ * top of the head).
+ */
+function drawHairHalo(ctx, rig, hair, style) {
+  if (!style || style === 'bald') return;
+  const blob = HAIR_BLOBS[style] || HAIR_BLOBS.short;
+  if (!blob) return;
+  const { head } = rig;
+  const direction = rig.direction;
+  const scaleX = (direction === 'west' || direction === 'east') ? 0.62 : 1.05;
+  const shiftX = (direction === 'west') ? head.r * 0.18
+              : (direction === 'east') ? -head.r * 0.18
+              : 0;
+  const pts = blob.map(([nx, ny]) => [
+    head.x + nx * head.r * scaleX + shiftX,
+    head.y + ny * head.r * 1.02,    // slight Y stretch so it pokes above the skull-top
+  ]);
+  blobPath(ctx, pts, 0.55);
+  ctx.fillStyle = hair.shadow || hair.base;
+  ctx.fill();
+  ctx.strokeStyle = hair.shadow || '#000';
+  ctx.lineWidth = outlineW(rig, 0.18);
+  ctx.stroke();
+}
+
 function drawHair(ctx, rig, hair, style) {
   if (!style || style === 'bald') return;
   const blob = HAIR_BLOBS[style] || HAIR_BLOBS.short;
@@ -1013,21 +1078,11 @@ function drawHair(ctx, rig, hair, style) {
     ctx.restore();
   }
 
-  // 5. Cast shadow on the FOREHEAD — the hair fringe drops a shadow onto
-  // the upper face. This is one of the strongest cues for chibi-style
-  // shading and instantly adds depth.
-  if (direction === 'south') {
-    VC.castShadow(ctx,
-      head.x,                head.y - head.r * 0.45,
-      head.r * 0.78,         head.r * 0.20,
-      0.55, hair.shadow || '#000');
-  } else if (direction === 'west' || direction === 'east') {
-    VC.castShadow(ctx,
-      head.x - (direction === 'west' ? 1 : -1) * head.r * 0.20,
-      head.y - head.r * 0.45,
-      head.r * 0.65, head.r * 0.18,
-      0.50, hair.shadow || '#000');
-  }
+  // 5. Cast shadow on the FOREHEAD has been removed from drawHair
+  // because the hair now renders ON TOP of the head (called after
+  // drawHead in the direction renderers). The fringe/forelock is the
+  // hair fringe itself sitting on the forehead — no separate shadow
+  // pass is needed.
 
   // 6. Fringe / forelock — a separate small mass that hangs in FRONT of
   // the forehead. Skipped for buzzed/undercut/mohawk (those styles don't
@@ -1303,6 +1358,7 @@ module.exports = {
   drawEyesSouth,
   drawEyeWest,
   drawHair,
+  drawHairHalo,
   drawBeard,
   outlineW,
 };

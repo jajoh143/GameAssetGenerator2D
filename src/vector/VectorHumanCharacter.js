@@ -12,6 +12,7 @@
 const Colors = require('../core/Colors');
 const VC     = require('./VectorCanvas');
 const Body   = require('./VectorBaseCharacter');
+const Weapon = require('./VectorWeapon');
 const { buildRig, FRAME_W, FRAME_H } = require('./VectorRig');
 
 // ---------------------------------------------------------------------------
@@ -97,8 +98,21 @@ function frameMeta(animationName, offsets) {
     if (animationName.includes('west') || animationName.includes('east')) actionSide = 'L';
     else                                                                  actionSide = 'R';
   }
-  void offsets;
-  return { isAttack, actionSide };
+  // Weapon type per attack family — the strike / fire frame index drives
+  // the muzzle flash for guns.
+  const weapon = Weapon.weaponFor(animationName);
+  // Find the "peak" frame for the visual flourish (sword strike or gun
+  // fire). We tag based on the offset sign & magnitude — frames where the
+  // action-side arm is fully extended.
+  const fwd = actionSide === 'L' ? (offsets.leftArmFwd || 0) : (offsets.rightArmFwd || 0);
+  const flash = animationName && animationName.startsWith('attack_shoot_') &&
+                Math.abs(fwd) >= 12;
+  // Blink: idle's frame 2 carries `headBob: -1` (the breath beat). Use
+  // that as the cheap "this is the up-tick of a breath, blink the eyes
+  // here" tag — gives the idle animation a tiny bit of life. Skipped on
+  // the attack frames so the action stays focused.
+  const blink = animationName === 'idle' && offsets.headBob === -1;
+  return { isAttack, actionSide, weapon, flash, blink };
 }
 
 function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
@@ -167,14 +181,41 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   // Head and friends
   Body.drawNeck(ctx, rig, colors.skin);
 
-  // Hair sits behind head, beard in front, eyes on top.
-  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  // Layer order: a thin halo of hair pokes out behind the skull, then the
+  // head, then the bulk of the wig sits ON TOP of the crown — this way
+  // the hair is visible as actual mass rather than being hidden inside
+  // the head silhouette. Eyes/beard go last so they aren't covered by
+  // long-fringe hair styles.
+  Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
-  Body.drawEyesSouth(ctx, rig, colors.eyes);
+  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  Body.drawEyesSouth(ctx, rig, colors.eyes, { blink: meta.blink });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
+
+  // Weapon — drawn LAST so it sits on top of everything (the action hand
+  // grips it). Skipped when the animation isn't an attack.
+  drawWeaponForFrame(ctx, rig, meta);
 
   if (hooks.afterHead) hooks.afterHead(ctx, rig, colors);
   return rig;
+}
+
+/**
+ * Render the weapon for an attack frame (if any). Pulls the action arm's
+ * elbow→hand vector from the rig so the weapon orients correctly with
+ * the current pose.
+ */
+function drawWeaponForFrame(ctx, rig, meta) {
+  if (!meta || !meta.weapon || !meta.actionSide) return;
+  const elbow = meta.actionSide === 'L' ? rig.elbowL : rig.elbowR;
+  const hand  = meta.actionSide === 'L' ? rig.handL  : rig.handR;
+  Weapon.drawWeapon(ctx, {
+    weapon:  meta.weapon,
+    handPos: hand,
+    forward: handToward(elbow, hand),
+    limbR:   rig.limbR,
+    flash:   meta.flash,
+  });
 }
 
 function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
@@ -227,8 +268,13 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
 
   Body.drawNeck(ctx, rig, colors.skin);
+  Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
+  // North view shows the BACK of the head — most of the hair should be
+  // visible. Drawing the full wig on top covers the bare skull.
   Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  // Weapon — drawn after head/hair so it sits on top.
+  drawWeaponForFrame(ctx, rig, meta);
   // No eyes / beard from behind.
   if (hooks.afterHead) hooks.afterHead(ctx, rig, colors);
   return rig;
@@ -290,10 +336,12 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
 
   Body.drawNeck(ctx, rig, colors.skin);
-  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
+  Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
+  Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawEyeWest(ctx, rig, colors.eyes);
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
+  drawWeaponForFrame(ctx, rig, meta);
 
   if (hooks.afterHead) hooks.afterHead(ctx, rig, colors);
   return rig;

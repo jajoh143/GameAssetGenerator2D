@@ -51,8 +51,12 @@ function drawWings(ctx, rig, wingColors, style, size, direction, frameIdx) {
 }
 
 function drawWingPair(ctx, rig, wingColors, style, scale, mirrored) {
+  // Wings root from the upper back / shoulder-blade region rather than
+  // the chest center. In a south-facing pose this reads as the wings
+  // emerging from behind the shoulders. The Y offset of -0.18*limbR
+  // pulls the root slightly above chest top, near the shoulder line.
   const cx = rig.chest.x;
-  const cy = rig.chest.y + rig.limbR * 0.2;
+  const cy = rig.chest.y - rig.limbR * 0.18;
   const wingLen = rig.frameH * 0.32 * scale;     // toned down from 0.40
   const wingW   = rig.frameW * 0.26 * scale;     // toned down from 0.32
 
