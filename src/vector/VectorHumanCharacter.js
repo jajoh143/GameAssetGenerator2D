@@ -183,6 +183,7 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
       { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
+    Body.drawKneeRidge(ctx, rig.kneeL, jointDir(rig.kneeL, rig.footL), rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'south');
   };
@@ -190,6 +191,7 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
       { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
+    Body.drawKneeRidge(ctx, rig.kneeR, jointDir(rig.kneeR, rig.footR), rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'south');
   };
@@ -309,6 +311,7 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
       { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
+    Body.drawKneeRidge(ctx, rig.kneeL, jointDir(rig.kneeL, rig.footL), rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'north');
   };
@@ -316,6 +319,7 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
       { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
+    Body.drawKneeRidge(ctx, rig.kneeR, jointDir(rig.kneeR, rig.footR), rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'north');
   };
@@ -395,6 +399,7 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
       { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     // Outside-leg fold/seam line — only really reads in profile view.
     Body.drawPantFold(ctx, hip, knee, foot, rig, colors.pants);
+    Body.drawKneeRidge(ctx, knee, jointDir(knee, foot), rig, colors.pants);
     Body.drawPantCuff(ctx, foot, knee, rig, colors.pants);
     // Foot tilt: a foot that's lifted off the ground points its toes
     // downward; a planted foot stays flat. The shin direction (knee→foot
@@ -515,6 +520,14 @@ function drawGroundShadow(ctx, rig, config, offsets) {
   const shadowX = (rig.footL.x + rig.footR.x) / 2;
   VC.groundShadow(ctx, shadowX, rig.groundY + rig.limbR * 0.6,
     sx * sScale, sy * sScale, sAlpha);
+}
+
+// Unit vector from one joint to another. Used for orienting features
+// that follow a limb (fist knuckles, knee ridge, vambrace, etc.).
+function jointDir(from, to) {
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const len = Math.hypot(dx, dy) || 1;
+  return { dx: dx / len, dy: dy / len };
 }
 
 // Unit vector from elbow → hand, used to orient the fist's knuckle row

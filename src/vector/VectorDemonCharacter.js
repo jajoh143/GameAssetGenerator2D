@@ -198,6 +198,68 @@ function drawTail(ctx, rig, demonSkinPalette, tailLen, direction, frameIdx = 0) 
 }
 
 /**
+ * Ear tufts — small fur / spike clumps protruding from each ear's
+ * outer-upper edge. Drawn over the default human ears for a more
+ * feral / monster-warrior read on muscular demons.
+ */
+function drawEarTufts(ctx, rig, hairColor) {
+  const { head } = rig;
+  const direction = rig.direction;
+  const earR = head.r * 0.18;
+  const tuftColor = hairColor || '#1a0a06';
+  const tuftHi = '#3a1a14';
+  const drawOne = (sign) => {
+    const ex = head.x + sign * head.r * 0.95;
+    const ey = head.y + head.r * 0.05;
+    ctx.save();
+    ctx.fillStyle = tuftColor;
+    ctx.strokeStyle = '#100604';
+    ctx.lineWidth = Body.outlineW(rig, 0.15);
+    // Three small spikes fanning out from the ear's outer edge
+    const spikes = [
+      { angle: -0.55, len: 0.95 },
+      { angle: -0.25, len: 1.20 },
+      { angle:  0.05, len: 0.85 },
+    ];
+    for (const s of spikes) {
+      const a = -Math.PI / 2 + s.angle * sign;
+      const tipX = ex + sign * Math.cos(a) * earR * s.len;
+      const tipY = ey + Math.sin(a) * earR * s.len;
+      const baseW = earR * 0.30;
+      const ax = ex + Math.cos(a + Math.PI / 2) * baseW * 0.5;
+      const ay = ey + Math.sin(a + Math.PI / 2) * baseW * 0.5;
+      const bx = ex - Math.cos(a + Math.PI / 2) * baseW * 0.5;
+      const by = ey - Math.sin(a + Math.PI / 2) * baseW * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(bx, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Highlight on the lit side
+      ctx.fillStyle = tuftHi;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo((ax + tipX) * 0.5, (ay + tipY) * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = tuftColor;
+    }
+    ctx.restore();
+  };
+  if (direction === 'south' || direction === 'north') {
+    drawOne(-1);
+    drawOne(1);
+  } else if (direction === 'west') {
+    drawOne(1);
+  } else {
+    drawOne(-1);
+  }
+}
+
+/**
  * Shoulder spikes — small bone-spike triangles cresting each shoulder.
  * Drawn for muscular / heavy demon builds (the warrior archetype) on
  * south + north views. Adds a natural-armor / aggressive accent that
@@ -288,7 +350,13 @@ function generateFrame(config, animationName, frameOffset) {
       // shoulder seam (and any shoulder pad below).
       if (showSpikes) drawShoulderSpikes(ctx, rig, colors.skin);
     },
-    afterHead(ctx, rig) {
+    afterHead(ctx, rig, colors) {
+      // Ear tufts before horns so the horns overlay if they happen to
+      // overlap the upper ear region.
+      if (showSpikes) {
+        const hairColor = (colors && colors.hair && colors.hair.shadow) || '#1a0a06';
+        drawEarTufts(ctx, rig, hairColor);
+      }
       if (direction === 'south') drawHornsSouth(ctx, rig, hornStyle, hornLen);
       else if (direction === 'north') drawHornsNorth(ctx, rig, hornStyle, hornLen);
       else drawHornsWest(ctx, rig, hornStyle, hornLen);

@@ -459,6 +459,48 @@ function drawPelvisBridge(ctx, rig, pants) {
 }
 
 /**
+ * Knee ridge — a short horizontal accent line crossing the leg at the
+ * knee joint. Reads as the bend in the trousers / a kneecap line so
+ * the leg silhouette has a clear thigh / shin break instead of one
+ * tapered tube.
+ *
+ *   knee:     the knee joint position
+ *   axisDir:  unit vector along the leg axis (knee → foot)
+ *   palette:  pants palette
+ */
+function drawKneeRidge(ctx, knee, axisDir, rig, pants) {
+  const r = rig.limbR;
+  const ux = axisDir.dx, uy = axisDir.dy;
+  const px = -uy, py = ux;            // perpendicular
+  const ridgeW = r * 0.85;            // span across the leg
+  const ridgeH = r * 0.10;             // line thickness offset
+  ctx.save();
+  ctx.strokeStyle = pants.deep_shadow || pants.shadow || pants.outline || '#000';
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = Math.max(1.0, r * 0.15);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(knee.x + px * ridgeW * 0.5, knee.y + py * ridgeW * 0.5);
+  ctx.quadraticCurveTo(
+    knee.x + ux * ridgeH, knee.y + uy * ridgeH,
+    knee.x - px * ridgeW * 0.5, knee.y - py * ridgeW * 0.5,
+  );
+  ctx.stroke();
+  // Small highlight stripe just above the ridge (lit edge of the knee
+  // cap) for added 3D readability.
+  ctx.strokeStyle = pants.highlight || '#fff';
+  ctx.globalAlpha = 0.30;
+  ctx.lineWidth = Math.max(0.8, r * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(knee.x + px * ridgeW * 0.40 - ux * r * 0.10,
+             knee.y + py * ridgeW * 0.40 - uy * r * 0.10);
+  ctx.lineTo(knee.x - px * ridgeW * 0.40 - ux * r * 0.10,
+             knee.y - py * ridgeW * 0.40 - uy * r * 0.10);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Pelvis bridge — drawn between the legs and the torso to anchor the
  * legs onto the body silhouette.
  */
@@ -2668,6 +2710,7 @@ module.exports = {
   drawCuff,
   drawPantCuff,
   drawPantFold,
+  drawKneeRidge,
   drawPelvisBridge,
   drawTorso,
   drawBelt,
