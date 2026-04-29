@@ -555,5 +555,549 @@
         "neutralAngleDeg": 0
       }
     }
+  ],
+  "armor": [
+    {
+      "name": "helmet_cap_leather",
+      "file": "../output/armor/helmet_cap_leather.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "cap",
+        "material": "leather",
+        "label": "Leather Cap",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_cap_iron",
+      "file": "../output/armor/helmet_cap_iron.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "cap",
+        "material": "iron",
+        "label": "Iron Cap",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_full_helm_iron",
+      "file": "../output/armor/helmet_full_helm_iron.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "full_helm",
+        "material": "iron",
+        "label": "Iron Full Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_full_helm_steel",
+      "file": "../output/armor/helmet_full_helm_steel.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "full_helm",
+        "material": "steel",
+        "label": "Steel Full Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_full_helm_gold",
+      "file": "../output/armor/helmet_full_helm_gold.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "full_helm",
+        "material": "gold",
+        "label": "Gold Full Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_full_helm_dark",
+      "file": "../output/armor/helmet_full_helm_dark.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "full_helm",
+        "material": "dark",
+        "label": "Dark Full Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_hood_cloth",
+      "file": "../output/armor/helmet_hood_cloth.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "hood",
+        "material": "cloth",
+        "label": "Cloth Hood",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_hood_dark",
+      "file": "../output/armor/helmet_hood_dark.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "hood",
+        "material": "dark",
+        "label": "Dark Hood",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_horned_iron",
+      "file": "../output/armor/helmet_horned_iron.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "horned",
+        "material": "iron",
+        "label": "Iron Horned Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_horned_dark",
+      "file": "../output/armor/helmet_horned_dark.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "horned",
+        "material": "dark",
+        "label": "Dark Horned Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_horned_steel",
+      "file": "../output/armor/helmet_horned_steel.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "horned",
+        "material": "steel",
+        "label": "Steel Horned Helm",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_crowned_gold",
+      "file": "../output/armor/helmet_crowned_gold.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "crowned",
+        "material": "gold",
+        "label": "Gold Circlet",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "helmet_crowned_iron",
+      "file": "../output/armor/helmet_crowned_iron.png",
+      "meta": {
+        "slot": "helmet",
+        "variant": "crowned",
+        "material": "iron",
+        "label": "Iron Circlet",
+        "layerOrder": 50,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_tunic_cloth",
+      "file": "../output/armor/chest_tunic_cloth.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "tunic",
+        "material": "cloth",
+        "label": "Cloth Tunic",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_tunic_leather",
+      "file": "../output/armor/chest_tunic_leather.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "tunic",
+        "material": "leather",
+        "label": "Leather Tunic",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_chainmail_iron",
+      "file": "../output/armor/chest_chainmail_iron.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "chainmail",
+        "material": "iron",
+        "label": "Iron Chainmail",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_chainmail_steel",
+      "file": "../output/armor/chest_chainmail_steel.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "chainmail",
+        "material": "steel",
+        "label": "Steel Chainmail",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_plate_steel",
+      "file": "../output/armor/chest_plate_steel.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "plate",
+        "material": "steel",
+        "label": "Steel Plate Mail",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_plate_gold",
+      "file": "../output/armor/chest_plate_gold.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "plate",
+        "material": "gold",
+        "label": "Gold Plate Mail",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_plate_dark",
+      "file": "../output/armor/chest_plate_dark.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "plate",
+        "material": "dark",
+        "label": "Dark Plate Mail",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_tabard_cloth",
+      "file": "../output/armor/chest_tabard_cloth.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "tabard",
+        "material": "cloth",
+        "label": "Cloth Tabard",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_tabard_gold",
+      "file": "../output/armor/chest_tabard_gold.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "tabard",
+        "material": "gold",
+        "label": "Gold Tabard",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_robe_cloth",
+      "file": "../output/armor/chest_robe_cloth.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "robe",
+        "material": "cloth",
+        "label": "Cloth Robe",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "chest_robe_dark",
+      "file": "../output/armor/chest_robe_dark.png",
+      "meta": {
+        "slot": "chest",
+        "variant": "robe",
+        "material": "dark",
+        "label": "Dark Robe",
+        "layerOrder": 30,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "boots_leather_leather",
+      "file": "../output/armor/boots_leather_leather.png",
+      "meta": {
+        "slot": "boots",
+        "variant": "leather",
+        "material": "leather",
+        "label": "Leather Leather Boots",
+        "layerOrder": 20,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "boots_leather_dark",
+      "file": "../output/armor/boots_leather_dark.png",
+      "meta": {
+        "slot": "boots",
+        "variant": "leather",
+        "material": "dark",
+        "label": "Dark Leather Boots",
+        "layerOrder": 20,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "boots_plate_iron",
+      "file": "../output/armor/boots_plate_iron.png",
+      "meta": {
+        "slot": "boots",
+        "variant": "plate",
+        "material": "iron",
+        "label": "Iron Plate Greaves",
+        "layerOrder": 20,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "boots_plate_steel",
+      "file": "../output/armor/boots_plate_steel.png",
+      "meta": {
+        "slot": "boots",
+        "variant": "plate",
+        "material": "steel",
+        "label": "Steel Plate Greaves",
+        "layerOrder": 20,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "gloves_leather_leather",
+      "file": "../output/armor/gloves_leather_leather.png",
+      "meta": {
+        "slot": "gloves",
+        "variant": "leather",
+        "material": "leather",
+        "label": "Leather Leather Gloves",
+        "layerOrder": 40,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "gloves_leather_dark",
+      "file": "../output/armor/gloves_leather_dark.png",
+      "meta": {
+        "slot": "gloves",
+        "variant": "leather",
+        "material": "dark",
+        "label": "Dark Leather Gloves",
+        "layerOrder": 40,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "gloves_gauntlet_iron",
+      "file": "../output/armor/gloves_gauntlet_iron.png",
+      "meta": {
+        "slot": "gloves",
+        "variant": "gauntlet",
+        "material": "iron",
+        "label": "Iron Plate Gauntlets",
+        "layerOrder": 40,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "gloves_gauntlet_steel",
+      "file": "../output/armor/gloves_gauntlet_steel.png",
+      "meta": {
+        "slot": "gloves",
+        "variant": "gauntlet",
+        "material": "steel",
+        "label": "Steel Plate Gauntlets",
+        "layerOrder": 40,
+        "frameWidth": 64,
+        "frameHeight": 96
+      }
+    },
+    {
+      "name": "shield_round_iron",
+      "file": "../output/armor/shield_round_iron.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "round",
+        "material": "iron",
+        "label": "Round Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_round_steel",
+      "file": "../output/armor/shield_round_steel.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "round",
+        "material": "steel",
+        "label": "Round Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_round_leather",
+      "file": "../output/armor/shield_round_leather.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "round",
+        "material": "leather",
+        "label": "Round Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_kite_steel",
+      "file": "../output/armor/shield_kite_steel.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "kite",
+        "material": "steel",
+        "label": "Kite Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 12,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_kite_gold",
+      "file": "../output/armor/shield_kite_gold.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "kite",
+        "material": "gold",
+        "label": "Kite Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 12,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_heater_steel",
+      "file": "../output/armor/shield_heater_steel.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "heater",
+        "material": "steel",
+        "label": "Heater Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 14,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_heater_dark",
+      "file": "../output/armor/shield_heater_dark.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "heater",
+        "material": "dark",
+        "label": "Heater Shield",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 14,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_buckler_iron",
+      "file": "../output/armor/shield_buckler_iron.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "buckler",
+        "material": "iron",
+        "label": "Buckler",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    },
+    {
+      "name": "shield_buckler_leather",
+      "file": "../output/armor/shield_buckler_leather.png",
+      "meta": {
+        "slot": "shield",
+        "variant": "buckler",
+        "material": "leather",
+        "label": "Buckler",
+        "frameSize": 32,
+        "gripX": 16,
+        "gripY": 16,
+        "neutralAngleDeg": 0
+      }
+    }
   ]
 }

@@ -2,27 +2,28 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { getYAnchors } = require('../characters/HumanCharacter');
 
 // ── Drawing constants (must match BaseCharacter.js) ────────────────────────
-// South / North view  — drawArmsSouth
-const S_SHOULDER_RX = 41;   // right-arm shoulder left-edge anchor
-const S_SHOULDER_LX = 18;   // left-arm  shoulder left-edge anchor
-const S_BASE_Y      = 28;   // shoulder row Y
-const S_SLEEVE_H    = 11;   // rows 0-10
-const S_HAND_W      = 4;    // rhw = baseAW - 1
-const S_R_SCALE     = 0.4;  // rArmDY = round(rightArmFwd * 0.4)
-const S_L_SCALE     = 0.4;
+// Hand anchor math is derived from the actual draw functions:
+//   drawArmsSouth        — sleeveH=13, baseY = torsoY - 1, shoulderRX = 43, lx = 18
+//   drawFrontArmWest     — sleeveH=13, frontY = torsoY - 1, shoulderX = torsoX - 1
+//   drawBackArmWest      — sleeveH=13, backY  = torsoY - 1, shoulderX = torsoX + 11
+//   HumanCharacter.drawSouth scales arm offsets by 0.9 before passing to drawArmsSouth
+//   HumanCharacter.drawWest  scales arm offsets by 1.4 before passing to draw*ArmWest
+const SLEEVE_H        = 13;
+const HAND_W          = 4;
+const S_SHOULDER_RX   = 43;
+const S_SHOULDER_LX   = 18;
+const S_ARM_DY_SCALE  = 0.9;
+const W_TORSO_X       = 16;
+const W_FRONT_DX_REL  = -1;   // shoulderX = torsoX + this
+const W_BACK_DX_REL   =  11;
+const W_ARM_DX_SCALE  = 1.4;
 
-// West view  — drawFrontArmWest / drawBackArmWest
-const W_TORSO_X     = 20;   // torsoX (constant)
-const W_TORSO_Y0    = 29;   // torsoY when bodyY=0   (64-4-13-2-16=29)
-const W_SLEEVE_H    = 11;
-const W_HAND_W      = 4;
-const W_F_SCALE     = 0.6;  // frontArmDX = -round(leftArmFwd  * 0.6)
-const W_B_SCALE     = 0.6;  // backArmDX  = -round(rightArmFwd * 0.6)
-
-// East is a horizontal mirror of west (spriteSize - 1 - x)
 const FRAME_W = 64;
+const FRAME_CENTER_X = 32;
+const HEAD_HALF_H = 7;       // drawHeadSouth chin at y=50, head 14 tall → mid is 7 above chin
 
 // ── Anchor helpers ─────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ function toDeg(rad) {
 }
 
 function anchor(hx, hy, sx, sy) {
-  const cx = hx + Math.floor(S_HAND_W / 2);
+  const cx = hx + Math.floor(HAND_W / 2);
   const cy = hy + 2;
   return {
     x:         cx,
@@ -42,39 +43,49 @@ function anchor(hx, hy, sx, sy) {
   };
 }
 
-function southRightHand(f) {
-  const rArmDY = Math.round((f.rightArmFwd || 0) * S_R_SCALE);
+// In south view drawArmsSouth: rRowX(maxRow=12) = shoulderRX + Math.round(rArmOut*12/12)
+// hand position = (shoulderRX + rArmOut, baseY + rArmDY + sleeveH) where baseY = torsoY - 1.
+function southRightHand(f, yAnchors) {
+  const torsoY  = yAnchors ? yAnchors.torsoY : 43;
+  const baseY   = torsoY - 1;
+  const rArmDY  = Math.round((f.rightArmFwd || 0) * S_ARM_DY_SCALE);
   const rArmOut = f.rightArmOut || 0;
   const hx = S_SHOULDER_RX + Math.round(rArmOut);
-  const hy = S_BASE_Y + rArmDY + S_SLEEVE_H;
-  return anchor(hx, hy, S_SHOULDER_RX, S_BASE_Y);
+  const hy = baseY + rArmDY + SLEEVE_H;
+  return anchor(hx, hy, S_SHOULDER_RX, baseY);
 }
 
-function southLeftHand(f) {
-  const lArmDY = Math.round((f.leftArmFwd || 0) * S_L_SCALE);
-  const hy = S_BASE_Y + lArmDY + S_SLEEVE_H;
-  return anchor(S_SHOULDER_LX, hy, S_SHOULDER_LX, S_BASE_Y);
+// Left arm: at maxRow lShift is 0, lArmX = lx + 0 + Math.round(lArmOut).
+function southLeftHand(f, yAnchors) {
+  const torsoY = yAnchors ? yAnchors.torsoY : 43;
+  const baseY  = torsoY - 1;
+  const lArmDY = Math.round((f.leftArmFwd || 0) * S_ARM_DY_SCALE);
+  const lArmOut = f.leftArmOut || 0;
+  const hx = S_SHOULDER_LX + Math.round(lArmOut);
+  const hy = baseY + lArmDY + SLEEVE_H;
+  return anchor(hx, hy, S_SHOULDER_LX, baseY);
 }
 
-function westFrontHand(f) {
-  const bodyY     = f.bodyY || 0;
-  const torsoY    = W_TORSO_Y0 + bodyY;
-  const frontY    = torsoY + 1;
-  const shoulderX = W_TORSO_X - 3;                                   // 17
-  const dx        = -Math.round((f.leftArmFwd || 0) * W_F_SCALE);
+// West view: front arm is the body-side arm (left arm anatomically).
+// drawFrontArmWest: shoulderX = torsoX - 1, frontY = torsoY - 1.
+// rowX(maxRow) = shoulderX + frontArmDX where frontArmDX = -round(leftArmFwd*1.4).
+function westFrontHand(f, yAnchors) {
+  const torsoY    = yAnchors ? yAnchors.torsoY + (f.bodyY || 0) : (43 + (f.bodyY || 0));
+  const frontY    = torsoY - 1;
+  const shoulderX = W_TORSO_X + W_FRONT_DX_REL;             // 15
+  const dx        = -Math.round((f.leftArmFwd || 0) * W_ARM_DX_SCALE);
   const hx        = shoulderX + dx;
-  const hy        = frontY + W_SLEEVE_H;
+  const hy        = frontY + SLEEVE_H;
   return anchor(hx, hy, shoulderX, frontY);
 }
 
-function westBackHand(f) {
-  const bodyY     = f.bodyY || 0;
-  const torsoY    = W_TORSO_Y0 + bodyY;
-  const backY     = torsoY + 1;
-  const shoulderX = W_TORSO_X + 9;                                   // 29
-  const dx        = -Math.round((f.rightArmFwd || 0) * W_B_SCALE);
+function westBackHand(f, yAnchors) {
+  const torsoY    = yAnchors ? yAnchors.torsoY + (f.bodyY || 0) : (43 + (f.bodyY || 0));
+  const backY     = torsoY - 1;
+  const shoulderX = W_TORSO_X + W_BACK_DX_REL;              // 27
+  const dx        = -Math.round((f.rightArmFwd || 0) * W_ARM_DX_SCALE);
   const hx        = shoulderX + dx;
-  const hy        = backY + W_SLEEVE_H;
+  const hy        = backY + SLEEVE_H;
   return anchor(hx, hy, shoulderX, backY);
 }
 
@@ -90,27 +101,136 @@ function mirrorAnchor(a) {
   };
 }
 
-function computeFrameAnchors(direction, f) {
+// ── Swing weapon rotation curves ───────────────────────────────────────────
+// During an attack_swing_* animation, the shoulder→hand angle is a poor proxy
+// for sword orientation: at apex the wrist is up-and-left of the shoulder, so
+// the natural angle (~-140°) makes the blade slice through the character's
+// head from the camera's POV. These hand-tuned curves give a more readable
+// motion: cocked over the shoulder → raised overhead → struck down-forward.
+//
+// Convention: canvas-style degrees (0=right, 90=down, -90=up). Frames are
+// indexed against the 8-frame ATTACK_SWING_*_FRAMES tables in AnimationData.
+const SWING_WEAPON_ANGLES = {
+  south: [-60, -75, -90, -90, -30,  60,  75,  30],
+  west:  [-45, -60, -90, -100, 180, 135, 110, 90],
+  north: [-60, -75, -90, -90, -30,  60,  75,  30],
+  east:  [225, 240, 270, 280, 0,    45,  70,  90],
+};
+
+function swingAngleFor(animName, frameIdx) {
+  const m = animName && animName.match(/^attack_swing_(south|west|north|east)$/);
+  if (!m) return null;
+  const arr = SWING_WEAPON_ANGLES[m[1]];
+  return (arr && frameIdx < arr.length) ? arr[frameIdx] : null;
+}
+
+// ── West/East overhand swing grip-lift offsets ──────────────────────────────
+// In side-profile view the arm only moves horizontally — the wrist stays at a
+// fixed Y (torsoY - 1 + sleeveH ≈ 55). To make the apex look like a true
+// overhand strike (grip near ear level, not chest level) we apply a per-frame
+// upward visual offset to the rendered weapon position without touching the
+// animation skeleton. dy is negative = upward in canvas space (64-px coords).
+const SWING_WEAPON_LIFT_Y = {
+  west: [  -4,  -10,  -16,  -20,   -8,    0,    0,    0],
+  east: [  -4,  -10,  -16,  -20,   -8,    0,    0,    0],
+};
+
+function swingWeaponLiftY(animName, frameIdx) {
+  const m = animName && animName.match(/^attack_swing_(west|east)$/);
+  if (!m) return 0;
+  const arr = SWING_WEAPON_LIFT_Y[m[1]];
+  return (arr && frameIdx < arr.length) ? arr[frameIdx] : 0;
+}
+
+// ── Per-frame weapon-behind-body flag ──────────────────────────────────────
+// When true, the runtime should draw the weapon sprite UNDER the character
+// body so the torso acts as an occluder. Used for south-facing animations
+// where the weapon is swinging toward or aimed at the camera — the body
+// provides a natural foreshortening illusion without altering the weapon art.
+const WEAPON_BEHIND_FRAMES = {
+  attack_swing_south: [false, true, true, true, false, false, false, false],
+  attack_shoot_south: [false, true, true, true, false, false],
+};
+
+function weaponBehindBodyFor(animName, frameIdx) {
+  const arr = WEAPON_BEHIND_FRAMES[animName];
+  return arr ? (arr[frameIdx] || false) : false;
+}
+
+function bodyPoint(x, y) {
+  return { x, y };
+}
+
+// Compute head/torso/feet body-slot anchors for a single frame.
+// Returned coordinates are in 64×96 frame space; buildMeta() scales to
+// the actual output frameSize.
+function computeBodySlots(direction, f, yAnchors) {
+  const bodyY      = f.bodyY    || 0;
+  const headBob    = f.headBob  || 0;
+  const torsoYAdj  = yAnchors.torsoY + bodyY;
+  const torsoMid   = torsoYAdj + Math.round((yAnchors.beltY - yAnchors.torsoY) / 2);
+  const headMidY   = yAnchors.headTopY + bodyY + headBob + HEAD_HALF_H;
+  const shoeY      = yAnchors.shoeY + bodyY;
+
+  if (direction === 'south' || direction === 'north') {
+    const lLegFwd = f.leftLegFwd  || 0;
+    const rLegFwd = f.rightLegFwd || 0;
+    return {
+      head:      bodyPoint(FRAME_CENTER_X, headMidY),
+      torso:     bodyPoint(FRAME_CENTER_X, torsoMid),
+      leftFoot:  bodyPoint(28 + Math.round(lLegFwd * 0.3), shoeY + 2),
+      rightFoot: bodyPoint(35 + Math.round(rLegFwd * 0.3), shoeY + 2),
+    };
+  }
+  if (direction === 'west') {
+    const torsoCx = W_TORSO_X + 5;            // ~midpoint of west torso silhouette (21)
+    const lLift   = f.leftLegLift  || 0;
+    const rLift   = f.rightLegLift || 0;
+    return {
+      head:      bodyPoint(torsoCx,     headMidY),
+      torso:     bodyPoint(torsoCx,     torsoMid),
+      leftFoot:  bodyPoint(torsoCx - 1, shoeY + 2 - lLift),
+      rightFoot: bodyPoint(torsoCx + 1, shoeY + 2 - rLift),
+    };
+  }
+  if (direction === 'east') {
+    const mxX = (x) => FRAME_W - 1 - x;
+    const torsoCx = mxX(W_TORSO_X + 5);        // mirrored midpoint (43)
+    const lLift   = f.leftLegLift  || 0;
+    const rLift   = f.rightLegLift || 0;
+    return {
+      head:      bodyPoint(torsoCx,     headMidY),
+      torso:     bodyPoint(torsoCx,     torsoMid),
+      leftFoot:  bodyPoint(torsoCx + 1, shoeY + 2 - lLift),
+      rightFoot: bodyPoint(torsoCx - 1, shoeY + 2 - rLift),
+    };
+  }
+  return {};
+}
+
+function computeFrameAnchors(direction, f, yAnchors) {
+  const bodySlots = yAnchors ? computeBodySlots(direction, f, yAnchors) : {};
   switch (direction) {
     case 'south':
     case 'north':
       return {
-        weaponHand: southRightHand(f),
-        offHand:    southLeftHand(f),
+        weaponHand: southRightHand(f, yAnchors),
+        offHand:    southLeftHand(f, yAnchors),
+        ...bodySlots,
       };
     case 'west': {
-      const front = westFrontHand(f);
-      const back  = westBackHand(f);
-      return { weaponHand: front, offHand: back };
+      const front = westFrontHand(f, yAnchors);
+      const back  = westBackHand(f, yAnchors);
+      return { weaponHand: front, offHand: back, ...bodySlots };
     }
     case 'east': {
       // East = horizontal mirror of west
-      const front = mirrorAnchor(westFrontHand(f));
-      const back  = mirrorAnchor(westBackHand(f));
-      return { weaponHand: front, offHand: back };
+      const front = mirrorAnchor(westFrontHand(f, yAnchors));
+      const back  = mirrorAnchor(westBackHand(f, yAnchors));
+      return { weaponHand: front, offHand: back, ...bodySlots };
     }
     default:
-      return {};
+      return bodySlots;
   }
 }
 
@@ -123,30 +243,58 @@ function computeFrameAnchors(direction, f) {
  * @param {string[]} animationRows  - Ordered list of animation names
  * @param {Function} getFrames      - (animName) => frameOffset[]
  * @param {Function} getDirection   - (animName) => 'south'|'north'|'west'|'east'
+ * @param {object}   [config]       - Character config — used to derive height-aware
+ *                                    body-slot anchors (head, torso, feet) per frame.
  * @returns {object}
  */
-function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn) {
+function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn, config) {
   const scale = frameSize / FRAME_W;   // for non-64 output sizes
+  const yAnchors = config ? getYAnchors(config) : null;
+
+  const scaleHandAnchor = (a) => a ? {
+    x:         Math.round(a.x         * scale),
+    y:         Math.round(a.y         * scale),
+    shoulderX: Math.round(a.shoulderX * scale),
+    shoulderY: Math.round(a.shoulderY * scale),
+    angleDeg:  a.angleDeg,
+  } : undefined;
+
+  const scalePoint = (p) => p ? {
+    x: Math.round(p.x * scale),
+    y: Math.round(p.y * scale),
+  } : undefined;
 
   const animations = {};
   animationRows.forEach((animName, rowIdx) => {
     const direction = getDirectionFn(animName);
     const offsets   = getFramesFn(animName);
 
-    const frames = offsets.map((f) => {
-      const anchors = computeFrameAnchors(direction, f);
-      // Scale anchor pixel positions to match the actual output frameSize
-      const scaleAnchor = (a) => a ? {
-        x:         Math.round(a.x         * scale),
-        y:         Math.round(a.y         * scale),
-        shoulderX: Math.round(a.shoulderX * scale),
-        shoulderY: Math.round(a.shoulderY * scale),
-        angleDeg:  a.angleDeg,
-      } : undefined;
-
+    const frames = offsets.map((f, frameIdx) => {
+      const anchors    = computeFrameAnchors(direction, f, yAnchors);
+      const swingAngle = swingAngleFor(animName, frameIdx);
+      const liftY      = swingWeaponLiftY(animName, frameIdx);
+      const behind     = weaponBehindBodyFor(animName, frameIdx);
       return {
-        weaponHand: scaleAnchor(anchors.weaponHand),
-        offHand:    scaleAnchor(anchors.offHand),
+        weaponHand: scaleHandAnchor(anchors.weaponHand),
+        offHand:    scaleHandAnchor(anchors.offHand),
+        // weaponAngle: rotation (deg) the runtime should use to orient the
+        // weapon. Defaults to the natural shoulder→hand angle; swing frames
+        // override it with a hand-tuned curve so the sword reads as a real
+        // strike instead of pointing through the body.
+        weaponAngle: swingAngle != null
+          ? swingAngle
+          : (anchors.weaponHand ? anchors.weaponHand.angleDeg : null),
+        // weaponOffsetY: pixels to shift the weapon grip upward from the
+        // anchor point (negative = up). Used for side-view overhand swing to
+        // lift the grip to ear/shoulder level without altering the skeleton.
+        weaponOffsetY: liftY ? Math.round(liftY * scale) : 0,
+        // weaponBehind: when true, render weapon under the body sprite so the
+        // torso occludes it (foreshortening illusion for south-facing attacks).
+        weaponBehind: behind || undefined,
+        head:       scalePoint(anchors.head),
+        torso:      scalePoint(anchors.torso),
+        leftFoot:   scalePoint(anchors.leftFoot),
+        rightFoot:  scalePoint(anchors.rightFoot),
       };
     });
 
