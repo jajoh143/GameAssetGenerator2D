@@ -325,41 +325,88 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
   const { chest, pelvis, neck } = rig;
   const direction = rig.direction;
 
-  // Shoulder width pads slightly past the chest.w to read like rounded shoulders.
   const sw = chest.w / 2;
   const hw = pelvis.w / 2;
-  const wy = (chest.y + pelvis.y) / 2;            // waist height
-  const wWaist = (sw + hw) / 2 * 0.78;             // pinch at waist
+  const tH = pelvis.y - chest.y;                      // torso height
+  const wy = chest.y + tH * 0.55;                     // waist height (slightly below midpoint)
+  const wWaist = Math.min(sw, hw) * 0.78;             // pinch at waist
+  const limbR = rig.limbR;
 
   let pts;
   if (direction === 'south' || direction === 'north') {
+    // Anatomical front silhouette: rounded shoulder caps, gentle ribs
+    // taper, narrow waist, curved hips, groin pinch. The path goes:
+    // top-center → right shoulder ridge → shoulder cap → armpit → ribs
+    // → waist → hip → groin → bottom-center → mirror up the left.
     pts = [
-      [chest.x - sw,        chest.y + 1],
-      [chest.x - sw * 0.94, wy - 1],
-      [chest.x - wWaist,    wy + (pelvis.y - wy) * 0.2],
-      [pelvis.x - hw,       pelvis.y - 1],
-      [pelvis.x - hw * 0.7, pelvis.y + rig.limbR * 0.4],
-      [pelvis.x + hw * 0.7, pelvis.y + rig.limbR * 0.4],
-      [pelvis.x + hw,       pelvis.y - 1],
-      [chest.x + wWaist,    wy + (pelvis.y - wy) * 0.2],
-      [chest.x + sw * 0.94, wy - 1],
-      [chest.x + sw,        chest.y + 1],
-      [chest.x,             chest.y - rig.limbR * 0.3],   // top center (collar dip)
+      // top center: collarbone hollow (slight rise)
+      [chest.x,                       chest.y - limbR * 0.20],
+      // right shoulder ridge
+      [chest.x + sw * 0.45,           chest.y - limbR * 0.05],
+      // right shoulder cap (rounded out)
+      [chest.x + sw * 1.00,           chest.y + limbR * 0.45],
+      // right armpit (curves back in below shoulder)
+      [chest.x + sw * 0.85,           chest.y + limbR * 1.20],
+      // right ribs (gentle curve down + in)
+      [chest.x + sw * 0.78,           chest.y + tH * 0.40],
+      // right waist (narrowest)
+      [chest.x + wWaist,              wy],
+      // right hip (curves out)
+      [pelvis.x + hw * 1.00,          pelvis.y - limbR * 0.20],
+      // right outer-thigh seam
+      [pelvis.x + hw * 0.85,          pelvis.y + limbR * 0.30],
+      // right groin (pinches in toward the leg root)
+      [pelvis.x + hw * 0.40,          pelvis.y + limbR * 0.50],
+      // bottom center: groin / inner-thigh notch
+      [pelvis.x,                       pelvis.y + limbR * 0.30],
+      // left groin
+      [pelvis.x - hw * 0.40,          pelvis.y + limbR * 0.50],
+      // left outer-thigh seam
+      [pelvis.x - hw * 0.85,          pelvis.y + limbR * 0.30],
+      // left hip
+      [pelvis.x - hw * 1.00,          pelvis.y - limbR * 0.20],
+      // left waist
+      [chest.x - wWaist,              wy],
+      // left ribs
+      [chest.x - sw * 0.78,           chest.y + tH * 0.40],
+      // left armpit
+      [chest.x - sw * 0.85,           chest.y + limbR * 1.20],
+      // left shoulder cap
+      [chest.x - sw * 1.00,           chest.y + limbR * 0.45],
+      // left shoulder ridge
+      [chest.x - sw * 0.45,           chest.y - limbR * 0.05],
     ];
   } else {
-    // Side view — much narrower silhouette (depth-of-body, not width).
-    const sd = sw * 0.55;     // chest depth
-    const hd = hw * 0.62;     // hip depth
+    // Side view — depth profile (front-to-back), not width.
+    const sd = sw * 0.55;
+    const hd = hw * 0.65;
     pts = [
-      [chest.x - sd,        chest.y + 2],
-      [chest.x - sd * 0.95, wy],
-      [chest.x - sd * 0.7,  pelvis.y - 1],
-      [chest.x - sd * 0.4,  pelvis.y + rig.limbR * 0.3],
-      [chest.x + sd * 0.4,  pelvis.y + rig.limbR * 0.3],
-      [chest.x + sd * 0.85, pelvis.y - 1],
-      [chest.x + sd * 0.95, wy],
-      [chest.x + sd * 0.95, chest.y + 2],
-      [chest.x,             chest.y - rig.limbR * 0.4],   // shoulder-top dip
+      // top: shoulder-top dip
+      [chest.x,                       chest.y - limbR * 0.30],
+      // chest forward bulge (front of body, smaller X = forward in west)
+      [chest.x - sd * 0.95,           chest.y + limbR * 0.30],
+      // mid-back / pec
+      [chest.x - sd * 0.85,           chest.y + tH * 0.30],
+      // waist front (gentle in-curve, abdominal)
+      [chest.x - sd * 0.55,           wy],
+      // belly forward bulge (very subtle)
+      [chest.x - sd * 0.65,           chest.y + tH * 0.75],
+      // pelvis front bottom
+      [chest.x - hd * 0.55,           pelvis.y],
+      // crotch-front
+      [chest.x - hd * 0.20,           pelvis.y + limbR * 0.50],
+      // crotch-back
+      [chest.x + hd * 0.30,           pelvis.y + limbR * 0.40],
+      // glute bulge
+      [chest.x + hd * 0.85,           pelvis.y - limbR * 0.10],
+      // lumbar inward curve
+      [chest.x + sd * 0.80,           wy + tH * 0.10],
+      // upper-back broad
+      [chest.x + sd * 0.95,           chest.y + tH * 0.30],
+      // shoulder-blade
+      [chest.x + sd * 0.85,           chest.y + limbR * 0.30],
+      // back of neck
+      [chest.x + sd * 0.10,           chest.y - limbR * 0.30],
     ];
   }
 
