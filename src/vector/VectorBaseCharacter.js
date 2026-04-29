@@ -331,62 +331,76 @@ function drawGlove(ctx, hand, palette, rig, opts = {}) {
 function drawPelvisBridge(ctx, rig, pants) {
   const { pelvis, chest } = rig;
   const direction = rig.direction;
+  // Pelvis is now an HOURGLASS shape that picks up where the torso ends
+  // at the waist line and runs to where the legs root. Wide hip flare
+  // in between. This is the visible "pants area between the belt and
+  // the legs" — the lower half of the silhouette.
+  const tH = pelvis.y - chest.y;
+  const wy = chest.y + tH * 0.62;     // waist line — must match drawTorso
+
   if (direction === 'west' || direction === 'east') {
-    // Side-view bridge: a small bowl from front-of-pelvis to glute.
+    // Side view: pelvis depth from front of waist to back of waist,
+    // bulging out at the hips and tucking back in at the groin.
     const sd = pelvis.w * 0.55;
-    const top = pelvis.y - rig.limbR * 1.20;
-    const bot = pelvis.y + rig.limbR * 0.50;
+    const hd = pelvis.w * 0.65;
     ctx.save();
     ctx.fillStyle = pants.base;
     ctx.strokeStyle = pants.outline || '#000';
     ctx.lineWidth = outlineW(rig, 0.30);
     ctx.beginPath();
-    ctx.moveTo(pelvis.x - sd * 0.85, top);
-    ctx.quadraticCurveTo(pelvis.x - sd * 1.05, pelvis.y, pelvis.x - sd * 0.55, bot);
-    ctx.lineTo(pelvis.x + sd * 0.55, bot);
-    ctx.quadraticCurveTo(pelvis.x + sd * 1.05, pelvis.y, pelvis.x + sd * 0.85, top);
+    // Front edge: from waist front, bulge out to hip, then tuck to crotch
+    ctx.moveTo(pelvis.x - sd * 0.50, wy);
+    ctx.quadraticCurveTo(pelvis.x - hd * 0.85, pelvis.y - rig.limbR * 0.10,
+                         pelvis.x - hd * 0.30, pelvis.y + rig.limbR * 0.50);
+    // Bottom: across the crotch
+    ctx.lineTo(pelvis.x + hd * 0.30, pelvis.y + rig.limbR * 0.40);
+    // Back edge: glute → lumbar → waist back
+    ctx.quadraticCurveTo(pelvis.x + hd * 0.95, pelvis.y - rig.limbR * 0.10,
+                         pelvis.x + sd * 0.78, wy);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
     ctx.restore();
     return;
   }
-  // South / north: a wedge that bulges from the waist line down to the
-  // groin notch. IMPORTANT: the bridge must stay INSIDE the torso
-  // silhouette at every Y level — if it pokes past the torso outline,
-  // the pants color leaks behind the torso and reads as "the legs are
-  // attached to the back" (user-flagged bug). The torso hip points are
-  // at hw * 1.00 → hw * 0.85 → hw * 0.40 (top → outer thigh → groin),
-  // so the bridge is sized strictly smaller than each.
+  // South / north: hourglass — narrow at the waist (top), wider at the
+  // hip line (mid), narrower at the groin (bottom) where the legs root.
   const hw = pelvis.w / 2;
-  const top = pelvis.y - rig.limbR * 0.95;       // sits a touch above the hip line
-  const bot = pelvis.y + rig.limbR * 0.55;       // dips into the groin
+  const wWaist = Math.min(rig.frameW * 0.20, hw * 0.85);  // waist top width
   ctx.save();
   ctx.fillStyle = pants.base;
   ctx.strokeStyle = pants.outline || '#000';
   ctx.lineWidth = outlineW(rig, 0.30);
   ctx.beginPath();
-  ctx.moveTo(pelvis.x - hw * 0.55, top);
-  ctx.quadraticCurveTo(pelvis.x - hw * 0.92, pelvis.y - rig.limbR * 0.20,
-                       pelvis.x - hw * 0.78, bot);
-  ctx.quadraticCurveTo(pelvis.x, bot - rig.limbR * 0.10,
-                       pelvis.x + hw * 0.78, bot);
-  ctx.quadraticCurveTo(pelvis.x + hw * 0.92, pelvis.y - rig.limbR * 0.20,
-                       pelvis.x + hw * 0.55, top);
+  // Top-left at the waist line
+  ctx.moveTo(pelvis.x - wWaist, wy);
+  // Curve down + out to the hip
+  ctx.quadraticCurveTo(pelvis.x - hw * 1.02, pelvis.y - rig.limbR * 0.30,
+                       pelvis.x - hw * 0.85, pelvis.y + rig.limbR * 0.20);
+  // Bottom-left to bottom-center (groin notch)
+  ctx.quadraticCurveTo(pelvis.x - hw * 0.50, pelvis.y + rig.limbR * 0.55,
+                       pelvis.x,             pelvis.y + rig.limbR * 0.30);
+  // Bottom-center to bottom-right
+  ctx.quadraticCurveTo(pelvis.x + hw * 0.50, pelvis.y + rig.limbR * 0.55,
+                       pelvis.x + hw * 0.85, pelvis.y + rig.limbR * 0.20);
+  // Right hip up to waist
+  ctx.quadraticCurveTo(pelvis.x + hw * 1.02, pelvis.y - rig.limbR * 0.30,
+                       pelvis.x + wWaist,    wy);
+  // Top edge across the waist (tucked under the belt)
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Cel shadow on the right side of the pelvis to match body lighting.
+  // Cel shadow on the right side to match body lighting.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = pants.shadow || pants.base;
   ctx.beginPath();
-  ctx.moveTo(pelvis.x + hw * 0.10, top);
-  ctx.quadraticCurveTo(pelvis.x + hw * 0.92, pelvis.y - rig.limbR * 0.10,
-                       pelvis.x + hw * 0.40, bot);
-  ctx.lineTo(pelvis.x + hw * 0.10, bot);
-  ctx.lineTo(pelvis.x + hw * 0.10, top);
+  ctx.moveTo(pelvis.x + wWaist * 0.10, wy);
+  ctx.quadraticCurveTo(pelvis.x + hw * 1.02, pelvis.y - rig.limbR * 0.10,
+                       pelvis.x + hw * 0.40, pelvis.y + rig.limbR * 0.50);
+  ctx.lineTo(pelvis.x + wWaist * 0.10, pelvis.y + rig.limbR * 0.55);
+  ctx.lineTo(pelvis.x + wWaist * 0.10, wy);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
@@ -535,17 +549,12 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
 
   let pts;
   if (direction === 'south' || direction === 'north') {
-    // Anatomical front silhouette. The torso TERMINATES at the belt
-    // line — anything below the belt is "pants area" handled by
-    // drawPelvisBridge + the legs. This way the shirt+pants seam lines
-    // up cleanly with the belt. Previously the silhouette extended
-    // past the belt into a "groin V", which made the shirt continue
-    // down into the pelvis area and the whole transition read awkwardly.
-    //
-    // Belt anchor (drawBelt): y = pelvis.y - h*0.4, h = limbR*0.85.
-    //   → belt sits ~ pelvis.y - limbR * 0.34. The shirt bottom is set
-    //   slightly lower (-0.30) so the belt cleanly overlays the seam.
-    const beltY = pelvis.y - limbR * 0.30;
+    // Anatomical front silhouette. The torso TERMINATES at the WAIST
+    // line — anything below the waist is "pants area" handled by
+    // drawPelvisBridge (which is now an hourglass: waist → hip flare →
+    // legs). The belt sits exactly at the waist line, on the boundary
+    // between shirt and pants. This matches chibi / anime conventions
+    // where the belt cinches at the natural waist (not at the hips).
     pts = [
       // top center: collarbone hollow (slight rise)
       [chest.x,                       chest.y - limbR * 0.20],
@@ -557,19 +566,11 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
       [chest.x + sw * 0.85,           chest.y + limbR * 1.20],
       // right ribs (gentle curve down + in)
       [chest.x + sw * 0.78,           chest.y + tH * 0.40],
-      // right waist (narrowest)
+      // right waist (narrowest) — also the shirt bottom corner
       [chest.x + wWaist,              wy],
-      // right hip — flares back out
-      [chest.x + hw * 0.95,           pelvis.y - limbR * 0.55],
-      // right shirt bottom corner (sits on the belt line)
-      [chest.x + hw * 0.85,           beltY],
-      // bottom center — soft dip across the belt line (no groin V)
-      [chest.x,                       beltY + limbR * 0.10],
-      // left shirt bottom corner
-      [chest.x - hw * 0.85,           beltY],
-      // left hip — flares back out
-      [chest.x - hw * 0.95,           pelvis.y - limbR * 0.55],
-      // left waist
+      // bottom center — flat / slight dip across the waist line
+      [chest.x,                       wy + limbR * 0.10],
+      // left waist / shirt bottom corner
       [chest.x - wWaist,              wy],
       // left ribs
       [chest.x - sw * 0.78,           chest.y + tH * 0.40],
@@ -593,20 +594,17 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
       [chest.x - sd * 0.90,           chest.y + tH * 0.32],
       // upper abs — start narrowing toward waist
       [chest.x - sd * 0.72,           chest.y + tH * 0.50],
-      // waist front (gentle in-curve, abdominal pinch)
+      // waist front — shirt terminates here at the waist line
       [chest.x - sd * 0.50,           wy],
-      // lower belly — bulges back out below the waist line
-      [chest.x - sd * 0.62,           chest.y + tH * 0.82],
-      // pelvis front bottom
-      [chest.x - hd * 0.55,           pelvis.y],
-      // crotch-front
-      [chest.x - hd * 0.20,           pelvis.y + limbR * 0.50],
-      // crotch-back
-      [chest.x + hd * 0.30,           pelvis.y + limbR * 0.40],
-      // glute bulge
-      [chest.x + hd * 0.85,           pelvis.y - limbR * 0.10],
-      // lumbar inward curve — narrows behind the waist
-      [chest.x + sd * 0.78,           wy + tH * 0.05],
+      // shirt bottom front corner (just below waist for a clean seam
+      // under the belt)
+      [chest.x - sd * 0.50,           wy + limbR * 0.10],
+      // shirt bottom center
+      [chest.x,                       wy + limbR * 0.15],
+      // shirt bottom back corner
+      [chest.x + sd * 0.78,           wy + limbR * 0.10],
+      // upper-back lumbar narrows in behind waist
+      [chest.x + sd * 0.78,           wy],
       // upper-back broad
       [chest.x + sd * 0.95,           chest.y + tH * 0.32],
       // shoulder-blade
@@ -932,16 +930,29 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
 
 function drawBelt(ctx, rig, belt) {
   if (!belt) return;
-  const { pelvis } = rig;
+  const { chest, pelvis } = rig;
   const direction = rig.direction;
-  const w = pelvis.w * 1.00;     // wider — runs the full hip line
-  const h = rig.limbR * 0.85;    // taller — beefier strap
+  // Belt sits at the WAIST line — the narrowest point of the silhouette
+  // and the seam between the shirt (above) and pants (below). This
+  // matches chibi / anime convention where the belt cinches at the
+  // natural waist, not the hips.
+  const tH = pelvis.y - chest.y;
+  const wy = chest.y + tH * 0.62;
+  // Belt width matches the WAIST width, not the hip width — chibi
+  // characters cinch at the narrow waist, so the strap shouldn't
+  // overhang the body silhouette on either side.
+  const wWaist = Math.min(rig.frameW * 0.20, pelvis.w * 0.85);
+  const w = wWaist * 2.10;        // 5% wider than the waist for visible overhang
+  const h = rig.limbR * 0.85;     // beefier strap
   const x = pelvis.x - w / 2;
-  const y = pelvis.y - h * 0.4;
+  const y = wy - h * 0.5;
   const beltOutline = belt.outline || '#000';
 
   if (direction === 'west' || direction === 'east') {
-    const sd = pelvis.w * 0.40;
+    // Side-view belt: spans the body's depth at the waist line. Width
+    // matches the side-view torso depth (sd) so the strap doesn't poke
+    // past the body's front/back outline.
+    const sd = pelvis.w * 0.30;
     VC.roundRect(ctx, pelvis.x - sd, y, sd * 2, h,
       h * 0.30, belt.base, beltOutline, outlineW(rig, 0.22));
     // Side-view buckle stub
