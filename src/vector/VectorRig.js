@@ -28,19 +28,21 @@ const FRAME_W = 128;
 const FRAME_H = 192;
 
 // Body proportions, expressed as ratios of FRAME_H so the rig scales
-// gracefully to taller / shorter heroes.
+// gracefully to taller / shorter heroes. Tuned so the character fills the
+// frame nicely while leaving ~5 px of headroom for hair to extend past
+// the head circle without clipping the top of the frame.
 const HEIGHT_DIMS = {
-  tiny:   { totalH: 0.55, headR: 0.13, neckLen: 0.025, torsoH: 0.18, legH: 0.12 },
-  short:  { totalH: 0.78, headR: 0.13, neckLen: 0.028, torsoH: 0.24, legH: 0.20 },
-  medium: { totalH: 0.92, headR: 0.13, neckLen: 0.030, torsoH: 0.27, legH: 0.27 },
-  tall:   { totalH: 1.00, headR: 0.13, neckLen: 0.032, torsoH: 0.30, legH: 0.31 },
+  tiny:   { totalH: 0.55, headR: 0.14, neckLen: 0.020, torsoH: 0.16, legH: 0.10 },
+  short:  { totalH: 0.74, headR: 0.14, neckLen: 0.025, torsoH: 0.23, legH: 0.20 },
+  medium: { totalH: 0.86, headR: 0.14, neckLen: 0.028, torsoH: 0.28, legH: 0.28 },
+  tall:   { totalH: 0.93, headR: 0.14, neckLen: 0.030, torsoH: 0.30, legH: 0.32 },
 };
 
 const BUILDS = {
-  slim:     { shoulderW: 0.44, hipW: 0.36, limbR: 0.045, torsoTaper: 0.78 },
-  average:  { shoulderW: 0.52, hipW: 0.40, limbR: 0.052, torsoTaper: 0.82 },
-  muscular: { shoulderW: 0.62, hipW: 0.42, limbR: 0.062, torsoTaper: 0.78 },
-  heavy:    { shoulderW: 0.60, hipW: 0.50, limbR: 0.062, torsoTaper: 0.92 },
+  slim:     { shoulderW: 0.50, hipW: 0.40, limbR: 0.052, torsoTaper: 0.78 },
+  average:  { shoulderW: 0.58, hipW: 0.44, limbR: 0.060, torsoTaper: 0.82 },
+  muscular: { shoulderW: 0.68, hipW: 0.46, limbR: 0.070, torsoTaper: 0.78 },
+  heavy:    { shoulderW: 0.66, hipW: 0.54, limbR: 0.070, torsoTaper: 0.92 },
 };
 
 function dims(config) {
@@ -97,7 +99,9 @@ function buildRig(config, direction, offsets) {
   const rLegLift  = (off.rightLegLift || 0) * sy;
 
   // Vertical layout (in frame units).  Anchor: feet sit on ground line.
-  const groundY = FRAME_H * 0.93;
+  // Pushed slightly down so the character fills the frame with a small
+  // strip of empty floor below.
+  const groundY = FRAME_H * 0.95;
 
   const headR    = FRAME_H * d.headR;
   const torsoH   = FRAME_H * d.torsoH;

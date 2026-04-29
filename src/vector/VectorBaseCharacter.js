@@ -261,6 +261,59 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ctx.stroke();
     ctx.restore();
   }
+
+  // 7. Jacket lapels — V-shape from collar to chest, drawn for jacket-
+  // family clothing (jacket / bomber / coat). Skipped for shirts/tanks.
+  if (direction === 'south' && opts.lapels) {
+    const lapelTop = chest.y + rig.limbR * 0.10;
+    const lapelBot = chest.y + (pelvis.y - chest.y) * 0.55;
+    const lapelW   = sw * 0.42;
+    ctx.save();
+    ctx.fillStyle = clothing.deep_shadow || clothing.shadow || '#222';
+    ctx.beginPath();
+    ctx.moveTo(chest.x - rig.limbR * 0.65, lapelTop);
+    ctx.lineTo(chest.x - lapelW * 0.50,    lapelBot);
+    ctx.lineTo(chest.x,                    lapelBot - rig.limbR * 0.5);
+    ctx.lineTo(chest.x,                    lapelTop);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(chest.x + rig.limbR * 0.65, lapelTop);
+    ctx.lineTo(chest.x + lapelW * 0.50,    lapelBot);
+    ctx.lineTo(chest.x,                    lapelBot - rig.limbR * 0.5);
+    ctx.lineTo(chest.x,                    lapelTop);
+    ctx.closePath();
+    ctx.fill();
+    // Subtle stitch line along the lapel edge
+    ctx.strokeStyle = VC.hexAlpha(clothing.highlight || '#fff', 0.35);
+    ctx.lineWidth = outlineW(rig, 0.06);
+    ctx.beginPath();
+    ctx.moveTo(chest.x - rig.limbR * 0.65, lapelTop);
+    ctx.lineTo(chest.x - lapelW * 0.50,    lapelBot);
+    ctx.moveTo(chest.x + rig.limbR * 0.65, lapelTop);
+    ctx.lineTo(chest.x + lapelW * 0.50,    lapelBot);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 8. Pocket lines — two short horizontal segments at hip-line (south)
+  if (direction === 'south' && opts.pockets) {
+    ctx.save();
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.lineWidth = outlineW(rig, 0.10);
+    ctx.globalAlpha = 0.50;
+    const py = pelvis.y - rig.limbR * 0.05;
+    for (const sign of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(chest.x + sign * hw * 0.30, py);
+      ctx.quadraticCurveTo(
+        chest.x + sign * hw * 0.55, py + rig.limbR * 0.30,
+        chest.x + sign * hw * 0.75, py + rig.limbR * 0.05,
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -359,56 +412,245 @@ function drawHead(ctx, rig, skin) {
 }
 
 /**
- * Eyes (front view) — two small ovals with iris and a tiny highlight.
+ * Eyes (front view) — anime-style almond ovals with a vertical iris,
+ * a bright catch-light at top-left, and a soft warm shadow under the
+ * upper lid (tarsal shadow) for depth.
  */
 function drawEyesSouth(ctx, rig, eyes) {
   const { head } = rig;
   const dx = head.r * 0.32;
-  const dy = head.r * 0.05;
-  const eyeR  = head.r * 0.13;
-  const irisR = head.r * 0.08;
+  const dy = head.r * 0.10;          // eyes sit slightly below head center
+  const eyeRX = head.r * 0.18;       // wider almond
+  const eyeRY = head.r * 0.13;
+  const irisRX = head.r * 0.10;
+  const irisRY = head.r * 0.13;       // taller-than-wide iris reads as "anime"
 
-  const irisColor = eyes.iris || eyes.base || '#3a2510';
-  const sclera    = eyes.solid ? irisColor : (eyes.sclera || '#f0e8d8');
+  const irisColor   = eyes.iris   || eyes.base || '#3a2510';
+  const irisShadow  = eyes.shadow || mixColor(irisColor, '#000', 0.45);
+  const sclera      = eyes.solid ? irisColor : (eyes.sclera || '#f6efe1');
+  const lashColor   = eyes.outline || '#1a1010';
 
   for (const sign of [-1, 1]) {
     const ex = head.x + dx * sign;
     const ey = head.y + dy;
-    // Sclera (or solid demon/fairy eye)
-    VC.oval(ctx, ex, ey, eyeR, eyeR * 0.85, sclera, '#1a1010', outlineW(rig, 0.10));
-    // Iris
-    VC.oval(ctx, ex, ey + eyeR * 0.05, irisR, irisR, irisColor, null);
+
+    // 1. Sclera — wider almond with a soft inner gradient.
+    if (!eyes.solid) {
+      const grad = ctx.createLinearGradient(ex, ey - eyeRY, ex, ey + eyeRY);
+      grad.addColorStop(0,   '#e9dfc9');
+      grad.addColorStop(0.4, sclera);
+      grad.addColorStop(1,   '#e0d4ba');
+      VC.oval(ctx, ex, ey, eyeRX, eyeRY, grad, null);
+    } else {
+      VC.oval(ctx, ex, ey, eyeRX, eyeRY, irisColor, null);
+    }
+
+    // 2. Iris — vertical oval, two-tone for a glassy look.
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, eyeRX, eyeRY, 0, 0, Math.PI * 2);
+    ctx.clip();
+
+    const irisGrad = ctx.createRadialGradient(
+      ex - irisRX * 0.25, ey - irisRY * 0.30, irisRY * 0.10,
+      ex,                 ey + irisRY * 0.20, irisRY * 1.10,
+    );
+    irisGrad.addColorStop(0,   lighten(irisColor, 0.25));
+    irisGrad.addColorStop(0.55, irisColor);
+    irisGrad.addColorStop(1,   irisShadow);
+    VC.oval(ctx, ex, ey + eyeRY * 0.05, irisRX, irisRY, irisGrad, null);
+
     // Pupil
-    VC.oval(ctx, ex, ey + eyeR * 0.05, irisR * 0.45, irisR * 0.45, '#000', null);
-    // Catch-light
-    VC.oval(ctx, ex - eyeR * 0.25, ey - eyeR * 0.25, eyeR * 0.18, eyeR * 0.18, '#fff', null);
+    VC.oval(ctx, ex, ey + eyeRY * 0.05, irisRX * 0.42, irisRY * 0.42, '#080605', null);
+
+    // Vertical catch-light (anime reflection)
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    VC.oval(ctx, ex - irisRX * 0.30, ey - irisRY * 0.35,
+      irisRX * 0.30, irisRY * 0.18, '#ffffff', null);
+    VC.oval(ctx, ex + irisRX * 0.30, ey + irisRY * 0.40,
+      irisRX * 0.16, irisRY * 0.10, '#ffffff', null);
+    ctx.restore();
+
+    // Lower-iris reflected light
+    ctx.save();
+    ctx.globalAlpha = 0.40;
+    VC.oval(ctx, ex, ey + irisRY * 0.55,
+      irisRX * 0.65, irisRY * 0.18,
+      lighten(irisColor, 0.45), null);
+    ctx.restore();
+
+    ctx.restore(); // clip
+
+    // 3. Upper-lid (lash) — a thicker dark stroke that hugs the top of the
+    // eye, with a small flick at the outer corner.
+    ctx.save();
+    ctx.strokeStyle = lashColor;
+    ctx.lineWidth   = Math.max(1.4, eyeRY * 0.35);
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(ex - eyeRX * 0.95, ey - eyeRY * 0.20);
+    ctx.quadraticCurveTo(ex, ey - eyeRY * 1.05, ex + eyeRX * 0.95, ey - eyeRY * 0.10);
+    // Outer-corner flick
+    ctx.quadraticCurveTo(ex + eyeRX * 1.05, ey - eyeRY * 0.05,
+                         ex + eyeRX * 1.10 * sign, ey - eyeRY * 0.30 * (sign > 0 ? 1 : 1));
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Lower lid — thin soft line (subtler than the lash).
+    ctx.save();
+    ctx.strokeStyle = lashColor;
+    ctx.lineWidth   = Math.max(0.8, eyeRY * 0.18);
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(ex - eyeRX * 0.85, ey + eyeRY * 0.20);
+    ctx.quadraticCurveTo(ex, ey + eyeRY * 0.95, ex + eyeRX * 0.85, ey + eyeRY * 0.30);
+    ctx.stroke();
+    ctx.restore();
+
+    // 5. Tarsal shadow under the upper lid — a soft brown band that
+    // sells the eye socket depth.
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, eyeRX, eyeRY, 0, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.globalAlpha = 0.30;
+    const lidShadow = ctx.createLinearGradient(ex, ey - eyeRY, ex, ey + eyeRY * 0.4);
+    lidShadow.addColorStop(0,   VC.hexAlpha(lashColor, 0.85));
+    lidShadow.addColorStop(0.6, VC.hexAlpha(lashColor, 0));
+    ctx.fillStyle = lidShadow;
+    ctx.fillRect(ex - eyeRX, ey - eyeRY, eyeRX * 2, eyeRY * 2);
+    ctx.restore();
   }
+
+  // Optional: tiny mouth — a soft curve for personality, drawn at lip height.
+  ctx.save();
+  ctx.strokeStyle = '#3a1808';
+  ctx.lineWidth = Math.max(1.0, head.r * 0.04);
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.55);
+  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.62,
+                       head.x + head.r * 0.10, head.y + head.r * 0.55);
+  ctx.stroke();
+  ctx.restore();
 }
 
 /**
- * Eye (side view) — single eye on the visible side.
+ * Eye (side view) — single eye on the visible side, plus mouth + nose tip.
  */
 function drawEyeWest(ctx, rig, eyes) {
   const { head } = rig;
   const ex = head.x - head.r * 0.42;
-  const ey = head.y + head.r * 0.05;
-  const eyeR  = head.r * 0.13;
-  const irisR = head.r * 0.07;
+  const ey = head.y + head.r * 0.10;
+  const eyeRX = head.r * 0.16;
+  const eyeRY = head.r * 0.13;
+  const irisRX = head.r * 0.08;
+  const irisRY = head.r * 0.12;
 
-  const irisColor = eyes.iris || eyes.base || '#3a2510';
-  const sclera    = eyes.solid ? irisColor : (eyes.sclera || '#f0e8d8');
+  const irisColor  = eyes.iris || eyes.base || '#3a2510';
+  const irisShadow = eyes.shadow || mixColor(irisColor, '#000', 0.4);
+  const sclera     = eyes.solid ? irisColor : (eyes.sclera || '#f6efe1');
+  const lashColor  = eyes.outline || '#1a1010';
 
-  VC.oval(ctx, ex, ey, eyeR * 0.85, eyeR * 0.85, sclera, '#1a1010', outlineW(rig, 0.10));
-  VC.oval(ctx, ex - eyeR * 0.1, ey + eyeR * 0.05, irisR, irisR, irisColor, null);
-  VC.oval(ctx, ex - eyeR * 0.1, ey + eyeR * 0.05, irisR * 0.5, irisR * 0.5, '#000', null);
-  VC.oval(ctx, ex - eyeR * 0.25, ey - eyeR * 0.25, eyeR * 0.15, eyeR * 0.15, '#fff', null);
+  // Sclera
+  if (!eyes.solid) {
+    const grad = ctx.createLinearGradient(ex, ey - eyeRY, ex, ey + eyeRY);
+    grad.addColorStop(0, '#e9dfc9');
+    grad.addColorStop(1, '#e0d4ba');
+    VC.oval(ctx, ex, ey, eyeRX * 0.95, eyeRY, grad, null);
+  } else {
+    VC.oval(ctx, ex, ey, eyeRX * 0.95, eyeRY, irisColor, null);
+  }
 
-  // Tiny nose-tip shadow
+  // Iris
   ctx.save();
-  ctx.globalAlpha = 0.4;
-  VC.oval(ctx, head.x - head.r * 0.85, head.y + head.r * 0.18,
-    head.r * 0.06, head.r * 0.08, '#1a0e08', null);
+  ctx.beginPath();
+  ctx.ellipse(ex, ey, eyeRX * 0.95, eyeRY, 0, 0, Math.PI * 2);
+  ctx.clip();
+  const irisGrad = ctx.createRadialGradient(
+    ex - irisRX * 0.4, ey - irisRY * 0.3, irisRY * 0.10,
+    ex,                ey,                irisRY * 1.10,
+  );
+  irisGrad.addColorStop(0,   lighten(irisColor, 0.25));
+  irisGrad.addColorStop(0.55, irisColor);
+  irisGrad.addColorStop(1,   irisShadow);
+  VC.oval(ctx, ex - eyeRX * 0.10, ey + eyeRY * 0.05, irisRX, irisRY, irisGrad, null);
+  VC.oval(ctx, ex - eyeRX * 0.10, ey + eyeRY * 0.05, irisRX * 0.45, irisRY * 0.45, '#080605', null);
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  VC.oval(ctx, ex - eyeRX * 0.30, ey - eyeRY * 0.35, irisRX * 0.30, irisRY * 0.18, '#ffffff', null);
   ctx.restore();
+  ctx.restore();
+
+  // Lash
+  ctx.save();
+  ctx.strokeStyle = lashColor;
+  ctx.lineWidth = Math.max(1.4, eyeRY * 0.35);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(ex - eyeRX * 0.95, ey - eyeRY * 0.10);
+  ctx.quadraticCurveTo(ex, ey - eyeRY * 1.0, ex + eyeRX * 0.95, ey - eyeRY * 0.20);
+  ctx.stroke();
+  ctx.restore();
+
+  // Lower lid
+  ctx.save();
+  ctx.strokeStyle = lashColor;
+  ctx.lineWidth = Math.max(0.8, eyeRY * 0.18);
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(ex - eyeRX * 0.85, ey + eyeRY * 0.20);
+  ctx.quadraticCurveTo(ex, ey + eyeRY * 0.85, ex + eyeRX * 0.85, ey + eyeRY * 0.30);
+  ctx.stroke();
+  ctx.restore();
+
+  // Nose tip + bridge shadow
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  VC.oval(ctx, head.x - head.r * 0.88, head.y + head.r * 0.18,
+    head.r * 0.06, head.r * 0.10, '#1a0e08', null);
+  ctx.restore();
+
+  // Mouth — small curve on the visible side
+  ctx.save();
+  ctx.strokeStyle = '#3a1808';
+  ctx.lineWidth = Math.max(1.0, head.r * 0.04);
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.moveTo(head.x - head.r * 0.65, head.y + head.r * 0.55);
+  ctx.quadraticCurveTo(head.x - head.r * 0.55, head.y + head.r * 0.62,
+                       head.x - head.r * 0.40, head.y + head.r * 0.55);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------------------
+// Color utilities — used by the eye renderer.
+// ---------------------------------------------------------------------------
+
+function lighten(hex, amount) {
+  return mixColor(hex, '#ffffff', amount);
+}
+
+function mixColor(a, b, t) {
+  const pa = parseHex(a), pb = parseHex(b);
+  const r = Math.round(pa[0] * (1 - t) + pb[0] * t);
+  const g = Math.round(pa[1] * (1 - t) + pb[1] * t);
+  const bl = Math.round(pa[2] * (1 - t) + pb[2] * t);
+  return `rgb(${r},${g},${bl})`;
+}
+
+function parseHex(hex) {
+  if (!hex) return [0, 0, 0];
+  if (hex.startsWith('rgb')) {
+    const m = /(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(hex);
+    return m ? [+m[1], +m[2], +m[3]] : [0, 0, 0];
+  }
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [0, 0, 0];
 }
 
 // ---------------------------------------------------------------------------
@@ -572,6 +814,104 @@ function drawHair(ctx, rig, hair, style) {
       head.r * 0.65, head.r * 0.18,
       0.50, hair.shadow || '#000');
   }
+
+  // 6. Fringe / forelock — a separate small mass that hangs in FRONT of
+  // the forehead. Skipped for buzzed/undercut/mohawk (those styles don't
+  // have bangs). Drawn after the cast shadow so the bangs sit on top of
+  // the shadow they're supposedly casting.
+  if (!['buzzed', 'mohawk', 'topknot'].includes(style)) {
+    drawForelock(ctx, rig, hair, style);
+  }
+}
+
+/**
+ * Forelock / bangs — a small blob covering the upper forehead, with its
+ * own miniature gradient. Different styles get slightly different
+ * silhouettes (curly = chunkier, long = side-swept, etc.).
+ */
+function drawForelock(ctx, rig, hair, style) {
+  const { head } = rig;
+  const direction = rig.direction;
+
+  // Base shape (front view)
+  let pts;
+  const yTop = -0.95, yBot = -0.30;
+  if (style === 'curly') {
+    pts = [
+      [-0.85, -0.45], [-0.95, -0.85], [-0.50, -1.00], [-0.20, -0.85],
+      [ 0.10, -1.00], [ 0.45, -0.85], [ 0.85, -0.95], [ 0.95, -0.55],
+      [ 0.55, -0.30], [ 0.05, -0.50], [-0.55, -0.30],
+    ];
+  } else if (style === 'long' || style === 'medium') {
+    pts = [
+      [-0.95, -0.40], [-1.00, -0.80], [-0.55, -1.00], [-0.10, -0.95],
+      [ 0.40, -1.05], [ 0.80, -0.85], [ 0.95, -0.45], [ 0.65, -0.20],
+      [ 0.10, -0.40], [-0.45, -0.25], [-0.85, -0.30],
+    ];
+  } else if (style === 'spiky') {
+    pts = [
+      [-0.85, -0.40], [-0.85, -0.95], [-0.50, -0.55], [-0.30, -1.10],
+      [-0.10, -0.55], [ 0.10, -1.15], [ 0.30, -0.60], [ 0.55, -1.00],
+      [ 0.85, -0.55], [ 0.80, -0.30], [-0.55, -0.30],
+    ];
+  } else if (style === 'undercut') {
+    pts = [
+      [-0.45, -0.40], [-0.65, -0.85], [-0.20, -1.00],
+      [ 0.30, -1.05], [ 0.75, -0.85], [ 0.85, -0.45],
+      [ 0.50, -0.25], [-0.20, -0.30],
+    ];
+  } else { // short (default)
+    pts = [
+      [-0.80, -0.40], [-0.85, -0.85], [-0.40, -1.00], [ 0.0, -0.95],
+      [ 0.45, -1.00], [ 0.80, -0.85], [ 0.85, -0.40], [ 0.45, -0.20],
+      [-0.05, -0.35], [-0.50, -0.20],
+    ];
+  }
+  void yTop; void yBot;
+
+  // Side-view squash — same trick as drawHair so the forelock follows
+  // the visible temple.
+  const scaleX = (direction === 'west' || direction === 'east') ? 0.62 : 1.0;
+  const shiftX = (direction === 'west') ? head.r * 0.18
+              : (direction === 'east') ? -head.r * 0.18
+              : 0;
+
+  const scaled = pts.map(([nx, ny]) => [
+    head.x + nx * head.r * scaleX + shiftX,
+    head.y + ny * head.r,
+  ]);
+
+  // Slightly darker than the main hair mass so it reads as a separate plane.
+  const darker = mixColor(hair.base || '#222', '#000', 0.20);
+  const grad = ctx.createLinearGradient(
+    head.x - head.r * 0.8, head.y - head.r * 0.95,
+    head.x + head.r * 0.8, head.y - head.r * 0.30,
+  );
+  grad.addColorStop(0,   hair.highlight || hair.base || '#444');
+  grad.addColorStop(0.4, hair.base || '#222');
+  grad.addColorStop(1,   darker);
+
+  blobPath(ctx, scaled, 0.55);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = hair.shadow || '#000';
+  ctx.lineWidth = outlineW(rig, 0.18);
+  ctx.stroke();
+
+  // Thin shine streak for that anime "specular" highlight
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.55;
+  const shine = ctx.createLinearGradient(
+    head.x - head.r * 0.8, head.y - head.r * 0.85,
+    head.x + head.r * 0.4, head.y - head.r * 0.55,
+  );
+  shine.addColorStop(0,   VC.hexAlpha(hair.highlight || '#fff', 0.85));
+  shine.addColorStop(0.5, VC.hexAlpha(hair.highlight || '#fff', 0));
+  ctx.fillStyle = shine;
+  blobPath(ctx, scaled, 0.55);
+  ctx.fill();
+  ctx.restore();
 }
 
 // Issue Catmull-Rom bezier commands for a closed blob into the current

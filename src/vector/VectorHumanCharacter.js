@@ -58,6 +58,14 @@ function resolveColors(config) {
     ? Object.assign({}, baseEyes, { solid: true })
     : baseEyes;
 
+  // Style-driven clothing detail flags (lapels, pockets, sleeve cuff bands).
+  const cs = config.clothingStyle || 'jacket';
+  const detailFlags = {
+    lapels:  ['jacket', 'bomber', 'coat'].includes(cs),
+    pockets: ['jacket', 'bomber', 'coat', 'apron', 'vest'].includes(cs),
+    cuffBand: ['jacket', 'bomber', 'coat', 'hoodie'].includes(cs),
+  };
+
   return {
     skin,
     hair:     Colors.HAIR_COLORS[config.hair] || Colors.HAIR_COLORS.black,
@@ -66,6 +74,7 @@ function resolveColors(config) {
     pants:    Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
     shoes:    Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
     belt:     Colors.BELT[config.beltColor] || Colors.BELT.standard,
+    detailFlags,
   };
 }
 
@@ -103,7 +112,7 @@ function drawSouth(ctx, config, offsets, hooks = {}) {
   else              { drawL(); drawR(); }
 
   // Body
-  Body.drawTorso(ctx, rig, colors.clothing);
+  Body.drawTorso(ctx, rig, colors.clothing, colors.detailFlags);
   if (config.belt !== false) Body.drawBelt(ctx, rig, colors.belt);
 
   // Arms — back arm first (smaller forward offset), then front
@@ -163,7 +172,7 @@ function drawNorth(ctx, config, offsets, hooks = {}) {
   if (lFwd >= rFwd) { drawR(); drawL(); }
   else              { drawL(); drawR(); }
 
-  Body.drawTorso(ctx, rig, colors.clothing, { chestCrease: false });
+  Body.drawTorso(ctx, rig, colors.clothing, Object.assign({ chestCrease: false }, colors.detailFlags));
   if (config.belt !== false) Body.drawBelt(ctx, rig, colors.belt);
 
   const drawArmL = () => {
@@ -231,7 +240,7 @@ function drawWest(ctx, config, offsets, hooks = {}) {
   drawArm(backArm);
 
   // Torso
-  Body.drawTorso(ctx, rig, colors.clothing);
+  Body.drawTorso(ctx, rig, colors.clothing, colors.detailFlags);
 
   // Front leg / front arm
   drawLeg(frontLeg);
