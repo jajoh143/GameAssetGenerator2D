@@ -177,17 +177,18 @@ function generateFrame(config, animationName, frameOffset) {
 
   const { canvas, ctx } = VC.makeCanvas(FRAME_W, FRAME_H);
   VC.clear(ctx, FRAME_W, FRAME_H);
+  const meta = Human.frameMeta(animationName, frameOffset);
   switch (direction) {
-    case 'south': Human.drawSouth(ctx, config, frameOffset, hooks); break;
-    case 'north': Human.drawNorth(ctx, config, frameOffset, hooks); break;
-    case 'west':  Human.drawWest (ctx, config, frameOffset, hooks); break;
+    case 'south': Human.drawSouth(ctx, config, frameOffset, hooks, meta); break;
+    case 'north': Human.drawNorth(ctx, config, frameOffset, hooks, meta); break;
+    case 'west':  Human.drawWest (ctx, config, frameOffset, hooks, meta); break;
     case 'east': {
       const { canvas: tmp, ctx: tmpCtx } = VC.makeCanvas(FRAME_W, FRAME_H);
-      Human.drawWest(tmpCtx, config, frameOffset, hooks);
+      Human.drawWest(tmpCtx, config, frameOffset, hooks, meta);
       ctx.drawImage(VC.mirrorCanvasH(tmp), 0, 0);
       break;
     }
-    default: Human.drawSouth(ctx, config, frameOffset, hooks); break;
+    default: Human.drawSouth(ctx, config, frameOffset, hooks, meta); break;
   }
   return canvas;
 }

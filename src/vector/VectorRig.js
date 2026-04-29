@@ -145,42 +145,51 @@ function buildRig(config, direction, offsets) {
   const legLen = legH;
 
   if (direction === 'south' || direction === 'north') {
-    // Arms hang at sides; lArmFwd shifts hand vertically (swing); lArmOut shifts hand outward.
+    // ── Arms ──
+    // The elbow gets a slight inward bend (cartoon proportion) plus a
+    // bigger arc when the arm swings forward — gives the arm a more
+    // organic curve than a straight ribbon.
+    const armBendIn = limbR * 0.6;   // small inward bow at elbow
     elbowL = {
-      x: shoulderL.x - 1 + lArmOut * 0.4,
-      y: shoulderL.y + armLen * 0.45 + lArmFwd * 0.5,
+      x: shoulderL.x + armBendIn * 0.5 + lArmOut * 0.4,  // bow slightly toward body
+      y: shoulderL.y + armLen * 0.48 + lArmFwd * 0.45,
     };
     handL  = {
       x: shoulderL.x - 2 + lArmOut * 1.0,
       y: shoulderL.y + armLen + lArmFwd * 1.0,
     };
     elbowR = {
-      x: shoulderR.x + 1 + rArmOut * 0.4,
-      y: shoulderR.y + armLen * 0.45 + rArmFwd * 0.5,
+      x: shoulderR.x - armBendIn * 0.5 + rArmOut * 0.4,
+      y: shoulderR.y + armLen * 0.48 + rArmFwd * 0.45,
     };
     handR  = {
       x: shoulderR.x + 2 + rArmOut * 1.0,
       y: shoulderR.y + armLen + rArmFwd * 1.0,
     };
 
-    // Legs: forward leg drops, back leg lifts (creates a stride feel).
+    // ── Legs ──
+    // The knee LEADS the foot in the direction of stride. When the leg
+    // swings forward (lLegFwd > 0), the knee shifts forward more than
+    // halfway, then the foot continues past it — creates a forward-bent
+    // knee silhouette typical of a chibi walk cycle.
     const lLegSign = lLegFwd >= 0 ? 1 : -1;
     const rLegSign = rLegFwd >= 0 ? 1 : -1;
+    const baseBend = limbR * 0.20;
     kneeL = {
-      x: hipL.x - Math.abs(lLegFwd) * 0.35,
-      y: hipL.y + legLen * 0.5 + lLegFwd * 0.25 * lLegSign,
+      x: hipL.x - Math.abs(lLegFwd) * 0.55 + baseBend * 0.6,
+      y: hipL.y + legLen * 0.45 + Math.abs(lLegFwd) * 0.30 * lLegSign,
     };
     footL = {
-      x: hipL.x - Math.abs(lLegFwd) * 0.55,
-      y: footY + lLegFwd * 0.35 * lLegSign,
+      x: hipL.x - Math.abs(lLegFwd) * 0.85,
+      y: footY + lLegFwd * 0.40 * lLegSign,
     };
     kneeR = {
-      x: hipR.x + Math.abs(rLegFwd) * 0.35,
-      y: hipR.y + legLen * 0.5 + rLegFwd * 0.25 * rLegSign,
+      x: hipR.x + Math.abs(rLegFwd) * 0.55 - baseBend * 0.6,
+      y: hipR.y + legLen * 0.45 + Math.abs(rLegFwd) * 0.30 * rLegSign,
     };
     footR = {
-      x: hipR.x + Math.abs(rLegFwd) * 0.55,
-      y: footY + rLegFwd * 0.35 * rLegSign,
+      x: hipR.x + Math.abs(rLegFwd) * 0.85,
+      y: footY + rLegFwd * 0.40 * rLegSign,
     };
   } else {
     // SIDE VIEW (west).  Both shoulders collapse onto a single x. Arms swing
@@ -190,17 +199,20 @@ function buildRig(config, direction, offsets) {
     shoulderL.x = cx - sideSpread;
     shoulderR.x = cx + sideSpread;
 
+    // ── Arms (side view) ──
+    // The elbow bends slightly forward of the swing direction so the arm
+    // reads as articulated, not as a straight stick.
     elbowL = {
-      x: shoulderL.x - lArmFwd * 0.5,
-      y: shoulderL.y + armLen * 0.5,
+      x: shoulderL.x - lArmFwd * 0.45 - limbR * 0.30,
+      y: shoulderL.y + armLen * 0.48,
     };
     handL  = {
       x: shoulderL.x - lArmFwd * 1.0,
       y: shoulderL.y + armLen * 0.95,
     };
     elbowR = {
-      x: shoulderR.x - rArmFwd * 0.5,
-      y: shoulderR.y + armLen * 0.5,
+      x: shoulderR.x - rArmFwd * 0.45 + limbR * 0.30,
+      y: shoulderR.y + armLen * 0.48,
     };
     handR  = {
       x: shoulderR.x - rArmFwd * 1.0,
@@ -211,17 +223,23 @@ function buildRig(config, direction, offsets) {
     hipL.x = cx - sideHipSpread;
     hipR.x = cx + sideHipSpread;
 
+    // Knee leads the foot in the swing direction AND lifts when the foot
+    // lifts (raised foot → bent knee). When the leg is planted (no lift)
+    // the knee sits straight ahead. When the leg lifts, the knee bends
+    // dramatically forward and up.
+    const lLiftFrac = lLegLift > 0 ? Math.min(1, lLegLift / (legLen * 0.4)) : 0;
+    const rLiftFrac = rLegLift > 0 ? Math.min(1, rLegLift / (legLen * 0.4)) : 0;
     kneeL = {
-      x: hipL.x - lLegFwd * 0.55,
-      y: hipL.y + legLen * 0.5 - lLegLift * 0.5,
+      x: hipL.x - lLegFwd * 0.55 - lLiftFrac * legLen * 0.18,
+      y: hipL.y + legLen * 0.50 - lLegLift * 0.85,
     };
     footL = {
       x: hipL.x - lLegFwd * 1.0,
       y: footY - lLegLift,
     };
     kneeR = {
-      x: hipR.x - rLegFwd * 0.55,
-      y: hipR.y + legLen * 0.5 - rLegLift * 0.5,
+      x: hipR.x - rLegFwd * 0.55 - rLiftFrac * legLen * 0.18,
+      y: hipR.y + legLen * 0.50 - rLegLift * 0.85,
     };
     footR = {
       x: hipR.x - rLegFwd * 1.0,

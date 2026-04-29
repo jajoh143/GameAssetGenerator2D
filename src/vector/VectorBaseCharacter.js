@@ -100,13 +100,87 @@ function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
 }
 
 /**
- * Hand — small skin-coloured oval at the end of an arm.
+ * Hand — skin-coloured oval at the end of an arm.
+ *
+ *   opts.fist:    draw a slightly larger, stronger-shaded fist instead of an
+ *                 open hand (used during attack animations / weapon grip).
+ *   opts.toward:  optional unit vector { dx, dy } pointing away from the
+ *                 wrist toward where a weapon would extend — when supplied,
+ *                 the fist's knuckle ridge orients along it.
  */
-function drawHand(ctx, hand, skin, rig) {
-  const r = rig.limbR * 1.05;
-  VC.oval(ctx, hand.x, hand.y, r, r * 0.95,
+function drawHand(ctx, hand, skin, rig, opts = {}) {
+  const r = rig.limbR * (opts.fist ? 1.15 : 1.05);
+  VC.oval(ctx, hand.x, hand.y, r, r * (opts.fist ? 0.92 : 0.95),
     VC.radial(ctx, hand.x - r * 0.3, hand.y - r * 0.3, r * 1.1, skin.highlight, skin.base),
     skin.outline, outlineW(rig));
+
+  // For a fist, add knuckle ridges + a darker palm shadow so it reads as
+  // closed instead of open.
+  if (opts.fist) {
+    const tx = (opts.toward && opts.toward.dx) || 0;
+    const ty = (opts.toward && opts.toward.dy) || 1;
+    const len = Math.hypot(tx, ty) || 1;
+    const ux = tx / len, uy = ty / len;
+    // Perpendicular for the knuckle row
+    const px = -uy, py = ux;
+    // Knuckle row: 3 short dark dashes across the wrist-forward face
+    ctx.save();
+    ctx.strokeStyle = skin.outline || '#1a0a06';
+    ctx.lineWidth = Math.max(1.0, r * 0.18);
+    ctx.lineCap = 'round';
+    for (const k of [-0.55, -0.10, 0.35]) {
+      const cx = hand.x + ux * r * 0.25 + px * r * k;
+      const cy = hand.y + uy * r * 0.25 + py * r * k;
+      ctx.beginPath();
+      ctx.moveTo(cx - ux * r * 0.18, cy - uy * r * 0.18);
+      ctx.lineTo(cx + ux * r * 0.18, cy + uy * r * 0.18);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // Palm shadow on the opposite side
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    VC.oval(ctx,
+      hand.x - ux * r * 0.30, hand.y - uy * r * 0.30,
+      r * 0.60, r * 0.45,
+      skin.shadow || skin.outline, null);
+    ctx.restore();
+  }
+}
+
+/**
+ * Sleeve cuff — a thin contrasting band drawn at the wrist end of a sleeve.
+ * Used for jacket/bomber/hoodie styles to suggest a separately-stitched
+ * cuff. Direction comes from the unit vector along the forearm so the band
+ * orients perpendicular to the arm.
+ */
+function drawCuff(ctx, hand, elbow, rig, clothing) {
+  const dx = hand.x - elbow.x, dy = hand.y - elbow.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  // Position the cuff slightly back from the hand (toward the elbow)
+  const cx = hand.x - ux * rig.limbR * 0.55;
+  const cy = hand.y - uy * rig.limbR * 0.55;
+  const px = -uy, py = ux;
+  const w = rig.limbR * 0.95;
+  const h = rig.limbR * 0.45;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(Math.atan2(uy, ux));
+  ctx.fillStyle = clothing.deep_shadow || clothing.shadow || '#222';
+  VC.roundRect(ctx, -h * 0.5, -w * 0.5, h, w, h * 0.4,
+    clothing.deep_shadow || clothing.shadow || '#222',
+    clothing.outline || '#000',
+    Math.max(0.8, h * 0.18));
+  // Stitch line (highlight)
+  ctx.strokeStyle = VC.hexAlpha(clothing.highlight || '#fff', 0.4);
+  ctx.lineWidth = Math.max(0.6, h * 0.10);
+  ctx.beginPath();
+  ctx.moveTo(-h * 0.30, -w * 0.40);
+  ctx.lineTo(-h * 0.30,  w * 0.40);
+  ctx.stroke();
+  ctx.restore();
+  void px; void py;
 }
 
 /**
@@ -1023,6 +1097,7 @@ module.exports = {
   drawLimb,
   drawHand,
   drawShoe,
+  drawCuff,
   drawTorso,
   drawBelt,
   drawNeck,
