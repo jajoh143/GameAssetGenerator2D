@@ -191,6 +191,47 @@ function drawHand(ctx, hand, skin, rig, opts = {}) {
 }
 
 /**
+ * Forearm wraps — short bandage / leather-strap dashes wound around the
+ * forearm. Drawn over the front of the forearm, between the elbow and
+ * the wrist. Adds adventurer detail without redrawing the limb.
+ *
+ *   palette:   strap color (any clothing palette)
+ *   hand/elbow joints used to measure the forearm direction.
+ */
+function drawForearmWraps(ctx, hand, elbow, rig, palette) {
+  const dx = hand.x - elbow.x, dy = hand.y - elbow.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;       // along forearm
+  const px = -uy, py = ux;                   // perpendicular
+  const r = rig.limbR;
+  // Three stripes evenly spaced from the elbow toward the wrist.
+  const stripes = [0.30, 0.55, 0.78];
+  ctx.save();
+  ctx.fillStyle = palette.base;
+  ctx.strokeStyle = palette.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.18);
+  for (const t of stripes) {
+    const cx = elbow.x + ux * len * t;
+    const cy = elbow.y + uy * len * t;
+    const stripeW = r * 0.45;     // along forearm
+    const stripeH = r * 1.20;     // perpendicular
+    ctx.beginPath();
+    ctx.moveTo(cx + ux * stripeW * 0.5 + px * stripeH * 0.5,
+               cy + uy * stripeW * 0.5 + py * stripeH * 0.5);
+    ctx.lineTo(cx + ux * stripeW * 0.5 - px * stripeH * 0.5,
+               cy + uy * stripeW * 0.5 - py * stripeH * 0.5);
+    ctx.lineTo(cx - ux * stripeW * 0.5 - px * stripeH * 0.5,
+               cy - uy * stripeW * 0.5 - py * stripeH * 0.5);
+    ctx.lineTo(cx - ux * stripeW * 0.5 + px * stripeH * 0.5,
+               cy - uy * stripeW * 0.5 + py * stripeH * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/**
  * Glove — paints a glove silhouette over the hand in glove color, with
  * a darker cel shadow on the right and an optional vambrace cuff that
  * extends up the forearm. Pairs with the existing sleeve drawCuff to
@@ -1235,6 +1276,43 @@ function drawHead(ctx, rig, skin) {
     head.x, head.y + head.r * 0.98,
     head.r * 0.50, head.r * 0.20,
     0.45, skin.outline);
+
+  // 8. Jaw line — a faint curved stroke from the cheekbone down to the
+  // chin, on the shadow side of the face (right). Adds bone structure
+  // / adult-ness without being a hard line. Skipped for snouted /
+  // fairy / lizardfolk faces that have their own structure cues.
+  if (rig.species !== 'lizardfolk' && rig.species !== 'fairy') {
+    const direction = rig.direction;
+    if (direction === 'south' || direction === 'north') {
+      ctx.save();
+      ctx.strokeStyle = skin.shadow || skin.outline;
+      ctx.globalAlpha = 0.30;
+      ctx.lineWidth = Math.max(1.0, head.r * 0.05);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      // Right cheekbone → jaw → chin
+      ctx.moveTo(head.x + head.r * 0.78, head.y + head.r * 0.05);
+      ctx.quadraticCurveTo(head.x + head.r * 0.65, head.y + head.r * 0.55,
+                           head.x + head.r * 0.30, head.y + head.r * 0.85);
+      ctx.stroke();
+      ctx.restore();
+    } else if (direction === 'west' || direction === 'east') {
+      // Side view: jaw line traces the underside of the chin from the
+      // visible ear down to the front of the chin.
+      const ds = direction === 'west' ? -1 : 1;
+      ctx.save();
+      ctx.strokeStyle = skin.shadow || skin.outline;
+      ctx.globalAlpha = 0.40;
+      ctx.lineWidth = Math.max(1.0, head.r * 0.05);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(head.x + ds * head.r * 0.55, head.y + head.r * 0.10);
+      ctx.quadraticCurveTo(head.x + ds * head.r * 0.20, head.y + head.r * 0.78,
+                           head.x - ds * head.r * 0.40, head.y + head.r * 0.85);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
 }
 
 function drawEars(ctx, rig, skin) {
@@ -1585,16 +1663,18 @@ function drawMouthSouth(ctx, rig, opts = {}) {
     return;
   }
 
-  // Soft smile
+  // Neutral mouth — a flatter line with the slightest dip in the middle.
+  // Replaces the older upward-curving "smile" which was reading too
+  // grin-cartoony. Adult / stoic expression suits the references better.
   ctx.save();
   ctx.strokeStyle = '#3a1808';
-  ctx.lineWidth = Math.max(1.0, head.r * 0.04);
+  ctx.lineWidth = Math.max(1.0, head.r * 0.05);
   ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha = 0.65;
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.55);
-  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.62,
-                       head.x + head.r * 0.10, head.y + head.r * 0.55);
+  ctx.moveTo(head.x - head.r * 0.13, head.y + head.r * 0.58);
+  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.61,
+                       head.x + head.r * 0.13, head.y + head.r * 0.58);
   ctx.stroke();
   ctx.restore();
 }
@@ -1855,13 +1935,13 @@ function drawMouthWest(ctx, rig, opts = {}) {
 
   ctx.save();
   ctx.strokeStyle = '#3a1808';
-  ctx.lineWidth = Math.max(1.0, head.r * 0.04);
+  ctx.lineWidth = Math.max(1.0, head.r * 0.05);
   ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha = 0.65;
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.65, head.y + head.r * 0.55);
-  ctx.quadraticCurveTo(head.x - head.r * 0.55, head.y + head.r * 0.62,
-                       head.x - head.r * 0.40, head.y + head.r * 0.55);
+  ctx.moveTo(head.x - head.r * 0.62, head.y + head.r * 0.58);
+  ctx.quadraticCurveTo(head.x - head.r * 0.55, head.y + head.r * 0.60,
+                       head.x - head.r * 0.42, head.y + head.r * 0.58);
   ctx.stroke();
   ctx.restore();
 }
@@ -2583,6 +2663,7 @@ module.exports = {
   drawLimb,
   drawHand,
   drawGlove,
+  drawForearmWraps,
   drawShoe,
   drawCuff,
   drawPantCuff,
