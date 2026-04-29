@@ -179,6 +179,124 @@ function groundShadow(ctx, cx, cy, rx, ry, alpha = 0.35) {
   ctx.fill();
 }
 
+// ---------------------------------------------------------------------------
+// Lighting helpers — used by body-part renderers to add depth.
+//
+// All renderers assume a single key light coming from the top-left at
+// ~45°. Form shadows therefore live on the bottom-right of every body part;
+// rim light lives along the top-left edge; cast shadows fall down-and-right.
+// ---------------------------------------------------------------------------
+
+/**
+ * Apply a soft "core shadow" on an oval — a darker crescent on the bottom-
+ * right that defines the terminator line between lit and shadowed sides.
+ * Drawn additively over an already-painted body part.
+ */
+function coreShadowOval(ctx, cx, cy, rx, ry, shadowColor, strength = 0.45) {
+  ctx.save();
+  ctx.globalAlpha = strength;
+  // The shadow blob is offset toward the bottom-right, smaller than the
+  // oval, with a soft radial falloff.
+  const g = ctx.createRadialGradient(
+    cx + rx * 0.55, cy + ry * 0.40, 0,
+    cx + rx * 0.55, cy + ry * 0.40, Math.max(rx, ry) * 1.05,
+  );
+  g.addColorStop(0,   shadowColor);
+  g.addColorStop(0.5, shadowColor);
+  g.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * A soft cast-shadow ellipse — used to drop the head's shadow onto the neck,
+ * the chin onto the chest, the hair onto the forehead, etc.
+ *
+ *   cx,cy: shadow center
+ *   rx,ry: ellipse radii
+ *   alpha: opacity (0..1)
+ */
+function castShadow(ctx, cx, cy, rx, ry, alpha = 0.35, color = '#000') {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+  g.addColorStop(0,   color);
+  g.addColorStop(0.55, hexAlpha(color, 0.7));
+  g.addColorStop(1,   hexAlpha(color, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Rim highlight — a thin bright crescent along the top-left edge of an
+ * oval. Used on hair, torso, head, limbs to suggest a back-light or
+ * reflected light bouncing off the back surface.
+ */
+function rimLight(ctx, cx, cy, rx, ry, color = '#fff', strength = 0.30) {
+  ctx.save();
+  ctx.globalAlpha = strength;
+  const g = ctx.createRadialGradient(
+    cx - rx * 0.55, cy - ry * 0.55, Math.max(rx, ry) * 0.65,
+    cx - rx * 0.55, cy - ry * 0.55, Math.max(rx, ry) * 1.05,
+  );
+  g.addColorStop(0,   hexAlpha(color, 0));
+  g.addColorStop(0.7, color);
+  g.addColorStop(1,   hexAlpha(color, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Ambient-occlusion strip — a short, soft dark line at the seam where two
+ * parts meet (under jaw, under arm, in waist crease). Pass two endpoints.
+ */
+function aoLine(ctx, x1, y1, x2, y2, thickness, alpha = 0.4, color = '#000') {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const nx = -uy, ny = ux;
+  ctx.beginPath();
+  ctx.moveTo(x1 + nx * thickness * 0.5, y1 + ny * thickness * 0.5);
+  ctx.lineTo(x2 + nx * thickness * 0.5, y2 + ny * thickness * 0.5);
+  ctx.lineTo(x2 - nx * thickness * 0.5, y2 - ny * thickness * 0.5);
+  ctx.lineTo(x1 - nx * thickness * 0.5, y1 - ny * thickness * 0.5);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(
+    x1 + nx * thickness, y1 + ny * thickness,
+    x1 - nx * thickness, y1 - ny * thickness,
+  );
+  g.addColorStop(0,   hexAlpha(color, 0));
+  g.addColorStop(0.5, color);
+  g.addColorStop(1,   hexAlpha(color, 0));
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * Convert a #rrggbb hex to rgba(...) with the given alpha. Tolerates
+ * 'rgba(...)' input by passing through.
+ */
+function hexAlpha(hex, a) {
+  if (!hex) return `rgba(0,0,0,${a})`;
+  if (hex.startsWith('rgba') || hex.startsWith('rgb')) return hex;
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return `rgba(0,0,0,${a})`;
+  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
 /**
  * Mirror canvas horizontally — used for east-facing frames.
  */
@@ -224,6 +342,11 @@ module.exports = {
   limb,
   smoothBlob,
   groundShadow,
+  coreShadowOval,
+  castShadow,
+  rimLight,
+  aoLine,
+  hexAlpha,
   mirrorCanvasH,
   blit,
   scaleCanvas,

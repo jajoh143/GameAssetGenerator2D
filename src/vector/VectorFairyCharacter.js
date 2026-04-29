@@ -53,8 +53,8 @@ function drawWings(ctx, rig, wingColors, style, size, direction, frameIdx) {
 function drawWingPair(ctx, rig, wingColors, style, scale, mirrored) {
   const cx = rig.chest.x;
   const cy = rig.chest.y + rig.limbR * 0.2;
-  const wingLen = rig.frameH * 0.40 * scale;
-  const wingW   = rig.frameW * 0.32 * scale;
+  const wingLen = rig.frameH * 0.32 * scale;     // toned down from 0.40
+  const wingW   = rig.frameW * 0.26 * scale;     // toned down from 0.32
 
   const outer = (wingColors && wingColors.outer) || '#aee0ff';
   const inner = (wingColors && wingColors.inner) || '#dceeff';
@@ -62,50 +62,82 @@ function drawWingPair(ctx, rig, wingColors, style, scale, mirrored) {
 
   for (const sign of mirrored ? [-1, 1] : [-1]) {
     ctx.save();
-    ctx.globalAlpha = 0.78;
+    ctx.globalAlpha = 0.82;
 
-    // Wing blob — two lobes (upper big, lower small) for butterfly,
-    // single elongated lobe for dragonfly.
-    let pts;
+    // ── Upper (large) wing — sweeps up-and-out from the shoulder ──
+    let upper;
     if (style === 'dragonfly') {
-      pts = [
-        [cx,                                 cy],
-        [cx + sign * wingW * 0.30,           cy - wingLen * 0.55],
-        [cx + sign * wingW * 0.95,           cy - wingLen * 0.65],
-        [cx + sign * wingW * 1.10,           cy - wingLen * 0.10],
-        [cx + sign * wingW * 0.85,           cy + wingLen * 0.40],
-        [cx + sign * wingW * 0.30,           cy + wingLen * 0.10],
+      upper = [
+        [cx + sign * wingW * 0.05, cy - wingLen * 0.05],
+        [cx + sign * wingW * 0.30, cy - wingLen * 0.65],
+        [cx + sign * wingW * 0.95, cy - wingLen * 0.75],
+        [cx + sign * wingW * 1.20, cy - wingLen * 0.30],
+        [cx + sign * wingW * 0.85, cy + wingLen * 0.05],
+        [cx + sign * wingW * 0.30, cy - wingLen * 0.10],
       ];
-    } else { // butterfly
-      pts = [
-        [cx,                                 cy],
-        [cx + sign * wingW * 0.50,           cy - wingLen * 0.80],
-        [cx + sign * wingW * 1.10,           cy - wingLen * 0.45],
-        [cx + sign * wingW * 1.05,           cy + wingLen * 0.10],
-        [cx + sign * wingW * 0.85,           cy + wingLen * 0.55],
-        [cx + sign * wingW * 0.40,           cy + wingLen * 0.45],
-        [cx + sign * wingW * 0.20,           cy + wingLen * 0.15],
+    } else { // butterfly upper
+      upper = [
+        [cx + sign * wingW * 0.05, cy - wingLen * 0.10],
+        [cx + sign * wingW * 0.45, cy - wingLen * 0.85],
+        [cx + sign * wingW * 1.00, cy - wingLen * 0.65],
+        [cx + sign * wingW * 1.15, cy - wingLen * 0.25],
+        [cx + sign * wingW * 0.95, cy + wingLen * 0.05],
+        [cx + sign * wingW * 0.50, cy - wingLen * 0.10],
       ];
     }
-
     const grad = ctx.createRadialGradient(
-      cx + sign * wingW * 0.5, cy - wingLen * 0.2,  wingW * 0.2,
-      cx + sign * wingW * 0.5, cy - wingLen * 0.2,  wingW * 1.0,
+      cx + sign * wingW * 0.6, cy - wingLen * 0.4,  wingW * 0.2,
+      cx + sign * wingW * 0.6, cy - wingLen * 0.4,  wingW * 1.1,
     );
-    grad.addColorStop(0, hexToRGBA(inner, 0.85));
-    grad.addColorStop(1, hexToRGBA(outer, 0.55));
-    VC.smoothBlob(ctx, pts, grad, hexToRGBA(veinC, 0.7), 1.2, 0.6);
+    grad.addColorStop(0,   hexToRGBA(inner, 0.92));
+    grad.addColorStop(0.7, hexToRGBA(outer, 0.65));
+    grad.addColorStop(1,   hexToRGBA(outer, 0.30));
+    VC.smoothBlob(ctx, upper, grad, hexToRGBA(veinC, 0.8), 1.4, 0.55);
 
-    // Vein detail
+    // ── Lower (smaller) wing — only butterfly style ──
+    if (style !== 'dragonfly') {
+      const lower = [
+        [cx + sign * wingW * 0.10, cy + wingLen * 0.10],
+        [cx + sign * wingW * 0.55, cy + wingLen * 0.20],
+        [cx + sign * wingW * 0.85, cy + wingLen * 0.55],
+        [cx + sign * wingW * 0.65, cy + wingLen * 0.80],
+        [cx + sign * wingW * 0.20, cy + wingLen * 0.55],
+      ];
+      const lgrad = ctx.createRadialGradient(
+        cx + sign * wingW * 0.5, cy + wingLen * 0.4,  wingW * 0.15,
+        cx + sign * wingW * 0.5, cy + wingLen * 0.4,  wingW * 0.8,
+      );
+      lgrad.addColorStop(0,   hexToRGBA(inner, 0.85));
+      lgrad.addColorStop(1,   hexToRGBA(outer, 0.30));
+      VC.smoothBlob(ctx, lower, lgrad, hexToRGBA(veinC, 0.7), 1.2, 0.55);
+    }
+
+    // ── Vein detail ──
+    ctx.strokeStyle = hexToRGBA(veinC, 0.55);
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.quadraticCurveTo(
-      cx + sign * wingW * 0.6, cy - wingLen * 0.4,
-      cx + sign * wingW * 0.95, cy - wingLen * 0.10,
+      cx + sign * wingW * 0.6, cy - wingLen * 0.45,
+      cx + sign * wingW * 0.95, cy - wingLen * 0.20,
     );
-    ctx.strokeStyle = hexToRGBA(veinC, 0.45);
-    ctx.lineWidth = 1.0;
     ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo(
+      cx + sign * wingW * 0.55, cy - wingLen * 0.20,
+      cx + sign * wingW * 1.00, cy - wingLen * 0.05,
+    );
+    ctx.stroke();
+
+    // Iridescent shimmer dot near the wing tip
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    VC.oval(ctx,
+      cx + sign * wingW * 0.85, cy - wingLen * 0.45,
+      wingW * 0.10, wingW * 0.06, '#ffffff', null);
+    ctx.restore();
+
     ctx.restore();
   }
 }
@@ -124,13 +156,20 @@ function generateFrame(config, animationName, frameOffset) {
     before(ctx, rig) {
       // Glow halo BEHIND the body
       drawGlow(ctx, rig, glowPal, glowInten);
-      // Back pair of wings (large, behind body)
+      // Wings ALWAYS render behind the body when facing (south) or facing
+      // away (north) — both wings are anatomically behind the shoulders.
+      // For side views the back wing draws here; the near-wing tip will
+      // also be drawn on top via afterHead so it can overlap the body.
       drawWings(ctx, rig, wingPal, wingStyle, wingSize, direction, fIdx);
     },
     afterHead(ctx, rig) {
-      // Front pair of wings (overlay tip in front of shoulder for depth)
+      // Side views only: a faint front overlay so the near-wing tip
+      // appears to wrap slightly past the shoulder. South / North views
+      // skip this — both wings sit fully behind the body and adding a
+      // forward layer there breaks the silhouette.
+      if (direction !== 'west' && direction !== 'east') return;
       ctx.save();
-      ctx.globalAlpha = 0.45;
+      ctx.globalAlpha = 0.35;
       drawWings(ctx, rig, wingPal, wingStyle, wingSize, direction, fIdx + 1);
       ctx.restore();
     },

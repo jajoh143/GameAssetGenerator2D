@@ -31,6 +31,13 @@ function outlineW(rig, factor = 0.18) {
 /**
  * Draw a 2-segment limb (shoulder → elbow → hand, or hip → knee → foot)
  * with tapered radii for a hand-drawn feel.
+ *
+ * Shading layers (back-to-front):
+ *   1. base gradient along limb axis (highlight → base → shadow)
+ *   2. cross-axis form-shadow gradient (lit on top-left, shadowed on
+ *      bottom-right) — gives the limb a cylindrical feel
+ *   3. rim highlight on the top-left edge
+ *   4. small AO blob at the joint (elbow/knee crease)
  */
 function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
   const r0 = opts.rootR || 1.0;
@@ -38,17 +45,58 @@ function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
   const r2 = opts.tipR  || 0.75;
   const lineWidth = opts.lineWidth || 1.4;
 
-  // Body fill (3-stop gradient along the limb axis)
+  // 1. Base axial gradient (lighter toward root, darker toward tip — useful
+  // when limbs hang down so the foot is darker than the hip).
   const grad = ctx.createLinearGradient(root.x, root.y, tip.x, tip.y);
   grad.addColorStop(0,   palette.highlight);
-  grad.addColorStop(0.5, palette.base);
+  grad.addColorStop(0.55, palette.base);
   grad.addColorStop(1,   palette.shadow || palette.base);
 
-  VC.limb(ctx, root.x, root.y, r0, mid.x, mid.y, r1, grad, palette.outline || '#000', lineWidth);
-  VC.limb(ctx, mid.x,  mid.y,  r1, tip.x, tip.y, r2, grad, palette.outline || '#000', lineWidth);
+  const outline = palette.outline || '#000';
+  VC.limb(ctx, root.x, root.y, r0, mid.x, mid.y, r1, grad, outline, lineWidth);
+  VC.limb(ctx, mid.x,  mid.y,  r1, tip.x, tip.y, r2, grad, outline, lineWidth);
 
-  // Joint cap (smooths the elbow/knee bend)
-  VC.oval(ctx, mid.x, mid.y, r1, r1, palette.shadow || palette.base, null);
+  // 2. Cylindrical form shadow — overlay a cross-axis dark band on the
+  // bottom-right side so the limb reads as a tube, not a flat ribbon.
+  if (palette.shadow) {
+    const seg = (a, b, ra, rb) => {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;       // perpendicular unit (right side)
+      const offX = nx * ra * 0.55, offY = ny * ra * 0.55;
+      const formGrad = ctx.createLinearGradient(
+        a.x - nx * ra, a.y - ny * ra,
+        a.x + nx * ra, a.y + ny * ra,
+      );
+      formGrad.addColorStop(0,   VC.hexAlpha(palette.shadow, 0));
+      formGrad.addColorStop(0.45, VC.hexAlpha(palette.shadow, 0));
+      formGrad.addColorStop(1,   VC.hexAlpha(palette.shadow, 0.55));
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-atop';
+      VC.limb(ctx, a.x, a.y, ra, b.x, b.y, rb, formGrad, null, 0);
+      ctx.restore();
+      // Rim highlight on the lit edge
+      const rimGrad = ctx.createLinearGradient(
+        a.x - nx * ra, a.y - ny * ra,
+        a.x + nx * ra, a.y + ny * ra,
+      );
+      rimGrad.addColorStop(0,   VC.hexAlpha(palette.highlight, 0.55));
+      rimGrad.addColorStop(0.35, VC.hexAlpha(palette.highlight, 0));
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-atop';
+      VC.limb(ctx, a.x, a.y, ra, b.x, b.y, rb, rimGrad, null, 0);
+      ctx.restore();
+      void offX; void offY;
+    };
+    seg(root, mid, r0, r1);
+    seg(mid,  tip, r1, r2);
+  }
+
+  // 3. Joint AO + cap — a small dark oval that smooths the bend AND
+  // hints at how the limb folds at the joint.
+  VC.oval(ctx, mid.x, mid.y, r1 * 0.95, r1 * 0.92, palette.shadow || palette.base, null);
+  VC.castShadow(ctx, mid.x + r1 * 0.20, mid.y + r1 * 0.30,
+    r1 * 0.65, r1 * 0.45, 0.35, palette.outline);
 }
 
 /**
@@ -133,28 +181,85 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     sw * 2,       pelvis.y - chest.y,
     clothing,
   );
-  VC.smoothBlob(ctx, pts, grad, clothing.outline || '#000', outlineW(rig, 0.22), 0.55);
+  // Lay down the blob path so subsequent shading layers can re-issue it.
+  blobPath(ctx, pts, 0.55);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = clothing.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.22);
+  ctx.stroke();
 
-  // Collar / neck-line accent
+  // 2. Form shadow on the right side — overlay a vertical dark band so
+  // the torso reads as a 3D barrel / cylinder.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.55;
+  const formGrad = ctx.createLinearGradient(
+    chest.x - sw, 0,
+    chest.x + sw, 0,
+  );
+  formGrad.addColorStop(0,   VC.hexAlpha(clothing.shadow || '#000', 0));
+  formGrad.addColorStop(0.55, VC.hexAlpha(clothing.shadow || '#000', 0));
+  formGrad.addColorStop(1,   VC.hexAlpha(clothing.deep_shadow || clothing.shadow || '#000', 0.85));
+  ctx.fillStyle = formGrad;
+  blobPath(ctx, pts, 0.55);
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Rim highlight along the upper-left chest edge.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.40;
+  const rimGrad = ctx.createLinearGradient(
+    chest.x - sw,        chest.y,
+    chest.x + sw * 0.20, chest.y + (pelvis.y - chest.y) * 0.4,
+  );
+  rimGrad.addColorStop(0,   VC.hexAlpha(clothing.highlight || '#fff', 0.85));
+  rimGrad.addColorStop(0.5, VC.hexAlpha(clothing.highlight || '#fff', 0));
+  ctx.fillStyle = rimGrad;
+  blobPath(ctx, pts, 0.55);
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Cast shadow under the neck/collar onto the upper chest.
+  if (direction !== 'north') {
+    VC.castShadow(ctx,
+      neck.x, chest.y + rig.limbR * 0.55,
+      sw * 0.55, rig.limbR * 0.40,
+      0.40, clothing.outline);
+  }
+
+  // 5. Waist AO crease — a faint horizontal band at the narrowest point
+  // suggesting the body bends.
+  if (direction === 'south' || direction === 'north') {
+    VC.castShadow(ctx,
+      chest.x, wy + (pelvis.y - wy) * 0.35,
+      wWaist * 0.95, rig.limbR * 0.18,
+      0.30, clothing.deep_shadow || clothing.outline);
+  }
+
+  // Collar / neck-line accent (drawn after shading so it stays visible)
   if (clothing.collar && (direction === 'south' || direction === 'west' || direction === 'east')) {
     ctx.beginPath();
     ctx.moveTo(neck.x - rig.limbR * 1.2, chest.y + 1);
     ctx.quadraticCurveTo(neck.x, chest.y + rig.limbR * 0.7, neck.x + rig.limbR * 1.2, chest.y + 1);
-    ctx.lineWidth = outlineW(rig, 0.18);
+    ctx.lineWidth = outlineW(rig, 0.20);
     ctx.strokeStyle = clothing.collar;
     ctx.stroke();
   }
 
-  // A subtle crease down the chest centerline (only south view)
+  // 6. Centerline crease (south view) — the seam where shirt buttons / zip
+  // would run. Subtle but adds depth.
   if (direction === 'south' && opts.chestCrease !== false) {
+    ctx.save();
     ctx.beginPath();
     ctx.moveTo(chest.x, chest.y + rig.limbR * 0.4);
     ctx.lineTo(chest.x, pelvis.y - rig.limbR * 0.2);
     ctx.lineWidth = outlineW(rig, 0.10);
-    ctx.strokeStyle = clothing.shadow || clothing.outline;
-    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.globalAlpha = 0.45;
     ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 }
 
@@ -201,24 +306,56 @@ function drawNeck(ctx, rig, skin) {
 
 function drawHead(ctx, rig, skin) {
   const { head } = rig;
+
+  // 1. Base ovoid with a top-left → bottom-right radial gradient.
   const grad = VC.radial(
     ctx,
-    head.x - head.r * 0.25, head.y - head.r * 0.3,
-    head.r * 1.5,
+    head.x - head.r * 0.30, head.y - head.r * 0.40,
+    head.r * 1.6,
     skin.highlight,
     skin.base,
   );
   VC.oval(ctx, head.x, head.y, head.r * 0.92, head.r,
-    grad, skin.outline, outlineW(rig, 0.20));
+    grad, skin.outline, outlineW(rig, 0.22));
 
-  // Soft cheek shadow on the bottom-right (south view)
+  // 2. Core shadow — a darker crescent on the bottom-right that defines
+  // the terminator between lit and shadowed cheek.
+  VC.coreShadowOval(ctx, head.x, head.y, head.r * 0.92, head.r,
+    skin.shadow, 0.55);
+
+  // 3. Reflected (bounced) light — a faint warm bloom on the bottom-left
+  // edge, simulating light bouncing off the chest/clothing.
+  ctx.save();
+  ctx.globalAlpha = 0.20;
+  const bounce = ctx.createRadialGradient(
+    head.x - head.r * 0.55, head.y + head.r * 0.45, 0,
+    head.x - head.r * 0.55, head.y + head.r * 0.45, head.r * 0.85,
+  );
+  bounce.addColorStop(0, skin.highlight);
+  bounce.addColorStop(1, VC.hexAlpha(skin.highlight, 0));
+  ctx.fillStyle = bounce;
+  ctx.beginPath();
+  ctx.ellipse(head.x, head.y, head.r * 0.92, head.r, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Cheek blush — only south view (faces camera, blush reads).
   if (rig.direction === 'south') {
     ctx.save();
-    ctx.globalAlpha = 0.35;
-    VC.oval(ctx, head.x + head.r * 0.25, head.y + head.r * 0.25,
-      head.r * 0.6, head.r * 0.45, skin.shadow, null);
+    ctx.globalAlpha = 0.18;
+    VC.oval(ctx, head.x + head.r * 0.42, head.y + head.r * 0.20,
+      head.r * 0.22, head.r * 0.14, '#c84848', null);
+    VC.oval(ctx, head.x - head.r * 0.42, head.y + head.r * 0.20,
+      head.r * 0.22, head.r * 0.14, '#c84848', null);
     ctx.restore();
   }
+
+  // 5. Cast shadow under the chin onto the neck — drawn AFTER the head,
+  // so it lands on the neck (which was rendered before the head).
+  VC.castShadow(ctx,
+    head.x, head.y + head.r * 0.95,
+    head.r * 0.55, head.r * 0.22,
+    0.45, skin.outline);
 }
 
 /**
@@ -348,22 +485,117 @@ function drawHair(ctx, rig, hair, style) {
     head.x + nx * head.r * scaleX + shiftX,
     head.y + ny * head.r,
   ]);
-  const grad = VC.vGradient(
-    ctx,
-    head.x - head.r, head.y - head.r * 1.2,
-    0, head.r * 2.2,
-    hair,
-  );
-  VC.smoothBlob(ctx, pts, grad, hair.shadow || '#000', outlineW(rig, 0.18), 0.55);
 
-  // A subtle inner-shadow streak for depth (curly + medium + long)
-  if (['curly', 'medium', 'long'].includes(style)) {
+  // 1. Base hair fill — diagonal gradient (highlight on top-left, shadow
+  // bottom-right) so the hair mass reads as 3D, not flat.
+  const grad = ctx.createLinearGradient(
+    head.x - head.r * 1.1, head.y - head.r * 1.3,
+    head.x + head.r * 1.1, head.y + head.r * 0.6,
+  );
+  grad.addColorStop(0,   hair.highlight || hair.base);
+  grad.addColorStop(0.5, hair.base);
+  grad.addColorStop(1,   hair.shadow || hair.base);
+  VC.smoothBlob(ctx, pts, grad, hair.shadow || '#000', outlineW(rig, 0.20), 0.55);
+
+  // 2. Form shadow blob on the bottom-right of the hair mass — a soft
+  // crescent that matches the head's core shadow direction.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.50;
+  const formShadow = ctx.createRadialGradient(
+    head.x + head.r * 0.55, head.y - head.r * 0.20, 0,
+    head.x + head.r * 0.55, head.y - head.r * 0.20, head.r * 1.4,
+  );
+  formShadow.addColorStop(0,   VC.hexAlpha(hair.shadow || '#000', 0.0));
+  formShadow.addColorStop(0.45, VC.hexAlpha(hair.shadow || '#000', 0.6));
+  formShadow.addColorStop(1,   VC.hexAlpha(hair.shadow || '#000', 0.0));
+  ctx.fillStyle = formShadow;
+  blobPath(ctx, pts, 0.55);
+  ctx.fill();
+  ctx.restore();
+
+  // 3. Rim highlight along the top-left silhouette — gives the hair a
+  // glossy "anime"-style sheen.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = 0.55;
+  const rim = ctx.createLinearGradient(
+    head.x - head.r * 1.1, head.y - head.r * 1.3,
+    head.x + head.r * 0.0, head.y - head.r * 0.4,
+  );
+  rim.addColorStop(0,   VC.hexAlpha(hair.highlight || '#fff', 0.85));
+  rim.addColorStop(0.6, VC.hexAlpha(hair.highlight || '#fff', 0.0));
+  ctx.fillStyle = rim;
+  blobPath(ctx, pts, 0.55);
+  ctx.fill();
+  ctx.restore();
+
+  // 4. Strand streaks — a couple of subtle dark lines in the mid-tone
+  // that suggest individual hair strands. Skipped for very-short / buzzed.
+  if (['medium', 'long', 'curly', 'topknot'].includes(style)) {
     ctx.save();
-    ctx.globalAlpha = 0.4;
-    VC.oval(ctx, head.x, head.y - head.r * 0.85, head.r * 0.55, head.r * 0.25,
-      hair.shadow, null);
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.globalAlpha = 0.30;
+    ctx.strokeStyle = hair.shadow || '#000';
+    ctx.lineWidth = head.r * 0.06;
+    ctx.lineCap = 'round';
+    for (const offsets of [
+      [-0.45, -0.95, -0.10, -0.50],
+      [ 0.25, -0.85,  0.55, -0.30],
+      [-0.05, -1.05,  0.10, -0.55],
+    ]) {
+      ctx.beginPath();
+      ctx.moveTo(head.x + offsets[0] * head.r * scaleX + shiftX,
+                 head.y + offsets[1] * head.r);
+      ctx.quadraticCurveTo(
+        head.x + ((offsets[0] + offsets[2]) / 2) * head.r * scaleX + shiftX,
+        head.y + ((offsets[1] + offsets[3]) / 2 - 0.15) * head.r,
+        head.x + offsets[2] * head.r * scaleX + shiftX,
+        head.y + offsets[3] * head.r);
+      ctx.stroke();
+    }
     ctx.restore();
   }
+
+  // 5. Cast shadow on the FOREHEAD — the hair fringe drops a shadow onto
+  // the upper face. This is one of the strongest cues for chibi-style
+  // shading and instantly adds depth.
+  if (direction === 'south') {
+    VC.castShadow(ctx,
+      head.x,                head.y - head.r * 0.45,
+      head.r * 0.78,         head.r * 0.20,
+      0.55, hair.shadow || '#000');
+  } else if (direction === 'west' || direction === 'east') {
+    VC.castShadow(ctx,
+      head.x - (direction === 'west' ? 1 : -1) * head.r * 0.20,
+      head.y - head.r * 0.45,
+      head.r * 0.65, head.r * 0.18,
+      0.50, hair.shadow || '#000');
+  }
+}
+
+// Issue Catmull-Rom bezier commands for a closed blob into the current
+// drawing context. The active path is left on the ctx — caller decides
+// whether to fill / stroke / clip / etc.
+//
+// (We can't use Path2D — @napi-rs/canvas does not expose it.)
+function blobPath(ctx, points, tension = 0.5) {
+  if (points.length < 3) return;
+  const n = points.length;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const p0 = points[(i - 1 + n) % n];
+    const p1 = points[i];
+    const p2 = points[(i + 1) % n];
+    const p3 = points[(i + 2) % n];
+    if (i === 0) ctx.moveTo(p1[0], p1[1]);
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 3;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 3;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 3;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 3;
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
+  }
+  ctx.closePath();
 }
 
 // ---------------------------------------------------------------------------
