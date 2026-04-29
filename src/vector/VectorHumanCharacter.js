@@ -66,11 +66,20 @@ function resolveColors(config) {
 
   // Style-driven clothing detail flags (lapels, pockets, sleeve cuff bands).
   const cs = config.clothingStyle || 'jacket';
+  // Muscular silhouette is drawn for explicit muscular / heavy builds OR
+  // for species that default to one (demon → muscular, lizardfolk → heavy).
+  const buildKey = config.build ||
+    (config.type === 'demon' ? 'muscular' :
+     config.type === 'lizardfolk' ? 'heavy' : 'average');
   const detailFlags = {
     lapels:      ['jacket', 'bomber', 'coat'].includes(cs),
     pockets:     ['jacket', 'bomber', 'coat', 'apron', 'vest'].includes(cs),
     cuffBand:    ['jacket', 'bomber', 'coat', 'hoodie'].includes(cs),
     chestPocket: ['jacket', 'bomber', 'coat', 'shirt'].includes(cs),
+    // Pec V is drawn on bare-chest / sleeveless styles where it makes
+    // anatomical sense — tank, vest, tshirt — for the muscular builds.
+    muscular:    (buildKey === 'muscular' || buildKey === 'heavy') &&
+                 ['tank', 'vest', 'tshirt'].includes(cs),
   };
 
   // Optional accessory palettes (hood, cape, shoulder pads). Each falls
@@ -179,14 +188,14 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const rFwd = offsets.rightLegFwd || 0;
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
-      { rootR: rig.limbR, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'south');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
-      { rootR: rig.limbR, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'south');
@@ -194,7 +203,9 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   if (lFwd >= rFwd) { drawR(); drawL(); }
   else              { drawL(); drawR(); }
 
-  // Body
+  // Body — pelvis bridge first so the legs visibly attach to the
+  // hip line, then the torso draws over the upper portion.
+  Body.drawPelvisBridge(ctx, rig, colors.pants);
   Body.drawTorso(ctx, rig, colors.clothing, colors.detailFlags);
   if (config.belt !== false) Body.drawBelt(ctx, rig, colors.belt);
 
@@ -296,14 +307,14 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   const rFwd = offsets.rightLegFwd || 0;
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
-      { rootR: rig.limbR, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'north');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
-      { rootR: rig.limbR, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'north');
@@ -311,6 +322,7 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   if (lFwd >= rFwd) { drawR(); drawL(); }
   else              { drawL(); drawR(); }
 
+  Body.drawPelvisBridge(ctx, rig, colors.pants);
   Body.drawTorso(ctx, rig, colors.clothing, Object.assign({ chestCrease: false }, colors.detailFlags));
   if (config.belt !== false) Body.drawBelt(ctx, rig, colors.belt);
 
@@ -377,7 +389,7 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
     const knee = side === 'L' ? rig.kneeL : rig.kneeR;
     const foot = side === 'L' ? rig.footL : rig.footR;
     Body.drawLimb(ctx, hip, knee, foot, colors.pants,
-      { rootR: rig.limbR, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     // Outside-leg fold/seam line — only really reads in profile view.
     Body.drawPantFold(ctx, hip, knee, foot, rig, colors.pants);
     Body.drawPantCuff(ctx, foot, knee, rig, colors.pants);
@@ -411,7 +423,9 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   };
   drawArm(backArm);
 
-  // Torso
+  // Torso — pelvis bridge first so the legs visibly attach to the hip
+  // line in profile.
+  Body.drawPelvisBridge(ctx, rig, colors.pants);
   Body.drawTorso(ctx, rig, colors.clothing, colors.detailFlags);
 
   // Front leg / front arm

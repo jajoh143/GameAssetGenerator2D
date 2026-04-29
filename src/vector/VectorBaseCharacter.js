@@ -197,6 +197,83 @@ function drawHand(ctx, hand, skin, rig, opts = {}) {
  *   2. A lighter inseam shadow on the inside (only meaningful in profile).
  * Together they break up an otherwise flat leg silhouette.
  */
+/**
+ * Pelvis bridge — a small filled pelvis shape in pants color that spans
+ * the hip line, drawn AFTER the legs but BEFORE the torso. The torso
+ * silhouette will overpaint the upper portion, leaving a visible lower-
+ * body wedge that connects the legs to the waist. Without this, narrow
+ * leg roots look detached from the torso and the character reads as
+ * "two tubes hanging under a shirt" — the user-flagged "legs spring out
+ * of nothing" problem.
+ *
+ * Drawn in `pants.base` so the visible lower-body section reads as a
+ * single pants-color zone from the belt down to the shoes.
+ */
+function drawPelvisBridge(ctx, rig, pants) {
+  const { pelvis, chest } = rig;
+  const direction = rig.direction;
+  if (direction === 'west' || direction === 'east') {
+    // Side-view bridge: a small bowl from front-of-pelvis to glute.
+    const sd = pelvis.w * 0.55;
+    const top = pelvis.y - rig.limbR * 1.20;
+    const bot = pelvis.y + rig.limbR * 0.50;
+    ctx.save();
+    ctx.fillStyle = pants.base;
+    ctx.strokeStyle = pants.outline || '#000';
+    ctx.lineWidth = outlineW(rig, 0.30);
+    ctx.beginPath();
+    ctx.moveTo(pelvis.x - sd * 0.85, top);
+    ctx.quadraticCurveTo(pelvis.x - sd * 1.05, pelvis.y, pelvis.x - sd * 0.55, bot);
+    ctx.lineTo(pelvis.x + sd * 0.55, bot);
+    ctx.quadraticCurveTo(pelvis.x + sd * 1.05, pelvis.y, pelvis.x + sd * 0.85, top);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  // South / north: a wedge that bulges from the waist line down to the
+  // groin notch, wider at the hips than at the waist.
+  const hw = pelvis.w / 2;
+  const top = pelvis.y - rig.limbR * 1.40;       // sits well above the leg root
+  const bot = pelvis.y + rig.limbR * 0.55;       // dips into the groin
+  ctx.save();
+  ctx.fillStyle = pants.base;
+  ctx.strokeStyle = pants.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.30);
+  ctx.beginPath();
+  ctx.moveTo(pelvis.x - hw * 0.78, top);
+  ctx.quadraticCurveTo(pelvis.x - hw * 1.10, pelvis.y - rig.limbR * 0.15,
+                       pelvis.x - hw * 0.85, bot);
+  ctx.quadraticCurveTo(pelvis.x, bot - rig.limbR * 0.15,
+                       pelvis.x + hw * 0.85, bot);
+  ctx.quadraticCurveTo(pelvis.x + hw * 1.10, pelvis.y - rig.limbR * 0.15,
+                       pelvis.x + hw * 0.78, top);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Cel shadow on the right side of the pelvis to match the body's
+  // light direction.
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = pants.shadow || pants.base;
+  ctx.beginPath();
+  ctx.moveTo(pelvis.x + hw * 0.20, top);
+  ctx.quadraticCurveTo(pelvis.x + hw * 1.10, pelvis.y, pelvis.x + hw * 0.40, bot);
+  ctx.lineTo(pelvis.x + hw * 0.20, bot);
+  ctx.lineTo(pelvis.x + hw * 0.20, top);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.restore();
+  void chest;
+}
+
+/**
+ * Pelvis bridge — drawn between the legs and the torso to anchor the
+ * legs onto the body silhouette.
+ */
 function drawPantFold(ctx, hip, knee, foot, rig, pants) {
   // Use the seam direction along the hip→foot vector. Bias the line
   // slightly toward the outside (perpendicular to the leg axis).
@@ -475,6 +552,31 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ctx.lineWidth = outlineW(rig, 0.20);
     ctx.strokeStyle = clothing.collar;
     ctx.stroke();
+  }
+
+  // 5a. Pectoral V — a thin dark line splitting the chest plane down the
+  // sternum. Only on muscular / heavy builds (so most NPCs stay smooth-
+  // chested). Sells the broad-shouldered warrior silhouette.
+  if (direction === 'south' && opts.muscular) {
+    ctx.save();
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = outlineW(rig, 0.12);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    const vTop = chest.y + limbR * 0.45;
+    const vBot = chest.y + limbR * 1.55;
+    ctx.moveTo(chest.x, vTop);
+    ctx.lineTo(chest.x, vBot);
+    // Small wings at the bottom suggesting the pec division curve out.
+    ctx.moveTo(chest.x, vBot);
+    ctx.quadraticCurveTo(chest.x - sw * 0.18, vBot + limbR * 0.15,
+                         chest.x - sw * 0.32, vBot + limbR * 0.05);
+    ctx.moveTo(chest.x, vBot);
+    ctx.quadraticCurveTo(chest.x + sw * 0.18, vBot + limbR * 0.15,
+                         chest.x + sw * 0.32, vBot + limbR * 0.05);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // 5b. Chest plane — a soft horizontal shadow under the shoulder line
@@ -989,29 +1091,42 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
 
     ctx.restore(); // clip
 
-    // 3. Upper-lid (lash) — a thicker dark stroke that hugs the top of the
-    // eye, with a small flick at the outer corner.
+    // 3. Upper-lid (lash) — a thicker dark stroke that hugs the top of
+    // the eye, with a small flick at the OUTER corner. Each eye's outer
+    // corner is on its own outer side: left eye's outer is to the left,
+    // right eye's outer is to the right. The lash arc therefore needs
+    // to mirror per side so both eyes flick away from the nose, not
+    // both flicking the same direction (which produced the asymmetric
+    // "one heavy lid, one light lid" look).
     ctx.save();
     ctx.strokeStyle = lashColor;
     ctx.lineWidth   = Math.max(1.4, eyeRY * 0.35);
     ctx.lineCap     = 'round';
     ctx.beginPath();
-    ctx.moveTo(ex - eyeRX * 0.95, ey - eyeRY * 0.20);
-    ctx.quadraticCurveTo(ex, ey - eyeRY * 1.05, ex + eyeRX * 0.95, ey - eyeRY * 0.10);
-    // Outer-corner flick
-    ctx.quadraticCurveTo(ex + eyeRX * 1.05, ey - eyeRY * 0.05,
-                         ex + eyeRX * 1.10 * sign, ey - eyeRY * 0.30 * (sign > 0 ? 1 : 1));
+    // Inner corner (toward the nose, opposite the sign) → outer corner
+    // (away from the nose, in the sign direction).
+    const innerX = ex - eyeRX * 0.95 * sign;       // toward nose
+    const outerX = ex + eyeRX * 0.95 * sign;       // outer
+    ctx.moveTo(innerX, ey - eyeRY * 0.10);
+    ctx.quadraticCurveTo(ex, ey - eyeRY * 1.05, outerX, ey - eyeRY * 0.20);
+    // Outer-corner flick — extends the lash slightly past the outer
+    // corner with a small upward kick.
+    ctx.quadraticCurveTo(
+      ex + eyeRX * 1.05 * sign, ey - eyeRY * 0.05,
+      ex + eyeRX * 1.15 * sign, ey - eyeRY * 0.35,
+    );
     ctx.stroke();
     ctx.restore();
 
-    // 4. Lower lid — thin soft line (subtler than the lash).
+    // 4. Lower lid — thin soft line (subtler than the lash). Mirrored
+    // per side to match the upper lash.
     ctx.save();
     ctx.strokeStyle = lashColor;
     ctx.lineWidth   = Math.max(0.8, eyeRY * 0.18);
     ctx.globalAlpha = 0.7;
     ctx.beginPath();
-    ctx.moveTo(ex - eyeRX * 0.85, ey + eyeRY * 0.20);
-    ctx.quadraticCurveTo(ex, ey + eyeRY * 0.95, ex + eyeRX * 0.85, ey + eyeRY * 0.30);
+    ctx.moveTo(ex - eyeRX * 0.85 * sign, ey + eyeRY * 0.30);
+    ctx.quadraticCurveTo(ex, ey + eyeRY * 0.95, ex + eyeRX * 0.85 * sign, ey + eyeRY * 0.20);
     ctx.stroke();
     ctx.restore();
 
@@ -2132,6 +2247,7 @@ module.exports = {
   drawCuff,
   drawPantCuff,
   drawPantFold,
+  drawPelvisBridge,
   drawTorso,
   drawBelt,
   drawNeck,

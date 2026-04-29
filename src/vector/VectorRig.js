@@ -148,7 +148,19 @@ function buildRig(config, direction, offsets) {
   // strip of empty floor below.
   const groundY = FRAME_H * 0.95;
 
-  const headR    = FRAME_H * d.headR;
+  // Per-species head-size scaling — small tweaks to make each species
+  // read distinctly without overhauling the rig:
+  //   lizardfolk: bigger skull to support the dragon snout overlay
+  //   fairy:      smaller, daintier head for the pixie aesthetic
+  //   goblin:     slightly smaller (matches the "small + scrappy" build)
+  //   others:     baseline
+  const HEAD_SCALE = {
+    lizardfolk: 1.10,
+    fairy:      0.88,
+    goblin:     0.92,
+  };
+  const headScale = (config && HEAD_SCALE[config.type]) || 1.0;
+  const headR    = FRAME_H * d.headR * headScale;
   const torsoH   = FRAME_H * d.torsoH;
   const legH     = FRAME_H * d.legH;
   const neckLen  = FRAME_H * d.neckLen;
