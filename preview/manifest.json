@@ -342,6 +342,31 @@
         "fairyDress": "violet",
         "glowColor": "violet"
       }
+    },
+    {
+      "name": "human_warrior",
+      "file": "../output/human_warrior_spritesheet.png",
+      "config": {
+        "type": "human",
+        "skin": "tan",
+        "hair": "dark_brown",
+        "hairStyle": "short",
+        "beardStyle": "full",
+        "eyes": "brown",
+        "build": "heavy",
+        "clothingStyle": "jacket",
+        "clothingColor": "charcoal",
+        "pants": "pants_black",
+        "shoes": "shoe_black",
+        "hood": true,
+        "hoodColor": "black",
+        "cape": true,
+        "capeColor": "red",
+        "shoulderPads": true,
+        "shoulderColor": "grey",
+        "gloves": true,
+        "gloveColor": "black"
+      }
     }
   ],
   "weapons": [
@@ -1443,6 +1468,31 @@
           "wingColor": "twilight",
           "fairyDress": "violet",
           "glowColor": "violet"
+        }
+      },
+      {
+        "name": "human_warrior",
+        "file": "../output/vector/human_warrior_vector_spritesheet.png",
+        "config": {
+          "type": "human",
+          "skin": "tan",
+          "hair": "dark_brown",
+          "hairStyle": "short",
+          "beardStyle": "full",
+          "eyes": "brown",
+          "build": "heavy",
+          "clothingStyle": "jacket",
+          "clothingColor": "charcoal",
+          "pants": "pants_black",
+          "shoes": "shoe_black",
+          "hood": true,
+          "hoodColor": "black",
+          "cape": true,
+          "capeColor": "red",
+          "shoulderPads": true,
+          "shoulderColor": "grey",
+          "gloves": true,
+          "gloveColor": "black"
         }
       }
     ]
