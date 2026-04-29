@@ -108,7 +108,9 @@ function generateFrame(config, animationName, frameOffset) {
       } else {
         drawEar(ctx, rig, -1, colors.skin);
       }
-      if (direction === 'south') drawFangs(ctx, rig);
+      // (Old drawFangs removed — the proper wide spiky-teeth mouth is
+      // drawn by drawMouthSouth/drawMouthWest in VectorBaseCharacter,
+      // which dispatches on rig.species === 'goblin'.)
 
       // Optional horns (reuse demon horn renderer with goblin params)
       if (hornStyle && hornStyle !== 'none') {
@@ -125,7 +127,7 @@ function generateFrame(config, animationName, frameOffset) {
 
   const { canvas, ctx } = VC.makeCanvas(FRAME_W, FRAME_H);
   VC.clear(ctx, FRAME_W, FRAME_H);
-  const meta = Human.frameMeta(animationName, frameOffset);
+  const meta = Human.frameMeta(animationName, frameOffset, config);
   switch (direction) {
     case 'south': Human.drawSouth(ctx, config, frameOffset, hooks, meta); break;
     case 'north': Human.drawNorth(ctx, config, frameOffset, hooks, meta); break;

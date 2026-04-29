@@ -149,6 +149,34 @@ function drawHand(ctx, hand, skin, rig, opts = {}) {
 }
 
 /**
+ * Pant fold / seam — a single soft vertical line down the side of a leg
+ * in profile view. Suggests the outer-leg seam of jeans / trousers and
+ * adds form to the otherwise-flat side-view leg.
+ */
+function drawPantFold(ctx, hip, knee, foot, rig, pants) {
+  // Use the seam direction along the hip→foot vector. Bias the line
+  // slightly toward the outside (perpendicular to the leg axis).
+  const dx1 = knee.x - hip.x, dy1 = knee.y - hip.y;
+  const dx2 = foot.x - knee.x, dy2 = foot.y - knee.y;
+  // Outside perpendicular: rotate +90° from the hip→knee vector.
+  const len1 = Math.hypot(dx1, dy1) || 1;
+  const ox = -dy1 / len1, oy = dx1 / len1;
+  const off = rig.limbR * 0.18;
+  ctx.save();
+  ctx.strokeStyle = pants.deep_shadow || pants.shadow || pants.outline || '#222';
+  ctx.lineWidth = Math.max(0.8, rig.limbR * 0.10);
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(hip.x + ox * off, hip.y + oy * off);
+  ctx.lineTo(knee.x + ox * off, knee.y + oy * off);
+  ctx.lineTo(foot.x + ox * off * 0.6, foot.y + oy * off * 0.6);
+  ctx.stroke();
+  ctx.restore();
+  void dx2; void dy2;
+}
+
+/**
  * Pant cuff — a slightly darker band at the ankle to suggest a hem,
  * similar in spirit to drawCuff but for legs. Direction comes from the
  * unit vector along the lower leg so the band orients perpendicular.
@@ -758,7 +786,49 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
     ctx.restore();
   }
 
-  // Optional: tiny mouth — a soft curve for personality, drawn at lip height.
+  // Mouth is drawn separately (skipped for species that draw their own —
+  // goblin gets fanged grin, lizardfolk's snout covers the mouth area).
+  drawMouthSouth(ctx, rig, opts);
+}
+
+/**
+ * Mouth (south view). Style depends on rig.species + opts.open.
+ *   • human/demon/fairy + closed: soft smile curve.
+ *   • human/demon/fairy + open  : small filled oval (battle cry).
+ *   • goblin                    : wide thin mouth with spiky teeth.
+ *   • lizardfolk                : skipped — handled by drawSnout overlay.
+ */
+function drawMouthSouth(ctx, rig, opts = {}) {
+  const { head } = rig;
+  if (rig.species === 'lizardfolk') return;
+
+  if (rig.species === 'goblin') {
+    drawGoblinMouthSouth(ctx, rig, opts);
+    return;
+  }
+
+  if (opts.open) {
+    // Open battle-cry mouth — a small dark oval with a tongue/inner shadow.
+    ctx.save();
+    ctx.fillStyle = '#1a0808';
+    ctx.strokeStyle = '#3a1808';
+    ctx.lineWidth = Math.max(1.0, head.r * 0.05);
+    ctx.beginPath();
+    ctx.ellipse(head.x, head.y + head.r * 0.62, head.r * 0.16, head.r * 0.13,
+      0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    // Tongue
+    ctx.fillStyle = '#a83a40';
+    ctx.beginPath();
+    ctx.ellipse(head.x, head.y + head.r * 0.66, head.r * 0.10, head.r * 0.06,
+      0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  // Soft smile
   ctx.save();
   ctx.strokeStyle = '#3a1808';
   ctx.lineWidth = Math.max(1.0, head.r * 0.04);
@@ -773,9 +843,71 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
 }
 
 /**
+ * Goblin's wide thin mouth with spiky teeth (south view).
+ */
+function drawGoblinMouthSouth(ctx, rig, opts = {}) {
+  const { head } = rig;
+  const cx = head.x;
+  const cy = head.y + head.r * 0.55;
+  const w  = head.r * 0.55;        // wide mouth
+  const h  = head.r * (opts.open ? 0.14 : 0.05);  // open during attack
+
+  // Mouth opening (dark interior)
+  ctx.save();
+  ctx.fillStyle = '#1a0a04';
+  ctx.strokeStyle = '#1a0a04';
+  ctx.lineWidth = Math.max(1.0, head.r * 0.05);
+  ctx.beginPath();
+  ctx.moveTo(cx - w, cy);
+  ctx.quadraticCurveTo(cx, cy + h, cx + w, cy);
+  ctx.quadraticCurveTo(cx, cy - h * 0.3, cx - w, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Spiky teeth — alternating sharp triangles along the upper jaw.
+  ctx.fillStyle = '#fffbe0';
+  ctx.strokeStyle = '#1a0a04';
+  ctx.lineWidth = Math.max(0.6, head.r * 0.025);
+  const teethCount = 7;
+  const toothSpan = (w * 2) / (teethCount + 1);
+  for (let i = 1; i <= teethCount; i++) {
+    const tx = cx - w + i * toothSpan;
+    // Alternate up/down sized teeth for a snaggle look
+    const big = i % 2 === 1;
+    const th  = head.r * (big ? 0.10 : 0.06);
+    ctx.beginPath();
+    ctx.moveTo(tx - toothSpan * 0.40, cy - h * 0.10);
+    ctx.lineTo(tx,                    cy - h * 0.10 + th);
+    ctx.lineTo(tx + toothSpan * 0.40, cy - h * 0.10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Two big fangs — protruding tusks at the corners
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.85, cy - h * 0.10);
+  ctx.lineTo(cx - w * 0.70, cy + h * 0.55 + head.r * 0.04);
+  ctx.lineTo(cx - w * 0.55, cy - h * 0.10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx + w * 0.55, cy - h * 0.10);
+  ctx.lineTo(cx + w * 0.70, cy + h * 0.55 + head.r * 0.04);
+  ctx.lineTo(cx + w * 0.85, cy - h * 0.10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
  * Eye (side view) — single eye on the visible side, plus mouth + nose tip.
  */
-function drawEyeWest(ctx, rig, eyes) {
+function drawEyeWest(ctx, rig, eyes, opts = {}) {
   const { head } = rig;
   const ex = head.x - head.r * 0.42;
   const ey = head.y + head.r * 0.10;
@@ -848,7 +980,77 @@ function drawEyeWest(ctx, rig, eyes) {
     head.r * 0.06, head.r * 0.10, '#1a0e08', null);
   ctx.restore();
 
-  // Mouth — small curve on the visible side
+  drawMouthWest(ctx, rig, opts);
+}
+
+/**
+ * Mouth (side view). Same dispatch logic as drawMouthSouth.
+ */
+function drawMouthWest(ctx, rig, opts = {}) {
+  const { head } = rig;
+  if (rig.species === 'lizardfolk') return;
+
+  if (rig.species === 'goblin') {
+    // Side-view goblin mouth — visible from the side as a wide open
+    // crack with a tooth row.
+    const cx = head.x - head.r * 0.50;
+    const cy = head.y + head.r * 0.55;
+    const w = head.r * 0.45;
+    const h = head.r * (opts.open ? 0.13 : 0.05);
+    ctx.save();
+    ctx.fillStyle = '#1a0a04';
+    ctx.strokeStyle = '#1a0a04';
+    ctx.lineWidth = Math.max(1.0, head.r * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(cx - w, cy);
+    ctx.quadraticCurveTo(cx, cy + h, cx + w, cy);
+    ctx.quadraticCurveTo(cx, cy - h * 0.3, cx - w, cy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Teeth
+    ctx.fillStyle = '#fffbe0';
+    ctx.strokeStyle = '#1a0a04';
+    ctx.lineWidth = Math.max(0.6, head.r * 0.025);
+    for (let i = 0; i < 4; i++) {
+      const tx = cx - w + (i + 0.5) * (w * 2 / 4);
+      const big = i % 2 === 0;
+      const th = head.r * (big ? 0.10 : 0.06);
+      ctx.beginPath();
+      ctx.moveTo(tx - head.r * 0.06, cy - h * 0.10);
+      ctx.lineTo(tx,                 cy - h * 0.10 + th);
+      ctx.lineTo(tx + head.r * 0.06, cy - h * 0.10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    // Protruding fang at the visible corner
+    ctx.beginPath();
+    ctx.moveTo(cx - w * 0.95, cy - h * 0.10);
+    ctx.lineTo(cx - w * 0.80, cy + h * 0.55 + head.r * 0.04);
+    ctx.lineTo(cx - w * 0.65, cy - h * 0.10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
+  if (opts.open) {
+    // Open battle-cry mouth, side view
+    ctx.save();
+    ctx.fillStyle = '#1a0808';
+    ctx.strokeStyle = '#3a1808';
+    ctx.lineWidth = Math.max(1.0, head.r * 0.05);
+    ctx.beginPath();
+    ctx.ellipse(head.x - head.r * 0.50, head.y + head.r * 0.62,
+      head.r * 0.12, head.r * 0.11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
+
   ctx.save();
   ctx.strokeStyle = '#3a1808';
   ctx.lineWidth = Math.max(1.0, head.r * 0.04);
@@ -971,9 +1173,10 @@ function drawHairHalo(ctx, rig, hair, style) {
   if (!blob) return;
   const { head } = rig;
   const direction = rig.direction;
-  const scaleX = (direction === 'west' || direction === 'east') ? 0.62 : 1.05;
-  const shiftX = (direction === 'west') ? head.r * 0.18
-              : (direction === 'east') ? -head.r * 0.18
+  // Stretch the halo across the full head profile in side view.
+  const scaleX = (direction === 'west' || direction === 'east') ? 1.05 : 1.05;
+  const shiftX = (direction === 'west') ? head.r * 0.10
+              : (direction === 'east') ? -head.r * 0.10
               : 0;
   const pts = blob.map(([nx, ny]) => [
     head.x + nx * head.r * scaleX + shiftX,
@@ -994,12 +1197,14 @@ function drawHair(ctx, rig, hair, style) {
   const { head } = rig;
   const direction = rig.direction;
 
-  // Side-view: shift blob so it follows the front-facing temple instead of
-  // wrapping fully around. Accomplish by squashing X by 0.6 and shifting +x
-  // toward the back of the head.
-  const scaleX = (direction === 'west' || direction === 'east') ? 0.62 : 1.0;
-  const shiftX = (direction === 'west') ? head.r * 0.18
-              : (direction === 'east') ? -head.r * 0.18
+  // Side view: hair stretches to cover the full head profile (forehead
+  // → crown → back of skull). Earlier versions squashed the X by 0.62
+  // which hid most of the hair behind the cheek silhouette; the new head
+  // profile is asymmetric (face on the front side, taller skull at the
+  // back) so we use a full-width scale and bias slightly toward the back.
+  const scaleX = (direction === 'west' || direction === 'east') ? 1.05 : 1.0;
+  const shiftX = (direction === 'west') ? head.r * 0.10
+              : (direction === 'east') ? -head.r * 0.10
               : 0;
 
   const pts = blob.map(([nx, ny]) => [
@@ -1195,11 +1400,11 @@ function drawForelock(ctx, rig, hair, style) {
   }
   void yTop; void yBot;
 
-  // Side-view squash — same trick as drawHair so the forelock follows
-  // the visible temple.
-  const scaleX = (direction === 'west' || direction === 'east') ? 0.62 : 1.0;
-  const shiftX = (direction === 'west') ? head.r * 0.18
-              : (direction === 'east') ? -head.r * 0.18
+  // Side view: forelock stretches across the full head profile, biased
+  // toward the front since bangs sit on the forehead.
+  const scaleX = (direction === 'west' || direction === 'east') ? 1.00 : 1.0;
+  const shiftX = (direction === 'west') ? -head.r * 0.05
+              : (direction === 'east') ?  head.r * 0.05
               : 0;
 
   const scaled = pts.map(([nx, ny]) => [
@@ -1351,12 +1556,15 @@ module.exports = {
   drawShoe,
   drawCuff,
   drawPantCuff,
+  drawPantFold,
   drawTorso,
   drawBelt,
   drawNeck,
   drawHead,
   drawEyesSouth,
   drawEyeWest,
+  drawMouthSouth,
+  drawMouthWest,
   drawHair,
   drawHairHalo,
   drawBeard,

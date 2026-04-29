@@ -13,13 +13,15 @@
 const VC = require('./VectorCanvas');
 
 /**
- * Pick the weapon type for an animation, or null if the animation isn't
- * an attack.
+ * Pick the weapon type for an animation. Species can override the default
+ * gun → wand for fey casters.
  */
-function weaponFor(animationName) {
+function weaponFor(animationName, species) {
   if (!animationName) return null;
   if (animationName.startsWith('attack_swing_')) return 'sword';
-  if (animationName.startsWith('attack_shoot_')) return 'gun';
+  if (animationName.startsWith('attack_shoot_')) {
+    return species === 'fairy' ? 'wand' : 'gun';
+  }
   return null;
 }
 
@@ -180,19 +182,111 @@ function drawGun(ctx, handPos, forward, limbR, opts = {}) {
 }
 
 /**
+ * Wand — a thin wooden stick with a glowing crystal/orb at the tip. On
+ * the FIRE frame, a magical bolt streams ahead of the orb in the
+ * casting direction.
+ *
+ *   opts.glow:  inner color of the orb (default warm gold)
+ *   opts.flash: true on the FIRE frame → adds magic bolt
+ */
+function drawWand(ctx, handPos, forward, limbR, opts = {}) {
+  const len = limbR * 4.0;
+  const px = -forward.dy, py = forward.dx;
+
+  const baseX = handPos.x + forward.dx * limbR * 0.10;
+  const baseY = handPos.y + forward.dy * limbR * 0.10;
+  const tipX  = handPos.x + forward.dx * len;
+  const tipY  = handPos.y + forward.dy * len;
+  void px; void py;
+
+  // Wooden shaft — tapered slightly
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#3a2008';
+  ctx.lineWidth = limbR * 0.32;
+  ctx.beginPath();
+  ctx.moveTo(baseX, baseY);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+  // Highlight stripe (lit side of the shaft)
+  ctx.strokeStyle = '#8a5818';
+  ctx.lineWidth = limbR * 0.14;
+  ctx.beginPath();
+  ctx.moveTo(baseX, baseY);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+  ctx.restore();
+
+  // Crystal orb at the tip — radial gradient from inner glow to outer color
+  const orbColor = opts.glow || '#fff5b8';
+  const orbR = limbR * 0.55;
+  ctx.save();
+  const grad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, orbR * 1.4);
+  grad.addColorStop(0,   orbColor);
+  grad.addColorStop(0.6, VC.hexAlpha(orbColor, 0.6));
+  grad.addColorStop(1,   VC.hexAlpha(orbColor, 0));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, orbR * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Solid core
+  ctx.fillStyle = orbColor;
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, orbR * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+  // Sparkle highlight
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(tipX - orbR * 0.2, tipY - orbR * 0.25, orbR * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Magic bolt on the FIRE frame — a tapered streak shooting forward
+  if (opts.flash) {
+    const boltLen = limbR * 3.5;
+    const bx = tipX + forward.dx * boltLen;
+    const by = tipY + forward.dy * boltLen;
+    ctx.save();
+    const bgrad = ctx.createLinearGradient(tipX, tipY, bx, by);
+    bgrad.addColorStop(0,   orbColor);
+    bgrad.addColorStop(0.5, VC.hexAlpha(orbColor, 0.85));
+    bgrad.addColorStop(1,   VC.hexAlpha(orbColor, 0));
+    ctx.strokeStyle = bgrad;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = limbR * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+    // Sparkle dots along the bolt
+    ctx.fillStyle = '#ffffff';
+    for (const t of [0.2, 0.55, 0.85]) {
+      const sx = tipX + (bx - tipX) * t;
+      const sy = tipY + (by - tipY) * t;
+      ctx.beginPath();
+      ctx.arc(sx, sy, limbR * 0.08, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+/**
  * Top-level dispatcher used from the human renderer's afterHead-equivalent
  * point. Draws the weapon for the given action arm + animation if any.
  *
- *   meta.weapon      : 'sword' | 'gun' (resolved by weaponFor)
+ *   meta.weapon      : 'sword' | 'gun' | 'wand' (resolved by weaponFor)
  *   meta.handPos     : { x, y } of the fist
  *   meta.forward     : { dx, dy } unit forearm vector
  *   meta.limbR       : forearm radius
  *   meta.flash       : true on the strike/fire frame to add muzzle flash
+ *   meta.glow        : optional hex (used for wand orb color)
  */
 function drawWeapon(ctx, meta) {
   if (!meta || !meta.weapon) return;
   if (meta.weapon === 'sword') drawSword(ctx, meta.handPos, meta.forward, meta.limbR);
-  else if (meta.weapon === 'gun') drawGun(ctx, meta.handPos, meta.forward, meta.limbR, { flash: meta.flash });
+  else if (meta.weapon === 'gun')  drawGun (ctx, meta.handPos, meta.forward, meta.limbR, { flash: meta.flash });
+  else if (meta.weapon === 'wand') drawWand(ctx, meta.handPos, meta.forward, meta.limbR, { flash: meta.flash, glow: meta.glow });
 }
 
 module.exports = {
@@ -200,4 +294,5 @@ module.exports = {
   drawWeapon,
   drawSword,
   drawGun,
+  drawWand,
 };

@@ -89,7 +89,7 @@ function resolveColors(config) {
  * action hand should be drawn as a fist, and which side is the action
  * arm. Resolved up-front from the animation name.
  */
-function frameMeta(animationName, offsets) {
+function frameMeta(animationName, offsets, config) {
   const isAttack = !!animationName && animationName.startsWith('attack_');
   // South + North attacks swing the right arm; west attacks swing the left
   // (matches the direction-of-travel + animation tables in AnimationData).
@@ -98,21 +98,31 @@ function frameMeta(animationName, offsets) {
     if (animationName.includes('west') || animationName.includes('east')) actionSide = 'L';
     else                                                                  actionSide = 'R';
   }
-  // Weapon type per attack family — the strike / fire frame index drives
-  // the muzzle flash for guns.
-  const weapon = Weapon.weaponFor(animationName);
+  // Weapon type per attack family — fairies get a wand instead of a gun.
+  const species = config && config.type;
+  const weapon = Weapon.weaponFor(animationName, species);
   // Find the "peak" frame for the visual flourish (sword strike or gun
   // fire). We tag based on the offset sign & magnitude — frames where the
   // action-side arm is fully extended.
   const fwd = actionSide === 'L' ? (offsets.leftArmFwd || 0) : (offsets.rightArmFwd || 0);
   const flash = animationName && animationName.startsWith('attack_shoot_') &&
                 Math.abs(fwd) >= 12;
+  // Glow color for fairy wand orb — pulled from the configured glow.
+  let glow = null;
+  if (species === 'fairy' && config) {
+    const glowKey = config.glowColor || 'golden';
+    const palette = Colors.FAIRY_GLOW && Colors.FAIRY_GLOW[glowKey];
+    if (palette) glow = palette.bright || palette.base;
+  }
   // Blink: idle's frame 2 carries `headBob: -1` (the breath beat). Use
   // that as the cheap "this is the up-tick of a breath, blink the eyes
   // here" tag — gives the idle animation a tiny bit of life. Skipped on
   // the attack frames so the action stays focused.
   const blink = animationName === 'idle' && offsets.headBob === -1;
-  return { isAttack, actionSide, weapon, flash, blink };
+  // Open mouth tag for attack frames at the peak — used by drawEyesSouth /
+  // drawEyeWest to render a "battle cry" mouth instead of the soft smile.
+  const openMouth = isAttack && Math.abs(fwd) >= 10;
+  return { isAttack, actionSide, weapon, flash, blink, openMouth, glow };
 }
 
 function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
@@ -189,7 +199,7 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
   Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
-  Body.drawEyesSouth(ctx, rig, colors.eyes, { blink: meta.blink });
+  Body.drawEyesSouth(ctx, rig, colors.eyes, { blink: meta.blink, open: meta.openMouth });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
 
   // Weapon — drawn LAST so it sits on top of everything (the action hand
@@ -303,6 +313,8 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
     const foot = side === 'L' ? rig.footL : rig.footR;
     Body.drawLimb(ctx, hip, knee, foot, colors.pants,
       { rootR: rig.limbR, midR: rig.limbR * 0.95, tipR: rig.limbR * 0.85 });
+    // Outside-leg fold/seam line — only really reads in profile view.
+    Body.drawPantFold(ctx, hip, knee, foot, rig, colors.pants);
     Body.drawPantCuff(ctx, foot, knee, rig, colors.pants);
     Body.drawShoe(ctx, foot, colors.shoes, rig, 'west');
   };
@@ -339,7 +351,7 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   Body.drawHairHalo(ctx, rig, colors.hair, config.hairStyle || 'short');
   Body.drawHead(ctx, rig, colors.skin);
   Body.drawHair(ctx, rig, colors.hair, config.hairStyle || 'short');
-  Body.drawEyeWest(ctx, rig, colors.eyes);
+  Body.drawEyeWest(ctx, rig, colors.eyes, { open: meta.openMouth });
   Body.drawBeard(ctx, rig, colors.hair, config.beardStyle || 'none');
   drawWeaponForFrame(ctx, rig, meta);
 
@@ -379,7 +391,7 @@ function generateFrame(config, animationName, frameOffset, hooks) {
   const { canvas, ctx } = VC.makeCanvas(FRAME_W, FRAME_H);
   VC.clear(ctx, FRAME_W, FRAME_H);
   const direction = directionOf(animationName);
-  const meta = frameMeta(animationName, frameOffset);
+  const meta = frameMeta(animationName, frameOffset, config);
   switch (direction) {
     case 'south': drawSouth(ctx, config, frameOffset, hooks, meta); break;
     case 'north': drawNorth(ctx, config, frameOffset, hooks, meta); break;

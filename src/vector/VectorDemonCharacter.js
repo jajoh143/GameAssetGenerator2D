@@ -204,7 +204,7 @@ function generateFrame(config, animationName, frameOffset) {
 
   const { canvas, ctx } = VC.makeCanvas(FRAME_W, FRAME_H);
   VC.clear(ctx, FRAME_W, FRAME_H);
-  const meta = Human.frameMeta(animationName, frameOffset);
+  const meta = Human.frameMeta(animationName, frameOffset, config);
   switch (direction) {
     case 'south': Human.drawSouth(ctx, config, frameOffset, hooks, meta); break;
     case 'north': Human.drawNorth(ctx, config, frameOffset, hooks, meta); break;

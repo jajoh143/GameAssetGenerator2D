@@ -250,7 +250,8 @@ function buildRig(config, direction, offsets) {
   // Species that draw their own ear shape (goblin: long pointed ears,
   // lizardfolk: snout + crest, no separate ears) skip the default human
   // ear bumps so they don't double-draw.
-  const skipEars = (config && (config.type === 'goblin' || config.type === 'lizardfolk')) || false;
+  const species = (config && config.type) || 'human';
+  const skipEars = species === 'goblin' || species === 'lizardfolk';
 
   return {
     direction,
@@ -265,6 +266,7 @@ function buildRig(config, direction, offsets) {
     footL,     footR,
     limbR,
     groundY,
+    species,
     skipEars,
   };
 }
