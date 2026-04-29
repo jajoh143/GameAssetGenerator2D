@@ -1165,12 +1165,19 @@ function drawArmorLabRow(stateIdx) {
 
   const animEntry = armorLab.charMeta && armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
   const fmeta     = animEntry && animEntry.frames && animEntry.frames[st.frame];
-  const facingNorth = animEntry && animEntry.direction === 'north';
+  const direction = animEntry && animEntry.direction;
+  const facingNorth = direction === 'north';
+  const sideView    = direction === 'west' || direction === 'east';
+  // In MetaExport, west/east place the off-hand on the BACK arm (the arm on
+  // the far side of the body from the camera). The shield therefore needs to
+  // render BEHIND the body so the torso occludes it; the weapon is on the
+  // front arm and stays in front. North-facing rows hide both behind the body.
+  const weaponBehindBody = facingNorth;
+  const shieldBehindBody = facingNorth || sideView;
 
   // Helpers — drawWeapon and drawShield are factored out so the layer order
   // can flip depending on whether the character faces toward or away from
-  // the camera. North-facing rows draw the weapon BEHIND the body (it's held
-  // in front of the character, hidden by their back from the viewer's POV).
+  // the camera, and on whether the gear is held by the front or back arm.
   const drawWeapon = () => {
     const weapon = armorLab.selected.weapon;
     if (!(weapon && fmeta && fmeta.weaponHand)) return;
@@ -1206,27 +1213,23 @@ function drawArmorLabRow(stateIdx) {
     ctx.drawImage(img, 0, 0, fSize, fSize, dx, dy, fSize * scale, fSize * scale);
   };
 
-  // North-facing: weapon and shield first (occluded by body), then character + armor.
-  if (facingNorth) {
-    drawWeapon();
-    drawShield();
-  }
+  // 1. Gear that sits BEHIND the body, drawn first.
+  if (weaponBehindBody) drawWeapon();
+  if (shieldBehindBody) drawShield();
 
-  // 1. Body
+  // 2. Body
   drawCharSheet(armorLab.selected.character);
 
-  // 2. Body armor — boots, chest, gloves (helmet drawn last).
+  // 3. Body armor — boots, chest, gloves (helmet drawn last).
   drawArmorSheet(armorLab.selected.boots);
   drawArmorSheet(armorLab.selected.chest);
   drawArmorSheet(armorLab.selected.gloves);
 
-  // South / east / west: weapon and shield in front of body.
-  if (!facingNorth) {
-    drawWeapon();
-    drawShield();
-  }
+  // 4. Gear that sits IN FRONT of the body.
+  if (!weaponBehindBody) drawWeapon();
+  if (!shieldBehindBody) drawShield();
 
-  // Helmet last — always on top.
+  // 5. Helmet last — always on top.
   drawArmorSheet(armorLab.selected.helmet);
 }
 
