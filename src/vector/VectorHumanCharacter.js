@@ -93,6 +93,9 @@ function resolveColors(config) {
   const shoulderPalette = config.shoulderColor
     ? (Colors.CLOTHING_COLORS && Colors.CLOTHING_COLORS[config.shoulderColor]) || clothing
     : clothing;
+  const glovePalette = config.gloveColor
+    ? (Colors.CLOTHING_COLORS && Colors.CLOTHING_COLORS[config.gloveColor]) || clothing
+    : clothing;
 
   return {
     skin,
@@ -102,6 +105,7 @@ function resolveColors(config) {
     hood:     hoodPalette,
     cape:     capePalette,
     shoulder: shoulderPalette,
+    glove:    glovePalette,
     pants:    Colors.PANTS[config.pants] || Colors.PANTS.jeans_blue,
     shoes:    Colors.SHOES[config.shoes] || Colors.SHOES.shoe_black,
     belt:     Colors.BELT[config.beltColor] || Colors.BELT.standard,
@@ -188,14 +192,14 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const rFwd = offsets.rightLegFwd || 0;
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
-      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'south');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
-      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'south');
@@ -307,14 +311,14 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   const rFwd = offsets.rightLegFwd || 0;
   const drawL = () => {
     Body.drawLimb(ctx, rig.hipL, rig.kneeL, rig.footL, colors.pants,
-      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipL, rig.kneeL, rig.footL, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footL, rig.kneeL, rig, colors.pants);
     Body.drawShoe(ctx, rig.footL, colors.shoes, rig, 'north');
   };
   const drawR = () => {
     Body.drawLimb(ctx, rig.hipR, rig.kneeR, rig.footR, colors.pants,
-      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     Body.drawPantFold(ctx, rig.hipR, rig.kneeR, rig.footR, rig, colors.pants);
     Body.drawPantCuff(ctx, rig.footR, rig.kneeR, rig, colors.pants);
     Body.drawShoe(ctx, rig.footR, colors.shoes, rig, 'north');
@@ -389,7 +393,7 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
     const knee = side === 'L' ? rig.kneeL : rig.kneeR;
     const foot = side === 'L' ? rig.footL : rig.footR;
     Body.drawLimb(ctx, hip, knee, foot, colors.pants,
-      { rootR: rig.limbR * 1.30, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
+      { rootR: rig.limbR * 1.10, midR: rig.limbR * 0.82, tipR: rig.limbR * 0.62 });
     // Outside-leg fold/seam line — only really reads in profile view.
     Body.drawPantFold(ctx, hip, knee, foot, rig, colors.pants);
     Body.drawPantCuff(ctx, foot, knee, rig, colors.pants);

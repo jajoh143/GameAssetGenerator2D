@@ -191,6 +191,125 @@ function drawHand(ctx, hand, skin, rig, opts = {}) {
 }
 
 /**
+ * Glove — paints a glove silhouette over the hand in glove color, with
+ * a darker cel shadow on the right and an optional vambrace cuff that
+ * extends up the forearm. Pairs with the existing sleeve drawCuff to
+ * produce a full vambrace look on jackets / hoodies / coats.
+ *
+ *   palette:    glove color (any clothing palette)
+ *   opts.fist:  closed-fist variant (knuckle ridges)
+ *   opts.toward:unit elbow→hand vector for orientation
+ *   opts.elbow: optional elbow joint — when present, adds the vambrace
+ *               cuff extending up the forearm.
+ */
+function drawGlove(ctx, hand, palette, rig, opts = {}) {
+  const r = rig.limbR * (opts.fist ? 1.20 : 1.10);
+  const tx = (opts.toward && opts.toward.dx) || 0;
+  const ty = (opts.toward && opts.toward.dy) || 1;
+  const len = Math.hypot(tx, ty) || 1;
+  const ux = tx / len, uy = ty / len;
+  const px = -uy, py = ux;
+
+  // Vambrace first — drawn BEFORE the glove silhouette so the glove
+  // overpaints its lower edge, hiding any seam at the wrist.
+  if (opts.elbow) {
+    const wx = hand.x - ux * r * 0.40;
+    const wy = hand.y - uy * r * 0.40;
+    const forearmLen = Math.hypot(opts.elbow.x - hand.x, opts.elbow.y - hand.y);
+    const cuffLen = Math.min(forearmLen * 0.55, rig.limbR * 2.4);
+    const cuffEnd = {
+      x: wx + (opts.elbow.x - hand.x) / forearmLen * cuffLen,
+      y: wy + (opts.elbow.y - hand.y) / forearmLen * cuffLen,
+    };
+    VC.limb(ctx, wx, wy, r * 0.78, cuffEnd.x, cuffEnd.y, r * 0.62,
+      palette.base, palette.outline || '#000', outlineW(rig, 0.28));
+    // Cel shadow band on the right side
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    const dxe = cuffEnd.x - wx, dye = cuffEnd.y - wy;
+    const lene = Math.hypot(dxe, dye) || 1;
+    const nxe = -dye / lene, nye = dxe / lene;
+    VC.limb(ctx,
+      wx + nxe * r * 0.30, wy + nye * r * 0.30, r * 0.78,
+      cuffEnd.x + nxe * r * 0.20, cuffEnd.y + nye * r * 0.20, r * 0.55,
+      palette.shadow || palette.base, null, 0);
+    ctx.restore();
+  }
+
+  // Mitten silhouette in glove color — same shape as drawHand so the
+  // glove tracks the same articulation cues as the bare hand.
+  ctx.save();
+  ctx.fillStyle = palette.base;
+  ctx.strokeStyle = palette.outline || '#000';
+  ctx.lineWidth = outlineW(rig, 0.30);
+  ctx.beginPath();
+  const wx = hand.x - ux * r * 0.40;
+  const wy = hand.y - uy * r * 0.40;
+  ctx.moveTo(wx + px * r * 0.55, wy + py * r * 0.55);
+  ctx.quadraticCurveTo(
+    wx + ux * r * 0.20 + px * r * 1.05, wy + uy * r * 0.20 + py * r * 1.05,
+    wx + ux * r * 0.55 + px * r * 0.85, wy + uy * r * 0.55 + py * r * 0.85,
+  );
+  ctx.quadraticCurveTo(
+    hand.x + ux * r * 0.30 + px * r * 0.55, hand.y + uy * r * 0.30 + py * r * 0.55,
+    hand.x + ux * r * 0.95 + px * r * 0.45, hand.y + uy * r * 0.95 + py * r * 0.45,
+  );
+  ctx.quadraticCurveTo(
+    hand.x + ux * r * 1.20,                  hand.y + uy * r * 1.20,
+    hand.x + ux * r * 0.95 - px * r * 0.55,  hand.y + uy * r * 0.95 - py * r * 0.55,
+  );
+  ctx.quadraticCurveTo(
+    wx + ux * r * 0.30 - px * r * 0.65, wy + uy * r * 0.30 - py * r * 0.65,
+    wx - px * r * 0.50,                  wy - py * r * 0.50,
+  );
+  ctx.quadraticCurveTo(
+    wx, wy,
+    wx + px * r * 0.55, wy + py * r * 0.55,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Cel shadow on the pinky side
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = palette.shadow || palette.base;
+  ctx.beginPath();
+  ctx.moveTo(wx - px * r * 0.50, wy - py * r * 0.50);
+  ctx.quadraticCurveTo(
+    hand.x + ux * r * 0.55 - px * r * 0.85, hand.y + uy * r * 0.55 - py * r * 0.85,
+    hand.x + ux * r * 1.05 - px * r * 0.20, hand.y + uy * r * 1.05 - py * r * 0.20,
+  );
+  ctx.lineTo(hand.x + ux * r * 0.40, hand.y + uy * r * 0.40);
+  ctx.lineTo(wx - px * r * 0.20, wy - py * r * 0.20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Knuckle / cuff trim
+  ctx.save();
+  ctx.strokeStyle = palette.outline || '#000';
+  ctx.lineWidth = Math.max(1.0, r * 0.16);
+  ctx.lineCap = 'round';
+  if (opts.fist) {
+    for (const k of [-0.45, 0.0, 0.45]) {
+      const cx = hand.x + ux * r * 0.55 + px * r * k * 0.6;
+      const cy = hand.y + uy * r * 0.55 + py * r * k * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(cx - ux * r * 0.18, cy - uy * r * 0.18);
+      ctx.lineTo(cx + ux * r * 0.18, cy + uy * r * 0.18);
+      ctx.stroke();
+    }
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(wx + px * r * 0.55, wy + py * r * 0.55);
+    ctx.quadraticCurveTo(wx, wy + r * 0.10, wx - px * r * 0.55, wy - py * r * 0.55);
+    ctx.stroke();
+  }
+  ctx.restore();
+  void px; void py;
+}
+
+/**
  * Pant fold / seam — a soft vertical line down the side of a leg.
  * Two passes:
  *   1. A heavier stitch line on the OUTSIDE of the leg (always visible).
@@ -233,36 +352,41 @@ function drawPelvisBridge(ctx, rig, pants) {
     return;
   }
   // South / north: a wedge that bulges from the waist line down to the
-  // groin notch, wider at the hips than at the waist.
+  // groin notch. IMPORTANT: the bridge must stay INSIDE the torso
+  // silhouette at every Y level — if it pokes past the torso outline,
+  // the pants color leaks behind the torso and reads as "the legs are
+  // attached to the back" (user-flagged bug). The torso hip points are
+  // at hw * 1.00 → hw * 0.85 → hw * 0.40 (top → outer thigh → groin),
+  // so the bridge is sized strictly smaller than each.
   const hw = pelvis.w / 2;
-  const top = pelvis.y - rig.limbR * 1.40;       // sits well above the leg root
+  const top = pelvis.y - rig.limbR * 0.95;       // sits a touch above the hip line
   const bot = pelvis.y + rig.limbR * 0.55;       // dips into the groin
   ctx.save();
   ctx.fillStyle = pants.base;
   ctx.strokeStyle = pants.outline || '#000';
   ctx.lineWidth = outlineW(rig, 0.30);
   ctx.beginPath();
-  ctx.moveTo(pelvis.x - hw * 0.78, top);
-  ctx.quadraticCurveTo(pelvis.x - hw * 1.10, pelvis.y - rig.limbR * 0.15,
-                       pelvis.x - hw * 0.85, bot);
-  ctx.quadraticCurveTo(pelvis.x, bot - rig.limbR * 0.15,
-                       pelvis.x + hw * 0.85, bot);
-  ctx.quadraticCurveTo(pelvis.x + hw * 1.10, pelvis.y - rig.limbR * 0.15,
-                       pelvis.x + hw * 0.78, top);
+  ctx.moveTo(pelvis.x - hw * 0.55, top);
+  ctx.quadraticCurveTo(pelvis.x - hw * 0.92, pelvis.y - rig.limbR * 0.20,
+                       pelvis.x - hw * 0.78, bot);
+  ctx.quadraticCurveTo(pelvis.x, bot - rig.limbR * 0.10,
+                       pelvis.x + hw * 0.78, bot);
+  ctx.quadraticCurveTo(pelvis.x + hw * 0.92, pelvis.y - rig.limbR * 0.20,
+                       pelvis.x + hw * 0.55, top);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Cel shadow on the right side of the pelvis to match the body's
-  // light direction.
+  // Cel shadow on the right side of the pelvis to match body lighting.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = pants.shadow || pants.base;
   ctx.beginPath();
-  ctx.moveTo(pelvis.x + hw * 0.20, top);
-  ctx.quadraticCurveTo(pelvis.x + hw * 1.10, pelvis.y, pelvis.x + hw * 0.40, bot);
-  ctx.lineTo(pelvis.x + hw * 0.20, bot);
-  ctx.lineTo(pelvis.x + hw * 0.20, top);
+  ctx.moveTo(pelvis.x + hw * 0.10, top);
+  ctx.quadraticCurveTo(pelvis.x + hw * 0.92, pelvis.y - rig.limbR * 0.10,
+                       pelvis.x + hw * 0.40, bot);
+  ctx.lineTo(pelvis.x + hw * 0.10, bot);
+  ctx.lineTo(pelvis.x + hw * 0.10, top);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
@@ -2243,6 +2367,7 @@ function drawShoulderPads(ctx, rig, palette) {
 module.exports = {
   drawLimb,
   drawHand,
+  drawGlove,
   drawShoe,
   drawCuff,
   drawPantCuff,
