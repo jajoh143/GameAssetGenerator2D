@@ -529,7 +529,7 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
   const sw = chest.w / 2;
   const hw = pelvis.w / 2;
   const tH = pelvis.y - chest.y;                      // torso height
-  const wy = chest.y + tH * 0.55;                     // waist height (slightly below midpoint)
+  const wy = chest.y + tH * 0.62;                     // waist height — sits lower so the chest/ribs section above reads tall enough; the belt still anchors at the hip line below
   const wWaist = Math.min(sw, hw) * 0.78;             // pinch at waist
   const limbR = rig.limbR;
 
