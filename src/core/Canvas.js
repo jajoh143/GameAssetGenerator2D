@@ -111,6 +111,19 @@ function clear(ctx, width, height) {
   ctx.clearRect(0, 0, width, height);
 }
 
+/**
+ * Scale srcCanvas by the given factor using nearest-neighbor interpolation.
+ * Returns the new (larger) canvas.
+ */
+function scaleCanvas(srcCanvas, scale) {
+  const dstW = Math.round(srcCanvas.width * scale);
+  const dstH = Math.round(srcCanvas.height * scale);
+  const { canvas: dst, ctx } = makeCanvas(dstW, dstH);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(srcCanvas, 0, 0, dstW, dstH);
+  return dst;
+}
+
 module.exports = {
   makeCanvas,
   fillRect,
@@ -123,4 +136,5 @@ module.exports = {
   mirrorCanvasH,
   blit,
   clear,
+  scaleCanvas,
 };

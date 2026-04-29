@@ -682,9 +682,9 @@
     <div>
       <div class="section-label">Sprite Size</div>
       <div class="btn-row" id="size-row">
-        <button class="toggle-btn active" data-val="64">64 px</button>
-        <button class="toggle-btn"        data-val="96">96 px</button>
-        <button class="toggle-btn"        data-val="128">128 px</button>
+        <button class="toggle-btn active" data-val="128">128 px</button>
+        <button class="toggle-btn"        data-val="192">192 px</button>
+        <button class="toggle-btn"        data-val="256">256 px</button>
       </div>
     </div>
 
@@ -742,7 +742,7 @@ const state = {
   goblinSkin: null, goblinHorns: 'none', goblinHornLength: 'short',
   lizardScale: null,
   fairySkin: null, wingStyle: 'butterfly', wingSize: 'medium', wingColor: null, fairyDress: null, glowColor: null, glowIntensity: 'medium',
-  frameSize: 64, name: '',
+  frameSize: 128, name: '',
 };
 
 // ── Legacy "<style>_<color>" key splitter — used when applying old presets
@@ -1556,7 +1556,7 @@ async function generate() {
   setStatus('Generating…', '');
 
   const name     = state.name || ('character_' + Date.now());
-  const frameSize = Number(state.frameSize) || 64;
+  const frameSize = Number(state.frameSize) || 128;
   const config   = buildConfig();
 
   try {

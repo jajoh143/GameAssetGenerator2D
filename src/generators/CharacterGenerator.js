@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { ROWS, buildSpritesheet, saveSpritesheet } = require('../core/Spritesheet');
+const { ROWS, FRAME_W, buildSpritesheet, saveSpritesheet } = require('../core/Spritesheet');
 const { ANIMATION_ROWS, getFrames, getDirection } = require('../animations/Animator');
 const { generateFrame: generateHumanFrame } = require('../characters/HumanCharacter');
 const { generateFrame: generateDemonFrame } = require('../characters/DemonCharacter');
@@ -10,6 +10,7 @@ const { generateFrame: generateGoblinFrame } = require('../characters/GoblinChar
 const { generateFrame: generateLizardfolkFrame } = require('../characters/LizardfolkCharacter');
 const { resolveConfig } = require('../characters/CharacterConfig');
 const { buildMeta, saveMeta } = require('../core/MetaExport');
+const { scaleCanvas } = require('../core/Canvas');
 const { buildPhaserSpritesheetConfig, savePhaserConfig } = require('../core/PhaserExport');
 
 /**
@@ -17,10 +18,10 @@ const { buildPhaserSpritesheetConfig, savePhaserConfig } = require('../core/Phas
  *
  * @param {object} rawConfig   - Character config
  * @param {string} outputPath  - Where to save the PNG
- * @param {number} [frameSize=64] - Output frame size in pixels (64 | 96 | 128)
+ * @param {number} [frameSize=128] - Output frame size in pixels (128 | 192 | 256)
  * @returns {string}           - Resolved output path
  */
-function generateSpritesheet(rawConfig, outputPath) {
+function generateSpritesheet(rawConfig, outputPath, frameSize = 128) {
   const config = resolveConfig(rawConfig);
   const generateFrame =
     config.type === 'demon'      ? generateDemonFrame      :
@@ -34,13 +35,13 @@ function generateSpritesheet(rawConfig, outputPath) {
     return offsets.map((frameOffset) => generateFrame(config, animName, frameOffset));
   });
 
-  const sheet = buildSpritesheet(rowFrames);
+  const nativeSheet = buildSpritesheet(rowFrames);
+  const scale = frameSize / FRAME_W;
+  const sheet = scale !== 1 ? scaleCanvas(nativeSheet, scale) : nativeSheet;
   saveSpritesheet(sheet, outputPath);
 
-  // Detect frame size from first frame for meta export
-  const firstFrame = rowFrames.find(f => f.length > 0)?.[0];
-  const metaW = firstFrame ? firstFrame.width : 64;
-  const metaH = firstFrame ? firstFrame.height : 96;
+  const metaW = frameSize;
+  const metaH = Math.round(96 * scale);
   const meta = buildMeta(metaW, ANIMATION_ROWS, getFrames, getDirection, config);
   saveMeta(meta, outputPath);
 
