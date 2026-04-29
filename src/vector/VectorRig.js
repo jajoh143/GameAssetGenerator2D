@@ -28,29 +28,57 @@ const FRAME_W = 128;
 const FRAME_H = 192;
 
 // Body proportions, expressed as ratios of FRAME_H so the rig scales
-// gracefully to taller / shorter heroes. Tuned so the character fills the
-// frame nicely while leaving ~5 px of headroom for hair to extend past
-// the head circle without clipping the top of the frame.
-const HEIGHT_DIMS = {
+// gracefully to taller / shorter heroes.
+//
+// Two stylizations:
+//   • CHIBI (default) — ~3 heads tall. Big-head, short-body kawaii.
+//   • NATURAL — ~5.5–6 heads tall. The "stylized realistic" zone where
+//     the head still reads expressively but the body has anatomical
+//     proportions: noticeably longer legs, thinner limbs, smaller head
+//     relative to torso. Less cartoony, closer to anime/RPG sprite work.
+const HEIGHT_DIMS_CHIBI = {
   tiny:   { totalH: 0.55, headR: 0.14, neckLen: 0.020, torsoH: 0.16, legH: 0.10 },
   short:  { totalH: 0.74, headR: 0.14, neckLen: 0.025, torsoH: 0.23, legH: 0.20 },
   medium: { totalH: 0.86, headR: 0.14, neckLen: 0.028, torsoH: 0.28, legH: 0.28 },
   tall:   { totalH: 0.93, headR: 0.14, neckLen: 0.030, torsoH: 0.30, legH: 0.32 },
 };
+const HEIGHT_DIMS_NATURAL = {
+  tiny:   { totalH: 0.65, headR: 0.085, neckLen: 0.025, torsoH: 0.22, legH: 0.30 },
+  short:  { totalH: 0.82, headR: 0.085, neckLen: 0.030, torsoH: 0.27, legH: 0.40 },
+  medium: { totalH: 0.90, headR: 0.085, neckLen: 0.035, torsoH: 0.30, legH: 0.44 },
+  tall:   { totalH: 0.94, headR: 0.085, neckLen: 0.040, torsoH: 0.32, legH: 0.46 },
+};
+const HEIGHT_DIMS = HEIGHT_DIMS_CHIBI;   // back-compat alias used elsewhere
 
-const BUILDS = {
+// Builds — wider for chibi, leaner for natural. The natural rig pulls
+// shoulders / hips / limb radii in a touch so the figure reads as adult
+// proportions rather than a stretched chibi.
+const BUILDS_CHIBI = {
   slim:     { shoulderW: 0.50, hipW: 0.40, limbR: 0.052, torsoTaper: 0.78 },
   average:  { shoulderW: 0.58, hipW: 0.44, limbR: 0.060, torsoTaper: 0.82 },
   muscular: { shoulderW: 0.68, hipW: 0.46, limbR: 0.070, torsoTaper: 0.78 },
   heavy:    { shoulderW: 0.66, hipW: 0.54, limbR: 0.070, torsoTaper: 0.92 },
 };
+const BUILDS_NATURAL = {
+  slim:     { shoulderW: 0.32, hipW: 0.26, limbR: 0.034, torsoTaper: 0.78 },
+  average:  { shoulderW: 0.38, hipW: 0.30, limbR: 0.040, torsoTaper: 0.82 },
+  muscular: { shoulderW: 0.46, hipW: 0.32, limbR: 0.048, torsoTaper: 0.78 },
+  heavy:    { shoulderW: 0.44, hipW: 0.40, limbR: 0.048, torsoTaper: 0.92 },
+};
+const BUILDS = BUILDS_CHIBI;     // back-compat alias
+
+function isNatural(config) {
+  return !!(config && config.proportion === 'natural');
+}
 
 function dims(config) {
-  return HEIGHT_DIMS[(config && config.height) || 'medium'] || HEIGHT_DIMS.medium;
+  const table = isNatural(config) ? HEIGHT_DIMS_NATURAL : HEIGHT_DIMS_CHIBI;
+  return table[(config && config.height) || 'medium'] || table.medium;
 }
 
 function build(config) {
-  return BUILDS[(config && config.build) || 'average'] || BUILDS.average;
+  const table = isNatural(config) ? BUILDS_NATURAL : BUILDS_CHIBI;
+  return table[(config && config.build) || 'average'] || table.average;
 }
 
 /**

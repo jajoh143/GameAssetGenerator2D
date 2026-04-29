@@ -190,6 +190,30 @@ function drawGun(ctx, handPos, forward, limbR, opts = {}) {
  *   opts.flash: true on the FIRE frame → adds magic bolt
  */
 function drawWand(ctx, handPos, forward, limbR, opts = {}) {
+  const orbColor = opts.glow || '#fff5b8';
+  // Soft bloom on the hand + adjacent skin BEFORE the wand draws — this
+  // way it tints the hand color rather than overpainting the wand body.
+  // Drawn with screen blending so it brightens whatever's underneath.
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.45;
+  const handTip = {
+    x: handPos.x + forward.dx * limbR * 4.0,
+    y: handPos.y + forward.dy * limbR * 4.0,
+  };
+  const bloomGrad = ctx.createRadialGradient(
+    handTip.x, handTip.y, 0,
+    handTip.x, handTip.y, limbR * 3.5,
+  );
+  bloomGrad.addColorStop(0,   orbColor);
+  bloomGrad.addColorStop(0.4, VC.hexAlpha(orbColor, 0.45));
+  bloomGrad.addColorStop(1,   VC.hexAlpha(orbColor, 0));
+  ctx.fillStyle = bloomGrad;
+  ctx.beginPath();
+  ctx.arc(handTip.x, handTip.y, limbR * 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
   const len = limbR * 4.0;
   const px = -forward.dy, py = forward.dx;
 
@@ -218,7 +242,6 @@ function drawWand(ctx, handPos, forward, limbR, opts = {}) {
   ctx.restore();
 
   // Crystal orb at the tip — radial gradient from inner glow to outer color
-  const orbColor = opts.glow || '#fff5b8';
   const orbR = limbR * 0.55;
   ctx.save();
   const grad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, orbR * 1.4);

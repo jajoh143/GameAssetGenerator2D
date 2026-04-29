@@ -136,15 +136,19 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   const rig = buildRig(config, 'south', offsets);
 
   // Ground shadow — shrinks when the character lifts off (negative bodyY
-  // == higher up). Sells the "lift" on attack peak frames + walk passing
-  // frames where the character bobs up.
+  // == higher up) AND tracks the character's center of mass horizontally
+  // (mid-pelvis X) instead of being glued to frame center. So when the
+  // body shifts during a stride or strike, the shadow slides with it.
   if (!offsets.skipGroundShadow) {
     const sx = rig.frameW * 0.22;
     const sy = rig.limbR * 0.6;
     const lift = Math.max(0, -((offsets.bodyY || 0) * (rig.frameH / 96)));
     const sScale = Math.max(0.55, 1 - lift * 0.04);
     const sAlpha = Math.max(0.15, 0.35 - lift * 0.025);
-    VC.groundShadow(ctx, rig.frameW / 2, rig.groundY + rig.limbR * 0.6,
+    // Average foot X gives a good approximation of where the character
+    // is actually standing — works for stride-shifted west walks too.
+    const shadowX = (rig.footL.x + rig.footR.x) / 2;
+    VC.groundShadow(ctx, shadowX, rig.groundY + rig.limbR * 0.6,
       sx * sScale, sy * sScale, sAlpha);
   }
 

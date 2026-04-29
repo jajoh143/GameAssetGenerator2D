@@ -1079,8 +1079,9 @@ function drawGoblinMouthSouth(ctx, rig, opts = {}) {
   ctx.fill();
   ctx.stroke();
 
-  // Spiky teeth — alternating sharp triangles along the upper jaw.
-  ctx.fillStyle = '#fffbe0';
+  // Spiky teeth — alternating sharp triangles along the upper jaw, with
+  // a bright cel highlight near the tip and a darker shadow near the
+  // gum line so each fang reads as a 3D shape rather than a flat shard.
   ctx.strokeStyle = '#1a0a04';
   ctx.lineWidth = Math.max(0.6, head.r * 0.025);
   const teethCount = 7;
@@ -1090,16 +1091,39 @@ function drawGoblinMouthSouth(ctx, rig, opts = {}) {
     // Alternate up/down sized teeth for a snaggle look
     const big = i % 2 === 1;
     const th  = head.r * (big ? 0.10 : 0.06);
+    const baseY = cy - h * 0.10;
+    // Fang triangle
+    ctx.fillStyle = '#fffbe0';
     ctx.beginPath();
-    ctx.moveTo(tx - toothSpan * 0.40, cy - h * 0.10);
-    ctx.lineTo(tx,                    cy - h * 0.10 + th);
-    ctx.lineTo(tx + toothSpan * 0.40, cy - h * 0.10);
+    ctx.moveTo(tx - toothSpan * 0.40, baseY);
+    ctx.lineTo(tx,                    baseY + th);
+    ctx.lineTo(tx + toothSpan * 0.40, baseY);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+    // Bright vertical highlight stripe on each fang's lit side.
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(tx - toothSpan * 0.18, baseY + th * 0.10);
+    ctx.lineTo(tx - toothSpan * 0.05, baseY + th * 0.85);
+    ctx.lineTo(tx - toothSpan * 0.04, baseY + th * 0.85);
+    ctx.lineTo(tx - toothSpan * 0.10, baseY + th * 0.10);
+    ctx.closePath();
+    ctx.fill();
+    // Dim toward the gum line for a touch of depth.
+    ctx.fillStyle = '#dac8a0';
+    ctx.beginPath();
+    ctx.moveTo(tx + toothSpan * 0.05, baseY);
+    ctx.lineTo(tx + toothSpan * 0.40, baseY);
+    ctx.lineTo(tx + toothSpan * 0.20, baseY + th * 0.30);
+    ctx.lineTo(tx + toothSpan * 0.00, baseY + th * 0.10);
+    ctx.closePath();
+    ctx.fill();
   }
 
-  // Two big fangs — protruding tusks at the corners
+  // Two big fangs — protruding tusks at the corners with their own
+  // bright highlight stripes.
+  ctx.fillStyle = '#fffbe0';
   ctx.beginPath();
   ctx.moveTo(cx - w * 0.85, cy - h * 0.10);
   ctx.lineTo(cx - w * 0.70, cy + h * 0.55 + head.r * 0.04);
@@ -1107,7 +1131,16 @@ function drawGoblinMouthSouth(ctx, rig, opts = {}) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.78, cy - h * 0.05);
+  ctx.lineTo(cx - w * 0.72, cy + h * 0.40);
+  ctx.lineTo(cx - w * 0.71, cy + h * 0.40);
+  ctx.lineTo(cx - w * 0.74, cy - h * 0.05);
+  ctx.closePath();
+  ctx.fill();
 
+  ctx.fillStyle = '#fffbe0';
   ctx.beginPath();
   ctx.moveTo(cx + w * 0.55, cy - h * 0.10);
   ctx.lineTo(cx + w * 0.70, cy + h * 0.55 + head.r * 0.04);
@@ -1115,6 +1148,14 @@ function drawGoblinMouthSouth(ctx, rig, opts = {}) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(cx + w * 0.62, cy - h * 0.05);
+  ctx.lineTo(cx + w * 0.68, cy + h * 0.40);
+  ctx.lineTo(cx + w * 0.69, cy + h * 0.40);
+  ctx.lineTo(cx + w * 0.66, cy - h * 0.05);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 

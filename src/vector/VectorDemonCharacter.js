@@ -147,21 +147,34 @@ function drawTail(ctx, rig, demonSkinPalette, tailLen, direction, frameIdx = 0) 
 
   const tailColor = (demonSkinPalette && demonSkinPalette.shadow) || '#3a1010';
   const tailHi    = (demonSkinPalette && demonSkinPalette.base)   || '#7a2020';
+  const tailRim   = (demonSkinPalette && demonSkinPalette.highlight) || '#a44040';
 
   ctx.save();
   ctx.lineCap = 'round';
+  // Outline pass (slightly wider, dark)
   ctx.strokeStyle = tailColor;
-  ctx.lineWidth = rig.limbR * 0.85;
+  ctx.lineWidth = rig.limbR * 0.95;
   ctx.beginPath();
   ctx.moveTo(rootX, rootY);
   ctx.quadraticCurveTo(midX, midY, tipX, tipY);
   ctx.stroke();
 
+  // Mid-tone body
   ctx.strokeStyle = tailHi;
-  ctx.lineWidth = rig.limbR * 0.40;
+  ctx.lineWidth = rig.limbR * 0.55;
   ctx.beginPath();
   ctx.moveTo(rootX, rootY);
   ctx.quadraticCurveTo(midX, midY, tipX, tipY);
+  ctx.stroke();
+
+  // Cel highlight — a thin lit-side stripe matching the body's top-left
+  // light source. Rendered as a parallel curve offset slightly above
+  // (less Y) the main tail line.
+  ctx.strokeStyle = tailRim;
+  ctx.lineWidth = rig.limbR * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(rootX,                   rootY - rig.limbR * 0.20);
+  ctx.quadraticCurveTo(midX, midY - rig.limbR * 0.20, tipX, tipY - rig.limbR * 0.15);
   ctx.stroke();
   ctx.restore();
 

@@ -112,6 +112,10 @@ function handleOptions(res) {
     presets:     PRESETS,
     defaults:    DEFAULT_CONFIG,
     frameSizes:  [128, 192, 256],
+    // Vector-only: switches the chibi rig (~3 heads tall) to the
+    // 'natural' rig (~5.5–6 heads tall) for less-cartoony characters.
+    // The pixel pipeline ignores this field.
+    proportions: ['chibi', 'natural'],
   });
 }
 
