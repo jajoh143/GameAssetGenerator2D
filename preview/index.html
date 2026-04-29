@@ -1088,7 +1088,8 @@ async function loadCharacterMeta(char) {
     armorLab.charFrameW = 64;
     armorLab.charFrameH = 96;
   }
-}
+  // Keep display canvases at ~128 px wide regardless of native frame size.
+  armorLab.scale = Math.max(1, Math.round(128 / armorLab.charFrameW));
 
 async function onArmorLabChange(slot, value) {
   const sel = document.getElementById('al-' + slot);
@@ -1783,7 +1784,7 @@ function buildCard(name, filePath, frameW, frameH, img) {
   const liveRow = document.createElement('div');
   liveRow.className = 'live-row';
 
-  const defaultScale = window.innerWidth < 768 ? 1 : 2;
+  const defaultScale = Math.max(1, Math.round(128 / frameW));
   const animState = { fps: 8, scale: defaultScale, bg: '#1a1a2e', frameW, frameH, img, timers: [], canvases: [], showWeapon: false };
   liveAnimations[id] = animState;
 
