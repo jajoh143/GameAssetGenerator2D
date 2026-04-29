@@ -477,6 +477,49 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     ctx.stroke();
   }
 
+  // 5b. Chest plane — a soft horizontal shadow under the shoulder line
+  // suggesting pectoral / upper-chest separation from the torso below.
+  // South view only (the shadow direction makes sense from the front).
+  if (direction === 'south') {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = clothing.shadow || clothing.base;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    // Curved horizontal band that hugs the chest line, dipping at the
+    // sternum to suggest the divide between pectorals.
+    const chestBandY = chest.y + rig.limbR * 1.10;
+    ctx.moveTo(chest.x - sw * 0.85, chestBandY);
+    ctx.quadraticCurveTo(
+      chest.x, chestBandY + rig.limbR * 0.55,
+      chest.x + sw * 0.85, chestBandY,
+    );
+    ctx.lineTo(chest.x + sw * 0.85, chestBandY + rig.limbR * 0.30);
+    ctx.quadraticCurveTo(
+      chest.x, chestBandY + rig.limbR * 0.95,
+      chest.x - sw * 0.85, chestBandY + rig.limbR * 0.30,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 5c. Waist crease — a faint horizontal line at the narrowest point.
+  // Sells the body bend and breaks up the torso vertically.
+  if (direction === 'south' || direction === 'north') {
+    ctx.save();
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = outlineW(rig, 0.10);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(chest.x - wWaist * 0.85, wy);
+    ctx.quadraticCurveTo(chest.x, wy + rig.limbR * 0.20,
+                         chest.x + wWaist * 0.85, wy);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // 6. Centerline crease (south view) — the seam where shirt buttons / zip
   // would run. Subtle but adds depth.
   if (direction === 'south' && opts.chestCrease !== false) {

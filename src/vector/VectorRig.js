@@ -76,9 +76,26 @@ function dims(config) {
   return table[(config && config.height) || 'medium'] || table.medium;
 }
 
+// Per-species build defaults. The user-provided build wins; this only
+// applies when no build was explicitly set, so each species has a
+// distinct silhouette out of the box.
+//   - demon:      muscular (warrior archetype)
+//   - goblin:     slim (small + scrawny)
+//   - lizardfolk: heavy (broad-shouldered, big-framed reptilian)
+//   - others:     average
+const SPECIES_DEFAULT_BUILD = {
+  demon:      'muscular',
+  goblin:     'slim',
+  lizardfolk: 'heavy',
+};
+
 function build(config) {
   const table = isNatural(config) ? BUILDS_NATURAL : BUILDS_CHIBI;
-  return table[(config && config.build) || 'average'] || table.average;
+  let key = config && config.build;
+  if (!key && config && SPECIES_DEFAULT_BUILD[config.type]) {
+    key = SPECIES_DEFAULT_BUILD[config.type];
+  }
+  return table[key || 'average'] || table.average;
 }
 
 /**
