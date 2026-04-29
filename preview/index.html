@@ -1163,56 +1163,70 @@ function drawArmorLabRow(stateIdx) {
                   armorOffsetX, armorOffsetY, armorFrameW * scale, armorFrameH * scale);
   };
 
+  const animEntry = armorLab.charMeta && armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
+  const fmeta     = animEntry && animEntry.frames && animEntry.frames[st.frame];
+  const facingNorth = animEntry && animEntry.direction === 'north';
+
+  // Helpers — drawWeapon and drawShield are factored out so the layer order
+  // can flip depending on whether the character faces toward or away from
+  // the camera. North-facing rows draw the weapon BEHIND the body (it's held
+  // in front of the character, hidden by their back from the viewer's POV).
+  const drawWeapon = () => {
+    const weapon = armorLab.selected.weapon;
+    if (!(weapon && fmeta && fmeta.weaponHand)) return;
+    const wh  = fmeta.weaponHand;
+    const img = armorLab.imgCache[toUrl(weapon.file)];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    const meta    = weapon.meta || {};
+    const fSize   = meta.frameSize || 32;
+    const gx      = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
+    const gy      = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
+    const neutral = meta.neutralAngleDeg || 0;
+    // Prefer the per-frame weaponAngle override (swing curves) when present,
+    // else fall back to the shoulder→hand direction.
+    const rot = (fmeta.weaponAngle != null ? fmeta.weaponAngle : wh.angleDeg) - neutral;
+    ctx.save();
+    ctx.translate(armorOffsetX + wh.x * scale, armorOffsetY + wh.y * scale);
+    ctx.rotate(rot * Math.PI / 180);
+    ctx.drawImage(img, 0, 0, fSize, fSize, -gx * scale, -gy * scale, fSize * scale, fSize * scale);
+    ctx.restore();
+  };
+  const drawShield = () => {
+    const shield = armorLab.selected.shield;
+    if (!(shield && fmeta && fmeta.offHand)) return;
+    const off = fmeta.offHand;
+    const img = armorLab.imgCache[toUrl(shield.file)];
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+    const meta  = shield.meta || {};
+    const fSize = meta.frameSize || 32;
+    const gx    = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
+    const gy    = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
+    const dx    = armorOffsetX + (off.x - gx) * scale;
+    const dy    = armorOffsetY + (off.y - gy) * scale;
+    ctx.drawImage(img, 0, 0, fSize, fSize, dx, dy, fSize * scale, fSize * scale);
+  };
+
+  // North-facing: weapon and shield first (occluded by body), then character + armor.
+  if (facingNorth) {
+    drawWeapon();
+    drawShield();
+  }
+
   // 1. Body
   drawCharSheet(armorLab.selected.character);
 
-  // 2. Body armor — boots, chest, gloves (low → mid z; helmet drawn last).
+  // 2. Body armor — boots, chest, gloves (helmet drawn last).
   drawArmorSheet(armorLab.selected.boots);
   drawArmorSheet(armorLab.selected.chest);
   drawArmorSheet(armorLab.selected.gloves);
 
-  const animEntry = armorLab.charMeta && armorLab.charMeta.animations && armorLab.charMeta.animations[st.name];
-  const fmeta     = animEntry && animEntry.frames && animEntry.frames[st.frame];
-
-  // 3. Weapon at weaponHand anchor, rotated to match arm direction.
-  // Anchor coords are in the armor frame (64×96); shift by armorOffset
-  // so the weapon lands in the centered armor area when the character
-  // canvas is wider (non-humans).
-  const weapon = armorLab.selected.weapon;
-  if (weapon && fmeta && fmeta.weaponHand) {
-    const wh  = fmeta.weaponHand;
-    const img = armorLab.imgCache[toUrl(weapon.file)];
-    if (img && img.complete && img.naturalWidth > 0) {
-      const meta    = weapon.meta || {};
-      const fSize   = meta.frameSize || 32;
-      const gx      = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
-      const gy      = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
-      const neutral = meta.neutralAngleDeg || 0;
-      ctx.save();
-      ctx.translate(armorOffsetX + wh.x * scale, armorOffsetY + wh.y * scale);
-      ctx.rotate((wh.angleDeg - neutral) * Math.PI / 180);
-      ctx.drawImage(img, 0, 0, fSize, fSize, -gx * scale, -gy * scale, fSize * scale, fSize * scale);
-      ctx.restore();
-    }
+  // South / east / west: weapon and shield in front of body.
+  if (!facingNorth) {
+    drawWeapon();
+    drawShield();
   }
 
-  // 4. Shield positioned at offHand anchor (no rotation — shields face out).
-  const shield = armorLab.selected.shield;
-  if (shield && fmeta && fmeta.offHand) {
-    const off = fmeta.offHand;
-    const img = armorLab.imgCache[toUrl(shield.file)];
-    if (img && img.complete && img.naturalWidth > 0) {
-      const meta  = shield.meta || {};
-      const fSize = meta.frameSize || 32;
-      const gx    = meta.gripX != null ? meta.gripX : Math.floor(fSize / 2);
-      const gy    = meta.gripY != null ? meta.gripY : Math.floor(fSize / 2);
-      const dx    = armorOffsetX + (off.x - gx) * scale;
-      const dy    = armorOffsetY + (off.y - gy) * scale;
-      ctx.drawImage(img, 0, 0, fSize, fSize, dx, dy, fSize * scale, fSize * scale);
-    }
-  }
-
-  // 5. Helmet last — always on top.
+  // Helmet last — always on top.
   drawArmorSheet(armorLab.selected.helmet);
 }
 

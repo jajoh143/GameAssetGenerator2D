@@ -101,6 +101,29 @@ function mirrorAnchor(a) {
   };
 }
 
+// ── Swing weapon rotation curves ───────────────────────────────────────────
+// During an attack_swing_* animation, the shoulder→hand angle is a poor proxy
+// for sword orientation: at apex the wrist is up-and-left of the shoulder, so
+// the natural angle (~-140°) makes the blade slice through the character's
+// head from the camera's POV. These hand-tuned curves give a more readable
+// motion: cocked over the shoulder → raised overhead → struck down-forward.
+//
+// Convention: canvas-style degrees (0=right, 90=down, -90=up). Frames are
+// indexed against the 8-frame ATTACK_SWING_*_FRAMES tables in AnimationData.
+const SWING_WEAPON_ANGLES = {
+  south: [-60, -75, -90, -90, -30,  60,  75,  30],
+  west:  [-45, -60, -90, -100, 180, 135, 110, 90],
+  north: [-60, -75, -90, -90, -30,  60,  75,  30],
+  east:  [225, 240, 270, 280, 0,    45,  70,  90],
+};
+
+function swingAngleFor(animName, frameIdx) {
+  const m = animName && animName.match(/^attack_swing_(south|west|north|east)$/);
+  if (!m) return null;
+  const arr = SWING_WEAPON_ANGLES[m[1]];
+  return (arr && frameIdx < arr.length) ? arr[frameIdx] : null;
+}
+
 function bodyPoint(x, y) {
   return { x, y };
 }
@@ -213,11 +236,19 @@ function buildMeta(frameSize, animationRows, getFramesFn, getDirectionFn, config
     const direction = getDirectionFn(animName);
     const offsets   = getFramesFn(animName);
 
-    const frames = offsets.map((f) => {
+    const frames = offsets.map((f, frameIdx) => {
       const anchors = computeFrameAnchors(direction, f, yAnchors);
+      const swingAngle = swingAngleFor(animName, frameIdx);
       return {
         weaponHand: scaleHandAnchor(anchors.weaponHand),
         offHand:    scaleHandAnchor(anchors.offHand),
+        // weaponAngle: rotation (deg) the runtime should use to orient the
+        // weapon. Defaults to the natural shoulder→hand angle; swing frames
+        // override it with a hand-tuned curve so the sword reads as a real
+        // strike instead of pointing through the body.
+        weaponAngle: swingAngle != null
+          ? swingAngle
+          : (anchors.weaponHand ? anchors.weaponHand.angleDeg : null),
         head:       scalePoint(anchors.head),
         torso:      scalePoint(anchors.torso),
         leftFoot:   scalePoint(anchors.leftFoot),
