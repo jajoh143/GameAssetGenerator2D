@@ -67,9 +67,10 @@ function resolveColors(config) {
   // Style-driven clothing detail flags (lapels, pockets, sleeve cuff bands).
   const cs = config.clothingStyle || 'jacket';
   const detailFlags = {
-    lapels:  ['jacket', 'bomber', 'coat'].includes(cs),
-    pockets: ['jacket', 'bomber', 'coat', 'apron', 'vest'].includes(cs),
-    cuffBand: ['jacket', 'bomber', 'coat', 'hoodie'].includes(cs),
+    lapels:      ['jacket', 'bomber', 'coat'].includes(cs),
+    pockets:     ['jacket', 'bomber', 'coat', 'apron', 'vest'].includes(cs),
+    cuffBand:    ['jacket', 'bomber', 'coat', 'hoodie'].includes(cs),
+    chestPocket: ['jacket', 'bomber', 'coat', 'shirt'].includes(cs),
   };
 
   return {
@@ -321,7 +322,16 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
     // Outside-leg fold/seam line — only really reads in profile view.
     Body.drawPantFold(ctx, hip, knee, foot, rig, colors.pants);
     Body.drawPantCuff(ctx, foot, knee, rig, colors.pants);
-    Body.drawShoe(ctx, foot, colors.shoes, rig, 'west');
+    // Foot tilt: a foot that's lifted off the ground points its toes
+    // downward; a planted foot stays flat. The shin direction (knee→foot
+    // angle relative to vertical) is the cleanest cue.
+    const dx = foot.x - knee.x, dy = foot.y - knee.y;
+    const shinAngle = Math.atan2(dx, dy);   // 0 when straight down, +ve when leg leans forward
+    const lift = (side === 'L' ? offsets.leftLegLift : offsets.rightLegLift) || 0;
+    // Only tilt when the leg is lifted (toes point down for a "stepping"
+    // look). Cap at ~25° so it doesn't look uncanny.
+    const tilt = lift > 0 ? Math.max(-0.45, Math.min(0.45, -shinAngle * 0.8)) : 0;
+    Body.drawShoe(ctx, foot, colors.shoes, rig, 'west', { tilt });
   };
   drawLeg(backLeg);
 

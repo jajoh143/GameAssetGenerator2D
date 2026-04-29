@@ -278,18 +278,27 @@ function drawCuff(ctx, hand, elbow, rig, clothing) {
 
 /**
  * Shoe — flat oval with a darker sole, anchored at the foot joint.
+ *
+ * `opts.tilt` (radians) rotates the shoe around the foot joint. Used on
+ * walk frames so the planted foot stays flat while the lifting/swinging
+ * foot tilts toes-down for a "stepping forward" look.
  */
-function drawShoe(ctx, foot, shoes, rig, direction) {
+function drawShoe(ctx, foot, shoes, rig, direction, opts = {}) {
   const r = rig.limbR;
   const sx = direction === 'west' || direction === 'east' ? r * 2.2 : r * 1.4;
   const sy = r * 0.95;
+  const tilt = opts.tilt || 0;
+  ctx.save();
+  ctx.translate(foot.x, foot.y);
+  if (tilt) ctx.rotate(tilt);
   // Upper
-  VC.oval(ctx, foot.x, foot.y, sx, sy,
-    VC.diagGradient(ctx, foot.x - sx, foot.y - sy, sx * 2, sy * 2, shoes),
+  VC.oval(ctx, 0, 0, sx, sy,
+    VC.diagGradient(ctx, -sx, -sy, sx * 2, sy * 2, shoes),
     shoes.outline, outlineW(rig));
   // Sole
-  VC.oval(ctx, foot.x, foot.y + sy * 0.55, sx * 0.95, sy * 0.4,
+  VC.oval(ctx, 0, sy * 0.55, sx * 0.95, sy * 0.4,
     shoes.shadow || shoes.outline, shoes.outline, outlineW(rig, 0.15));
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------------------
@@ -484,6 +493,33 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
     }
     ctx.restore();
   }
+
+  // 9. Chest pocket — small inset rectangle on the upper-left chest, only
+  // for jacket-family clothing (visible on south view). A darker rectangle
+  // with a flap line on top reads as a sewn-on patch pocket.
+  if (direction === 'south' && opts.chestPocket) {
+    const pw = sw * 0.32;
+    const ph = rig.limbR * 0.95;
+    const px = chest.x - sw * 0.55;
+    const py = chest.y + rig.limbR * 0.95;
+    ctx.save();
+    // Pocket body
+    ctx.fillStyle = clothing.deep_shadow || clothing.shadow || '#222';
+    ctx.strokeStyle = clothing.outline || '#000';
+    ctx.lineWidth = outlineW(rig, 0.16);
+    ctx.beginPath();
+    ctx.rect(px, py, pw, ph);
+    ctx.fill();
+    ctx.stroke();
+    // Flap line near the top
+    ctx.beginPath();
+    ctx.moveTo(px, py + ph * 0.35);
+    ctx.lineTo(px + pw, py + ph * 0.35);
+    ctx.lineWidth = outlineW(rig, 0.10);
+    ctx.strokeStyle = VC.hexAlpha(clothing.highlight || '#fff', 0.5);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -615,6 +651,23 @@ function drawHead(ctx, rig, skin) {
   ctx.quadraticCurveTo(
     head.x + head.r * 0.30, head.y - head.r * 0.05,
     head.x + head.r * 0.18, head.y - head.r * 0.95,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // 3b. Brow-ridge shadow — a soft horizontal band across the upper face
+  // just above the eye line. Sells the eye-socket recess and lets the
+  // hair fringe "cast" onto the face even though the hair itself is
+  // drawn opaquely on top of the forehead.
+  ctx.beginPath();
+  ctx.moveTo(head.x - head.r * 0.85, head.y - head.r * 0.10);
+  ctx.quadraticCurveTo(
+    head.x, head.y - head.r * 0.30,
+    head.x + head.r * 0.85, head.y - head.r * 0.10,
+  );
+  ctx.quadraticCurveTo(
+    head.x, head.y + head.r * 0.05,
+    head.x - head.r * 0.85, head.y - head.r * 0.10,
   );
   ctx.closePath();
   ctx.fill();
@@ -1323,47 +1376,53 @@ function drawHair(ctx, rig, hair, style) {
     head.y + ny * head.r,
   ]);
 
-  // 1. Base hair fill — diagonal gradient (highlight on top-left, shadow
-  // bottom-right) so the hair mass reads as 3D, not flat.
-  const grad = ctx.createLinearGradient(
-    head.x - head.r * 1.1, head.y - head.r * 1.3,
-    head.x + head.r * 1.1, head.y + head.r * 0.6,
-  );
-  grad.addColorStop(0,   hair.highlight || hair.base);
-  grad.addColorStop(0.5, hair.base);
-  grad.addColorStop(1,   hair.shadow || hair.base);
-  VC.smoothBlob(ctx, pts, grad, hair.shadow || '#000', outlineW(rig, 0.20), 0.55);
+  // 1. Flat-fill the hair mass — solid base color with strong outline.
+  blobPath(ctx, pts, 0.55);
+  ctx.fillStyle = hair.base;
+  ctx.fill();
+  ctx.strokeStyle = hair.shadow || '#000';
+  ctx.lineWidth = outlineW(rig, 0.32);
+  ctx.stroke();
 
-  // 2. Form shadow blob on the bottom-right of the hair mass — a soft
-  // crescent that matches the head's core shadow direction.
+  // 2. Cel shadow band — a darker shape on the bottom-right of the hair
+  // mass that matches the head's terminator. Drawn via source-atop so it
+  // clips to the hair silhouette.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = 0.50;
-  const formShadow = ctx.createRadialGradient(
-    head.x + head.r * 0.55, head.y - head.r * 0.20, 0,
-    head.x + head.r * 0.55, head.y - head.r * 0.20, head.r * 1.4,
+  ctx.fillStyle = hair.shadow || '#000';
+  ctx.beginPath();
+  ctx.moveTo(head.x + head.r * 0.20, head.y - head.r * 1.20);
+  ctx.quadraticCurveTo(
+    head.x + head.r * 1.30, head.y - head.r * 0.30,
+    head.x + head.r * 0.40, head.y + head.r * 0.30,
   );
-  formShadow.addColorStop(0,   VC.hexAlpha(hair.shadow || '#000', 0.0));
-  formShadow.addColorStop(0.45, VC.hexAlpha(hair.shadow || '#000', 0.6));
-  formShadow.addColorStop(1,   VC.hexAlpha(hair.shadow || '#000', 0.0));
-  ctx.fillStyle = formShadow;
-  blobPath(ctx, pts, 0.55);
+  ctx.lineTo(head.x + head.r * 0.10, head.y + head.r * 0.20);
+  ctx.quadraticCurveTo(
+    head.x + head.r * 0.40, head.y - head.r * 0.40,
+    head.x + head.r * 0.20, head.y - head.r * 1.20,
+  );
+  ctx.closePath();
   ctx.fill();
   ctx.restore();
 
-  // 3. Rim highlight along the top-left silhouette — gives the hair a
-  // glossy "anime"-style sheen.
+  // 3. Cel highlight stripe — a brighter band along the lit side of the
+  // hair (top-left). Reads as a glossy specular highlight characteristic
+  // of anime-style hair.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
-  ctx.globalAlpha = 0.55;
-  const rim = ctx.createLinearGradient(
-    head.x - head.r * 1.1, head.y - head.r * 1.3,
-    head.x + head.r * 0.0, head.y - head.r * 0.4,
+  ctx.fillStyle = hair.highlight || '#fff';
+  ctx.beginPath();
+  ctx.moveTo(head.x - head.r * 0.65, head.y - head.r * 1.25);
+  ctx.quadraticCurveTo(
+    head.x - head.r * 1.20, head.y - head.r * 0.85,
+    head.x - head.r * 0.95, head.y - head.r * 0.30,
   );
-  rim.addColorStop(0,   VC.hexAlpha(hair.highlight || '#fff', 0.85));
-  rim.addColorStop(0.6, VC.hexAlpha(hair.highlight || '#fff', 0.0));
-  ctx.fillStyle = rim;
-  blobPath(ctx, pts, 0.55);
+  ctx.lineTo(head.x - head.r * 0.75, head.y - head.r * 0.40);
+  ctx.quadraticCurveTo(
+    head.x - head.r * 0.95, head.y - head.r * 0.85,
+    head.x - head.r * 0.50, head.y - head.r * 1.10,
+  );
+  ctx.closePath();
   ctx.fill();
   ctx.restore();
 
