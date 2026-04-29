@@ -535,10 +535,17 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
 
   let pts;
   if (direction === 'south' || direction === 'north') {
-    // Anatomical front silhouette: rounded shoulder caps, gentle ribs
-    // taper, narrow waist, curved hips, groin pinch. The path goes:
-    // top-center → right shoulder ridge → shoulder cap → armpit → ribs
-    // → waist → hip → groin → bottom-center → mirror up the left.
+    // Anatomical front silhouette. The torso TERMINATES at the belt
+    // line — anything below the belt is "pants area" handled by
+    // drawPelvisBridge + the legs. This way the shirt+pants seam lines
+    // up cleanly with the belt. Previously the silhouette extended
+    // past the belt into a "groin V", which made the shirt continue
+    // down into the pelvis area and the whole transition read awkwardly.
+    //
+    // Belt anchor (drawBelt): y = pelvis.y - h*0.4, h = limbR*0.85.
+    //   → belt sits ~ pelvis.y - limbR * 0.34. The shirt bottom is set
+    //   slightly lower (-0.30) so the belt cleanly overlays the seam.
+    const beltY = pelvis.y - limbR * 0.30;
     pts = [
       // top center: collarbone hollow (slight rise)
       [chest.x,                       chest.y - limbR * 0.20],
@@ -552,20 +559,16 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
       [chest.x + sw * 0.78,           chest.y + tH * 0.40],
       // right waist (narrowest)
       [chest.x + wWaist,              wy],
-      // right hip (curves out)
-      [pelvis.x + hw * 1.00,          pelvis.y - limbR * 0.20],
-      // right outer-thigh seam
-      [pelvis.x + hw * 0.85,          pelvis.y + limbR * 0.30],
-      // right groin (pinches in toward the leg root)
-      [pelvis.x + hw * 0.40,          pelvis.y + limbR * 0.50],
-      // bottom center: groin / inner-thigh notch
-      [pelvis.x,                       pelvis.y + limbR * 0.30],
-      // left groin
-      [pelvis.x - hw * 0.40,          pelvis.y + limbR * 0.50],
-      // left outer-thigh seam
-      [pelvis.x - hw * 0.85,          pelvis.y + limbR * 0.30],
-      // left hip
-      [pelvis.x - hw * 1.00,          pelvis.y - limbR * 0.20],
+      // right hip — flares back out
+      [chest.x + hw * 0.95,           pelvis.y - limbR * 0.55],
+      // right shirt bottom corner (sits on the belt line)
+      [chest.x + hw * 0.85,           beltY],
+      // bottom center — soft dip across the belt line (no groin V)
+      [chest.x,                       beltY + limbR * 0.10],
+      // left shirt bottom corner
+      [chest.x - hw * 0.85,           beltY],
+      // left hip — flares back out
+      [chest.x - hw * 0.95,           pelvis.y - limbR * 0.55],
       // left waist
       [chest.x - wWaist,              wy],
       // left ribs
@@ -586,12 +589,14 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
       [chest.x,                       chest.y - limbR * 0.30],
       // chest forward bulge (front of body, smaller X = forward in west)
       [chest.x - sd * 0.95,           chest.y + limbR * 0.30],
-      // mid-back / pec
-      [chest.x - sd * 0.85,           chest.y + tH * 0.30],
-      // waist front (gentle in-curve, abdominal)
-      [chest.x - sd * 0.55,           wy],
-      // belly forward bulge (very subtle)
-      [chest.x - sd * 0.65,           chest.y + tH * 0.75],
+      // mid-back / pec — keep the chest forward profile broad
+      [chest.x - sd * 0.90,           chest.y + tH * 0.32],
+      // upper abs — start narrowing toward waist
+      [chest.x - sd * 0.72,           chest.y + tH * 0.50],
+      // waist front (gentle in-curve, abdominal pinch)
+      [chest.x - sd * 0.50,           wy],
+      // lower belly — bulges back out below the waist line
+      [chest.x - sd * 0.62,           chest.y + tH * 0.82],
       // pelvis front bottom
       [chest.x - hd * 0.55,           pelvis.y],
       // crotch-front
@@ -600,10 +605,10 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
       [chest.x + hd * 0.30,           pelvis.y + limbR * 0.40],
       // glute bulge
       [chest.x + hd * 0.85,           pelvis.y - limbR * 0.10],
-      // lumbar inward curve
-      [chest.x + sd * 0.80,           wy + tH * 0.10],
+      // lumbar inward curve — narrows behind the waist
+      [chest.x + sd * 0.78,           wy + tH * 0.05],
       // upper-back broad
-      [chest.x + sd * 0.95,           chest.y + tH * 0.30],
+      [chest.x + sd * 0.95,           chest.y + tH * 0.32],
       // shoulder-blade
       [chest.x + sd * 0.85,           chest.y + limbR * 0.30],
       // back of neck
@@ -701,6 +706,33 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
                          chest.x + sw * 0.32, vBot + limbR * 0.05);
     ctx.stroke();
     ctx.restore();
+
+    // Abs ladder — three short curved lines BELOW the pec V suggesting
+    // abdominal segments. Each line curves slightly toward the body
+    // centerline so they read as muscle planes rather than ladder rungs.
+    ctx.save();
+    ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
+    ctx.globalAlpha = 0.40;
+    ctx.lineWidth = outlineW(rig, 0.10);
+    ctx.lineCap = 'round';
+    const absStart = chest.y + limbR * 1.85;
+    const absEnd   = wy - limbR * 0.20;
+    const absRows  = 3;
+    for (let i = 0; i < absRows; i++) {
+      const t = (i + 0.5) / absRows;
+      const ay = absStart + (absEnd - absStart) * t;
+      const halfW = sw * (0.32 - i * 0.05);     // slightly narrower per row
+      ctx.beginPath();
+      // Two curved horizontal segments separated by a small gap at center
+      ctx.moveTo(chest.x - halfW, ay);
+      ctx.quadraticCurveTo(chest.x - halfW * 0.5, ay + limbR * 0.10,
+                           chest.x - limbR * 0.05, ay);
+      ctx.moveTo(chest.x + limbR * 0.05, ay);
+      ctx.quadraticCurveTo(chest.x + halfW * 0.5, ay + limbR * 0.10,
+                           chest.x + halfW, ay);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // 5b. Chest plane — a soft horizontal shadow under the shoulder line
@@ -731,16 +763,20 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
   }
 
   // 5c. Waist crease — a faint horizontal line at the narrowest point.
-  // Sells the body bend and breaks up the torso vertically.
+  // Sells the body bend and breaks up the torso vertically. For
+  // muscular / heavy builds wearing sleeveless tops, the crease is
+  // stronger + slightly above the silhouette pinch (where the abs
+  // would naturally cinch).
   if (direction === 'south' || direction === 'north') {
     ctx.save();
     ctx.strokeStyle = clothing.deep_shadow || clothing.outline;
-    ctx.globalAlpha = 0.45;
-    ctx.lineWidth = outlineW(rig, 0.10);
+    ctx.globalAlpha = opts.muscular ? 0.70 : 0.45;
+    ctx.lineWidth = outlineW(rig, opts.muscular ? 0.14 : 0.10);
     ctx.lineCap = 'round';
     ctx.beginPath();
+    const creaseY = wy + rig.limbR * (opts.muscular ? 0.10 : 0.20);
     ctx.moveTo(chest.x - wWaist * 0.85, wy);
-    ctx.quadraticCurveTo(chest.x, wy + rig.limbR * 0.20,
+    ctx.quadraticCurveTo(chest.x, creaseY,
                          chest.x + wWaist * 0.85, wy);
     ctx.stroke();
     ctx.restore();
