@@ -54,10 +54,10 @@ const HEIGHT_DIMS = HEIGHT_DIMS_CHIBI;   // back-compat alias used elsewhere
 // shoulders / hips / limb radii in a touch so the figure reads as adult
 // proportions rather than a stretched chibi.
 const BUILDS_CHIBI = {
-  slim:     { shoulderW: 0.50, hipW: 0.40, limbR: 0.052, torsoTaper: 0.78 },
-  average:  { shoulderW: 0.58, hipW: 0.44, limbR: 0.060, torsoTaper: 0.82 },
-  muscular: { shoulderW: 0.68, hipW: 0.46, limbR: 0.070, torsoTaper: 0.78 },
-  heavy:    { shoulderW: 0.66, hipW: 0.54, limbR: 0.070, torsoTaper: 0.92 },
+  slim:     { shoulderW: 0.50, hipW: 0.28, limbR: 0.052, torsoTaper: 0.78 },
+  average:  { shoulderW: 0.58, hipW: 0.32, limbR: 0.060, torsoTaper: 0.82 },
+  muscular: { shoulderW: 0.68, hipW: 0.36, limbR: 0.070, torsoTaper: 0.78 },
+  heavy:    { shoulderW: 0.66, hipW: 0.44, limbR: 0.070, torsoTaper: 0.92 },
 };
 const BUILDS_NATURAL = {
   slim:     { shoulderW: 0.32, hipW: 0.26, limbR: 0.034, torsoTaper: 0.78 },

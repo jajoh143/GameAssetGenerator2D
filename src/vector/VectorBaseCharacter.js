@@ -1407,7 +1407,7 @@ function drawEars(ctx, rig, skin) {
 function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   const { head } = rig;
   const dx = head.r * 0.32;
-  const dy = head.r * 0.10;          // eyes sit slightly below head center
+  const dy = head.r * 0.04;          // eyes near vertical center of face
 
   // Closed-eye blink — short downward-curving arc with an underline.
   if (opts.blink) {
@@ -1444,10 +1444,10 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   // bartender / patron pixel art have eyes that are ~3-4 px in a 32 px
   // head, i.e. roughly 12-15% of head radius. Anime-huge eyes read as
   // "chibi cartoon"; tight eyes read as "stylized but grounded".
-  const eyeRX = head.r * 0.16;
-  const eyeRY = head.r * 0.13;
-  const irisRX = head.r * 0.09;
-  const irisRY = head.r * 0.12;
+  const eyeRX = head.r * 0.19;
+  const eyeRY = head.r * 0.15;
+  const irisRX = head.r * 0.11;
+  const irisRY = head.r * 0.14;
 
   const irisColor   = eyes.iris   || eyes.base || '#3a2510';
   const irisShadow  = eyes.shadow || mixColor(irisColor, '#000', 0.45);
@@ -1616,8 +1616,8 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
 function drawEyebrowsSouth(ctx, rig, eyes) {
   const { head } = rig;
   const dx = head.r * 0.32;
-  const dy = -head.r * 0.18;        // slightly above eye line
-  const browW = head.r * 0.28;
+  const dy = -head.r * 0.24;        // slightly above eye line
+  const browW = head.r * 0.32;
   const browH = head.r * 0.07;
   const browColor = eyes.brow || '#1a1010';
   ctx.save();
@@ -2044,10 +2044,10 @@ const HAIR_BLOBS = {
     [-0.40,  0.05], [-0.95,  0.30],
   ],
   spiky: [
-    [-0.95, -0.10], [-1.10, -0.85], [-0.65, -0.55], [-0.55, -1.30],
-    [-0.20, -0.65], [0.0, -1.40], [0.20, -0.65], [0.55, -1.30],
-    [0.65, -0.55], [1.10, -0.85], [0.95, -0.10], [0.55, -0.20],
-    [-0.55, -0.20],
+    [-0.95, -0.40], [-1.10, -1.15], [-0.65, -0.85], [-0.55, -1.60],
+    [-0.20, -0.95], [0.0, -1.70], [0.20, -0.95], [0.55, -1.60],
+    [0.65, -0.85], [1.10, -1.15], [0.95, -0.40], [0.55, -0.50],
+    [-0.55, -0.50],
   ],
   mohawk: [
     [-0.20, -0.05], [-0.30, -0.65], [-0.10, -1.40], [0.10, -1.40],
@@ -2311,9 +2311,9 @@ function drawForelock(ctx, rig, hair, style) {
     ];
   } else if (style === 'spiky') {
     pts = [
-      [-0.85, -0.40], [-0.85, -0.95], [-0.50, -0.55], [-0.30, -1.10],
-      [-0.10, -0.55], [ 0.10, -1.15], [ 0.30, -0.60], [ 0.55, -1.00],
-      [ 0.85, -0.55], [ 0.80, -0.30], [-0.55, -0.30],
+      [-0.85, -0.60], [-0.85, -1.15], [-0.50, -0.80], [-0.30, -1.35],
+      [-0.10, -0.80], [ 0.10, -1.40], [ 0.30, -0.85], [ 0.55, -1.25],
+      [ 0.85, -0.80], [ 0.80, -0.55], [-0.55, -0.55],
     ];
   } else if (style === 'undercut') {
     pts = [
