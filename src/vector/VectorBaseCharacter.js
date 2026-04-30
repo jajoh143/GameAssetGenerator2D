@@ -48,7 +48,7 @@ function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
   const r0 = opts.rootR || 1.0;
   const r1 = opts.midR  || 0.92;
   const r2 = opts.tipR  || 0.75;
-  const lineWidth = opts.lineWidth || outlineW({ limbR: r0 }, 0.30);
+  const lineWidth = opts.lineWidth || outlineW({ limbR: r0 }, 0.24);
 
   const base    = palette.base;
   const shadow  = palette.shadow || palette.base;
@@ -58,17 +58,14 @@ function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
   VC.limb(ctx, root.x, root.y, r0, mid.x, mid.y, r1, base, outline, lineWidth);
   VC.limb(ctx, mid.x,  mid.y,  r1, tip.x, tip.y, r2, base, outline, lineWidth);
 
-  // 2. Hard-edged shadow band on the bottom-right side. The shadow shape
-  // is the limb itself, but offset perpendicular toward the shadow side,
-  // and clipped to the limb body so it reads as the right-half being
-  // in shadow.
+  // 2. Shadow band — covers the bottom-right half of each segment so the
+  // arm reads as a cylinder rather than a flat shape.
   const seg = (a, b, ra, rb) => {
     const dx = b.x - a.x, dy = b.y - a.y;
     const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len, ny = dx / len;     // perpendicular (right side of arm)
-    // Offset both ends ~55% of the radius toward the shadow side for a bolder cel look.
-    const offA = { x: a.x + nx * ra * 0.55, y: a.y + ny * ra * 0.55 };
-    const offB = { x: b.x + nx * rb * 0.55, y: b.y + ny * rb * 0.55 };
+    const nx = -dy / len, ny = dx / len;
+    const offA = { x: a.x + nx * ra * 0.48, y: a.y + ny * ra * 0.48 };
+    const offB = { x: b.x + nx * rb * 0.48, y: b.y + ny * rb * 0.48 };
     ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
     VC.limb(ctx, offA.x, offA.y, ra, offB.x, offB.y, rb, shadow, null, 0);
@@ -77,7 +74,26 @@ function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
   seg(root, mid, r0, r1);
   seg(mid,  tip, r1, r2);
 
-  // 3. Joint cap — a small filled oval that smooths the bend.
+  // 3. Rim highlight — a narrow bright stripe on the opposite (lit) side.
+  // Painted source-atop so it stays inside the silhouette. Gives the
+  // cylinder its convex roundness without a gradient.
+  const highlight = palette.highlight || palette.base;
+  const rim = (a, b, ra, rb) => {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    const offA = { x: a.x - nx * ra * 0.52, y: a.y - ny * ra * 0.52 };
+    const offB = { x: b.x - nx * rb * 0.52, y: b.y - ny * rb * 0.52 };
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.globalAlpha = 0.40;
+    VC.limb(ctx, offA.x, offA.y, ra * 0.55, offB.x, offB.y, rb * 0.55, highlight, null, 0);
+    ctx.restore();
+  };
+  rim(root, mid, r0, r1);
+  rim(mid,  tip, r1, r2);
+
+  // 4. Joint cap — smooths the elbow/knee bend.
   VC.oval(ctx, mid.x, mid.y, r1 * 0.95, r1 * 0.92, shadow, null);
 }
 
@@ -1382,18 +1398,19 @@ function drawHead(ctx, rig, skin) {
   // taper to a soft chin point.
   let pts;
   if (direction === 'south' || direction === 'north') {
+    // Rounder cheekbones + softer chin for a chibi silhouette.
     pts = [
-      [-0.50, -1.00],   // top-left of skull
-      [-0.92, -0.55],   // upper temple
-      [-0.95, -0.05],   // cheekbone (widest point)
-      [-0.78,  0.55],   // jaw
-      [-0.32,  0.92],   // chin-left
-      [ 0.00,  1.00],   // chin
-      [ 0.32,  0.92],
-      [ 0.78,  0.55],
-      [ 0.95, -0.05],
-      [ 0.92, -0.55],
-      [ 0.50, -1.00],
+      [-0.48, -1.00],
+      [-0.90, -0.52],
+      [-0.96, -0.05],   // cheekbone (widest point)
+      [-0.80,  0.52],   // jaw
+      [-0.38,  0.88],   // chin-left
+      [ 0.00,  0.95],   // chin (rounded, not a point)
+      [ 0.38,  0.88],
+      [ 0.80,  0.52],
+      [ 0.96, -0.05],
+      [ 0.90, -0.52],
+      [ 0.48, -1.00],
       [ 0.00, -1.05],   // skull-top
     ];
   } else {
@@ -1418,12 +1435,13 @@ function drawHead(ctx, rig, skin) {
     head.y + ny * head.r,
   ]);
 
-  // 2. Flat-fill the head — solid base skin tone with a strong outline.
+  // 2. Flat-fill the head — outline scaled to the head radius, not limbR,
+  // so the stroke reads as a clean border rather than a thick sticker edge.
   blobPath(ctx, blob, 0.55);
   ctx.fillStyle = skin.base;
   ctx.fill();
   ctx.strokeStyle = skin.outline;
-  ctx.lineWidth = outlineW(rig, 0.32);
+  ctx.lineWidth = Math.max(1.4, head.r * 0.062);
   ctx.stroke();
 
   // 3. Cel shadow — a bold cheek/jaw shadow on the bottom-right that covers
@@ -1445,32 +1463,30 @@ function drawHead(ctx, rig, skin) {
   ctx.closePath();
   ctx.fill();
 
-  // 3b. Brow-ridge shadow — a soft horizontal band across the upper face
-  // just above the eye line. Sells the eye-socket recess and lets the
-  // hair fringe "cast" onto the face even though the hair itself is
-  // drawn opaquely on top of the forehead.
+  // 3b. Brow-ridge shadow — repositioned to sit above the larger eyes
+  // (eye center is at head.y; eyebrows are at head.y - 0.30*r).
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.85, head.y - head.r * 0.10);
+  ctx.moveTo(head.x - head.r * 0.82, head.y - head.r * 0.24);
   ctx.quadraticCurveTo(
-    head.x, head.y - head.r * 0.30,
-    head.x + head.r * 0.85, head.y - head.r * 0.10,
+    head.x, head.y - head.r * 0.44,
+    head.x + head.r * 0.82, head.y - head.r * 0.24,
   );
   ctx.quadraticCurveTo(
-    head.x, head.y + head.r * 0.05,
-    head.x - head.r * 0.85, head.y - head.r * 0.10,
+    head.x, head.y - head.r * 0.08,
+    head.x - head.r * 0.82, head.y - head.r * 0.24,
   );
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 
-  // 5. Cheek blush — south view only.
+  // 5. Cheek blush — south view only. Positioned below the eye line.
   if (direction === 'south') {
     ctx.save();
-    ctx.globalAlpha = 0.20;
-    VC.oval(ctx, head.x + head.r * 0.46, head.y + head.r * 0.22,
-      head.r * 0.20, head.r * 0.12, '#c84848', null);
-    VC.oval(ctx, head.x - head.r * 0.46, head.y + head.r * 0.22,
-      head.r * 0.20, head.r * 0.12, '#c84848', null);
+    ctx.globalAlpha = 0.22;
+    VC.oval(ctx, head.x + head.r * 0.50, head.y + head.r * 0.38,
+      head.r * 0.22, head.r * 0.13, '#d04848', null);
+    VC.oval(ctx, head.x - head.r * 0.50, head.y + head.r * 0.38,
+      head.r * 0.22, head.r * 0.13, '#d04848', null);
     ctx.restore();
   }
 
