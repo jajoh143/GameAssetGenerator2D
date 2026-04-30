@@ -3022,6 +3022,70 @@ function drawCape(ctx, rig, palette, opts = {}) {
 }
 
 /**
+ * Shoulder cap — a deltoid-shaped oval that bridges the arm root to the
+ * torso edge. Drawn after arms for every character (no config flag needed),
+ * so the arm attachment always reads as a proper shoulder mass rather than
+ * a cylinder floating out of the body edge.
+ */
+function drawShoulderCap(ctx, rig, clothing) {
+  const { shoulderL, shoulderR, limbR } = rig;
+  const direction = rig.direction;
+
+  // Cap radii slightly larger than the arm root so they fully cover the seam.
+  const rx = limbR * 1.42;
+  const ry = limbR * 1.15;
+
+  const drawOne = (sh, outSign) => {
+    // Shift the cap a little outward and up from the shoulder joint so the
+    // deltoid mass sits above the arm insertion.
+    const capX = sh.x + outSign * limbR * 0.22;
+    const capY = sh.y - limbR * 0.14;
+
+    // Clip all fill passes to the cap ellipse for clean cel-shading.
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.fillStyle = clothing.base;
+    ctx.beginPath();
+    ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cel shadow on the lower-right (shadow side).
+    ctx.fillStyle = clothing.shadow || clothing.base;
+    ctx.beginPath();
+    ctx.ellipse(capX + rx * 0.38, capY + ry * 0.24, rx * 0.88, ry * 0.88, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rim highlight on the upper-left (lit side).
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = clothing.highlight || clothing.base;
+    ctx.beginPath();
+    ctx.ellipse(capX - rx * 0.30, capY - ry * 0.20, rx * 0.50, ry * 0.50, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // Outline — drawn after restore so it isn't clipped.
+    ctx.beginPath();
+    ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = clothing.outline || '#000';
+    ctx.lineWidth = Math.max(1.4, limbR * 0.20);
+    ctx.stroke();
+  };
+
+  if (direction === 'south' || direction === 'north') {
+    drawOne(shoulderL, -1);
+    drawOne(shoulderR,  1);
+  } else {
+    // West/east profile: back shoulder first (drawn under), front on top.
+    drawOne(shoulderR,  1);
+    drawOne(shoulderL, -1);
+  }
+}
+
+/**
  * Shoulder pads — domed armor caps on each shoulder. Drawn after the
  * torso + arm so they overlay the shoulder seam.
  */
@@ -3356,6 +3420,7 @@ module.exports = {
   drawBeard,
   drawHood,
   drawCape,
+  drawShoulderCap,
   drawShoulderPads,
   drawHeadwear,
   drawGlasses,

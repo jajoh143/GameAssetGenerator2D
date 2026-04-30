@@ -255,7 +255,9 @@ function drawSouth(ctx, config, offsets, hooks = {}, meta = {}) {
   if (lArmFwd >= rArmFwd) { drawArmR(); drawArmL(); }
   else                    { drawArmL(); drawArmR(); }
 
-  // Shoulder pads — drawn AFTER arms so they cap the shoulder seam.
+  // Shoulder caps — always drawn to bridge the arm-root → torso seam.
+  Body.drawShoulderCap(ctx, rig, colors.clothing);
+  // Armor shoulder pads overlay the cap when equipped.
   if (config.shoulderPads) Body.drawShoulderPads(ctx, rig, colors.shoulder);
 
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
@@ -377,7 +379,9 @@ function drawNorth(ctx, config, offsets, hooks = {}, meta = {}) {
   };
   drawArmL(); drawArmR();
 
-  // Shoulder pads cap the back-shoulder seam.
+  // Shoulder caps — always drawn to bridge the arm-root → torso seam.
+  Body.drawShoulderCap(ctx, rig, colors.clothing);
+  // Armor shoulder pads overlay the cap when equipped.
   if (config.shoulderPads) Body.drawShoulderPads(ctx, rig, colors.shoulder);
 
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
@@ -472,7 +476,9 @@ function drawWest(ctx, config, offsets, hooks = {}, meta = {}) {
   if (config.belt !== false) Body.drawBelt(ctx, rig, colors.belt);
   drawArm(frontArm);
 
-  // Shoulder pads cap both shoulders in profile.
+  // Shoulder caps — always drawn to bridge the arm-root → torso seam.
+  Body.drawShoulderCap(ctx, rig, colors.clothing);
+  // Armor shoulder pads overlay the cap when equipped.
   if (config.shoulderPads) Body.drawShoulderPads(ctx, rig, colors.shoulder);
 
   if (hooks.afterBody) hooks.afterBody(ctx, rig, colors);
