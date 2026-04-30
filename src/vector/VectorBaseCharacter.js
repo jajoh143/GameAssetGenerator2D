@@ -3031,17 +3031,18 @@ function drawShoulderCap(ctx, rig, clothing) {
   const { shoulderL, shoulderR, limbR } = rig;
   const direction = rig.direction;
 
-  // Cap radii slightly larger than the arm root so they fully cover the seam.
-  const rx = limbR * 1.42;
-  const ry = limbR * 1.15;
+  // Cap is a small flat oval — just wide enough to round off the arm-root
+  // seam at the torso edge. Not a visual element in its own right, more a
+  // smooth transition piece. Keep it under the arm-root radius so it
+  // doesn't read as a separate shoulder pad.
+  const rx = limbR * 0.92;
+  const ry = limbR * 0.68;
 
-  const drawOne = (sh, outSign) => {
-    // Shift the cap a little outward and up from the shoulder joint so the
-    // deltoid mass sits above the arm insertion.
-    const capX = sh.x + outSign * limbR * 0.22;
-    const capY = sh.y - limbR * 0.14;
+  const drawOne = (sh) => {
+    // Centered on the shoulder joint with only a tiny upward nudge.
+    const capX = sh.x;
+    const capY = sh.y - limbR * 0.06;
 
-    // Clip all fill passes to the cap ellipse for clean cel-shading.
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
@@ -3052,36 +3053,37 @@ function drawShoulderCap(ctx, rig, clothing) {
     ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cel shadow on the lower-right (shadow side).
+    // Subtle shadow on the lower-right.
     ctx.fillStyle = clothing.shadow || clothing.base;
     ctx.beginPath();
-    ctx.ellipse(capX + rx * 0.38, capY + ry * 0.24, rx * 0.88, ry * 0.88, 0, 0, Math.PI * 2);
+    ctx.ellipse(capX + rx * 0.35, capY + ry * 0.22, rx * 0.85, ry * 0.85, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Rim highlight on the upper-left (lit side).
-    ctx.globalAlpha = 0.48;
+    // Faint rim highlight.
+    ctx.globalAlpha = 0.38;
     ctx.fillStyle = clothing.highlight || clothing.base;
     ctx.beginPath();
-    ctx.ellipse(capX - rx * 0.30, capY - ry * 0.20, rx * 0.50, ry * 0.50, 0, 0, Math.PI * 2);
+    ctx.ellipse(capX - rx * 0.28, capY - ry * 0.18, rx * 0.46, ry * 0.46, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
 
-    // Outline — drawn after restore so it isn't clipped.
+    // Thin outline — keep it lighter than the body outline so the cap
+    // reads as part of the sleeve, not a separate shape.
     ctx.beginPath();
     ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
     ctx.strokeStyle = clothing.outline || '#000';
-    ctx.lineWidth = Math.max(1.4, limbR * 0.20);
+    ctx.lineWidth = Math.max(1.0, limbR * 0.14);
     ctx.stroke();
   };
 
   if (direction === 'south' || direction === 'north') {
-    drawOne(shoulderL, -1);
-    drawOne(shoulderR,  1);
+    drawOne(shoulderL);
+    drawOne(shoulderR);
   } else {
     // West/east profile: back shoulder first (drawn under), front on top.
-    drawOne(shoulderR,  1);
-    drawOne(shoulderL, -1);
+    drawOne(shoulderR);
+    drawOne(shoulderL);
   }
 }
 
