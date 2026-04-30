@@ -198,7 +198,7 @@ function buildRig(config, direction, offsets) {
   // West / East:   arms swing forward/back along X, legs swing along X with lift in Y.
   let elbowL, elbowR, handL, handR, kneeL, kneeR, footL, footR;
 
-  const armLen = torsoH * 0.55;
+  const armLen = torsoH * 0.82;
   const legLen = legH;
 
   if (direction === 'south' || direction === 'north') {

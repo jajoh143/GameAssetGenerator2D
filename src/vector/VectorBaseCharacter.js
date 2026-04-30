@@ -749,7 +749,7 @@ function drawTorso(ctx, rig, clothing, opts = {}) {
   const hw = pelvis.w / 2;
   const tH = pelvis.y - chest.y;                      // torso height
   const wy = chest.y + tH * 0.62;                     // waist height — sits lower so the chest/ribs section above reads tall enough; the belt still anchors at the hip line below
-  const wWaist = Math.min(sw, hw) * 0.78;             // pinch at waist
+  const wWaist = hw * 0.92;                            // waist ≈ hip width so the torso reads as one continuous shape
   const limbR = rig.limbR;
 
   let pts;
@@ -3031,49 +3031,42 @@ function drawShoulderCap(ctx, rig, clothing) {
   const { shoulderL, shoulderR, limbR } = rig;
   const direction = rig.direction;
 
-  // Cap is a small flat oval — just wide enough to round off the arm-root
-  // seam at the torso edge. Not a visual element in its own right, more a
-  // smooth transition piece. Keep it under the arm-root radius so it
-  // doesn't read as a separate shoulder pad.
-  const rx = limbR * 0.92;
-  const ry = limbR * 0.68;
+  // Tiny seam-filler: narrower than the arm root so it never reads as a
+  // visible shape — it only smooths the hard corner where the cylindrical
+  // arm meets the blob torso edge.
+  const rx = limbR * 0.72;
+  const ry = limbR * 0.52;
 
   const drawOne = (sh) => {
-    // Centered on the shoulder joint with only a tiny upward nudge.
     const capX = sh.x;
-    const capY = sh.y - limbR * 0.06;
+    const capY = sh.y - limbR * 0.04;
 
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
     ctx.clip();
 
+    // Base clothing color — same as the arm so the cap is invisible except
+    // for filling the gap between arm and torso outline.
     ctx.fillStyle = clothing.base;
     ctx.beginPath();
     ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Subtle shadow on the lower-right.
+    // Single subtle shadow pass on the lower-right, matching the arm shading.
     ctx.fillStyle = clothing.shadow || clothing.base;
+    ctx.globalAlpha = 0.55;
     ctx.beginPath();
-    ctx.ellipse(capX + rx * 0.35, capY + ry * 0.22, rx * 0.85, ry * 0.85, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Faint rim highlight.
-    ctx.globalAlpha = 0.38;
-    ctx.fillStyle = clothing.highlight || clothing.base;
-    ctx.beginPath();
-    ctx.ellipse(capX - rx * 0.28, capY - ry * 0.18, rx * 0.46, ry * 0.46, 0, 0, Math.PI * 2);
+    ctx.ellipse(capX + rx * 0.32, capY + ry * 0.20, rx * 0.82, ry * 0.82, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
 
-    // Thin outline — keep it lighter than the body outline so the cap
-    // reads as part of the sleeve, not a separate shape.
+    // Hairline outline only — should not be visually distinct.
     ctx.beginPath();
     ctx.ellipse(capX, capY, rx, ry, 0, 0, Math.PI * 2);
     ctx.strokeStyle = clothing.outline || '#000';
-    ctx.lineWidth = Math.max(1.0, limbR * 0.14);
+    ctx.lineWidth = Math.max(0.8, limbR * 0.10);
     ctx.stroke();
   };
 
