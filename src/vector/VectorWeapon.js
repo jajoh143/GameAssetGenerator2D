@@ -318,43 +318,52 @@ function drawWeapon(ctx, meta) {
 }
 
 /**
- * Swing arc — a curved white trail that arcs behind the weapon at the
- * peak of a swing. Reads as motion blur / slash effect. Direction is
- * either 'left' (south right-handed slash sweeps to the left) or
- * 'down' for side-view downward chops.
+ * Swing arc — a dramatic white crescent trail at the peak of a swing.
+ * Three-layer approach: wide soft glow, medium semi-transparent body,
+ * thin crisp bright core. Matches the bold motion-blur arcs in the
+ * reference sprite art.
  */
 function drawSwingArc(ctx, handPos, forward, limbR, dir) {
-  const reach = limbR * 4.8;
+  const reach = limbR * 5.2;
   const tipX = handPos.x + forward.dx * reach;
   const tipY = handPos.y + forward.dy * reach;
   // Perpendicular for arc curvature
   const px = -forward.dy, py = forward.dx;
-  // The arc starts behind the swing direction and ends at the tip,
-  // bulging outward in the perpendicular direction.
   const sgn = dir === 'right' || dir === 'down' ? -1 : 1;
-  const startBack = limbR * 3.0;
-  const startX = tipX - forward.dx * startBack + sgn * px * limbR * 2.6;
-  const startY = tipY - forward.dy * startBack + sgn * py * limbR * 2.6;
-  const ctrlX  = handPos.x + forward.dx * limbR * 1.2 + sgn * px * limbR * 3.4;
-  const ctrlY  = handPos.y + forward.dy * limbR * 1.2 + sgn * py * limbR * 3.4;
+  const startBack = limbR * 3.5;
+  const startX = tipX - forward.dx * startBack + sgn * px * limbR * 3.2;
+  const startY = tipY - forward.dy * startBack + sgn * py * limbR * 3.2;
+  const ctrlX  = handPos.x + forward.dx * limbR * 1.5 + sgn * px * limbR * 4.5;
+  const ctrlY  = handPos.y + forward.dy * limbR * 1.5 + sgn * py * limbR * 4.5;
 
   ctx.save();
-  // Outer thick white halo
-  ctx.strokeStyle = '#ffffff';
   ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = Math.max(2.5, limbR * 0.55);
+
+  // Layer 1 — wide diffuse glow
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = Math.max(10, limbR * 2.2);
   ctx.beginPath();
   ctx.moveTo(startX, startY);
   ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
   ctx.stroke();
-  // Inner crisp white core
-  ctx.globalAlpha = 0.95;
-  ctx.lineWidth = Math.max(1.2, limbR * 0.18);
+
+  // Layer 2 — mid-weight semi-transparent body
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = Math.max(5, limbR * 1.10);
   ctx.beginPath();
   ctx.moveTo(startX, startY);
   ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
   ctx.stroke();
+
+  // Layer 3 — crisp bright core
+  ctx.strokeStyle = '#ffffff';
+  ctx.globalAlpha = 1.0;
+  ctx.lineWidth = Math.max(2.0, limbR * 0.30);
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
+  ctx.stroke();
+
   ctx.restore();
 }
 

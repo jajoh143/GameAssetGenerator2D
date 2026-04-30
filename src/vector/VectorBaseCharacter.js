@@ -23,7 +23,7 @@ const VC = require('./VectorCanvas');
 // because at chibi proportions a thin line gets lost in the shading —
 // a stronger silhouette reads cleaner at any zoom.
 function outlineW(rig, factor = 0.32) {
-  return Math.max(1.0, rig.limbR * factor * 0.50);
+  return Math.max(1.8, rig.limbR * factor * 0.95);
 }
 
 // ---------------------------------------------------------------------------
@@ -66,9 +66,9 @@ function drawLimb(ctx, root, mid, tip, palette, opts = {}) {
     const dx = b.x - a.x, dy = b.y - a.y;
     const len = Math.hypot(dx, dy) || 1;
     const nx = -dy / len, ny = dx / len;     // perpendicular (right side of arm)
-    // Offset both ends ~40% of the radius toward the shadow side.
-    const offA = { x: a.x + nx * ra * 0.45, y: a.y + ny * ra * 0.45 };
-    const offB = { x: b.x + nx * rb * 0.45, y: b.y + ny * rb * 0.45 };
+    // Offset both ends ~55% of the radius toward the shadow side for a bolder cel look.
+    const offA = { x: a.x + nx * ra * 0.55, y: a.y + ny * ra * 0.55 };
+    const offB = { x: b.x + nx * rb * 0.55, y: b.y + ny * rb * 0.55 };
     ctx.save();
     ctx.globalCompositeOperation = 'source-atop';
     VC.limb(ctx, offA.x, offA.y, ra, offB.x, offB.y, rb, shadow, null, 0);
@@ -1426,22 +1426,21 @@ function drawHead(ctx, rig, skin) {
   ctx.lineWidth = outlineW(rig, 0.32);
   ctx.stroke();
 
-  // 3. Cel shadow — a soft cheek/jaw shadow on the bottom-right (shadow
-  // side). Drawn as a curved blob via source-atop so the terminator reads
-  // as a smooth crescent rather than a hard wedge.
+  // 3. Cel shadow — a bold cheek/jaw shadow on the bottom-right that covers
+  // ~40% of the face. Hard-edge crescent style matching reference art.
   ctx.save();
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = skin.shadow;
   ctx.beginPath();
-  ctx.moveTo(head.x + head.r * 0.18, head.y - head.r * 0.95);
+  ctx.moveTo(head.x + head.r * 0.10, head.y - head.r * 1.00);
   ctx.quadraticCurveTo(
-    head.x + head.r * 1.15, head.y - head.r * 0.10,
-    head.x + head.r * 0.30, head.y + head.r * 1.00,
+    head.x + head.r * 1.20, head.y - head.r * 0.15,
+    head.x + head.r * 0.35, head.y + head.r * 1.00,
   );
-  ctx.lineTo(head.x + head.r * 0.05, head.y + head.r * 0.95);
+  ctx.lineTo(head.x - head.r * 0.10, head.y + head.r * 0.95);
   ctx.quadraticCurveTo(
-    head.x + head.r * 0.30, head.y - head.r * 0.05,
-    head.x + head.r * 0.18, head.y - head.r * 0.95,
+    head.x + head.r * 0.30, head.y - head.r * 0.10,
+    head.x + head.r * 0.10, head.y - head.r * 1.00,
   );
   ctx.closePath();
   ctx.fill();
@@ -1599,22 +1598,20 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
     ctx.lineCap = 'round';
     ctx.globalAlpha = 0.55;
     ctx.beginPath();
-    ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.55);
-    ctx.quadraticCurveTo(head.x, head.y + head.r * 0.62,
-                         head.x + head.r * 0.10, head.y + head.r * 0.55);
+    ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.69);
+    ctx.quadraticCurveTo(head.x, head.y + head.r * 0.73,
+                         head.x + head.r * 0.10, head.y + head.r * 0.69);
     ctx.stroke();
     ctx.restore();
     return;
   }
 
-  // Smaller, more anatomically proportioned eyes — references like the
-  // bartender / patron pixel art have eyes that are ~3-4 px in a 32 px
-  // head, i.e. roughly 12-15% of head radius. Anime-huge eyes read as
-  // "chibi cartoon"; tight eyes read as "stylized but grounded".
-  const eyeRX = head.r * 0.19;
-  const eyeRY = head.r * 0.15;
-  const irisRX = head.r * 0.11;
-  const irisRY = head.r * 0.14;
+  // Larger chibi eyes — ~22% of head radius gives the character the big-eye
+  // anime/cartoon look characteristic of the reference sprite style.
+  const eyeRX = head.r * 0.22;
+  const eyeRY = head.r * 0.19;
+  const irisRX = head.r * 0.14;
+  const irisRY = head.r * 0.17;
 
   const irisColor   = eyes.iris   || eyes.base || '#3a2510';
   const irisShadow  = eyes.shadow || mixColor(irisColor, '#000', 0.45);
@@ -1634,28 +1631,27 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
   if (rig.species !== 'lizardfolk' && rig.species !== 'fairy') {
     const { head } = rig;
     ctx.save();
-    // Bridge crease — slight rightward lean to match the top-left light.
+    // Bridge crease — moved below larger eyes.
     ctx.strokeStyle = eyes.outline || '#1a1010';
     ctx.lineWidth = Math.max(0.8, head.r * 0.04);
     ctx.lineCap = 'round';
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.40;
     ctx.beginPath();
-    ctx.moveTo(head.x + head.r * 0.04, head.y + head.r * 0.05);
+    ctx.moveTo(head.x + head.r * 0.04, head.y + head.r * 0.30);
     ctx.quadraticCurveTo(
-      head.x + head.r * 0.10, head.y + head.r * 0.22,
-      head.x + head.r * 0.06, head.y + head.r * 0.34,
+      head.x + head.r * 0.10, head.y + head.r * 0.42,
+      head.x + head.r * 0.06, head.y + head.r * 0.52,
     );
     ctx.stroke();
     ctx.restore();
-    // Tip dot — a tiny darker mark at the bottom of the bridge for
-    // a clearly visible "nose tip" feature even at thumbnail size.
+    // Tiny nostril dot below the bridge.
     ctx.save();
     ctx.fillStyle = eyes.outline || '#1a1010';
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.50;
     ctx.beginPath();
     ctx.ellipse(
       head.x + head.r * 0.04,
-      head.y + head.r * 0.36,
+      head.y + head.r * 0.54,
       Math.max(0.8, head.r * 0.04),
       Math.max(0.8, head.r * 0.05),
       0, 0, Math.PI * 2,
@@ -1792,8 +1788,8 @@ function drawEyesSouth(ctx, rig, eyes, opts = {}) {
 function drawEyebrowsSouth(ctx, rig, eyes) {
   const { head } = rig;
   const dx = head.r * 0.32;
-  const dy = -head.r * 0.24;        // slightly above eye line
-  const browW = head.r * 0.32;
+  const dy = -head.r * 0.30;        // raised to clear larger eyes
+  const browW = head.r * 0.34;
   const browH = head.r * 0.07;
   const browColor = eyes.brow || '#1a1010';
   ctx.save();
@@ -1861,29 +1857,27 @@ function drawMouthSouth(ctx, rig, opts = {}) {
   }
 
   if (opts.open) {
-    // Open battle-cry mouth — a small dark oval with a tongue/inner shadow.
+    // Open battle-cry mouth — moved down to clear larger eyes.
     ctx.save();
     ctx.fillStyle = '#1a0808';
     ctx.strokeStyle = '#3a1808';
     ctx.lineWidth = Math.max(1.0, head.r * 0.05);
     ctx.beginPath();
-    ctx.ellipse(head.x, head.y + head.r * 0.62, head.r * 0.16, head.r * 0.13,
+    ctx.ellipse(head.x, head.y + head.r * 0.73, head.r * 0.16, head.r * 0.13,
       0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     // Tongue
     ctx.fillStyle = '#a83a40';
     ctx.beginPath();
-    ctx.ellipse(head.x, head.y + head.r * 0.66, head.r * 0.10, head.r * 0.06,
+    ctx.ellipse(head.x, head.y + head.r * 0.77, head.r * 0.10, head.r * 0.06,
       0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     return;
   }
 
-  // Neutral mouth — a flatter dark line with the slightest dip in the
-  // middle, plus a subtle lower-lip highlight tint just below it so the
-  // mouth reads as a 3D feature rather than a flat scratch on the face.
+  // Neutral mouth — moved down to keep proportion below larger eyes.
   ctx.save();
   ctx.strokeStyle = '#3a1808';
   ctx.lineWidth = Math.max(1.0, head.r * 0.05);
@@ -1891,19 +1885,18 @@ function drawMouthSouth(ctx, rig, opts = {}) {
   ctx.globalAlpha = 0.70;
   // Upper lip line
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.14, head.y + head.r * 0.58);
-  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.62,
-                       head.x + head.r * 0.14, head.y + head.r * 0.58);
+  ctx.moveTo(head.x - head.r * 0.14, head.y + head.r * 0.69);
+  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.73,
+                       head.x + head.r * 0.14, head.y + head.r * 0.69);
   ctx.stroke();
-  // Lower-lip warm shadow — a soft pink-brown band just below the line
-  // suggesting the curve of the lower lip.
+  // Lower-lip warm shadow — a soft pink-brown band just below the mouth line.
   ctx.strokeStyle = '#8a3826';
   ctx.globalAlpha = 0.30;
   ctx.lineWidth = Math.max(1.2, head.r * 0.07);
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.66);
-  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.69,
-                       head.x + head.r * 0.10, head.y + head.r * 0.66);
+  ctx.moveTo(head.x - head.r * 0.10, head.y + head.r * 0.77);
+  ctx.quadraticCurveTo(head.x, head.y + head.r * 0.80,
+                       head.x + head.r * 0.10, head.y + head.r * 0.77);
   ctx.stroke();
   ctx.restore();
 }
@@ -1914,7 +1907,7 @@ function drawMouthSouth(ctx, rig, opts = {}) {
 function drawGoblinMouthSouth(ctx, rig, opts = {}) {
   const { head } = rig;
   const cx = head.x;
-  const cy = head.y + head.r * 0.55;
+  const cy = head.y + head.r * 0.68;   // shifted down to clear larger eyes
   const w  = head.r * 0.55;        // wide mouth
   const h  = head.r * (opts.open ? 0.14 : 0.05);  // open during attack
 
@@ -2021,11 +2014,11 @@ function drawEyeWest(ctx, rig, eyes, opts = {}) {
   const { head } = rig;
   const ex = head.x - head.r * 0.42;
   const ey = head.y + head.r * 0.10;
-  // Smaller side-view eye to match the front view's reduction.
-  const eyeRX = head.r * 0.14;
-  const eyeRY = head.r * 0.12;
-  const irisRX = head.r * 0.08;
-  const irisRY = head.r * 0.11;
+  // Side-view eye — slightly larger to match the chibi front-view scale.
+  const eyeRX = head.r * 0.17;
+  const eyeRY = head.r * 0.15;
+  const irisRX = head.r * 0.10;
+  const irisRY = head.r * 0.13;
 
   const irisColor  = eyes.iris || eyes.base || '#3a2510';
   const irisShadow = eyes.shadow || mixColor(irisColor, '#000', 0.4);
@@ -2084,10 +2077,10 @@ function drawEyeWest(ctx, rig, eyes, opts = {}) {
   ctx.stroke();
   ctx.restore();
 
-  // Nose tip + bridge shadow
+  // Nose tip + bridge shadow — moved down to clear larger eye.
   ctx.save();
   ctx.globalAlpha = 0.5;
-  VC.oval(ctx, head.x - head.r * 0.88, head.y + head.r * 0.18,
+  VC.oval(ctx, head.x - head.r * 0.88, head.y + head.r * 0.40,
     head.r * 0.06, head.r * 0.10, '#1a0e08', null);
   ctx.restore();
 
@@ -2105,7 +2098,7 @@ function drawMouthWest(ctx, rig, opts = {}) {
     // Side-view goblin mouth — visible from the side as a wide open
     // crack with a tooth row.
     const cx = head.x - head.r * 0.50;
-    const cy = head.y + head.r * 0.55;
+    const cy = head.y + head.r * 0.68;   // shifted down to clear larger eye
     const w = head.r * 0.45;
     const h = head.r * (opts.open ? 0.13 : 0.05);
     ctx.save();
@@ -2148,13 +2141,13 @@ function drawMouthWest(ctx, rig, opts = {}) {
   }
 
   if (opts.open) {
-    // Open battle-cry mouth, side view
+    // Open battle-cry mouth, side view — moved down.
     ctx.save();
     ctx.fillStyle = '#1a0808';
     ctx.strokeStyle = '#3a1808';
     ctx.lineWidth = Math.max(1.0, head.r * 0.05);
     ctx.beginPath();
-    ctx.ellipse(head.x - head.r * 0.50, head.y + head.r * 0.62,
+    ctx.ellipse(head.x - head.r * 0.50, head.y + head.r * 0.73,
       head.r * 0.12, head.r * 0.11, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
@@ -2168,9 +2161,9 @@ function drawMouthWest(ctx, rig, opts = {}) {
   ctx.lineCap = 'round';
   ctx.globalAlpha = 0.65;
   ctx.beginPath();
-  ctx.moveTo(head.x - head.r * 0.62, head.y + head.r * 0.58);
-  ctx.quadraticCurveTo(head.x - head.r * 0.55, head.y + head.r * 0.60,
-                       head.x - head.r * 0.42, head.y + head.r * 0.58);
+  ctx.moveTo(head.x - head.r * 0.62, head.y + head.r * 0.70);
+  ctx.quadraticCurveTo(head.x - head.r * 0.55, head.y + head.r * 0.72,
+                       head.x - head.r * 0.42, head.y + head.r * 0.70);
   ctx.stroke();
   ctx.restore();
 }

@@ -37,10 +37,10 @@ const FRAME_H = 192;
 //     proportions: noticeably longer legs, thinner limbs, smaller head
 //     relative to torso. Less cartoony, closer to anime/RPG sprite work.
 const HEIGHT_DIMS_CHIBI = {
-  tiny:   { totalH: 0.55, headR: 0.14, neckLen: 0.020, torsoH: 0.16, legH: 0.10 },
-  short:  { totalH: 0.74, headR: 0.14, neckLen: 0.025, torsoH: 0.23, legH: 0.20 },
-  medium: { totalH: 0.86, headR: 0.14, neckLen: 0.028, torsoH: 0.28, legH: 0.28 },
-  tall:   { totalH: 0.93, headR: 0.14, neckLen: 0.030, torsoH: 0.30, legH: 0.32 },
+  tiny:   { totalH: 0.55, headR: 0.165, neckLen: 0.018, torsoH: 0.13, legH: 0.08 },
+  short:  { totalH: 0.74, headR: 0.165, neckLen: 0.022, torsoH: 0.19, legH: 0.16 },
+  medium: { totalH: 0.86, headR: 0.165, neckLen: 0.025, torsoH: 0.23, legH: 0.22 },
+  tall:   { totalH: 0.93, headR: 0.165, neckLen: 0.028, torsoH: 0.25, legH: 0.27 },
 };
 const HEIGHT_DIMS_NATURAL = {
   tiny:   { totalH: 0.65, headR: 0.085, neckLen: 0.025, torsoH: 0.22, legH: 0.30 },
@@ -54,10 +54,10 @@ const HEIGHT_DIMS = HEIGHT_DIMS_CHIBI;   // back-compat alias used elsewhere
 // shoulders / hips / limb radii in a touch so the figure reads as adult
 // proportions rather than a stretched chibi.
 const BUILDS_CHIBI = {
-  slim:     { shoulderW: 0.50, hipW: 0.28, limbR: 0.052, torsoTaper: 0.78 },
-  average:  { shoulderW: 0.58, hipW: 0.32, limbR: 0.060, torsoTaper: 0.82 },
-  muscular: { shoulderW: 0.68, hipW: 0.36, limbR: 0.070, torsoTaper: 0.78 },
-  heavy:    { shoulderW: 0.66, hipW: 0.44, limbR: 0.070, torsoTaper: 0.92 },
+  slim:     { shoulderW: 0.52, hipW: 0.29, limbR: 0.057, torsoTaper: 0.78 },
+  average:  { shoulderW: 0.63, hipW: 0.34, limbR: 0.066, torsoTaper: 0.82 },
+  muscular: { shoulderW: 0.73, hipW: 0.39, limbR: 0.078, torsoTaper: 0.78 },
+  heavy:    { shoulderW: 0.71, hipW: 0.47, limbR: 0.078, torsoTaper: 0.92 },
 };
 const BUILDS_NATURAL = {
   slim:     { shoulderW: 0.32, hipW: 0.26, limbR: 0.034, torsoTaper: 0.78 },

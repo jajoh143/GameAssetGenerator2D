@@ -2,11 +2,10 @@
 
 const path = require('path');
 const fs   = require('fs');
-const { generateSpritesheet }  = require('./generators/CharacterGenerator');
+const { generateSpritesheet, ROWS, FRAME_W, FRAME_H } = require('./generators/VectorCharacterGenerator');
 const { generateAllWeapons }   = require('./generators/WeaponGenerator');
 const { generateAllArmor }     = require('./generators/ArmorGenerator');
 const { PRESETS }              = require('./characters/CharacterConfig');
-const { ROWS, FRAME_W, FRAME_H } = require('./core/Spritesheet');
 
 const OUTPUT_DIR   = path.join(__dirname, '..', 'output');
 const WEAPONS_DIR  = path.join(OUTPUT_DIR, 'weapons');
