@@ -225,30 +225,40 @@ function buildRig(config, direction, offsets) {
     };
 
     // ── Legs (south/north front-facing view) ──
-    // In front view the legs swing like a pendulum: positive lLegFwd
-    // swings the LEFT foot OUTWARD (to the left), negative swings it
-    // inward (toward center / behind the stance). Using the signed
-    // value rather than Math.abs means the two half-cycles of the
-    // walk look different — the previous Math.abs bug made frames
-    // 2 and 6 of the walk cycle produce identical leg positions.
-    // Back leg (negative fwd): foot lifts slightly off the ground and
-    // knee rises, simulating the recovery swing.
+    //
+    // The "ice-skater" bug: the old formula put nearly all of lLegFwd
+    // into X, making both feet slide sideways on every frame.
+    //
+    // Correct front-view stride: keep feet almost directly below their
+    // hips (tiny sway is fine), and express the stride as a HEIGHT
+    // difference — the back / push-off leg bends at the knee and the
+    // foot lifts off the ground, while the contact / forward leg stays
+    // fully extended down.
+    //
+    //   lLegFwd > 0  →  left leg is the CONTACT leg  (planted, full extension)
+    //   lLegFwd < 0  →  left leg is the PUSH-OFF leg (knee bends, foot lifts)
+    const lContact = Math.max(0,  lLegFwd);
+    const lPushOff = Math.max(0, -lLegFwd);
+    const rContact = Math.max(0,  rLegFwd);
+    const rPushOff = Math.max(0, -rLegFwd);
+
     kneeL = {
-      x: hipL.x - lLegFwd * 0.45,
-      y: hipL.y + legLen * 0.45 - Math.max(0, -lLegFwd) * 0.20,
+      x: hipL.x - lLegFwd * 0.10,              // tiny hip-sway hint
+      y: hipL.y + legLen * 0.46 - lPushOff * 0.30, // knee rises on push-off
     };
     footL = {
-      x: hipL.x - lLegFwd * 0.68,
-      y: footY - Math.max(0, -lLegFwd) * 0.35,
+      x: hipL.x - lLegFwd * 0.12,              // stays under hip
+      y: footY - lPushOff * 0.55,               // foot lifts on push-off
     };
     kneeR = {
-      x: hipR.x + rLegFwd * 0.45,
-      y: hipR.y + legLen * 0.45 - Math.max(0, -rLegFwd) * 0.20,
+      x: hipR.x + rLegFwd * 0.10,
+      y: hipR.y + legLen * 0.46 - rPushOff * 0.30,
     };
     footR = {
-      x: hipR.x + rLegFwd * 0.68,
-      y: footY - Math.max(0, -rLegFwd) * 0.35,
+      x: hipR.x + rLegFwd * 0.12,
+      y: footY - rPushOff * 0.55,
     };
+    void lContact; void rContact;
   } else {
     // SIDE VIEW (west).  Both shoulders collapse onto a single x. Arms swing
     // forward (negative X) / back (positive X). The "left" arm is the front
